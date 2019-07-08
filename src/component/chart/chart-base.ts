@@ -1,11 +1,21 @@
+import '../../chart.css'
+
 import { min, max } from 'd3-array';
 import { scaleBand, scaleLinear } from 'd3-scale';
 import { select, event, Selection, BaseType, EnterElement } from 'd3-selection';
 import { axisBottom, axisLeft } from 'd3-axis';
+import { fromEvent, Subscription, Observable, Subject } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 
 import { IChart } from './chart.interface';
 import { ChartConfiguration, Axis, Margin } from './chart-configuration';
 import { ISeries } from './series.interface';
+
+export interface ISeriesConfiguration {
+    selector?: string;
+    xField: string;
+    yField: string;
+}
 
 export interface Scale {
     orinet: string;
@@ -42,13 +52,18 @@ export class ChartBase implements IChart {
 
     protected seriesList: Array<ISeries> = [];
 
+    protected subscription: Subscription;
+
     protected margin: Margin = {
         top: 20, left: 30, bottom: 40, right: 20
     };
 
+    private config: ChartConfiguration;
+
     constructor(
-        private configuration: ChartConfiguration
+        configuration: ChartConfiguration
     ) {
+        this.config = configuration;
         this.bootstrap();
     }
 
@@ -62,54 +77,49 @@ export class ChartBase implements IChart {
 
     bootstrap() {
         // initialize size setup
-        if (this.configuration.margin) {
-            Object.assign(this.margin, this.configuration.margin);
+        if (this.config.margin) {
+            Object.assign(this.margin, this.config.margin);
         }
 
-        this.svg = select(this.configuration.selector);
+        this.svg = select(this.config.selector);
 
-        this.svgWidth = parseFloat(this.svg.style('width'));
-        this.svgHeight = parseFloat(this.svg.style('height'));
-
-        this.width = this.svgWidth - this.margin.left - this.margin.right,
-        this.height = this.svgHeight - this.margin.top - this.margin.bottom;
+        this.setRootSize();
 
         // data setup origin data 와 분리.
-        this.data = this.setupData(this.configuration.data);
+        this.data = this.setupData(this.config.data);
 
         let targetValues: Array<number> = undefined;
 
         // setup min value
-        if (!this.configuration.min) {
-            if (this.configuration.calcField) {
-                targetValues = this.data.map((item: any) => parseFloat(item[this.configuration.calcField]));
+        if (!this.config.hasOwnProperty('min')) {
+            if (this.config.calcField) {
+                targetValues = this.data.map((item: any) => parseFloat(item[this.config.calcField]));
             } else {
                 new Error('please setup configuration calcField because min, max value');
             }
 
             this.min = min(targetValues);
         } else {
-            this.min = this.configuration.min;
+            this.min = this.config.min;
         }
 
         // setup max value
-        if (!this.configuration.max) {
-            if (!this.configuration.calcField) {
+        if (!this.config.hasOwnProperty('max')) {
+            if (!this.config.calcField) {
                 new Error('please setup configuration calcField because min, max value')
             } else {
                 if (!targetValues || !targetValues.length) {
-                    targetValues = this.data.map((item: any) => parseFloat(item[this.configuration.calcField]));
+                    targetValues = this.data.map((item: any) => parseFloat(item[this.config.calcField]));
                 }
             }
 
             this.max = max(targetValues);
         } else {
-            this.max = this.configuration.max;
+            this.max = this.config.max;
         }
 
-        this.scales = this.setupScale(this.configuration.axes);
-        if (this.configuration.series) {
-            this.seriesList = this.configuration.series;
+        if (this.config.series) {
+            this.seriesList = this.config.series;
         }
         
         this.makeContainer();
@@ -126,6 +136,14 @@ export class ChartBase implements IChart {
 
     }
 
+    protected setRootSize() {
+        this.svgWidth = parseFloat(this.svg.style('width'));
+        this.svgHeight = parseFloat(this.svg.style('height'));
+
+        this.width = this.svgWidth - this.margin.left - this.margin.right,
+        this.height = this.svgHeight - this.margin.top - this.margin.bottom;
+    }
+
     protected makeContainer() {
         this.mainGroup = this.svg.append('g')
             .attr('transform', `translate(${this.margin.left}, ${this.margin.top})`);
@@ -139,10 +157,17 @@ export class ChartBase implements IChart {
     }
 
     protected addEventListner() {
-
+        this.subscription = new Subscription();
+        if (this.config.isResize && this.config.isResize === 'Y') {
+            const resizeEvent = fromEvent(window, 'resize').pipe(debounceTime(500));
+            this.subscription.add(
+                resizeEvent.subscribe(this.resizeEventHandler)
+            );
+        }
     }
 
     protected updateAxis() {
+        this.scales = this.setupScale(this.config.axes);
         this.xAxisGroup.call(
             axisBottom(this.scales.find((scale: Scale) => scale.orinet === 'bottom').scale)
         )
@@ -153,11 +178,18 @@ export class ChartBase implements IChart {
     }
 
     protected updateSeries() {
-        if (this.seriesList && this.seriesList.length) {
-            this.seriesList.map((series: ISeries) => {
-                series.setSvgElement(this.svg, this.mainGroup);
-                series.drawSeries(this.data, this.scales, this.width, this.height);
-            });
+        try {
+            if (this.seriesList && this.seriesList.length) {
+                this.seriesList.map((series: ISeries) => {
+                    series.chartBase = this;
+                    series.setSvgElement(this.svg, this.mainGroup);
+                    series.drawSeries(this.data, this.scales, this.width, this.height);
+                });
+            }
+        } catch(error) {
+            if (console && console.log) {
+                console.log(error);
+            }
         }
     }
 
@@ -172,6 +204,7 @@ export class ChartBase implements IChart {
     }
 
     protected setupScale(axes: Array<Axis> = []): Array<{orinet:string, scale:any}> {
+        console.log('setupScale : ', this.min);
         const returnAxes: Array<{orinet:string, scale:any}> = [];
         axes.map((axis: Axis) => {
             let scale = null;
@@ -208,5 +241,13 @@ export class ChartBase implements IChart {
         return returnAxes;
     }
 
-    
+    protected resizeEventHandler = () => {
+        
+        if (!this.svg) return;
+
+        this.setRootSize();
+
+        this.updateDisplay();
+    }
+
 }

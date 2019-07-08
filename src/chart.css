@@ -1,0 +1,36 @@
+svg {
+    display: block;
+    width: 100%;
+    height: 350px;
+    background-color: #fff;
+}
+
+.vertical-bar { 
+    fill: steelblue; 
+}
+
+.basic-line-sales { 
+    fill: none;
+    stroke: #ffab00;
+    stroke-width: 2px;
+}
+
+.basic-line-sales-dot {
+    stroke: #fff;
+    fill: #ffab00;
+}
+
+.basic-line-assets {
+    fill: none;
+    stroke: #09ff00;
+    stroke-width: 2px;
+}
+
+.basic-line-assets-dot {
+    stroke: #fff;
+    fill: #09ff00;
+}
+
+.sales-label {
+    fill: #777;
+}

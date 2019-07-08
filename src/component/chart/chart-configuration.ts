@@ -21,6 +21,8 @@ export interface Margin {
 export interface ChartConfiguration<T = any> {
     selector: string;
 
+    isResize?: string; // 'Y' or 'N'
+
     margin?: Margin;
 
     axes?: Array<Axis>;
