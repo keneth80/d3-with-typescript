@@ -2,20 +2,20 @@ import { ISeries } from "./series.interface";
 
 export interface Axis {
     field: any; // data propertie
-    type: string; // default: number, option: number or string => number: linear, string: scale band for range
+    type: string; // default: number, option: number or string or time => number: scaleLinear, time: scaleTime, string: scaleBand for range
     placement: string; // position
     domain?: Array<any>;
     padding?: number;
 }
 
 export interface Margin {
-    top: number;
+    top?: number;
 
-    left: number;
+    left?: number;
 
-    bottom: number;
+    bottom?: number;
 
-    right: number;
+    right?: number;
 }
 
 export interface ChartConfiguration<T = any> {

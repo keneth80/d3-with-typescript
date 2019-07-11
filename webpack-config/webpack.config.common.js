@@ -45,6 +45,6 @@ module.exports = {
             filename: './index.html'
         }),
 
-        new BundleAnalyzerPlugin()
+        // new BundleAnalyzerPlugin()
     ]
 };

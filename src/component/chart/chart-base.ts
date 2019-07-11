@@ -1,9 +1,9 @@
 import '../../chart.css'
 
-import { min, max } from 'd3-array';
-import { scaleBand, scaleLinear } from 'd3-scale';
-import { select, event, Selection, BaseType, EnterElement } from 'd3-selection';
-import { axisBottom, axisLeft } from 'd3-axis';
+import { min, max, extent } from 'd3-array';
+import { scaleBand, scaleLinear, scaleTime, scalePoint } from 'd3-scale';
+import { select, event, Selection, BaseType } from 'd3-selection';
+import { axisBottom, axisLeft, axisTop, axisRight } from 'd3-axis';
 import { fromEvent, Subscription, Observable, Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 
@@ -22,15 +22,15 @@ export interface Scale {
     scale: any;
 }
 
-export class ChartBase implements IChart {
+export class ChartBase<T = any> implements IChart {
 
-    protected data: Array<any> = [];
+    protected data: Array<T> = [];
 
     protected scales: Array<Scale> = [];
 
-    protected min: number = 0;
+    public min: number = 0;
 
-    protected max: number = Infinity;
+    public max: number = Infinity;
 
     protected width: number;
 
@@ -48,11 +48,17 @@ export class ChartBase implements IChart {
 
     protected xAxisGroup: Selection<BaseType, any, HTMLElement, any>;
 
+    protected xTopAxisGroup: Selection<BaseType, any, HTMLElement, any>;
+
     protected yAxisGroup: Selection<BaseType, any, HTMLElement, any>;
+
+    protected yRightAxisGroup: Selection<BaseType, any, HTMLElement, any>;
 
     protected seriesList: Array<ISeries> = [];
 
     protected subscription: Subscription;
+
+    protected chartClickSubject: Subject<any> = new Subject();
 
     protected margin: Margin = {
         top: 20, left: 30, bottom: 40, right: 20
@@ -67,12 +73,16 @@ export class ChartBase implements IChart {
         this.bootstrap();
     }
 
-    get chartData(): any {
+    get chartData(): Array<T> {
         return this.data;
     }
 
-    set chartData(value: any) {
+    set chartData(value: Array<T>) {
         this.data = value;
+    }
+
+    chartClick() {
+        return this.chartClickSubject.asObservable();
     }
 
     bootstrap() {
@@ -93,7 +103,7 @@ export class ChartBase implements IChart {
         // setup min value
         if (!this.config.hasOwnProperty('min')) {
             if (this.config.calcField) {
-                targetValues = this.data.map((item: any) => parseFloat(item[this.config.calcField]));
+                targetValues = this.data.map((item: T) => parseFloat(item[this.config.calcField]));
             } else {
                 new Error('please setup configuration calcField because min, max value');
             }
@@ -109,7 +119,7 @@ export class ChartBase implements IChart {
                 new Error('please setup configuration calcField because min, max value')
             } else {
                 if (!targetValues || !targetValues.length) {
-                    targetValues = this.data.map((item: any) => parseFloat(item[this.config.calcField]));
+                    targetValues = this.data.map((item: T) => parseFloat(item[this.config.calcField]));
                 }
             }
 
@@ -133,7 +143,11 @@ export class ChartBase implements IChart {
     }
 
     destroy() {
-
+        this.subscription.unsubscribe();
+        if (this.svg) {
+            this.svg.on('click', null);
+        }
+        this.data.length = 0;
     }
 
     protected setRootSize() {
@@ -146,17 +160,27 @@ export class ChartBase implements IChart {
 
     protected makeContainer() {
         this.mainGroup = this.svg.append('g')
+            .attr('class', 'main-group')
             .attr('transform', `translate(${this.margin.left}, ${this.margin.top})`);
 
         this.xAxisGroup = this.mainGroup.append('g')
             .attr('class', 'x-axis-group')
             .attr('transform', `translate(0, ${this.height})`);
 
+        this.xTopAxisGroup = this.mainGroup.append('g')
+            .attr('class', 'x-top-axis-group')
+            .attr('transform', `translate(0, 0)`);
+
         this.yAxisGroup = this.mainGroup.append('g')
             .attr('class', 'y-axis-group');
+
+        this.yRightAxisGroup = this.mainGroup.append('g')
+            .attr('class', 'y-right-axis-group')
+            .attr('transform', `translate(${this.width - this.margin.right}, 0)`);
     }
 
     protected addEventListner() {
+        this.svg.on('click', this.chartCanvasClick);
         this.subscription = new Subscription();
         if (this.config.isResize && this.config.isResize === 'Y') {
             const resizeEvent = fromEvent(window, 'resize').pipe(debounceTime(500));
@@ -166,15 +190,41 @@ export class ChartBase implements IChart {
         }
     }
 
+    protected chartCanvasClick = () => {
+        this.chartClickSubject.next();
+    }
+
     protected updateAxis() {
         this.scales = this.setupScale(this.config.axes);
-        this.xAxisGroup.call(
-            axisBottom(this.scales.find((scale: Scale) => scale.orinet === 'bottom').scale)
-        )
 
-        this.yAxisGroup.call(
-            axisLeft(this.scales.find((scale: Scale) => scale.orinet === 'left').scale)
-        )
+        const bottom = this.scales.find((scale: Scale) => scale.orinet === 'bottom');
+        if (bottom) {
+            this.xAxisGroup.call(
+                axisBottom(bottom.scale)
+            )
+        }
+
+        const left = this.scales.find((scale: Scale) => scale.orinet === 'left');
+        if (left) {
+            this.yAxisGroup.call(
+                axisLeft(left.scale)
+            )
+        }
+
+        // special
+        const top = this.scales.find((scale: Scale) => scale.orinet === 'top');
+        if (top) {
+            this.xTopAxisGroup.call(
+                axisTop(top.scale)
+            )
+        }
+
+        const right = this.scales.find((scale: Scale) => scale.orinet === 'right');
+        if (right) {
+            this.yRightAxisGroup.call(
+                axisRight(right.scale)
+            )
+        }
     }
 
     protected updateSeries() {
@@ -198,34 +248,50 @@ export class ChartBase implements IChart {
         this.updateSeries();
     }
 
-    protected setupData(data) {
+    protected setupData(data: Array<T>) {
         this.originalData = [...data];
         return data;
     }
 
-    protected setupScale(axes: Array<Axis> = []): Array<{orinet:string, scale:any}> {
-        console.log('setupScale : ', this.min);
-        const returnAxes: Array<{orinet:string, scale:any}> = [];
+    protected setupScale(axes: Array<Axis> = []): Array<{orinet:string, scale:any, visible?: boolean}> {
+        const returnAxes: Array<{orinet:string, scale:any, visible?: boolean}> = [];
         axes.map((axis: Axis) => {
+            let range = <any>[];
+            if (axis.placement === 'bottom' || axis.placement === 'top') {
+                range = [0, this.width];
+            } else {
+                range = [this.height, 0];
+            }
+
             let scale = null;
             if (axis.type === 'string') {
-                scale = scaleBand().range([0, this.width]).padding(axis.padding ? +axis.padding : 0.1);
+                scale = scaleBand().range(range).padding(axis.padding ? +axis.padding : 0.1);
                 if (axis.domain) {
                     scale.domain(axis.domain);
                 } else {
                     scale.domain(
-                        this.data.map((item: any) => item[axis.field])
+                        this.data.map((item: T) => item[axis.field])
                     );
                 }
+            } else if (axis.type === 'point') {
+                scale = scalePoint().range(range).padding(axis.padding ? +axis.padding : 0.1);
+                if (axis.domain) {
+                    scale.domain(axis.domain);
+                } else {
+                    scale.domain(
+                        this.data.map((item: T) => item[axis.field])
+                    );
+                }
+            } else if (axis.type === 'time') {
+                scale = scaleTime().range(range);
+                scale.domain(extent(this.data, (item: T) => item[axis.field]));
             } else {
-                scale = scaleLinear().range(
-                    [this.height, 0]
-                );
+                scale = scaleLinear().range(range);
                 if (axis.domain) {
                     scale.domain(axis.domain);
                 } else {
                     if (!this.max) {
-                        this.max = max(this.data.map((item: any) => parseFloat(item[axis.field])));
+                        this.max = max(this.data.map((item: T) => parseFloat(item[axis.field])));
                     }
                     scale.domain(
                         [this.min, this.max]
@@ -235,7 +301,7 @@ export class ChartBase implements IChart {
 
             returnAxes.push({
                 orinet: axis.placement,
-                scale 
+                scale
             });
         });
         return returnAxes;
