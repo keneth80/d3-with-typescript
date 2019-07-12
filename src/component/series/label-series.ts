@@ -1,7 +1,8 @@
 import { Selection, BaseType } from 'd3-selection';
 import { ISeries } from '../chart/series.interface';
-import { Scale, ChartBase } from '../chart/chart-base';
+import { Scale } from '../chart/chart-base';
 import { Subject, Observable } from 'rxjs';
+import { SeriesBase } from '../chart/series-base';
 
 export interface LabelSeriesConfiguration {
     selector?: string;
@@ -10,16 +11,10 @@ export interface LabelSeriesConfiguration {
     templete?: any;
 }
 
-export class LabelSeries implements ISeries {
-    protected svg: Selection<BaseType, any, HTMLElement, any>;
-
-    protected mainGroup: Selection<BaseType, any, HTMLElement, any>;
-
+export class LabelSeries extends SeriesBase implements ISeries {
     private itemClass: string = 'label';
 
     private itemClickSubject: Subject<any> = new Subject();
-
-    private chart: ChartBase;
 
     private xField: string;
 
@@ -28,6 +23,7 @@ export class LabelSeries implements ISeries {
     private templete: any;
 
     constructor(configuration: LabelSeriesConfiguration) {
+        super();
         if (configuration) {
             if (configuration.selector) {
                 this.itemClass = configuration.selector;
@@ -45,14 +41,6 @@ export class LabelSeries implements ISeries {
                 this.templete = configuration.templete;
             }
         }
-    }
-
-    set chartBase(value: ChartBase) {
-        this.chart = value;
-    }
-
-    get chartBase() {
-        return this.chart;
     }
 
     get currentItem(): Observable<any> {

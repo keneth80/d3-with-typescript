@@ -1,10 +1,11 @@
 import { Selection, BaseType } from 'd3-selection';
 import { ISeries } from '../chart/series.interface';
-import { Scale, ChartBase } from '../chart/chart-base';
+import { Scale } from '../chart/chart-base';
 import { histogram, max } from 'd3-array';
 import { nest } from 'd3-collection';
 import { scaleLinear } from 'd3-scale';
 import { area, curveCatmullRom } from 'd3-shape';
+import { SeriesBase } from '../chart/series-base';
 
 export interface BasicViolinSeriesConfiguration {
     selector?: string;
@@ -12,14 +13,8 @@ export interface BasicViolinSeriesConfiguration {
     yField: string;
 }
 
-export class BasicViolinSeries implements ISeries {
-    protected svg: Selection<BaseType, any, HTMLElement, any>;
-
-    protected mainGroup: Selection<BaseType, any, HTMLElement, any>;
-
+export class BasicViolinSeries extends SeriesBase implements ISeries {
     private itemClass: string = 'basic-violin';
-
-    private chart: ChartBase;
 
     private xField: string;
 
@@ -28,6 +23,7 @@ export class BasicViolinSeries implements ISeries {
     private histogram: any;
 
     constructor(configuration: BasicViolinSeriesConfiguration) {
+        super();
         if (configuration) {
             if (configuration.selector) {
                 this.itemClass = configuration.selector;
@@ -41,14 +37,6 @@ export class BasicViolinSeries implements ISeries {
                 this.yField = configuration.yField;
             }
         }
-    }
-
-    set chartBase(value: ChartBase) {
-        this.chart = value;
-    }
-
-    get chartBase() {
-        return this.chart;
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
@@ -89,7 +77,7 @@ export class BasicViolinSeries implements ISeries {
 
         const xNum = scaleLinear()
             .range([0, x.bandwidth()])
-            .domain([-maxNum,maxNum]);
+            .domain([-maxNum, maxNum]);
 
         this.mainGroup.selectAll(`.${this.itemClass}`)
             .data(sumstat)

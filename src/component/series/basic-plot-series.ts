@@ -1,9 +1,9 @@
 import { Selection, BaseType } from 'd3-selection';
-import { line, curveMonotoneX } from 'd3-shape';
-import { Subject, Observable, config } from 'rxjs';
+import { Subject, Observable } from 'rxjs';
 
 import { ISeries } from '../chart/series.interface';
-import { Scale, ChartBase } from '../chart/chart-base';
+import { Scale } from '../chart/chart-base';
+import { SeriesBase } from '../chart/series-base';
 
 export interface BasicPlotSeriesConfiguration {
     selector?: string;
@@ -15,16 +15,10 @@ export interface BasicPlotSeriesConfiguration {
     }
 }
 
-export class BasicPlotSeries implements ISeries {
-    protected svg: Selection<BaseType, any, HTMLElement, any>;
-
-    protected mainGroup: Selection<BaseType, any, HTMLElement, any>;
-
+export class BasicPlotSeries extends SeriesBase implements ISeries {
     private seriesClass: string = 'basic-plot';
 
     private itemClickSubject: Subject<any> = new Subject();
-
-    private chart: ChartBase;
 
     private xField: string;
 
@@ -33,6 +27,7 @@ export class BasicPlotSeries implements ISeries {
     private style: any;
 
     constructor(configuration: BasicPlotSeriesConfiguration) {
+        super();
         if (configuration) {
             if (configuration.selector) {
                 this.seriesClass = configuration.selector;
@@ -50,14 +45,6 @@ export class BasicPlotSeries implements ISeries {
                 this.style = configuration.style;
             }
         }
-    }
-
-    set chartBase(value: ChartBase) {
-        this.chart = value;
-    }
-
-    get chartBase() {
-        return this.chart;
     }
 
     get currentItem(): Observable<any> {

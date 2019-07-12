@@ -3,7 +3,8 @@ import { line, curveMonotoneX } from 'd3-shape';
 import { Subject, Observable } from 'rxjs';
 
 import { ISeries } from '../chart/series.interface';
-import { Scale, ChartBase } from '../chart/chart-base';
+import { Scale } from '../chart/chart-base';
+import { SeriesBase } from '../chart/series-base';
 
 export interface BasicLineSeriesConfiguration {
     selector?: string;
@@ -17,11 +18,7 @@ export interface BasicLineSeriesConfiguration {
     }
 }
 
-export class BasicLineSeries implements ISeries {
-    protected svg: Selection<BaseType, any, HTMLElement, any>;
-
-    protected mainGroup: Selection<BaseType, any, HTMLElement, any>;
-
+export class BasicLineSeries extends SeriesBase implements ISeries {
     protected dotGroup: Selection<BaseType, any, HTMLElement, any>;
 
     private line: any;
@@ -32,8 +29,6 @@ export class BasicLineSeries implements ISeries {
 
     private itemClickSubject: Subject<any> = new Subject();
 
-    private chart: ChartBase;
-
     private xField: string;
 
     private yField: string;
@@ -41,6 +36,7 @@ export class BasicLineSeries implements ISeries {
     private isDot: boolean = true;
 
     constructor(configuration: BasicLineSeriesConfiguration) {
+        super();
         if (configuration) {
             if (configuration.selector) {
                 this.lineClass = configuration.selector;
@@ -62,14 +58,6 @@ export class BasicLineSeries implements ISeries {
                 this.isDot = false;
             }
         }
-    }
-
-    set chartBase(value: ChartBase) {
-        this.chart = value;
-    }
-
-    get chartBase() {
-        return this.chart;
     }
 
     get currentItem(): Observable<any> {

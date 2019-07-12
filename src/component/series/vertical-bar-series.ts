@@ -1,7 +1,8 @@
 import { Selection, BaseType } from 'd3-selection';
 import { ISeries } from '../chart/series.interface';
-import { Scale, ChartBase } from '../chart/chart-base';
+import { Scale } from '../chart/chart-base';
 import { Subject, Observable } from 'rxjs';
+import { SeriesBase } from '../chart/series-base';
 
 export interface VerticalBarSeriesConfiguration {
     selector?: string;
@@ -9,22 +10,17 @@ export interface VerticalBarSeriesConfiguration {
     yField: string;
 }
 
-export class VerticalBarSeries implements ISeries {
-    protected svg: Selection<BaseType, any, HTMLElement, any>;
-
-    protected mainGroup: Selection<BaseType, any, HTMLElement, any>;
-
+export class VerticalBarSeries extends SeriesBase implements ISeries {
     private barClass: string = 'bar';
 
     private itemClickSubject: Subject<any> = new Subject();
-
-    private chart: ChartBase;
 
     private xField: string;
 
     private yField: string;
 
     constructor(configuration: VerticalBarSeriesConfiguration) {
+        super();
         if (configuration) {
             if (configuration.selector) {
                 this.barClass = configuration.selector;
@@ -38,14 +34,6 @@ export class VerticalBarSeries implements ISeries {
                 this.yField = configuration.yField;
             }
         }
-    }
-
-    set chartBase(value: ChartBase) {
-        this.chart = value;
-    }
-
-    get chartBase() {
-        return this.chart;
     }
 
     get currentItem(): Observable<any> {

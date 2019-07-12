@@ -3,7 +3,8 @@ import { line, area } from 'd3-shape';
 import { Subject, Observable } from 'rxjs';
 
 import { ISeries } from '../chart/series.interface';
-import { Scale, ChartBase } from '../chart/chart-base';
+import { Scale } from '../chart/chart-base';
+import { SeriesBase } from '../chart/series-base';
 
 export interface BasicBollingerBandSeriesConfiguration {
     selector?: string;
@@ -21,20 +22,15 @@ export interface BollingerBandModel {
     high: number;
 }
 
-export class BasicBollingerBandSeries implements ISeries {
-    protected svg: Selection<BaseType, any, HTMLElement, any>;
-
-    protected mainGroup: Selection<BaseType, any, HTMLElement, any>;
-
+export class BasicBollingerBandSeries extends SeriesBase implements ISeries {
     private itemClass: string = 'basic-bollinger-band';
 
     private itemClickSubject: Subject<any> = new Subject();
 
-    private chart: ChartBase;
-
     private xField: string;
 
     constructor(configuration: BasicBollingerBandSeriesConfiguration) {
+        super();
         if (configuration) {
             if (configuration.selector) {
                 this.itemClass = configuration.selector;
@@ -44,14 +40,6 @@ export class BasicBollingerBandSeries implements ISeries {
                 this.xField = configuration.xField;
             }
         }
-    }
-
-    set chartBase(value: ChartBase) {
-        this.chart = value;
-    }
-
-    get chartBase() {
-        return this.chart;
     }
 
     get currentItem(): Observable<any> {

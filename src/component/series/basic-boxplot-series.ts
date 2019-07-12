@@ -3,7 +3,8 @@ import { histogram } from 'd3-array';
 import { Subject, Observable } from 'rxjs';
 
 import { ISeries } from '../chart/series.interface';
-import { Scale, ChartBase } from '../chart/chart-base';
+import { Scale } from '../chart/chart-base';
+import { SeriesBase } from '../chart/series-base';
 
 export interface BasicBoxplotSeriesConfiguration {
     selector?: string;
@@ -23,22 +24,17 @@ export interface BoxplotModel {
     color?: string;
 }
 
-export class BasicBoxplotSeries implements ISeries {
-    protected svg: Selection<BaseType, any, HTMLElement, any>;
-
-    protected mainGroup: Selection<BaseType, any, HTMLElement, any>;
-
+export class BasicBoxplotSeries extends SeriesBase implements ISeries {
     private itemClass: string = 'basic-boxplot';
 
     private itemClickSubject: Subject<any> = new Subject();
-
-    private chart: ChartBase;
 
     private xField: string;
 
     private maxWidth: number;
 
     constructor(configuration: BasicBoxplotSeriesConfiguration) {
+        super();
         if (configuration) {
             if (configuration.selector) {
                 this.itemClass = configuration.selector;
@@ -52,14 +48,6 @@ export class BasicBoxplotSeries implements ISeries {
                 this.maxWidth = configuration.maxWidth;
             }
         }
-    }
-
-    set chartBase(value: ChartBase) {
-        this.chart = value;
-    }
-
-    get chartBase() {
-        return this.chart;
     }
 
     get currentItem(): Observable<any> {
@@ -77,9 +65,14 @@ export class BasicBoxplotSeries implements ISeries {
     drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {
         const x: any = scales.find((scale: Scale) => scale.orinet === 'bottom').scale;
         const y: any = scales.find((scale: Scale) => scale.orinet === 'left').scale;
-        const padding = x.bandwidth() / 2;
 
-        let barWidth = x.bandwidth();
+        let padding = 0;
+        let barWidth = 10;
+
+        if (x.bandwidth) {
+            barWidth = x.bandwidth();
+            padding = x.bandwidth() / 2;
+        }
 
         if (this.maxWidth && this.maxWidth < barWidth) {
             barWidth = this.maxWidth;
