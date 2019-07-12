@@ -2,10 +2,11 @@ import { ISeries } from "./series.interface";
 
 export interface Axis {
     field: any; // data propertie
-    type: string; // default: number, option: number or string or time => number: scaleLinear, time: scaleTime, string: scaleBand for range
+    type: string; // default: number, option: number or string or point or time => number: scaleLinear, time: scaleTime, string: scaleBand, point: scalePoint for range
     placement: string; // position
     domain?: Array<any>;
     padding?: number;
+    visible?: boolean;
 }
 
 export interface Margin {

@@ -8,6 +8,7 @@ import { Scale, ChartBase } from '../chart/chart-base';
 export interface BasicBoxplotSeriesConfiguration {
     selector?: string;
     xField: string;
+    maxWidth?: number;
     style?: {
         stroke?: string;
         fill?: string;
@@ -35,6 +36,8 @@ export class BasicBoxplotSeries implements ISeries {
 
     private xField: string;
 
+    private maxWidth: number;
+
     constructor(configuration: BasicBoxplotSeriesConfiguration) {
         if (configuration) {
             if (configuration.selector) {
@@ -43,6 +46,10 @@ export class BasicBoxplotSeries implements ISeries {
 
             if (configuration.xField) {
                 this.xField = configuration.xField;
+            }
+
+            if (configuration.maxWidth) {
+                this.maxWidth = configuration.maxWidth;
             }
         }
     }
@@ -72,7 +79,11 @@ export class BasicBoxplotSeries implements ISeries {
         const y: any = scales.find((scale: Scale) => scale.orinet === 'left').scale;
         const padding = x.bandwidth() / 2;
 
-        const barWidth = x.bandwidth();
+        let barWidth = x.bandwidth();
+
+        if (this.maxWidth && this.maxWidth < barWidth) {
+            barWidth = this.maxWidth;
+        }
 
         // Draw the box plot vertical lines
         this.mainGroup.selectAll('.verticalLines')

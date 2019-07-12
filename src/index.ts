@@ -1,6 +1,6 @@
 import './style.css';
 
-import { min, max, quantile } from 'd3-array';
+import { min, max, quantile, mean } from 'd3-array';
 import { randomUniform, randomNormal } from 'd3-random';
 import { scaleOrdinal, scaleQuantile } from 'd3-scale';
 import { timeParse } from 'd3-time-format';
@@ -12,6 +12,8 @@ import { BasicLineSeries } from './component/series/basic-line-series';
 import { LabelSeries } from './component/series/label-series';
 import { BasicPlotSeries } from './component/series/basic-plot-series';
 import { BasicBoxplotSeries } from './component/series/basic-boxplot-series';
+import { bollingerData } from './component/mock-data/bollinger-band-data';
+import { BasicBollingerBandSeries } from './component/series/basic-bollinger-band-series';
 
 class SalesModel {
     salesperson: string;
@@ -180,8 +182,6 @@ const boxplot = () => {
         });
     }
 
-    console.log('groupCounts : ', groupCounts);
-
     // Setup a color scale for filling each box
     const colorScale = scaleOrdinal(schemeCategory10)
         .domain(Object.keys(groupCounts));
@@ -202,18 +202,14 @@ const boxplot = () => {
         boxPlotData.push(obj);
     }
 
-    console.log('boxPlotData : ', boxPlotData);
-
     const boxplotSeries = new BasicBoxplotSeries({
-        xField: 'key'
+        xField: 'key',
+        maxWidth: 20
     })
 
     const boxPlotChart = new BasicChart({
         selector: '#boxplot',
         data: boxPlotData,
-        margin: {
-            top: 40
-        },
         isResize: 'Y',
         min: min(globalCounts),
         max: max(globalCounts),
@@ -229,11 +225,6 @@ const boxplot = () => {
                 field: 'sales',
                 type: 'number',
                 placement: 'left'
-            },
-            {
-                field: 'date',
-                type: 'time',
-                placement: 'top'
             }
         ],
         series: [
@@ -250,6 +241,73 @@ const boxQuartiles = (d: any) => {
     ];
 }
 
+const bollinger = () => {
+    const parseTime = timeParse('%m/%d/%Y');
+
+    bollingerData.forEach((item: any) => {
+        item.date = parseTime(item.date);
+        item.close = +item.close;
+    });
+    const bollingerChartData = getBollingerBands(20, 2, bollingerData);
+
+    const bollingerBandSeries = new BasicBollingerBandSeries({
+        xField: 'key'
+    });
+
+    const lineSeries = new BasicLineSeries({
+        selector: 'bollinger-line',
+        xField: 'key',
+        yField: 'close',
+        isDot: false
+    });
+
+    const bollingerChart = new BasicChart({
+        selector: '#bollinger',
+        data: bollingerChartData,
+        isResize: 'Y',
+        min: min(bollingerChartData, (d: any) => { return d.low; }),
+        max: max(bollingerChartData, (d: any) => { return d.high; }),
+        axes: [
+            {
+                field: 'close',
+                type: 'number',
+                placement: 'left'
+            },
+            {
+                field: 'key',
+                type: 'time',
+                placement: 'bottom'
+            }
+        ],
+        series: [
+            bollingerBandSeries,
+            lineSeries
+        ]
+    }).draw();
+}
+
+// test 용
+const getBollingerBands = (n: number, k: number, data: Array<any>) => {
+    const bands = []; //{ ma: 0, low: 0, high: 0 }
+    for (let i = n - 1, len = data.length; i < len; i++) {
+        const slice = data.slice(i + 1 - n , i);
+        let meanData = mean(slice, (d: any) => { return d.close; });
+        const stdDev = Math.sqrt(mean(slice.map((d: any) =>{
+            return Math.pow(d.close - meanData, 2);
+        })));
+        bands.push({ 
+            key: data[i].date,
+            ma: meanData,
+            low: meanData - (k * stdDev),
+            high: meanData + (k * stdDev) ,
+            close: data[i].close
+        });
+    }
+    return bands;
+}
+
 excute();
 
 boxplot();
+
+bollinger();

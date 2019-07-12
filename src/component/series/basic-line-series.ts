@@ -10,6 +10,7 @@ export interface BasicLineSeriesConfiguration {
     dotSelector?: string;
     xField: string;
     yField: string;
+    isDot?: boolean;
     style?: {
         stroke?: string;
         fill?: string;
@@ -37,6 +38,8 @@ export class BasicLineSeries implements ISeries {
 
     private yField: string;
 
+    private isDot: boolean = true;
+
     constructor(configuration: BasicLineSeriesConfiguration) {
         if (configuration) {
             if (configuration.selector) {
@@ -53,6 +56,10 @@ export class BasicLineSeries implements ISeries {
 
             if (configuration.yField) {
                 this.yField = configuration.yField;
+            }
+
+            if (configuration.isDot === false) {
+                this.isDot = false;
             }
         }
     }
@@ -84,12 +91,20 @@ export class BasicLineSeries implements ISeries {
     drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {
         const x: any = scales.find((scale: Scale) => scale.orinet === 'bottom').scale;
         const y: any = scales.find((scale: Scale) => scale.orinet === 'left').scale;
-        const padding = x.bandwidth() / 2;
+        let padding = 0;
+
+        if (x.bandwidth) {
+            padding = x.bandwidth() / 2;
+        }
 
         this.line = line()
             .defined(data => data[this.yField])
-            .x((data: any, i) => { return x(data[this.xField]) + padding; }) // set the x values for the line generator
-            .y((data: any) => { return y(data[this.yField]); }) // set the y values for the line generator 
+            .x((data: any, i) => {
+                return x(data[this.xField]) + padding; 
+            }) // set the x values for the line generator
+            .y((data: any) => { 
+                return y(data[this.yField]); 
+            }) // set the y values for the line generator 
             .curve(curveMonotoneX); // apply smoothing to the line
 
         this.mainGroup.selectAll(`.${this.lineClass}`)
@@ -102,18 +117,20 @@ export class BasicLineSeries implements ISeries {
                 .style('fill', 'none')
                 .attr('d', this.line);
 
-        this.dotGroup.selectAll(`.${this.dotClass}`)
-            .data(chartData)
-                .join(
-                    (enter) => enter.append('circle').attr('class', this.dotClass),
-                    (update) => update,
-                    (exit) => exit.remove
-                )
-                .attr('cx', (data: any, i) => { return x(data[this.xField]) + padding; })
-                .attr('cy', (data: any) => { return y(data[this.yField]); })
-                .attr('r', 5)
-                .on('click', (data: any) => {
-                    this.itemClickSubject.next(data);
-                });
+        if (this.isDot) {
+            this.dotGroup.selectAll(`.${this.dotClass}`)
+                .data(chartData)
+                    .join(
+                        (enter) => enter.append('circle').attr('class', this.dotClass),
+                        (update) => update,
+                        (exit) => exit.remove
+                    )
+                    .attr('cx', (data: any, i) => { return x(data[this.xField]) + padding; })
+                    .attr('cy', (data: any) => { return y(data[this.yField]); })
+                    .attr('r', 5)
+                    .on('click', (data: any) => {
+                        this.itemClickSubject.next(data);
+                    });
+        }
     }
 }
