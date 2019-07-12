@@ -318,8 +318,8 @@ const violin = () => {
     }).then((data: any) => {
         const violinSeries = new BasicViolinSeries({
             selector: 'basic-violin',
-            xField: 'key',
-            yField: 'value'
+            xField: 'Species',
+            yField: 'Sepal_Length'
         });
 
         const violinChart = new BasicChart({
@@ -330,7 +330,7 @@ const violin = () => {
             max: 10,
             axes: [
                 {
-                    field: 'key',
+                    field: 'Species',
                     type: 'string',
                     placement: 'bottom',
                     padding: 0.2,

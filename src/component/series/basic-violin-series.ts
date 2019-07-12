@@ -69,9 +69,9 @@ export class BasicViolinSeries implements ISeries {
             .value(d => d);
 
         const sumstat = nest()  // nest function allows to group the calculation per level of a factor
-            .key((d: any) => { return d.Species;})
+            .key((d: any) => { return d[this.xField];})
             .rollup((d: any) => {   // For each key..
-                const input = d.map((g: any) => { return g.Sepal_Length;})    // Keep the variable called Sepal_Length
+                const input = d.map((g: any) => { return g[this.yField];})
                 const bins = this.histogram(input)   // And compute the binning on it.
                 return bins;
             })
@@ -79,10 +79,10 @@ export class BasicViolinSeries implements ISeries {
         
         let maxNum = 0
         for ( let i in sumstat ){
-            const allBins: Array<any> = sumstat[i][this.yField];
+            const allBins: Array<any> = sumstat[i].value;
             const lengths = allBins.map((a: Array<any>) => {return a.length;});
             const longuest = max(lengths);
-            if (longuest > maxNum) { 
+            if (longuest > maxNum) {
                 maxNum = longuest 
             }
         }
@@ -98,10 +98,10 @@ export class BasicViolinSeries implements ISeries {
                 (update) => update,
                 (exit) => exit.remove
             )
-            .attr('transform', (d: any) => { return('translate(' + x(d[this.xField]) +' ,0)') } )
+            .attr('transform', (d: any) => { return('translate(' + x(d.key) +' ,0)') } )
                 .selectAll('.violin-area')
                 .data((d: any) => {
-                    return [(d[this.yField])];
+                    return [(d.value)];
                 })
                 .join(
                     (enter) => enter.append('path').attr('class', 'violin-area'),
