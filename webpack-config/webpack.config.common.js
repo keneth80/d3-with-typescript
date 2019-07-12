@@ -31,6 +31,20 @@ module.exports = {
             {
                 test: /\.css$/,
                 use: ['style-loader', 'css-loader']
+            },
+            {
+                test: /\.woff2?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+                // loader: 'url?limit=10000'
+                use: 'url-loader'
+            },
+            {
+                test: /\.(txt|csv)$/,
+                use: [
+                  {
+                    loader: 'file-loader',
+                    options: {}
+                  }
+                ]
             }
         ]
     },

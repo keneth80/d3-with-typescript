@@ -5,6 +5,7 @@ import { randomUniform, randomNormal } from 'd3-random';
 import { scaleOrdinal, scaleQuantile } from 'd3-scale';
 import { timeParse } from 'd3-time-format';
 import { schemeCategory10 } from 'd3-scale-chromatic';
+import { csv } from 'd3-fetch';
 import { DocumentSelectionExample } from './component/document-selection-example';
 import { BasicChart } from './component/basic-chart';
 import { VerticalBarSeries } from './component/series/vertical-bar-series';
@@ -14,6 +15,7 @@ import { BasicPlotSeries } from './component/series/basic-plot-series';
 import { BasicBoxplotSeries } from './component/series/basic-boxplot-series';
 import { bollingerData } from './component/mock-data/bollinger-band-data';
 import { BasicBollingerBandSeries } from './component/series/basic-bollinger-band-series';
+import { BasicViolinSeries } from './component/series/basic-violin-series';
 
 class SalesModel {
     salesperson: string;
@@ -306,8 +308,51 @@ const getBollingerBands = (n: number, k: number, data: Array<any>) => {
     return bands;
 }
 
+
+
+const violin = () => {
+    // https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/iris.csv
+    // ./component/mock-data/iris.csv
+    csv('https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/iris.csv', (data: any) => {
+        return data;
+    }).then((data: any) => {
+        const violinSeries = new BasicViolinSeries({
+            selector: 'basic-violin',
+            xField: 'key',
+            yField: 'value'
+        });
+
+        const violinChart = new BasicChart({
+            selector: '#violin',
+            data: data,
+            isResize: 'Y',
+            min: 0,
+            max: 10,
+            axes: [
+                {
+                    field: 'key',
+                    type: 'string',
+                    placement: 'bottom',
+                    padding: 0.2,
+                    domain: ['setosa', 'versicolor', 'virginica']
+                },
+                {
+                    field: 'Sepal_Length',
+                    type: 'number',
+                    placement: 'left'
+                }
+            ],
+            series: [
+                violinSeries
+            ]
+        }).draw();
+    })
+}
+
 excute();
 
 boxplot();
 
 bollinger();
+
+violin();

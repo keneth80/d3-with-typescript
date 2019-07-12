@@ -20,6 +20,8 @@
         "cross-env": "~5.2",
         "css-loader": "^3.0.0",
         "cssnano": "~4.1",
+        "dsv-loader": "^2.0.0",
+        "file-loader": "^4.0.0",
         "html-webpack-plugin": "^3.2.0",
         "optimize-css-assets-webpack-plugin": "~5.0",
         "style-loader": "^0.23.1",
