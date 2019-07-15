@@ -2,7 +2,6 @@ import { Selection, BaseType } from 'd3-selection';
 import { line, area } from 'd3-shape';
 import { Subject, Observable } from 'rxjs';
 
-import { ISeries } from '../chart/series.interface';
 import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
 

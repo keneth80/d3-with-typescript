@@ -1,11 +1,12 @@
 import { Selection, BaseType } from 'd3-selection';
-import { ISeries } from '../chart/series.interface';
-import { Scale } from '../chart/chart-base';
+import { Subject, Observable } from 'rxjs';
 import { histogram, max } from 'd3-array';
 import { nest } from 'd3-collection';
 import { scaleLinear } from 'd3-scale';
 import { area, curveCatmullRom } from 'd3-shape';
+
 import { SeriesBase } from '../chart/series-base';
+import { Scale } from '../chart/chart-base';
 
 export interface BasicViolinSeriesConfiguration {
     selector?: string;
