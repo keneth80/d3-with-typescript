@@ -2,6 +2,7 @@
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const HtmlWebPackPlugin      = require('html-webpack-plugin');
 const BundleAnalyzerPlugin   = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const CopyWebpackPlugin = require('copy-webpack-plugin')
 
 const helpers = require('./helpers');
  
@@ -58,6 +59,10 @@ module.exports = {
             template: './src/index.html',
             filename: './index.html'
         }),
+
+        new CopyWebpackPlugin([
+            { from: './src/component/mock-data/**', to: './component/mock-data', flatten: true }
+        ])
 
         // new BundleAnalyzerPlugin()
     ]

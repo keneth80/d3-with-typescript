@@ -308,12 +308,10 @@ const getBollingerBands = (n: number, k: number, data: Array<any>) => {
     return bands;
 }
 
-
-
 const violin = () => {
     // https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/iris.csv
     // ./component/mock-data/iris.csv
-    csv('https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/iris.csv', (data: any) => {
+    csv('./component/mock-data/iris.csv', (data: any) => {
         return data;
     }).then((data: any) => {
         const violinSeries = new BasicViolinSeries({
