@@ -75,7 +75,7 @@ const excute = () => {
         yField: 'sales',
         xField: 'salesperson'
     });
-    verticalBarSeries.currentItem.subscribe((item: any) => {
+    verticalBarSeries.$currentItem.subscribe((item: any) => {
         console.log('verticalBarSeries.item : ', item);
     });
 
@@ -85,7 +85,7 @@ const excute = () => {
         yField: 'sales',
         xField: 'salesperson'
     });
-    basicLineSeries.currentItem.subscribe((item: any) => {
+    basicLineSeries.$currentItem.subscribe((item: any) => {
         console.log('basicLineSeries.item : ', item);
     });
 
@@ -101,7 +101,7 @@ const excute = () => {
         yField: 'assets',
         xField: 'salesperson'
     });
-    basicLineSeries2.currentItem.subscribe((item: any) => {
+    basicLineSeries2.$currentItem.subscribe((item: any) => {
         console.log('basicLineSerie2s.item : ', item);
     });
 

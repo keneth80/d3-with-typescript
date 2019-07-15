@@ -1,4 +1,6 @@
 import { Selection, BaseType } from 'd3-selection';
+import { Subject, Observable } from 'rxjs';
+
 import { ChartBase, Scale } from './chart-base';
 import { ISeries } from './series.interface';
 
@@ -6,6 +8,8 @@ export class SeriesBase implements ISeries {
     protected svg: Selection<BaseType, any, HTMLElement, any>;
 
     protected mainGroup: Selection<BaseType, any, HTMLElement, any>;
+
+    protected itemClickSubject: Subject<any> = new Subject();
 
     private chart: ChartBase;
 
@@ -17,6 +21,10 @@ export class SeriesBase implements ISeries {
 
     get chartBase() {
         return this.chart;
+    }
+
+    get $currentItem(): Observable<any> {
+        return this.itemClickSubject.asObservable();
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 

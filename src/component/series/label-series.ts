@@ -14,8 +14,6 @@ export interface LabelSeriesConfiguration {
 export class LabelSeries extends SeriesBase {
     private itemClass: string = 'label';
 
-    private itemClickSubject: Subject<any> = new Subject();
-
     private xField: string;
 
     private yField: string;
@@ -41,10 +39,6 @@ export class LabelSeries extends SeriesBase {
                 this.templete = configuration.templete;
             }
         }
-    }
-
-    get currentItem(): Observable<any> {
-        return this.itemClickSubject.asObservable();
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 

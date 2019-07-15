@@ -25,8 +25,6 @@ export interface BoxplotModel {
 export class BasicBoxplotSeries extends SeriesBase {
     private itemClass: string = 'basic-boxplot';
 
-    private itemClickSubject: Subject<any> = new Subject();
-
     private xField: string;
 
     private maxWidth: number;
@@ -46,10 +44,6 @@ export class BasicBoxplotSeries extends SeriesBase {
                 this.maxWidth = configuration.maxWidth;
             }
         }
-    }
-
-    get currentItem(): Observable<any> {
-        return this.itemClickSubject.asObservable();
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 

@@ -13,8 +13,6 @@ export interface VerticalBarSeriesConfiguration {
 export class VerticalBarSeries extends SeriesBase {
     private barClass: string = 'bar';
 
-    private itemClickSubject: Subject<any> = new Subject();
-
     private xField: string;
 
     private yField: string;
@@ -34,10 +32,6 @@ export class VerticalBarSeries extends SeriesBase {
                 this.yField = configuration.yField;
             }
         }
-    }
-
-    get currentItem(): Observable<any> {
-        return this.itemClickSubject.asObservable();
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 

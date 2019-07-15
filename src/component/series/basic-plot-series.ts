@@ -17,8 +17,6 @@ export interface BasicPlotSeriesConfiguration {
 export class BasicPlotSeries extends SeriesBase {
     private seriesClass: string = 'basic-plot';
 
-    private itemClickSubject: Subject<any> = new Subject();
-
     private xField: string;
 
     private yField: string;
@@ -44,10 +42,6 @@ export class BasicPlotSeries extends SeriesBase {
                 this.style = configuration.style;
             }
         }
-    }
-
-    get currentItem(): Observable<any> {
-        return this.itemClickSubject.asObservable();
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 

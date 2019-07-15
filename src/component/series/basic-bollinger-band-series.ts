@@ -24,8 +24,6 @@ export interface BollingerBandModel {
 export class BasicBollingerBandSeries extends SeriesBase {
     private itemClass: string = 'basic-bollinger-band';
 
-    private itemClickSubject: Subject<any> = new Subject();
-
     private xField: string;
 
     constructor(configuration: BasicBollingerBandSeriesConfiguration) {
@@ -39,10 +37,6 @@ export class BasicBollingerBandSeries extends SeriesBase {
                 this.xField = configuration.xField;
             }
         }
-    }
-
-    get currentItem(): Observable<any> {
-        return this.itemClickSubject.asObservable();
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 

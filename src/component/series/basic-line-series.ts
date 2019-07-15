@@ -26,8 +26,6 @@ export class BasicLineSeries extends SeriesBase {
 
     private dotClass: string = 'basic-line-dot';
 
-    private itemClickSubject: Subject<any> = new Subject();
-
     private xField: string;
 
     private yField: string;
@@ -57,10 +55,6 @@ export class BasicLineSeries extends SeriesBase {
                 this.isDot = false;
             }
         }
-    }
-
-    get currentItem(): Observable<any> {
-        return this.itemClickSubject.asObservable();
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
