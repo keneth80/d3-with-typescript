@@ -27,6 +27,8 @@ export class StackedVerticalBarSeries extends SeriesBase {
 
     private rootGroup: Selection<BaseType, any, HTMLElement, any>;
 
+    private legendGroup: Selection<BaseType, any, HTMLElement, any>;
+
     constructor(configuration: VerticalBarSeriesConfiguration) {
         super();
         if (configuration) {
@@ -54,6 +56,14 @@ export class StackedVerticalBarSeries extends SeriesBase {
         this.rootGroup = mainGroup;
         if (!mainGroup.select(`.${this.barClass}-group`).node()) {
             this.mainGroup = this.rootGroup.append('g').attr('class', `${this.barClass}-group`);
+        }
+
+        if (!mainGroup.select('.legend-group').node()) {
+            this.legendGroup = this.rootGroup.append('g')
+                .attr('class', 'legend-group')
+                .attr('font-family', 'sans-serif')
+                .attr('font-size', 10)
+                .attr('text-anchor', 'end');
         }
     }
 
@@ -92,48 +102,40 @@ export class StackedVerticalBarSeries extends SeriesBase {
                 .attr('y', (d: any) => { return y(d[1]); })
                 .attr('height', (d: any) => { return y(d[0]) - y(d[1]); })
                 .attr('width', x.bandwidth());
-
-        // this.mainGroup.append('g')
-        //     .selectAll('g')
-        //     .data(stack().keys(keys)(chartData))
-        //     .enter().append('g')
-        //         .attr('fill', (d: any) => { return z(d.key) + ''; })
-        //         .selectAll('rect')
-        //         .data((d) => { return d; })
-        //         .enter().append('rect')
-        //             .attr('x', (d: any) => { return x(d.data[this.xField]); })
-        //             .attr('y', (d: any) => { return y(d[1]); })
-        //             .attr('height', (d: any) => { return y(d[0]) - y(d[1]); })
-        //             .attr('width', x.bandwidth())
-                    // .on('mouseover', () => { tooltip.style('display', null); })
-                    // .on('mouseout', () => { tooltip.style('display', 'none'); })
-                    // .on('mousemove', (d: any) => {
-                    //     console.log(d);
-                    //     var xPosition = d3.mouse(this)[0] - 5;
-                    //     var yPosition = d3.mouse(this)[1] - 5;
-                    //     tooltip.attr('transform', 'translate(' + xPosition + ',' + yPosition + ')');
-                    //     tooltip.select('text').text(d[1]-d[0]);
-                    // });
-
-        // const legend = this.mainGroup.append('g')
-        //     .attr('font-family', 'sans-serif')
-        //     .attr('font-size', 10)
-        //     .attr('text-anchor', 'end')
-        //     .selectAll('g')
-        //     .data(keys.slice().reverse())
-        //     .enter().append('g')
-        //     .attr('transform', function(d, i) { return 'translate(0,' + i * 20 + ')'; });
-
-        // legend.append('rect')
-        //     .attr('x', width - 19)
-        //     .attr('width', 19)
-        //     .attr('height', 19)
-        //     .attr('fill', z);
-
-        // legend.append('text')
-        //     .attr('x', width - 24)
-        //     .attr('y', 9.5)
-        //     .attr('dy', '0.32em')
-        //     .text((d: any) => { return d; });
+                // .on('mouseover', () => { tooltip.style('display', null); })
+                // .on('mouseout', () => { tooltip.style('display', 'none'); })
+                // .on('mousemove', (d: any) => {
+                //     console.log(d);
+                //     var xPosition = d3.mouse(this)[0] - 5;
+                //     var yPosition = d3.mouse(this)[1] - 5;
+                //     tooltip.attr('transform', 'translate(' + xPosition + ',' + yPosition + ')');
+                //     tooltip.select('text').text(d[1]-d[0]);
+                // });
+        const legendKey = keys.slice().reverse();
+        const legend = this.legendGroup.selectAll('.legend-item-group')
+            .data(legendKey)
+            .join(
+                (enter) => enter.append('g').attr('class', 'legend-item-group'),
+                (update) => {
+                    update.selectAll('*').remove();
+                    return update;
+                },
+                (exit) => exit.remove()
+            )
+            .attr('transform', (d: any, i: number) => { return 'translate(0,' + i * 20 + ')'; });
+      
+        legend.append('rect')
+            .attr('x', width - 19)
+            .attr('width', 19)
+            .attr('height', 19)
+            .attr('fill', (d) => {
+                return z(d) + '';
+            });
+      
+        legend.append('text')
+            .attr('x', width - 24)
+            .attr('y', 9.5)
+            .attr('dy', '0.32em')
+            .text((d) => { return d; });
     }
 }
