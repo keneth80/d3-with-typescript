@@ -15,7 +15,7 @@ export interface BasicPlotSeriesConfiguration {
     }
 }
 
-export class BasicPlotSeries extends SeriesBase implements ISeries {
+export class BasicPlotSeries extends SeriesBase {
     private seriesClass: string = 'basic-plot';
 
     private itemClickSubject: Subject<any> = new Subject();

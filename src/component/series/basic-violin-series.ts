@@ -13,7 +13,7 @@ export interface BasicViolinSeriesConfiguration {
     yField: string;
 }
 
-export class BasicViolinSeries extends SeriesBase implements ISeries {
+export class BasicViolinSeries extends SeriesBase {
     private itemClass: string = 'basic-violin';
 
     private xField: string;

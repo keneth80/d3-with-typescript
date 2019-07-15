@@ -22,7 +22,7 @@ export interface BollingerBandModel {
     high: number;
 }
 
-export class BasicBollingerBandSeries extends SeriesBase implements ISeries {
+export class BasicBollingerBandSeries extends SeriesBase {
     private itemClass: string = 'basic-bollinger-band';
 
     private itemClickSubject: Subject<any> = new Subject();

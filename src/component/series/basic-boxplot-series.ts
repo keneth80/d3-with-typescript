@@ -24,7 +24,7 @@ export interface BoxplotModel {
     color?: string;
 }
 
-export class BasicBoxplotSeries extends SeriesBase implements ISeries {
+export class BasicBoxplotSeries extends SeriesBase {
     private itemClass: string = 'basic-boxplot';
 
     private itemClickSubject: Subject<any> = new Subject();

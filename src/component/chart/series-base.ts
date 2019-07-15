@@ -1,7 +1,8 @@
 import { Selection, BaseType } from 'd3-selection';
-import { ChartBase } from './chart-base';
+import { ChartBase, Scale } from './chart-base';
+import { ISeries } from './series.interface';
 
-export class SeriesBase {
+export class SeriesBase implements ISeries {
     protected svg: Selection<BaseType, any, HTMLElement, any>;
 
     protected mainGroup: Selection<BaseType, any, HTMLElement, any>;
@@ -16,5 +17,14 @@ export class SeriesBase {
 
     get chartBase() {
         return this.chart;
+    }
+
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
+        mainGroup: Selection<BaseType, any, HTMLElement, any>) {
+
+    }
+
+    drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {
+
     }
 }

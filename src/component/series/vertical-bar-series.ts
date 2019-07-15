@@ -10,7 +10,7 @@ export interface VerticalBarSeriesConfiguration {
     yField: string;
 }
 
-export class VerticalBarSeries extends SeriesBase implements ISeries {
+export class VerticalBarSeries extends SeriesBase {
     private barClass: string = 'bar';
 
     private itemClickSubject: Subject<any> = new Subject();

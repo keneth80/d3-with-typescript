@@ -11,7 +11,7 @@ export interface LabelSeriesConfiguration {
     templete?: any;
 }
 
-export class LabelSeries extends SeriesBase implements ISeries {
+export class LabelSeries extends SeriesBase {
     private itemClass: string = 'label';
 
     private itemClickSubject: Subject<any> = new Subject();

@@ -18,7 +18,7 @@ export interface BasicLineSeriesConfiguration {
     }
 }
 
-export class BasicLineSeries extends SeriesBase implements ISeries {
+export class BasicLineSeries extends SeriesBase {
     protected dotGroup: Selection<BaseType, any, HTMLElement, any>;
 
     private line: any;
