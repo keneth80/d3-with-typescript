@@ -65,23 +65,6 @@ export class BasicBollingerBandSeries extends SeriesBase {
             .y0((d: any) =>{ return y(d.low); })
             .y1((d: any) =>{ return y(d.high); });
 
-        // this.mainGroup.append('path')
-        //     .datum(chartData)
-        //     .attr('class', 'area bands')
-        //     .attr('d', bandsArea);
-        // this.mainGroup.append('path')
-        //     .datum(chartData)
-        //     .attr('class', 'bollinger-line bands')
-        //     .attr('d', lowBand);
-        // this.mainGroup.append('path')
-        //     .datum(chartData)
-        //     .attr('class', 'bollinger-line bands')
-        //     .attr('d', highBand);
-        // this.mainGroup.append('path')
-        //     .datum(chartData)
-        //     .attr('class', 'bollinger-line ma bands')
-        //     .attr('d', ma);
-
         this.mainGroup.selectAll('.area.bands')
             .data([chartData])
             .join(
