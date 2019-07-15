@@ -16,6 +16,7 @@ import { BasicBoxplotSeries } from './component/series/basic-boxplot-series';
 import { bollingerData } from './component/mock-data/bollinger-band-data';
 import { BasicBollingerBandSeries } from './component/series/basic-bollinger-band-series';
 import { BasicViolinSeries } from './component/series/basic-violin-series';
+import { StackedVerticalBarSeries } from './component/series/stacked-vertical-bar-series';
 
 class SalesModel {
     salesperson: string;
@@ -347,6 +348,51 @@ const violin = () => {
     })
 }
 
+const stackedBar = () => {
+    csv('./component/mock-data/age-groups.csv', (d: any, index: number, columns: Array<string>) => {
+        for (let i = 1, t = 0; i < columns.length; ++i) {
+            t += d[columns[i]] = +d[columns[i]];
+            d.total = t;
+        }
+        return d;
+    })
+    .then((data) => {
+        console.log('result : ', data, data.columns);
+        
+        const stackedVerticalBarSeries = new StackedVerticalBarSeries({
+            xField: 'State',
+            yField: 'total',
+            columns: data.columns
+        });
+
+        const stackedBarChart = new BasicChart({
+            selector: '#stackedBar',
+            data: data,
+            calcField: 'total',
+            isResize: 'Y',
+            axes: [
+                {
+                    field: 'State',
+                    type: 'string',
+                    placement: 'bottom',
+                    padding: 0.2
+                },
+                {
+                    field: 'total',
+                    type: 'number',
+                    placement: 'left'
+                }
+            ],
+            series: [
+                stackedVerticalBarSeries
+            ]
+        }).draw();
+    })
+    .catch((error: any) => {
+        console.log('Error : ', error);
+    });
+}
+
 excute();
 
 boxplot();
@@ -354,3 +400,5 @@ boxplot();
 bollinger();
 
 violin();
+
+stackedBar();
