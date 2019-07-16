@@ -358,7 +358,9 @@ const stackedBar = () => {
     })
     .then((data) => {
         console.log('result : ', data, data.columns);
-        
+
+        data.sort((a, b) => { return b.total - a.total; });
+
         const stackedVerticalBarSeries = new StackedVerticalBarSeries({
             xField: 'State',
             yField: 'total',
@@ -368,7 +370,8 @@ const stackedBar = () => {
         const stackedBarChart = new BasicChart({
             selector: '#stackedBar',
             data: data,
-            calcField: 'total',
+            min: 0,
+            max: max(data, (d: any) => d.total),
             isResize: 'Y',
             axes: [
                 {
@@ -380,7 +383,8 @@ const stackedBar = () => {
                 {
                     field: 'total',
                     type: 'number',
-                    placement: 'left'
+                    placement: 'left',
+                    isRound: true
                 }
             ],
             series: [

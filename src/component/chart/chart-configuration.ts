@@ -7,6 +7,7 @@ export interface Axis {
     domain?: Array<any>;
     padding?: number;
     visible?: boolean;
+    isRound?: boolean; // nice() call 여부
 }
 
 export interface Margin {

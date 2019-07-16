@@ -61,11 +61,15 @@ export class ChartBase<T = any> implements IChart {
 
     protected chartClickSubject: Subject<any> = new Subject();
 
+    protected tooltipGroup: Selection<BaseType, any, HTMLElement, any>;
+
     protected margin: Margin = {
         top: 20, left: 30, bottom: 40, right: 20
     };
 
     private config: ChartConfiguration;
+
+    private isTooltip: boolean = false;
 
     constructor(
         configuration: ChartConfiguration
@@ -80,6 +84,10 @@ export class ChartBase<T = any> implements IChart {
 
     set chartData(value: Array<T>) {
         this.data = value;
+    }
+
+    get chartMargin(): any {
+        return this.margin;
     }
 
     chartClick() {
@@ -143,6 +151,50 @@ export class ChartBase<T = any> implements IChart {
         return this;
     }
 
+    showTooltip(): Selection<BaseType, any, HTMLElement, any> {
+        this.tooltipGroup.style('display', null);
+        this.drawTooltip();
+        return this.tooltipGroup;
+    }
+
+    hideTooltip(): Selection<BaseType, any, HTMLElement, any> {
+        this.tooltipGroup.style('display', 'none');
+        return this.tooltipGroup;
+    }
+
+    drawTooltip() {
+        if (this.isTooltip) {
+            return;
+        }
+
+        this.isTooltip = true;
+
+        this.tooltipGroup.selectAll('.tooltip-background')
+            .data(['background'])
+            .join(
+                (enter) => enter.append('rect').attr('class', '.tooltip-background'),
+                (update) => update,
+                (exit) => exit.remove()
+            )
+            .attr('width', 60)
+            .attr('height', 20)
+            .attr('fill', 'white')
+            .style('opacity', 0.5);
+
+        this.tooltipGroup.selectAll('.tooltip-text')
+            .data(['text'])
+            .join(
+                (enter) => enter.append('text').attr('class', '.tooltip-text'),
+                (update) => update,
+                (exit) => exit.remove()
+            )
+            .attr('x', 30)
+            .attr('dy', '1.2em')
+            .style('text-anchor', 'middle')
+            .attr('font-size', '12px')
+            .attr('font-weight', 'bold');
+    }
+
     destroy() {
         this.subscription.unsubscribe();
         if (this.svg) {
@@ -178,6 +230,10 @@ export class ChartBase<T = any> implements IChart {
         this.yRightAxisGroup = this.mainGroup.append('g')
             .attr('class', 'y-right-axis-group')
             .attr('transform', `translate(${this.width - this.margin.right}, 0)`);
+
+        this.tooltipGroup = this.svg.append('g')
+            .attr('class', 'tooltip-group')
+            .style('display', 'none');
     }
 
     protected addEventListner() {
@@ -310,9 +366,16 @@ export class ChartBase<T = any> implements IChart {
                     if (!this.max) {
                         this.max = max(this.data.map((item: T) => parseFloat(item[axis.field])));
                     }
-                    scale.domain(
-                        [this.min, this.max]
-                    );
+                    if (axis.isRound === true) {
+                        scale.domain(
+                            [this.min, this.max]
+                        ).nice();
+                    } else {
+                        scale.domain(
+                            [this.min, this.max]
+                        );
+                    }
+                    
                 }
             }
 

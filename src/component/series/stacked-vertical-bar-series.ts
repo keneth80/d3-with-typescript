@@ -1,4 +1,4 @@
-import { Selection, BaseType } from 'd3-selection';
+import { Selection, select, BaseType, mouse } from 'd3-selection';
 import { scaleOrdinal } from 'd3-scale';
 import { axisLeft } from 'd3-axis';
 import { max } from 'd3-array';
@@ -28,6 +28,8 @@ export class StackedVerticalBarSeries extends SeriesBase {
     private rootGroup: Selection<BaseType, any, HTMLElement, any>;
 
     private legendGroup: Selection<BaseType, any, HTMLElement, any>;
+
+    private tooltipGroup: Selection<BaseType, any, HTMLElement, any>;
 
     constructor(configuration: VerticalBarSeriesConfiguration) {
         super();
@@ -79,15 +81,17 @@ export class StackedVerticalBarSeries extends SeriesBase {
 
         const keys = this.columns.slice(1);
         
-        chartData.sort((a, b) => { return b[this.yField] - a[this.yField]; });
-        x.domain(chartData.map((d) => { return d[this.xField]; }));
-        y.domain([0, max(chartData, (d) => { return d[this.yField]; })]).nice();
         z.domain(keys);
+
+        console.log('stack : ', stack().keys(keys)(chartData));
 
         this.mainGroup.selectAll('.stacked-bar-group')
             .data(stack().keys(keys)(chartData))
             .join(
-                (enter) => enter.append('g').attr('class', 'stacked-bar-group').attr('fill', (d: any) => { return z(d.key) + ''; }),
+                (enter) => enter.append('g')
+                            .attr('class', 'stacked-bar-group')
+                            .attr('fill', (d: any) => { return z(d.key) + ''; })
+                            .attr('column', (d: any) => { return d.key; }),
                 (update) => update,
                 (exit) => exit.remove()
             )
@@ -101,16 +105,31 @@ export class StackedVerticalBarSeries extends SeriesBase {
                 .attr('x', (d: any) => { return x(d.data[this.xField]); })
                 .attr('y', (d: any) => { return y(d[1]); })
                 .attr('height', (d: any) => { return y(d[0]) - y(d[1]); })
-                .attr('width', x.bandwidth());
-                // .on('mouseover', () => { tooltip.style('display', null); })
-                // .on('mouseout', () => { tooltip.style('display', 'none'); })
-                // .on('mousemove', (d: any) => {
-                //     console.log(d);
-                //     var xPosition = d3.mouse(this)[0] - 5;
-                //     var yPosition = d3.mouse(this)[1] - 5;
-                //     tooltip.attr('transform', 'translate(' + xPosition + ',' + yPosition + ')');
-                //     tooltip.select('text').text(d[1]-d[0]);
-                // });
+                .attr('width', x.bandwidth())
+                .on('mouseover', (d: any, i, nodeList: any) => {
+                    select(nodeList[i])
+                        .style('stroke', 'f5330c')
+                        .style('stroke-width', 2);
+                        
+                    this.tooltipGroup = this.chartBase.showTooltip();
+                })
+                .on('mouseout', (d: any, i, nodeList: any) => {
+                    select(nodeList[i])
+                        .style('stroke', null)
+                        .style('stroke-width', null);
+
+                    this.chartBase.hideTooltip();
+                })
+                .on('mousemove', (d: any, i, nodeList: any) => {
+                    const target: any = nodeList[i];
+                    const column: string = target.parentElement.getAttribute('column');
+                    const xPosition = mouse(target)[0] + 10;
+                    const yPosition = mouse(target)[1] - 5;
+                    this.tooltipGroup.attr('transform', `translate(${this.chartBase.chartMargin.left + xPosition}, ${yPosition})`);
+                    this.tooltipGroup.select('text').text(`${column}: ${d.data[column]}`);
+                    // this.tooltipGroup.select('text').text(`${d[1] - d[0]}`);
+                    // console.log('d : ', d, target, parent);
+                });
         const legendKey = keys.slice().reverse();
         const legend = this.legendGroup.selectAll('.legend-item-group')
             .data(legendKey)
