@@ -1,5 +1,6 @@
-import { Selection, select, BaseType, mouse } from 'd3-selection';
-import { scaleOrdinal } from 'd3-scale';
+import { Selection, select, BaseType, mouse, event } from 'd3-selection';
+import { scaleOrdinal, scaleBand } from 'd3-scale';
+import { zoomTransform } from 'd3-zoom'
 import { stack } from 'd3-shape';
 import { format } from 'd3-format';
 import { Subject, Observable } from 'rxjs';
@@ -7,15 +8,14 @@ import { Subject, Observable } from 'rxjs';
 import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
 
-export interface StackedVerticalBarSeriesConfiguration {
+export interface GroupedVerticalBarSeriesConfiguration {
     selector?: string;
     xField: string;
-    yField: string;
     columns: Array<string>;
 }
 
-export class StackedVerticalBarSeries extends SeriesBase {
-    private barClass: string = 'stacked-bar';
+export class GroupedVerticalBarSeries extends SeriesBase {
+    private barClass: string = 'grouped-bar';
 
     private xField: string;
 
@@ -31,7 +31,7 @@ export class StackedVerticalBarSeries extends SeriesBase {
 
     private numberFmt: any;
 
-    constructor(configuration: StackedVerticalBarSeriesConfiguration) {
+    constructor(configuration: GroupedVerticalBarSeriesConfiguration) {
         super();
         if (configuration) {
             if (configuration.selector) {
@@ -40,10 +40,6 @@ export class StackedVerticalBarSeries extends SeriesBase {
 
             if (configuration.xField) {
                 this.xField = configuration.xField;
-            }
-
-            if (configuration.yField) {
-                this.yField = configuration.yField;
             }
 
             if (configuration.columns) {
@@ -77,6 +73,8 @@ export class StackedVerticalBarSeries extends SeriesBase {
         const x: any = scales.find((scale: Scale) => scale.orinet === 'bottom').scale;
         const y: any = scales.find((scale: Scale) => scale.orinet === 'left').scale;
 
+        const barx: any = scaleBand();
+
         // set the colors
         const z = scaleOrdinal()
         .range(['#98abc5', '#8a89a6', '#7b6888', '#6b486b', '#a05d56', '#d0743c', '#ff8c00']);
@@ -85,27 +83,37 @@ export class StackedVerticalBarSeries extends SeriesBase {
         
         z.domain(keys);
 
-        this.mainGroup.selectAll('.stacked-bar-group')
-            .data(stack().keys(keys)(chartData))
+        barx.domain(keys)
+            .rangeRound([0, x.bandwidth()])
+            .padding(0.05);
+
+        this.mainGroup.selectAll('.grouped-bar-group')
+            .data(chartData)
             .join(
                 (enter) => enter.append('g')
-                            .attr('class', 'stacked-bar-group')
-                            .attr('fill', (d: any) => { return z(d.key) + ''; })
-                            .attr('column', (d: any) => { return d.key; }),
+                            .attr('class', 'grouped-bar-group')
+                            .attr('transform', (d: any) => {
+                                return `translate( ${x(d[this.xField])} ,0)`;
+                            }),
                 (update) => update,
                 (exit) => exit.remove()
             )
-            .selectAll('.stacked-bar-item')
-                .data((d: any) => { return d; })
+            .selectAll('.grouped-bar-item')
+                .data((d: any) => { 
+                    return keys.map(
+                        (key: string) => { return {key: key, value: d[key]}; }
+                    ); 
+                })
                 .join(
-                    (enter) => enter.append('rect').attr('class', 'stacked-bar-item'),
+                    (enter) => enter.append('rect').attr('class', 'grouped-bar-item'),
                     (update) => update,
                     (exit) => exit.remove()
                 )
-                .attr('x', (d: any) => { return x(d.data[this.xField]); })
-                .attr('y', (d: any) => { return y(d[1]); })
-                .attr('height', (d: any) => { return y(d[0]) - y(d[1]); })
-                .attr('width', x.bandwidth())
+                .attr('x', (d: any) => { return barx(d.key); })
+                .attr('y', (d: any) => { return (d.value < 0 ? y(0) : y(d.value)); })
+                .attr('height', (d: any) => { return Math.abs(y(d.value) - y(0)); })
+                .attr('width', barx.bandwidth())
+                .attr('fill', (d: any) => z(d.key) + '')
                 .on('mouseover', (d: any, i, nodeList: any) => {
                     select(nodeList[i])
                         .style('stroke', 'f5330c')
@@ -120,17 +128,24 @@ export class StackedVerticalBarSeries extends SeriesBase {
 
                     this.chartBase.hideTooltip();
                 })
-                .on('mousemove', (d: any, i, nodeList: any) => {
-                    const target: any = nodeList[i];
-                    const column: string = target.parentElement.getAttribute('column');
-                    const xPosition = mouse(target)[0] + 10;
-                    const yPosition = mouse(target)[1] - 5;
-                    this.tooltipGroup.attr('transform', `translate(${this.chartBase.chartMargin.left + xPosition}, ${yPosition})`);
-                    const textElement: any = this.tooltipGroup.select('text').text(`${column}: ${this.numberFmt(d.data[column])}`);
+                .on('mousemove', (d: any, i: number, nodeList: any) => {
+                    const textElement: any = this.tooltipGroup.select('text').text(`${d.key}: ${this.numberFmt(d.value)}`);
+                    const textWidth = textElement.node().getComputedTextLength() + 10;
                     this.tooltipGroup.selectAll('rect')
-                        .attr('width', textElement.node().getComputedTextLength() + 10);
-                    // this.tooltipGroup.select('text').text(`${d[1] - d[0]}`);
-                    // console.log('d : ', d, target, parent);
+                        .attr('width', textWidth);
+
+                    let xPosition = event.offsetX;
+                    let yPosition = event.offsetY -20;
+                    if (xPosition + textWidth > width) {
+                        xPosition = event.offsetX - textWidth;
+                    }
+                    this.tooltipGroup.attr('transform', `translate(${xPosition}, ${yPosition})`);
+
+                    // const target: any = nodeList[i];
+                    // const parent: any = select(target.parentElement);
+                    // const position = mouse(target);
+
+                    // console.log('position : ', target, parent.node().getBBox(), position, xPosition, yPosition);
                 });
         
         const legendKey = keys.slice().reverse();

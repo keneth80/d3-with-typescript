@@ -17,6 +17,7 @@ import { bollingerData } from './component/mock-data/bollinger-band-data';
 import { BasicBollingerBandSeries } from './component/series/basic-bollinger-band-series';
 import { BasicViolinSeries } from './component/series/basic-violin-series';
 import { StackedVerticalBarSeries } from './component/series/stacked-vertical-bar-series';
+import { GroupedVerticalBarSeries } from './component/series/grouped-vertical-bar-series';
 
 class SalesModel {
     salesperson: string;
@@ -357,8 +358,6 @@ const stackedBar = () => {
         return d;
     })
     .then((data) => {
-        console.log('result : ', data, data.columns);
-
         data.sort((a, b) => { return b.total - a.total; });
 
         const stackedVerticalBarSeries = new StackedVerticalBarSeries({
@@ -397,6 +396,50 @@ const stackedBar = () => {
     });
 }
 
+const groupedBar = () => {
+    csv('./component/mock-data/grouped-bar-data.csv', (d: any, index: number, columns: Array<string>) => {
+        for (let i = 1, t = 0; i < columns.length; ++i) {
+            t += d[columns[i]] = +d[columns[i]];
+            d.total = t;
+        }
+        return d;
+    })
+    .then((data) => {
+        const groupedVerticalBarSeries = new GroupedVerticalBarSeries({
+            xField: 'State',
+            columns: data.columns
+        });
+
+        const groupedBarChart = new BasicChart({
+            selector: '#groupedBar',
+            data: data,
+            min: 0,
+            max: max(data, d => max(data.columns.slice(1), key => d[key])),
+            isResize: 'Y',
+            axes: [
+                {
+                    field: 'State',
+                    type: 'string',
+                    placement: 'bottom',
+                    padding: 0.2
+                },
+                {
+                    field: 'total',
+                    type: 'number',
+                    placement: 'left',
+                    isRound: true
+                }
+            ],
+            series: [
+                groupedVerticalBarSeries
+            ]
+        }).draw();
+    })
+    .catch((error: any) => {
+        console.log('Error : ', error);
+    });
+}
+
 excute();
 
 boxplot();
@@ -406,3 +449,5 @@ bollinger();
 violin();
 
 stackedBar();
+
+groupedBar();

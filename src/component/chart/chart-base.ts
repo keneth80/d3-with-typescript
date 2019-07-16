@@ -176,10 +176,15 @@ export class ChartBase<T = any> implements IChart {
                 (update) => update,
                 (exit) => exit.remove()
             )
+            .attr('rx', 5)
+            .attr('ry', 5)
+            .attr('x', 0)
+            .attr('y', 0)
             .attr('width', 60)
             .attr('height', 20)
             .attr('fill', 'white')
-            .style('opacity', 0.5);
+            .style('stroke', '#000')
+            .style('fill-opacity', 0.6);
 
         this.tooltipGroup.selectAll('.tooltip-text')
             .data(['text'])
@@ -188,9 +193,9 @@ export class ChartBase<T = any> implements IChart {
                 (update) => update,
                 (exit) => exit.remove()
             )
-            .attr('x', 30)
+            .attr('x', 5)
             .attr('dy', '1.2em')
-            .style('text-anchor', 'middle')
+            .style('text-anchor', 'start')
             .attr('font-size', '12px')
             .attr('font-weight', 'bold');
     }
