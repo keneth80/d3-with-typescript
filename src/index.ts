@@ -413,7 +413,7 @@ const groupedBar = () => {
         const groupedBarChart = new BasicChart({
             selector: '#groupedBar',
             data: data,
-            min: 0,
+            min: -2000000,
             max: max(data, d => max(data.columns.slice(1), key => d[key])),
             isResize: 'Y',
             axes: [

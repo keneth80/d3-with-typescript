@@ -56,11 +56,12 @@ export class VerticalBarSeries extends SeriesBase {
                     return x(data[this.xField]); 
                 })
                 .attr('width', x.bandwidth())
-                .attr('y', (data: any) => { 
-                    return y(data[this.yField]);
+                .attr('y', (data: any) => {
+                    return (data[this.yField] < 0 ? y(0) : y(data[this.yField]));
                 })
-                .attr('height', (data: any) => { 
-                    return height - y(data[this.yField]); 
+                .attr('height', (data: any) => {
+                    return Math.abs(y(data[this.yField]) - y(0));
+                    // return height - y(data[this.yField]); 
                 })
                 .on('click', (data: any) => {
                     this.itemClickSubject.next(data);

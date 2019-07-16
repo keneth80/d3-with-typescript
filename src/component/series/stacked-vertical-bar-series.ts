@@ -103,8 +103,10 @@ export class StackedVerticalBarSeries extends SeriesBase {
                     (exit) => exit.remove()
                 )
                 .attr('x', (d: any) => { return x(d.data[this.xField]); })
-                .attr('y', (d: any) => { return y(d[1]); })
                 .attr('height', (d: any) => { return y(d[0]) - y(d[1]); })
+                .attr('y', (d: any) => { return (d[1] < 0 ? y(0) : y(d[1])); })
+                // TODO: 계산 적용해 볼 것.
+                // .attr('height', (d: any) => { return Math.abs(y(d[0]) - y(d[1]) - y(0)); })
                 .attr('width', x.bandwidth())
                 .on('mouseover', (d: any, i, nodeList: any) => {
                     select(nodeList[i])
@@ -125,8 +127,10 @@ export class StackedVerticalBarSeries extends SeriesBase {
                     const column: string = target.parentElement.getAttribute('column');
                     const xPosition = mouse(target)[0] + 10;
                     const yPosition = mouse(target)[1] - 5;
+                    const textElement: any = this.tooltipGroup.select('text')
+                        .text(`${column}: ${this.numberFmt(d.data[column])}`);
+
                     this.tooltipGroup.attr('transform', `translate(${this.chartBase.chartMargin.left + xPosition}, ${yPosition})`);
-                    const textElement: any = this.tooltipGroup.select('text').text(`${column}: ${this.numberFmt(d.data[column])}`);
                     this.tooltipGroup.selectAll('rect')
                         .attr('width', textElement.node().getComputedTextLength() + 10);
                     // this.tooltipGroup.select('text').text(`${d[1] - d[0]}`);
