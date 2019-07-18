@@ -15,7 +15,7 @@ export interface BasicPlotSeriesConfiguration {
 }
 
 export class BasicPlotSeries extends SeriesBase {
-    private seriesClass: string = 'basic-plot';
+    private selector: string = 'basic-plot';
 
     private xField: string;
 
@@ -27,7 +27,7 @@ export class BasicPlotSeries extends SeriesBase {
         super();
         if (configuration) {
             if (configuration.selector) {
-                this.seriesClass = configuration.selector;
+                this.selector = configuration.selector;
             }
 
             if (configuration.xField) {
@@ -47,8 +47,8 @@ export class BasicPlotSeries extends SeriesBase {
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
                   mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
-        if (!mainGroup.select(`.${this.seriesClass}-group`).node()) {
-            this.mainGroup = mainGroup.append('g').attr('class', `${this.seriesClass}-group`);
+        if (!mainGroup.select(`.${this.selector}-group`).node()) {
+            this.mainGroup = mainGroup.append('g').attr('class', `${this.selector}-group`);
         }
     }
 
@@ -61,10 +61,10 @@ export class BasicPlotSeries extends SeriesBase {
             padding = x.bandwidth() / 2;
         }
         
-        const elements = this.mainGroup.selectAll(`.${this.seriesClass}`)
+        const elements = this.mainGroup.selectAll(`.${this.selector}`)
             .data(chartData)
                 .join(
-                    (enter) => enter.append('circle').attr('class', this.seriesClass),
+                    (enter) => enter.append('circle').attr('class', this.selector),
                     (update) => update,
                     (exit) => exit.remove
                 )

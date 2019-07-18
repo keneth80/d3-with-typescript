@@ -11,7 +11,7 @@ export interface VerticalBarSeriesConfiguration {
 }
 
 export class VerticalBarSeries extends SeriesBase {
-    private barClass: string = 'bar';
+    private selector: string = 'bar';
 
     private xField: string;
 
@@ -21,7 +21,7 @@ export class VerticalBarSeries extends SeriesBase {
         super();
         if (configuration) {
             if (configuration.selector) {
-                this.barClass = configuration.selector;
+                this.selector = configuration.selector;
             }
 
             if (configuration.xField) {
@@ -37,18 +37,18 @@ export class VerticalBarSeries extends SeriesBase {
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
                   mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
-        if (!mainGroup.select(`.${this.barClass}-group`).node()) {
-            this.mainGroup = mainGroup.append('g').attr('class', `${this.barClass}-group`);
+        if (!mainGroup.select(`.${this.selector}-group`).node()) {
+            this.mainGroup = mainGroup.append('g').attr('class', `${this.selector}-group`);
         }
     }
 
     drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {
         const x: any = scales.find((scale: Scale) => scale.orinet === 'bottom').scale;
         const y: any = scales.find((scale: Scale) => scale.orinet === 'left').scale;
-        this.mainGroup.selectAll(`.${this.barClass}`)
+        this.mainGroup.selectAll(`.${this.selector}`)
             .data(chartData)
                 .join(
-                    (enter) => enter.append('rect').attr('class', this.barClass),
+                    (enter) => enter.append('rect').attr('class', this.selector),
                     (update) => update,
                     (exit) => exit.remove
                 )

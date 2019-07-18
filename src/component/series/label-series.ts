@@ -12,7 +12,7 @@ export interface LabelSeriesConfiguration {
 }
 
 export class LabelSeries extends SeriesBase {
-    private itemClass: string = 'label';
+    private selector: string = 'label';
 
     private xField: string;
 
@@ -24,7 +24,7 @@ export class LabelSeries extends SeriesBase {
         super();
         if (configuration) {
             if (configuration.selector) {
-                this.itemClass = configuration.selector;
+                this.selector = configuration.selector;
             }
 
             if (configuration.xField) {
@@ -44,18 +44,18 @@ export class LabelSeries extends SeriesBase {
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
                   mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
-        if (!mainGroup.select(`.${this.itemClass}-group`).node()) {
-            this.mainGroup = mainGroup.append('g').attr('class', `${this.itemClass}-group`);
+        if (!mainGroup.select(`.${this.selector}-group`).node()) {
+            this.mainGroup = mainGroup.append('g').attr('class', `${this.selector}-group`);
         }
     }
 
     drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {
         const x: any = scales.find((scale: Scale) => scale.orinet === 'bottom').scale;
         const y: any = scales.find((scale: Scale) => scale.orinet === 'left').scale;
-        this.mainGroup.selectAll(`.${this.itemClass}`)
+        this.mainGroup.selectAll(`.${this.selector}`)
             .data(chartData)
                 .join(
-                    (enter) => enter.append('text').attr('class', this.itemClass),
+                    (enter) => enter.append('text').attr('class', this.selector),
                     (update) => update,
                     (exit) => exit.remove
                 )

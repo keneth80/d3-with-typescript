@@ -22,7 +22,7 @@ export class BasicLineSeries extends SeriesBase {
 
     private line: any;
 
-    private lineClass: string = 'basic-line';
+    private selector: string = 'basic-line';
 
     private dotClass: string = 'basic-line-dot';
 
@@ -36,7 +36,7 @@ export class BasicLineSeries extends SeriesBase {
         super();
         if (configuration) {
             if (configuration.selector) {
-                this.lineClass = configuration.selector;
+                this.selector = configuration.selector;
             }
 
             if (configuration.dotSelector) {
@@ -60,8 +60,8 @@ export class BasicLineSeries extends SeriesBase {
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
                   mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
-        if (!mainGroup.select(`.${this.lineClass}-group`).node()) {
-            this.mainGroup = mainGroup.append('g').attr('class', `${this.lineClass}-group`);
+        if (!mainGroup.select(`.${this.selector}-group`).node()) {
+            this.mainGroup = mainGroup.append('g').attr('class', `${this.selector}-group`);
         }
 
         if (!mainGroup.select(`.${this.dotClass}-group`).node()) {
@@ -88,10 +88,10 @@ export class BasicLineSeries extends SeriesBase {
             }) // set the y values for the line generator 
             .curve(curveMonotoneX); // apply smoothing to the line
 
-        this.mainGroup.selectAll(`.${this.lineClass}`)
+        this.mainGroup.selectAll(`.${this.selector}`)
             .data([chartData])
                 .join(
-                    (enter) => enter.append('path').attr('class', this.lineClass),
+                    (enter) => enter.append('path').attr('class', this.selector),
                     (update) => update,
                     (exit) => exit.remove
                 )

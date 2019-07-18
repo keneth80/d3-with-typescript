@@ -15,7 +15,7 @@ export interface StackedVerticalBarSeriesConfiguration {
 }
 
 export class StackedVerticalBarSeries extends SeriesBase {
-    private barClass: string = 'stacked-bar';
+    private selector: string = 'stacked-bar';
 
     private xField: string;
 
@@ -35,7 +35,7 @@ export class StackedVerticalBarSeries extends SeriesBase {
         super();
         if (configuration) {
             if (configuration.selector) {
-                this.barClass = configuration.selector;
+                this.selector = configuration.selector;
             }
 
             if (configuration.xField) {
@@ -58,8 +58,8 @@ export class StackedVerticalBarSeries extends SeriesBase {
                   mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
         this.rootGroup = mainGroup;
-        if (!mainGroup.select(`.${this.barClass}-group`).node()) {
-            this.mainGroup = this.rootGroup.append('g').attr('class', `${this.barClass}-group`);
+        if (!mainGroup.select(`.${this.selector}-group`).node()) {
+            this.mainGroup = this.rootGroup.append('g').attr('class', `${this.selector}-group`);
         }
 
         if (!mainGroup.select('.legend-group').node()) {

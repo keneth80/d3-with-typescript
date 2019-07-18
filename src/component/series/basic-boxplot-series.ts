@@ -23,7 +23,7 @@ export interface BoxplotModel {
 }
 
 export class BasicBoxplotSeries extends SeriesBase {
-    private itemClass: string = 'basic-boxplot';
+    private selector: string = 'basic-boxplot';
 
     private xField: string;
 
@@ -33,7 +33,7 @@ export class BasicBoxplotSeries extends SeriesBase {
         super();
         if (configuration) {
             if (configuration.selector) {
-                this.itemClass = configuration.selector;
+                this.selector = configuration.selector;
             }
 
             if (configuration.xField) {
@@ -49,8 +49,8 @@ export class BasicBoxplotSeries extends SeriesBase {
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
                   mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
-        if (!mainGroup.select(`.${this.itemClass}-group`).node()) {
-            this.mainGroup = mainGroup.append('g').attr('class', `${this.itemClass}-group`);
+        if (!mainGroup.select(`.${this.selector}-group`).node()) {
+            this.mainGroup = mainGroup.append('g').attr('class', `${this.selector}-group`);
         }
     }
 

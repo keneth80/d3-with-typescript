@@ -15,7 +15,7 @@ export interface GroupedVerticalBarSeriesConfiguration {
 }
 
 export class GroupedVerticalBarSeries extends SeriesBase {
-    private barClass: string = 'grouped-bar';
+    private selector: string = 'grouped-bar';
 
     private xField: string;
 
@@ -35,7 +35,7 @@ export class GroupedVerticalBarSeries extends SeriesBase {
         super();
         if (configuration) {
             if (configuration.selector) {
-                this.barClass = configuration.selector;
+                this.selector = configuration.selector;
             }
 
             if (configuration.xField) {
@@ -54,8 +54,8 @@ export class GroupedVerticalBarSeries extends SeriesBase {
                   mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
         this.rootGroup = mainGroup;
-        if (!mainGroup.select(`.${this.barClass}-group`).node()) {
-            this.mainGroup = this.rootGroup.append('g').attr('class', `${this.barClass}-group`);
+        if (!mainGroup.select(`.${this.selector}-group`).node()) {
+            this.mainGroup = this.rootGroup.append('g').attr('class', `${this.selector}-group`);
         }
 
         if (!mainGroup.select('.legend-group').node()) {
@@ -67,37 +67,32 @@ export class GroupedVerticalBarSeries extends SeriesBase {
         }
     }
 
-    // https://bl.ocks.org/mjfoster83/7c9bdfd714ab2f2e39dd5c09057a55a0
-    // example 참고함.
     drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {
         const x: any = scales.find((scale: Scale) => scale.orinet === 'bottom').scale;
         const y: any = scales.find((scale: Scale) => scale.orinet === 'left').scale;
 
-        const barx: any = scaleBand();
+        const keys = this.columns.slice(1);
+        const barx: any = scaleBand()
+            .domain(keys)
+            .rangeRound([0, x.bandwidth()]);
 
         // set the colors
         const z = scaleOrdinal()
-        .range(['#98abc5', '#8a89a6', '#7b6888', '#6b486b', '#a05d56', '#d0743c', '#ff8c00']);
+            .range(['#98abc5', '#8a89a6', '#7b6888', '#6b486b', '#a05d56', '#d0743c', '#ff8c00']);
 
-        const keys = this.columns.slice(1);
-        
         z.domain(keys);
 
-        barx.domain(keys)
-            .rangeRound([0, x.bandwidth()])
-            .padding(0.05);
-
-        this.mainGroup.selectAll('.grouped-bar-group')
+        this.mainGroup.selectAll('.grouped-bar-item-group')
             .data(chartData)
             .join(
                 (enter) => enter.append('g')
-                            .attr('class', 'grouped-bar-group')
-                            .attr('transform', (d: any) => {
-                                return `translate( ${x(d[this.xField])} ,0)`;
-                            }),
+                            .attr('class', 'grouped-bar-item-group'),
                 (update) => update,
                 (exit) => exit.remove()
             )
+            .attr('transform', (d: any) => {
+                return `translate( ${x(d[this.xField])} ,0)`;
+            })
             .selectAll('.grouped-bar-item')
                 .data((d: any) => { 
                     return keys.map(

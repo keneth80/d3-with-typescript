@@ -15,7 +15,7 @@ export interface BasicViolinSeriesConfiguration {
 }
 
 export class BasicViolinSeries extends SeriesBase {
-    private itemClass: string = 'basic-violin';
+    private selector: string = 'basic-violin';
 
     private xField: string;
 
@@ -27,7 +27,7 @@ export class BasicViolinSeries extends SeriesBase {
         super();
         if (configuration) {
             if (configuration.selector) {
-                this.itemClass = configuration.selector;
+                this.selector = configuration.selector;
             }
 
             if (configuration.xField) {
@@ -43,8 +43,8 @@ export class BasicViolinSeries extends SeriesBase {
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
                   mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
-        if (!mainGroup.select(`.${this.itemClass}-group`).node()) {
-            this.mainGroup = mainGroup.append('g').attr('class', `${this.itemClass}-group`);
+        if (!mainGroup.select(`.${this.selector}-group`).node()) {
+            this.mainGroup = mainGroup.append('g').attr('class', `${this.selector}-group`);
         }
     }
 
@@ -80,10 +80,10 @@ export class BasicViolinSeries extends SeriesBase {
             .range([0, x.bandwidth()])
             .domain([-maxNum, maxNum]);
 
-        this.mainGroup.selectAll(`.${this.itemClass}`)
+        this.mainGroup.selectAll(`.${this.selector}`)
             .data(sumstat)
             .join(
-                (enter) => enter.append('g').attr('class', this.itemClass),
+                (enter) => enter.append('g').attr('class', this.selector),
                 (update) => update,
                 (exit) => exit.remove
             )

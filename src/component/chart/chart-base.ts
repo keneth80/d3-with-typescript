@@ -343,7 +343,7 @@ export class ChartBase<T = any> implements IChart {
 
             let scale = null;
             if (axis.type === 'string') {
-                scale = scaleBand().range(range).padding(axis.padding ? +axis.padding : 0.1);
+                scale = scaleBand().range(range).padding(axis.padding ? +axis.padding : 0);
                 if (axis.domain) {
                     scale.domain(axis.domain);
                 } else {

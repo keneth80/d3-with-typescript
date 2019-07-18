@@ -22,7 +22,7 @@ export interface BollingerBandModel {
 }
 
 export class BasicBollingerBandSeries extends SeriesBase {
-    private itemClass: string = 'basic-bollinger-band';
+    private selector: string = 'basic-bollinger-band';
 
     private xField: string;
 
@@ -30,7 +30,7 @@ export class BasicBollingerBandSeries extends SeriesBase {
         super();
         if (configuration) {
             if (configuration.selector) {
-                this.itemClass = configuration.selector;
+                this.selector = configuration.selector;
             }
 
             if (configuration.xField) {
@@ -42,8 +42,8 @@ export class BasicBollingerBandSeries extends SeriesBase {
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
                   mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
-        if (!mainGroup.select(`.${this.itemClass}-group`).node()) {
-            this.mainGroup = mainGroup.append('g').attr('class', `${this.itemClass}-group`);
+        if (!mainGroup.select(`.${this.selector}-group`).node()) {
+            this.mainGroup = mainGroup.append('g').attr('class', `${this.selector}-group`);
         }
     }
 
