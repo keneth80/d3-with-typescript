@@ -2,7 +2,7 @@ import { Selection, select, BaseType, mouse } from 'd3-selection';
 import { scaleOrdinal } from 'd3-scale';
 import { stack } from 'd3-shape';
 import { format } from 'd3-format';
-import { Subject, Observable } from 'rxjs';
+import { color } from 'd3-color';
 
 import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
@@ -71,8 +71,6 @@ export class StackedVerticalBarSeries extends SeriesBase {
         }
     }
 
-    // https://bl.ocks.org/mjfoster83/7c9bdfd714ab2f2e39dd5c09057a55a0
-    // example 참고함.
     drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {
         const x: any = scales.find((scale: Scale) => scale.orinet === 'bottom').scale;
         const y: any = scales.find((scale: Scale) => scale.orinet === 'left').scale;
@@ -89,16 +87,59 @@ export class StackedVerticalBarSeries extends SeriesBase {
             .data(stack().keys(keys)(chartData))
             .join(
                 (enter) => enter.append('g')
-                            .attr('class', 'stacked-bar-group')
-                            .attr('fill', (d: any) => { return z(d.key) + ''; })
-                            .attr('column', (d: any) => { return d.key; }),
+                            .attr('class', 'stacked-bar-group'),
                 (update) => update,
                 (exit) => exit.remove()
             )
+            .attr('fill', (d: any) => { return z(d.key) + ''; })
+            .attr('column', (d: any) => { return d.key; }) // point
             .selectAll('.stacked-bar-item')
                 .data((d: any) => { return d; })
                 .join(
-                    (enter) => enter.append('rect').attr('class', 'stacked-bar-item'),
+                    (enter) => enter.append('rect').attr('class', 'stacked-bar-item')
+                        .on('mouseover', (d: any, i, nodeList: any) => {
+                            const target: any = nodeList[i];
+                            const column: string = target.parentElement.getAttribute('column');
+                            const fill: string = z(column) + '';
+                            
+                            select(nodeList[i])
+                                .style('fill', () => color(fill).darker(2) + '') // point
+                                .style('stroke', 'f5330c')
+                                .style('stroke-width', 2);
+
+                            this.tooltipGroup = this.chartBase.showTooltip();
+                        })
+                        .on('mouseout', (d: any, i, nodeList: any) => {
+                            const target: any = nodeList[i];
+                            const column: string = target.parentElement.getAttribute('column');
+                            const fill: string = z(column) + '';
+
+                            select(nodeList[i])
+                                .style('fill', () => color(fill).darker(0) + '') // point
+                                .style('stroke', null)
+                                .style('stroke-width', null);
+
+                            this.chartBase.hideTooltip();
+                        })
+                        .on('mousemove', (d: any, i, nodeList: any) => {
+                            const target: any = nodeList[i];
+                            const column: string = target.parentElement.getAttribute('column');
+                            const xPosition = mouse(target)[0] + 10;
+                            const yPosition = mouse(target)[1] - 5;
+                            const textElement: any = this.tooltipGroup.select('text')
+                                .text(`${column}: ${this.numberFmt(d.data[column])}`);
+
+                            this.tooltipGroup.attr('transform', `translate(${this.chartBase.chartMargin.left + xPosition}, ${yPosition})`);
+                            this.tooltipGroup.selectAll('rect')
+                                .attr('width', textElement.node().getComputedTextLength() + 10);
+                            // this.tooltipGroup.select('text').text(`${d[1] - d[0]}`);
+                            // console.log('d : ', d, target, parent);
+                        })
+                        .on('click', (data: any) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            this.itemClickSubject.next(data);
+                        }),
                     (update) => update,
                     (exit) => exit.remove()
                 )
@@ -107,35 +148,7 @@ export class StackedVerticalBarSeries extends SeriesBase {
                 .attr('y', (d: any) => { return (d[1] < 0 ? y(0) : y(d[1])); })
                 // TODO: 계산 적용해 볼 것.
                 // .attr('height', (d: any) => { return Math.abs(y(d[0]) - y(d[1]) - y(0)); })
-                .attr('width', x.bandwidth())
-                .on('mouseover', (d: any, i, nodeList: any) => {
-                    select(nodeList[i])
-                        .style('stroke', 'f5330c')
-                        .style('stroke-width', 2);
-
-                    this.tooltipGroup = this.chartBase.showTooltip();
-                })
-                .on('mouseout', (d: any, i, nodeList: any) => {
-                    select(nodeList[i])
-                        .style('stroke', null)
-                        .style('stroke-width', null);
-
-                    this.chartBase.hideTooltip();
-                })
-                .on('mousemove', (d: any, i, nodeList: any) => {
-                    const target: any = nodeList[i];
-                    const column: string = target.parentElement.getAttribute('column');
-                    const xPosition = mouse(target)[0] + 10;
-                    const yPosition = mouse(target)[1] - 5;
-                    const textElement: any = this.tooltipGroup.select('text')
-                        .text(`${column}: ${this.numberFmt(d.data[column])}`);
-
-                    this.tooltipGroup.attr('transform', `translate(${this.chartBase.chartMargin.left + xPosition}, ${yPosition})`);
-                    this.tooltipGroup.selectAll('rect')
-                        .attr('width', textElement.node().getComputedTextLength() + 10);
-                    // this.tooltipGroup.select('text').text(`${d[1] - d[0]}`);
-                    // console.log('d : ', d, target, parent);
-                });
+                .attr('width', x.bandwidth());
         
         const legendKey = keys.slice().reverse();
         const legend = this.legendGroup.selectAll('.legend-item-group')

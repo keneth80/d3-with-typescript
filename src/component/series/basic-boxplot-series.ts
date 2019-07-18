@@ -90,7 +90,12 @@ export class BasicBoxplotSeries extends SeriesBase {
         this.mainGroup.selectAll('.quartile')
             .data(chartData)
             .join(
-                (enter) => enter.append('rect').attr('class', 'quartile'),
+                (enter) => enter.append('rect').attr('class', 'quartile')
+                    .on('click', (data: any) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        this.itemClickSubject.next(data);
+                    }),
                 (update) => update,
                 (exit) => exit.remove()
             )

@@ -64,16 +64,18 @@ export class BasicPlotSeries extends SeriesBase {
         const elements = this.mainGroup.selectAll(`.${this.selector}`)
             .data(chartData)
                 .join(
-                    (enter) => enter.append('circle').attr('class', this.selector),
+                    (enter) => enter.append('circle').attr('class', this.selector)
+                        .on('click', (data: any) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            this.itemClickSubject.next(data);
+                        }),
                     (update) => update,
                     (exit) => exit.remove
                 )
                 .attr('cx', (data: any, i) => { return x(data[this.xField]) + padding; })
                 .attr('cy', (data: any) => { return y(data[this.yField]); })
-                .attr('r', 5)
-                .on('click', (data: any) => {
-                    this.itemClickSubject.next(data);
-                });
+                .attr('r', 5);
         if (this.style) {
             elements.style('fill', this.style.fill || '#000')
                 .style('stroke', this.style.stroke || '#fff')

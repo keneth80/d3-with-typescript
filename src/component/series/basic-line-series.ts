@@ -102,16 +102,18 @@ export class BasicLineSeries extends SeriesBase {
             this.dotGroup.selectAll(`.${this.dotClass}`)
                 .data(chartData)
                     .join(
-                        (enter) => enter.append('circle').attr('class', this.dotClass),
+                        (enter) => enter.append('circle').attr('class', this.dotClass)
+                            .on('click', (data: any) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                this.itemClickSubject.next(data);
+                            }),
                         (update) => update,
                         (exit) => exit.remove
                     )
                     .attr('cx', (data: any, i) => { return x(data[this.xField]) + padding; })
                     .attr('cy', (data: any) => { return y(data[this.yField]); })
-                    .attr('r', 5)
-                    .on('click', (data: any) => {
-                        this.itemClickSubject.next(data);
-                    });
+                    .attr('r', 5);
         }
     }
 }

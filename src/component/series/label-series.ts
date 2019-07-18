@@ -55,7 +55,12 @@ export class LabelSeries extends SeriesBase {
         this.mainGroup.selectAll(`.${this.selector}`)
             .data(chartData)
                 .join(
-                    (enter) => enter.append('text').attr('class', this.selector),
+                    (enter) => enter.append('text').attr('class', this.selector)
+                        .on('click', (data: any) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            this.itemClickSubject.next(data);
+                        }),
                     (update) => update,
                     (exit) => exit.remove
                 )
@@ -71,9 +76,6 @@ export class LabelSeries extends SeriesBase {
                         returnText = this.templete(data);
                     }
                     return returnText;
-                })
-                .on('click', (data: any) => {
-                    this.itemClickSubject.next(data);
                 });
     }
 }

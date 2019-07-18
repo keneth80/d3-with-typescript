@@ -48,7 +48,12 @@ export class VerticalBarSeries extends SeriesBase {
         this.mainGroup.selectAll(`.${this.selector}`)
             .data(chartData)
                 .join(
-                    (enter) => enter.append('rect').attr('class', this.selector),
+                    (enter) => enter.append('rect').attr('class', this.selector)
+                        .on('click', (data: any) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            this.itemClickSubject.next(data);
+                        }),
                     (update) => update,
                     (exit) => exit.remove
                 )
@@ -62,9 +67,6 @@ export class VerticalBarSeries extends SeriesBase {
                 .attr('height', (data: any) => {
                     return Math.abs(y(data[this.yField]) - y(0));
                     // return height - y(data[this.yField]); 
-                })
-                .on('click', (data: any) => {
-                    this.itemClickSubject.next(data);
                 });
     }
 }

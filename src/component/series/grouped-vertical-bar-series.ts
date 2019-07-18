@@ -1,9 +1,7 @@
 import { Selection, select, BaseType, mouse, event } from 'd3-selection';
 import { scaleOrdinal, scaleBand } from 'd3-scale';
-import { zoomTransform } from 'd3-zoom'
-import { stack } from 'd3-shape';
+import { color } from 'd3-color';
 import { format } from 'd3-format';
-import { Subject, Observable } from 'rxjs';
 
 import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
@@ -100,7 +98,47 @@ export class GroupedVerticalBarSeries extends SeriesBase {
                     ); 
                 })
                 .join(
-                    (enter) => enter.append('rect').attr('class', 'grouped-bar-item'),
+                    (enter) => enter.append('rect').attr('class', 'grouped-bar-item')
+                        .on('mouseover', (d: any, i, nodeList: any) => {
+                            select(nodeList[i])
+                                .style('fill', () => color(z(d.key) + '').darker(2) + '') // point
+                                .style('stroke', 'f5330c')
+                                .style('stroke-width', 2);
+        
+                            this.tooltipGroup = this.chartBase.showTooltip();
+                        })
+                        .on('mouseout', (d: any, i, nodeList: any) => {
+                            select(nodeList[i])
+                                .style('fill', () => color(z(d.key) + '').darker(0) + '') // point
+                                .style('stroke', null)
+                                .style('stroke-width', null);
+        
+                            this.chartBase.hideTooltip();
+                        })
+                        .on('mousemove', (d: any, i: number, nodeList: any) => {
+                            const textElement: any = this.tooltipGroup.select('text').text(`${d.key}: ${this.numberFmt(d.value)}`);
+                            const textWidth = textElement.node().getComputedTextLength() + 10;
+                            this.tooltipGroup.selectAll('rect')
+                                .attr('width', textWidth);
+        
+                            let xPosition = event.offsetX;
+                            let yPosition = event.offsetY -20;
+                            if (xPosition + textWidth > width) {
+                                xPosition = event.offsetX - textWidth;
+                            }
+                            this.tooltipGroup.attr('transform', `translate(${xPosition}, ${yPosition})`);
+        
+                            // const target: any = nodeList[i];
+                            // const parent: any = select(target.parentElement);
+                            // const position = mouse(target);
+        
+                            // console.log('position : ', target, parent.node().getBBox(), position, xPosition, yPosition);
+                        })
+                        .on('click', (data: any) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            this.itemClickSubject.next(data);
+                        }),
                     (update) => update,
                     (exit) => exit.remove()
                 )
@@ -108,40 +146,7 @@ export class GroupedVerticalBarSeries extends SeriesBase {
                 .attr('y', (d: any) => { return (d.value < 0 ? y(0) : y(d.value)); })
                 .attr('height', (d: any) => { return Math.abs(y(d.value) - y(0)); })
                 .attr('width', barx.bandwidth())
-                .attr('fill', (d: any) => z(d.key) + '')
-                .on('mouseover', (d: any, i, nodeList: any) => {
-                    select(nodeList[i])
-                        .style('stroke', 'f5330c')
-                        .style('stroke-width', 2);
-
-                    this.tooltipGroup = this.chartBase.showTooltip();
-                })
-                .on('mouseout', (d: any, i, nodeList: any) => {
-                    select(nodeList[i])
-                        .style('stroke', null)
-                        .style('stroke-width', null);
-
-                    this.chartBase.hideTooltip();
-                })
-                .on('mousemove', (d: any, i: number, nodeList: any) => {
-                    const textElement: any = this.tooltipGroup.select('text').text(`${d.key}: ${this.numberFmt(d.value)}`);
-                    const textWidth = textElement.node().getComputedTextLength() + 10;
-                    this.tooltipGroup.selectAll('rect')
-                        .attr('width', textWidth);
-
-                    let xPosition = event.offsetX;
-                    let yPosition = event.offsetY -20;
-                    if (xPosition + textWidth > width) {
-                        xPosition = event.offsetX - textWidth;
-                    }
-                    this.tooltipGroup.attr('transform', `translate(${xPosition}, ${yPosition})`);
-
-                    // const target: any = nodeList[i];
-                    // const parent: any = select(target.parentElement);
-                    // const position = mouse(target);
-
-                    // console.log('position : ', target, parent.node().getBBox(), position, xPosition, yPosition);
-                });
+                .attr('fill', (d: any) => z(d.key) + '');
         
         const legendKey = keys.slice().reverse();
         const legend = this.legendGroup.selectAll('.legend-item-group')
