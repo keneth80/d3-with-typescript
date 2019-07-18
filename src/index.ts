@@ -421,7 +421,7 @@ const groupedBar = () => {
                     field: 'State',
                     type: 'string',
                     placement: 'bottom',
-                    padding: 0.2
+                    padding: 0.1
                 },
                 {
                     field: 'total',

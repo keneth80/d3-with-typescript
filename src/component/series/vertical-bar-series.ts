@@ -3,6 +3,8 @@ import { Subject, Observable } from 'rxjs';
 
 import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
+import { transition } from 'd3-transition';
+import { easeQuadIn } from 'd3-ease';
 
 export interface VerticalBarSeriesConfiguration {
     selector?: string;
@@ -16,6 +18,8 @@ export class VerticalBarSeries extends SeriesBase {
     private xField: string;
 
     private yField: string;
+
+    private transition: any;
 
     constructor(configuration: VerticalBarSeriesConfiguration) {
         super();
@@ -32,6 +36,10 @@ export class VerticalBarSeries extends SeriesBase {
                 this.yField = configuration.yField;
             }
         }
+
+        this.transition = transition()
+        .duration(750)
+        // .ease(easeQuadIn);
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
@@ -61,6 +69,9 @@ export class VerticalBarSeries extends SeriesBase {
                     return x(data[this.xField]); 
                 })
                 .attr('width', x.bandwidth())
+                .attr('y', height)
+                .attr('height', 0)
+                .transition(this.transition) // animation
                 .attr('y', (data: any) => {
                     return (data[this.yField] < 0 ? y(0) : y(data[this.yField]));
                 })

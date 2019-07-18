@@ -21,6 +21,7 @@ export interface Scale {
     orinet: string;
     scale: any;
     type: string;
+    visible: boolean;
 }
 
 export class ChartBase<T = any> implements IChart {
@@ -260,7 +261,7 @@ export class ChartBase<T = any> implements IChart {
         this.scales = this.setupScale(this.config.axes);
 
         const bottom = this.scales.find((scale: Scale) => scale.orinet === 'bottom');
-        if (bottom) {
+        if (bottom && bottom.visible) {
             const bottomScale = axisBottom(bottom.scale);
             if (bottom.type === 'number') {
                 bottomScale.ticks(null, 's');
@@ -271,7 +272,7 @@ export class ChartBase<T = any> implements IChart {
         }
 
         const left = this.scales.find((scale: Scale) => scale.orinet === 'left');
-        if (left) {
+        if (left && left.visible) {
             const leftScale = axisLeft(left.scale);
             if (left.type === 'number') {
                 leftScale.ticks(null, 's');
@@ -283,7 +284,7 @@ export class ChartBase<T = any> implements IChart {
 
         // special
         const top = this.scales.find((scale: Scale) => scale.orinet === 'top');
-        if (top) {
+        if (top && top.visible) {
             const topScale = axisTop(top.scale);
             if (top.type === 'number') {
                 topScale.ticks(null, 's');
@@ -294,7 +295,7 @@ export class ChartBase<T = any> implements IChart {
         }
 
         const right = this.scales.find((scale: Scale) => scale.orinet === 'right');
-        if (right) {
+        if (right && right.visible) {
             const rightScale = axisRight(right.scale);
             if (right.type === 'number') {
                 rightScale.ticks(null, 's');
@@ -331,8 +332,8 @@ export class ChartBase<T = any> implements IChart {
         return data;
     }
 
-    protected setupScale(axes: Array<Axis> = []): Array<{orinet:string, scale:any, visible?: boolean, type: string}> {
-        const returnAxes: Array<{orinet:string, scale:any, visible?: boolean, type: string}> = [];
+    protected setupScale(axes: Array<Axis> = []): Array<Scale> {
+        const returnAxes: Array<Scale> = [];
         axes.map((axis: Axis) => {
             let range = <any>[];
             if (axis.placement === 'bottom' || axis.placement === 'top') {
@@ -387,7 +388,8 @@ export class ChartBase<T = any> implements IChart {
             returnAxes.push({
                 orinet: axis.placement,
                 scale,
-                type: axis.type
+                type: axis.type,
+                visible: axis.visible === false ? false : true
             });
         });
         return returnAxes;
