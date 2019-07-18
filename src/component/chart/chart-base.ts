@@ -25,15 +25,14 @@ export interface Scale {
 }
 
 export class ChartBase<T = any> implements IChart {
-
-    protected data: Array<T> = [];
-
-    protected scales: Array<Scale> = [];
-
     public min: number = 0;
 
     public max: number = Infinity;
 
+    protected data: Array<T> = [];
+
+    protected scales: Array<Scale> = [];
+    
     protected width: number;
 
     protected height: number;
@@ -205,7 +204,9 @@ export class ChartBase<T = any> implements IChart {
         this.subscription.unsubscribe();
         if (this.svg) {
             this.svg.on('click', null);
+            this.svg.selectAll('*').remove();
         }
+        this.originalData.length = 0;
         this.data.length = 0;
     }
 
