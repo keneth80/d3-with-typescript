@@ -72,7 +72,7 @@ export class BasicViolinSeries extends SeriesBase {
             const lengths = allBins.map((a: Array<any>) => {return a.length;});
             const longuest = max(lengths);
             if (longuest > maxNum) {
-                maxNum = longuest 
+                maxNum = longuest;
             }
         }
 
