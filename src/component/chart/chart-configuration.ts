@@ -8,6 +8,7 @@ export interface Axis {
     padding?: number;
     visible?: boolean;
     isRound?: boolean; // nice() call 여부
+    tickFormat?: string;
 }
 
 export interface Margin {

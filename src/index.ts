@@ -146,7 +146,8 @@ const excute = () => {
             {
                 field: 'date',
                 type: 'time',
-                placement: 'top'
+                placement: 'top',
+                // tickFormat: '%y/%m/%d'
             }
         ],
         series: [
@@ -371,6 +372,9 @@ const stackedBar = () => {
             data: data,
             min: 0,
             max: max(data, (d: any) => d.total),
+            margin: {
+                left: 65
+            },
             isResize: 'Y',
             axes: [
                 {
@@ -383,7 +387,8 @@ const stackedBar = () => {
                     field: 'total',
                     type: 'number',
                     placement: 'left',
-                    isRound: true
+                    isRound: true,
+                    tickFormat: ',d'
                 }
             ],
             series: [
@@ -413,6 +418,9 @@ const groupedBar = () => {
         const groupedBarChart = new BasicChart({
             selector: '#groupedBar',
             data: data,
+            margin: {
+                left: 65
+            },
             min: -2000000,
             max: max(data, d => max(data.columns.slice(1), key => d[key])),
             isResize: 'Y',
@@ -427,6 +435,7 @@ const groupedBar = () => {
                     field: 'total',
                     type: 'number',
                     placement: 'left',
+                    tickFormat: 's',
                     isRound: true
                 }
             ],
