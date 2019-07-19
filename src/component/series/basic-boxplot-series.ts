@@ -16,9 +16,9 @@ export interface BasicBoxplotSeriesConfiguration {
 
 export interface BoxplotModel {
     key: string;
-    counts?: number;
-    quartile?: number;
-    whiskers?: Array<number>;
+    counts?: any[];
+    quartile?: number[];
+    whiskers?: number[];
     color?: string;
 }
 
