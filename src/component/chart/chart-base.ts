@@ -1,6 +1,8 @@
 import '../../chart.css'
 
 import { min, max, extent } from 'd3-array';
+import { timeFormat } from 'd3-time-format';
+import { format } from 'd3-format';
 import { scaleBand, scaleLinear, scaleTime, scalePoint } from 'd3-scale';
 import { select, event, Selection, BaseType } from 'd3-selection';
 import { axisBottom, axisLeft, axisTop, axisRight } from 'd3-axis';
@@ -22,6 +24,7 @@ export interface Scale {
     scale: any;
     type: string;
     visible: boolean;
+    tickFormat?: string;
 }
 
 export class ChartBase<T = any> implements IChart {
@@ -30,6 +33,10 @@ export class ChartBase<T = any> implements IChart {
     public max: number = Infinity;
 
     protected data: Array<T> = [];
+
+    protected svgWidth: number = 0;
+
+    protected svgHeight: number = 0;
 
     protected scales: Array<Scale> = [];
     
@@ -41,19 +48,7 @@ export class ChartBase<T = any> implements IChart {
 
     protected svg: Selection<BaseType, any, HTMLElement, any>;
 
-    protected svgWidth: number = 0;
-
-    protected svgHeight: number = 0;
-
     protected mainGroup: Selection<BaseType, any, HTMLElement, any>;
-
-    protected xAxisGroup: Selection<BaseType, any, HTMLElement, any>;
-
-    protected xTopAxisGroup: Selection<BaseType, any, HTMLElement, any>;
-
-    protected yAxisGroup: Selection<BaseType, any, HTMLElement, any>;
-
-    protected yRightAxisGroup: Selection<BaseType, any, HTMLElement, any>;
 
     protected seriesList: Array<ISeries> = [];
 
@@ -65,6 +60,10 @@ export class ChartBase<T = any> implements IChart {
 
     protected margin: Margin = {
         top: 20, left: 30, bottom: 40, right: 20
+    };
+
+    protected axisGroups: any = {
+        top: null, left: null, bottom: null, right: null
     };
 
     private config: ChartConfiguration;
@@ -223,18 +222,18 @@ export class ChartBase<T = any> implements IChart {
             .attr('class', 'main-group')
             .attr('transform', `translate(${this.margin.left}, ${this.margin.top})`);
 
-        this.xAxisGroup = this.mainGroup.append('g')
+        this.axisGroups.bottom = this.mainGroup.append('g')
             .attr('class', 'x-axis-group')
             .attr('transform', `translate(0, ${this.height})`);
 
-        this.xTopAxisGroup = this.mainGroup.append('g')
+        this.axisGroups.top = this.mainGroup.append('g')
             .attr('class', 'x-top-axis-group')
             .attr('transform', `translate(0, 0)`);
 
-        this.yAxisGroup = this.mainGroup.append('g')
+        this.axisGroups.left = this.mainGroup.append('g')
             .attr('class', 'y-axis-group');
 
-        this.yRightAxisGroup = this.mainGroup.append('g')
+        this.axisGroups.right = this.mainGroup.append('g')
             .attr('class', 'y-right-axis-group')
             .attr('transform', `translate(${this.width - this.margin.right}, 0)`);
 
@@ -261,50 +260,35 @@ export class ChartBase<T = any> implements IChart {
     protected updateAxis() {
         this.scales = this.setupScale(this.config.axes);
 
-        const bottom = this.scales.find((scale: Scale) => scale.orinet === 'bottom');
-        if (bottom && bottom.visible) {
-            const bottomScale = axisBottom(bottom.scale);
-            if (bottom.type === 'number') {
-                bottomScale.ticks(null, 's');
+        this.scales.map((scale: Scale) => {
+            let orientedScale: any = null;
+            if (scale.orinet === 'right') {
+                orientedScale = axisRight(scale.scale);
+            } else if (scale.orinet === 'left') {
+                orientedScale = axisLeft(scale.scale);
+            } else if (scale.orinet === 'top') {
+                orientedScale = axisTop(scale.scale);
+            } else {
+                orientedScale = axisBottom(scale.scale);
             }
-            this.xAxisGroup.call(
-                bottomScale
-            )
-        }
 
-        const left = this.scales.find((scale: Scale) => scale.orinet === 'left');
-        if (left && left.visible) {
-            const leftScale = axisLeft(left.scale);
-            if (left.type === 'number') {
-                leftScale.ticks(null, 's');
+            if (scale.type === 'number') {
+                if (scale.tickFormat) {
+                    orientedScale.ticks(null, scale.tickFormat);
+                    // orientedScale.tickFormat(timeFormat(scale.tickFormat));
+                }
+            } else if (scale.type === 'time') {
+                if (scale.tickFormat) {
+                    orientedScale.tickFormat(timeFormat(scale.tickFormat));
+                }
             }
-            this.yAxisGroup.call(
-                leftScale
-            )
-        }
 
-        // special
-        const top = this.scales.find((scale: Scale) => scale.orinet === 'top');
-        if (top && top.visible) {
-            const topScale = axisTop(top.scale);
-            if (top.type === 'number') {
-                topScale.ticks(null, 's');
+            if (scale.visible) {
+                this.axisGroups[scale.orinet].call(
+                    orientedScale
+                );
             }
-            this.xTopAxisGroup.call(
-                topScale
-            )
-        }
-
-        const right = this.scales.find((scale: Scale) => scale.orinet === 'right');
-        if (right && right.visible) {
-            const rightScale = axisRight(right.scale);
-            if (right.type === 'number') {
-                rightScale.ticks(null, 's');
-            }
-            this.yRightAxisGroup.call(
-                rightScale
-            )
-        }
+        });
     }
 
     protected updateSeries() {
@@ -390,7 +374,8 @@ export class ChartBase<T = any> implements IChart {
                 orinet: axis.placement,
                 scale,
                 type: axis.type,
-                visible: axis.visible === false ? false : true
+                visible: axis.visible === false ? false : true,
+                tickFormat: axis.tickFormat ? axis.tickFormat : undefined
             });
         });
         return returnAxes;
