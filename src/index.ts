@@ -19,6 +19,7 @@ import { BasicViolinSeries } from './component/series/basic-violin-series';
 import { StackedVerticalBarSeries } from './component/series/stacked-vertical-bar-series';
 import { GroupedVerticalBarSeries } from './component/series/grouped-vertical-bar-series';
 import { BasicPieSeries } from './component/series/basic-pie-series';
+import { BasicDonutSeries } from './component/series/basic-donut-series';
 
 class SalesModel {
     salesperson: string;
@@ -501,6 +502,38 @@ const pieChart = () => {
 
 };
 
+const donutChart = () => {
+    const labels = ['Lorem ipsum', 'dolor sit', 'amet', 'consectetur', 'adipisicing', 'elit', 'sed', 'do', 'eiusmod', 'tempor', 'incididunt'];
+	const pieData = labels.map((label) => {
+		return { label: label, value: Math.random() }
+	});
+
+    const donutSeries = new BasicDonutSeries({
+        categoryField: 'label',
+        valueField: 'value'
+    });
+
+    const basicPieChart = new BasicChart({
+        selector: '#donut',
+        data: pieData,
+        margin: {
+            left: 10,
+            right: 10,
+            top: 10,
+            bottom: 10
+        },
+        min: 0,
+        max: max(pieData, (d: any) => d.value),
+        isResize: 'Y',
+        axes: [
+
+        ],
+        series: [
+            donutSeries
+        ]
+    }).draw();
+}
+
 excute();
 
 boxplot();
@@ -514,3 +547,5 @@ stackedBar();
 groupedBar();
 
 pieChart();
+
+donutChart();

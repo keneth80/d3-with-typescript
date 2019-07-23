@@ -3,7 +3,7 @@ import { Selection, BaseType } from 'd3-selection';
 import { pie, arc } from 'd3-shape';
 import { scaleOrdinal, } from 'd3-scale';
 import { transition } from 'd3-transition';
-import { quantize } from 'd3-interpolate';
+import { quantize, interpolate } from 'd3-interpolate';
 
 import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
@@ -12,8 +12,6 @@ export interface BasicDonutSeriesConfiguration {
     selector?: string;
     categoryField: string;
     valueField: string;
-    innerRadius?: number;
-    isLabel?: boolean;
 }
 
 export class BasicDonutSeries extends SeriesBase {
@@ -27,9 +25,11 @@ export class BasicDonutSeries extends SeriesBase {
 
     private pieShape: any;
 
-    private innerRadius: number = 0;
+    private pieSeriesGroup: Selection<BaseType, any, HTMLElement, any>;
 
-    private isLabel: boolean = false;
+    private pieLabelGroup: Selection<BaseType, any, HTMLElement, any>;
+
+    private pieLineGroup: Selection<BaseType, any, HTMLElement, any>;
 
     constructor(configuration: BasicDonutSeriesConfiguration) {
         super();
@@ -44,14 +44,6 @@ export class BasicDonutSeries extends SeriesBase {
 
             if (configuration.valueField) {
                 this.valueField = configuration.valueField;
-            }
-
-            if (configuration.innerRadius) {
-                this.innerRadius = configuration.innerRadius;
-            }
-
-            if (configuration.isLabel) {
-                this.isLabel = true;
             }
         }
 
@@ -70,111 +62,123 @@ export class BasicDonutSeries extends SeriesBase {
         if (!mainGroup.select(`.${this.selector}-group`).node()) {
             this.mainGroup = mainGroup.append('g').attr('class', `${this.selector}-group`);
         }
+
+        this.pieSeriesGroup = this.mainGroup.append('g')
+            .attr('class', `${this.selector}-pie-series-group`);
+
+        this.pieLabelGroup = this.mainGroup.append('g')
+            .attr('class', `${this.selector}-pie-label-group`);
+
+        this.pieLineGroup = this.mainGroup.append('g')
+            .attr('class', `${this.selector}-pie-line-group`);
     }
 
     drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {
-        const radius = Math.min(width, height) / 2 - 40;
+        const radius = Math.min(width, height) / 2;
+
+        const arcs = this.pieShape(chartData);
 
         const color = scaleOrdinal()
             .domain(chartData.map(d => d[this.categoryField]))
             .range(quantize(t => interpolateSpectral(t * 0.8 + 0.1), chartData.length).reverse());
 
-        const arcShape = arc()
-            // .innerRadius(radius * 0.5)
-            // .outerRadius(radius * 0.5);
-            .innerRadius(this.innerRadius * 0.5)
-            .outerRadius(Math.min(width, height) / 2 - 1 * 0.5);
+        const innerArc = arc()
+            .outerRadius(radius * 0.8)
+            .innerRadius(radius * 0.4);
 
-        const arcs = this.pieShape(chartData);
+        const outerArc = arc()
+            .innerRadius(radius * 0.9)
+            .outerRadius(radius * 0.9);
 
         this.mainGroup.attr('transform', `translate(${width / 2},${height / 2})`);
 
-        this.mainGroup.selectAll(`.${this.selector}-path`)
-            .data(arcs)
+        // ------- pie series -------
+        const series = this.pieSeriesGroup.selectAll(`.${this.selector}-path`)
+            .data(arcs, (d: any) => { return d.data[this.categoryField];})
             .join(
                 (enter) => enter.append('path').attr('class', `${this.selector}-path`),
                 (update) => update,
                 (exit) => exit.remove()
             )
-            .attr('fill', (d: any) => color(d.data[this.categoryField]) + '')
-            .attr('stroke', 'white')
-            .attr('d', arcShape)
-                .selectAll('title')
-                .data((d: any) => {
-                    return [d];
-                })
-                .join(
-                    (enter) => enter.append('title').attr('class', `${this.selector}-title`),
-                    (update) => update,
-                    (exit) => exit.remove()
-                )
-                .text((d: any) => `${d.data[this.categoryField]}: ${d.data[this.valueField].toLocaleString()}`);
+            .attr('fill', (d: any) => color(d.data[this.categoryField]) + '');
+        
+        let currentSeries = null;
+        series.transition()
+            .duration(1000)
+            .attrTween('d', (d: any) => {
+                currentSeries = currentSeries || d;
+                const interpolateMng = interpolate(currentSeries, d);
+                currentSeries = interpolateMng(0);
+                return (t: any) => {
+                    return innerArc(interpolateMng(t));
+                };
+            });
 
-        if (this.isLabel) {
-            const radius = Math.min(width, height) / 2 * 0.8;
-            const arcLabel = arc().innerRadius(radius).outerRadius(radius);
-    
-            const texts = this.mainGroup.selectAll(`.${this.selector}-label`)
-                .data(arcs)
-                .join(
-                    (enter) => enter.append('text').attr('class', `${this.selector}-label`),
-                    (update) => update,
-                    (exit) => exit.remove()
-                )
-                .attr('transform', (d: any) => `translate(${arcLabel.centroid(d)})`)
-                .attr('dy', '0.35em')
-    
-                
-            texts.selectAll('tspan.label')
-                .data((d: any) => [d])
-                .join(
-                    (enter) => enter.append('tspan').attr('class', 'label'),
-                    (update) => update,
-                    (exit) => exit.remove()
-                )
-                .attr('x', 0)
-                .attr('y', '-0.7em')
-                .style('font-size', 13)
-                .style('font-weight', 'bold')
-                .text((d: any) => d.data.name);
+        // ------- labels -------
+        const labels = this.pieLabelGroup.selectAll(`.${this.selector}-label`)
+            .data(arcs, (d: any) => { return d.data[this.categoryField];})
+            .join(
+                (enter) => enter.append('text').attr('class', `${this.selector}-label`),
+                (update) => update,
+                (exit) => exit.remove()
+            )
+            .attr('dy', '.35em')
+            .text((d: any) => {
+                return d.data[this.categoryField];
+            });
+
+        let currentLabel = null;
+        labels.transition().duration(1000)
+            .attrTween('transform', (d: any) => {
+                currentLabel = currentLabel || d;
+                const interpolateMng = interpolate(currentLabel, d);
+                currentLabel = interpolateMng(0);
+                return (t: any) => {
+                    const d2 = interpolateMng(t);
+                    const pos = outerArc.centroid(d2);
+                    pos[0] = radius * (this.midAngle(d2) < Math.PI ? 1 : -1);
+                    return `translate(${pos})`;
+                };
+            })
+            .styleTween('text-anchor', (d: any) => {
+                currentLabel = currentLabel || d;
+                const interpolateMng = interpolate(currentLabel, d);
+                currentLabel = interpolateMng(0);
+                return (t: any) => {
+                    const d2 = interpolateMng(t);
+                    return this.midAngle(d2) < Math.PI ? 'start' : 'end';
+                };
+            });
             
-            texts.filter((d: any) => (d.endAngle - d.startAngle) > 0.25)
-                .selectAll('tspan.value')
-                .data((d: any) => [d])
-                .join(
-                    (enter) => enter.append('tspan').attr('class', 'value'),
-                    (update) => update,
-                    (exit) => exit.remove()
-                )
-                .attr('x', 0)
-                .attr('y', '0.7em')
-                .style('fill-opacity', 0.7)
-                .style('font-size', 11)
-                .text((d: any) => d.data.value.toLocaleString());
-        } else {
-            const outerArc = arc()
-                .innerRadius(this.innerRadius * 0.9)
-                .outerRadius(this.innerRadius * 0.9);
+        // ------- poly lines -------
+        const lines = this.pieLineGroup.selectAll(`.${this.selector}-line`)
+            .data(arcs, (d: any) => { return d.data[this.categoryField];})
+            .join(
+                (enter) => enter.append('polyline').attr('class', `${this.selector}-line`),
+                (update) => update,
+                (exit) => exit.remove()
+            )
+            .style('opacity', 0.5)
+            .style('stroke', '#000')
+            .style('stroke-width', 2)
+            .style('fill', 'none');
 
-            this.mainGroup
-                .selectAll('.all-poly-lines')
-                .data(arcs)
-                .join(
-                    (enter) => enter.append('polyline').attr('class', 'all-poly-lines'),
-                    (update) => update,
-                    (exit) => exit.remove()
-                )
-                .style('fill', 'none')
-                .style('stroke', 'black')
-                .style('stroke-width', 1)
-                .attr('points', (d: any) => {
-                    const posA = arcShape.centroid(d) // line insertion in the slice
-                    const posB = outerArc.centroid(d) // line break: we use the other arc generator that has been built only for that
-                    const posC = outerArc.centroid(d); // Label position = almost the same as posB
-                    const midangle = d.startAngle + (d.endAngle - d.startAngle) / 2 // we need the angle to see if the X position will be at the extreme right or extreme left
-                    posC[0] = radius * 0.95 * (midangle < Math.PI ? 1 : -1); // multiply by 1 or -1 to put it on the right or on the left
-                    return <any>[posA, posB, posC];
-                })
-        }
+        let currentLine = null;
+        lines.transition().duration(1000)
+            .attrTween('points', (d: any) => {
+                currentLine = currentLine || d;
+                const interpolateMng = interpolate(currentLine, d);
+                currentLine = interpolateMng(0);
+                return (t: any) => {
+                    const d2 = interpolateMng(t);
+                    const pos = outerArc.centroid(d2);
+                    pos[0] = radius * 0.95 * (this.midAngle(d2) < Math.PI ? 1 : -1);
+                    return [innerArc.centroid(d2), outerArc.centroid(d2), pos].toLocaleString();
+                };			
+            });
     }
+
+    midAngle = (d: any) => {
+		return d.startAngle + (d.endAngle - d.startAngle)/2;
+	}
 }

@@ -29,7 +29,7 @@ export class BasicPieSeries extends SeriesBase {
 
     private innerRadius: number = 0;
 
-    private isLabel: boolean = false;
+    private isLabel: boolean = true;
 
     constructor(configuration: BasicPieSeriesConfiguration) {
         super();
@@ -136,7 +136,7 @@ export class BasicPieSeries extends SeriesBase {
                 .attr('y', '-0.7em')
                 .style('font-size', 13)
                 .style('font-weight', 'bold')
-                .text((d: any) => d.data.name);
+                .text((d: any) => d.data[this.categoryField]);
             
             texts.filter((d: any) => (d.endAngle - d.startAngle) > 0.25)
                 .selectAll('tspan.value')
@@ -150,31 +150,7 @@ export class BasicPieSeries extends SeriesBase {
                 .attr('y', '0.7em')
                 .style('fill-opacity', 0.7)
                 .style('font-size', 11)
-                .text((d: any) => d.data.value.toLocaleString());
-        } else {
-            const outerArc = arc()
-                .innerRadius(this.innerRadius * 0.9)
-                .outerRadius(this.innerRadius * 0.9);
-
-            this.mainGroup
-                .selectAll('.all-poly-lines')
-                .data(arcs)
-                .join(
-                    (enter) => enter.append('polyline').attr('class', 'all-poly-lines'),
-                    (update) => update,
-                    (exit) => exit.remove()
-                )
-                .style('fill', 'none')
-                .style('stroke', 'black')
-                .style('stroke-width', 1)
-                .attr('points', (d: any) => {
-                    const posA = arcShape.centroid(d) // line insertion in the slice
-                    const posB = outerArc.centroid(d) // line break: we use the other arc generator that has been built only for that
-                    const posC = outerArc.centroid(d); // Label position = almost the same as posB
-                    const midangle = d.startAngle + (d.endAngle - d.startAngle) / 2 // we need the angle to see if the X position will be at the extreme right or extreme left
-                    posC[0] = radius * 0.95 * (midangle < Math.PI ? 1 : -1); // multiply by 1 or -1 to put it on the right or on the left
-                    return <any>[posA, posB, posC];
-                })
+                .text((d: any) => d.data[this.valueField].toLocaleString());
         }
     }
 }

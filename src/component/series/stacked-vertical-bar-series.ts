@@ -150,6 +150,10 @@ export class StackedVerticalBarSeries extends SeriesBase {
                 // .attr('height', (d: any) => { return Math.abs(y(d[0]) - y(d[1]) - y(0)); })
                 .attr('width', x.bandwidth());
         
+        this.drawLegend(keys, z, width);
+    }
+
+    drawLegend(keys: string[], z: any, width: number) {
         const legendKey = keys.slice().reverse();
         const legend = this.legendGroup.selectAll('.legend-item-group')
             .data(legendKey)

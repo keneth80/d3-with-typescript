@@ -141,6 +141,10 @@ export class GroupedVerticalBarSeries extends SeriesBase {
                 .attr('width', barx.bandwidth())
                 .attr('fill', (d: any) => z(d.key) + '');
         
+        this.drawLegend(keys, z, width);
+    }
+
+    drawLegend(keys: string[], z: any, width: number) {
         const legendKey = keys.slice().reverse();
         const legend = this.legendGroup.selectAll('.legend-item-group')
             .data(legendKey)
