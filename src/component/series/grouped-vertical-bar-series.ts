@@ -5,6 +5,7 @@ import { format } from 'd3-format';
 
 import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
+import { getTransformByArray } from '../chart/util/d3-svg-util';
 
 export interface GroupedVerticalBarSeriesConfiguration {
     selector?: string;
@@ -118,21 +119,13 @@ export class GroupedVerticalBarSeries extends SeriesBase {
                         .on('mousemove', (d: any, i: number, nodeList: any) => {
                             const textElement: any = this.tooltipGroup.select('text').text(`${d.key}: ${this.numberFmt(d.value)}`);
                             const textWidth = textElement.node().getComputedTextLength() + 10;
-                            this.tooltipGroup.selectAll('rect')
-                                .attr('width', textWidth);
-        
-                            let xPosition = event.offsetX;
-                            let yPosition = event.offsetY -20;
+                            
+                            let xPosition = event.x;
+                            let yPosition = event.offsetY -30;
                             if (xPosition + textWidth > width) {
-                                xPosition = event.offsetX - textWidth;
+                                xPosition = xPosition - textWidth;
                             }
-                            this.tooltipGroup.attr('transform', `translate(${xPosition}, ${yPosition})`);
-        
-                            // const target: any = nodeList[i];
-                            // const parent: any = select(target.parentElement);
-                            // const position = mouse(target);
-        
-                            // console.log('position : ', target, parent.node().getBBox(), position, xPosition, yPosition);
+                            this.tooltipGroup.attr('transform', `translate(${xPosition}, ${yPosition})`).selectAll('rect').attr('width', textWidth);
                         })
                         .on('click', (data: any) => {
                             event.preventDefault();

@@ -1,14 +1,14 @@
+import { schemeDark2, interpolateSpectral } from 'd3-scale-chromatic';
 import { Selection, BaseType } from 'd3-selection';
 import { pie, arc } from 'd3-shape';
 import { scaleOrdinal, } from 'd3-scale';
 import { transition } from 'd3-transition';
 import { quantize } from 'd3-interpolate';
-import { interpolateSpectral } from 'd3-scale-chromatic';
 
 import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
 
-export interface BasicPieSeriesConfiguration {
+export interface BasicDonutSeriesConfiguration {
     selector?: string;
     categoryField: string;
     valueField: string;
@@ -16,8 +16,8 @@ export interface BasicPieSeriesConfiguration {
     isLabel?: boolean;
 }
 
-export class BasicPieSeries extends SeriesBase {
-    private selector: string = 'pie';
+export class BasicDonutSeries extends SeriesBase {
+    private selector: string = 'donut';
 
     private categoryField: string;
 
@@ -31,7 +31,7 @@ export class BasicPieSeries extends SeriesBase {
 
     private isLabel: boolean = false;
 
-    constructor(configuration: BasicPieSeriesConfiguration) {
+    constructor(configuration: BasicDonutSeriesConfiguration) {
         super();
         if (configuration) {
             if (configuration.selector) {

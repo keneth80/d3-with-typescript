@@ -125,7 +125,7 @@ export class StackedVerticalBarSeries extends SeriesBase {
                             const target: any = nodeList[i];
                             const column: string = target.parentElement.getAttribute('column');
                             const xPosition = mouse(target)[0] + 10;
-                            const yPosition = mouse(target)[1] - 5;
+                            const yPosition = mouse(target)[1] - 10;
                             const textElement: any = this.tooltipGroup.select('text')
                                 .text(`${column}: ${this.numberFmt(d.data[column])}`);
 
