@@ -103,18 +103,20 @@ export class GroupedVerticalBarSeries extends SeriesBase {
                         .on('mouseover', (d: any, i, nodeList: any) => {
                             select(nodeList[i])
                                 .style('fill', () => color(z(d.key) + '').darker(2) + '') // point
-                                .style('stroke', 'f5330c')
-                                .style('stroke-width', 2);
+                                // .style('stroke', '#f5330c')
+                                // .style('stroke-width', 2);
         
                             this.tooltipGroup = this.chartBase.showTooltip();
+                            select(nodeList[i]).classed('tooltip', true);
                         })
                         .on('mouseout', (d: any, i, nodeList: any) => {
                             select(nodeList[i])
                                 .style('fill', () => color(z(d.key) + '').darker(0) + '') // point
-                                .style('stroke', null)
-                                .style('stroke-width', null);
+                                // .style('stroke', null)
+                                // .style('stroke-width', null);
         
                             this.chartBase.hideTooltip();
+                            select(nodeList[i]).classed('tooltip', false);
                         })
                         .on('mousemove', (d: any, i: number, nodeList: any) => {
                             const textElement: any = this.tooltipGroup.select('text').text(`${d.key}: ${this.numberFmt(d.value)}`);

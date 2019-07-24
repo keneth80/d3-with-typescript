@@ -1,12 +1,15 @@
 import { schemeDark2, interpolateSpectral } from 'd3-scale-chromatic';
-import { Selection, BaseType } from 'd3-selection';
+import { Selection, BaseType, select, event } from 'd3-selection';
 import { pie, arc } from 'd3-shape';
+import { color } from 'd3-color';
 import { scaleOrdinal, } from 'd3-scale';
 import { transition } from 'd3-transition';
 import { quantize, interpolate } from 'd3-interpolate';
+import { format } from 'd3-format';
 
 import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
+import { isIE } from '../chart/util/d3-svg-util';
 
 export interface BasicDonutSeriesConfiguration {
     selector?: string;
@@ -31,6 +34,10 @@ export class BasicDonutSeries extends SeriesBase {
 
     private pieLineGroup: Selection<BaseType, any, HTMLElement, any>;
 
+    private tooltipGroup: Selection<BaseType, any, HTMLElement, any>;
+
+    private numberFmt: any;
+
     constructor(configuration: BasicDonutSeriesConfiguration) {
         super();
         if (configuration) {
@@ -46,6 +53,8 @@ export class BasicDonutSeries extends SeriesBase {
                 this.valueField = configuration.valueField;
             }
         }
+
+        this.numberFmt = format(',.4f');
 
         this.transition = transition()
         .duration(750);
@@ -78,7 +87,7 @@ export class BasicDonutSeries extends SeriesBase {
 
         const arcs = this.pieShape(chartData);
 
-        const color = scaleOrdinal()
+        const colors = scaleOrdinal()
             .domain(chartData.map(d => d[this.categoryField]))
             .range(quantize(t => interpolateSpectral(t * 0.8 + 0.1), chartData.length).reverse());
 
@@ -100,7 +109,48 @@ export class BasicDonutSeries extends SeriesBase {
                 (update) => update,
                 (exit) => exit.remove()
             )
-            .attr('fill', (d: any) => color(d.data[this.categoryField]) + '');
+            .attr('fill', (d: any) => colors(d.data[this.categoryField]) + '')
+            .on('mouseover', (d: any, i, nodeList: any) => {
+                if (nodeList[i]) {
+                    select(nodeList[i])
+                        .style('fill', () => color(colors(d.data[this.categoryField]) + '').darker(2) + '') // point
+                        // .style('stroke', '#f5330c')
+                        // .style('stroke-width', 2);
+
+                    this.tooltipGroup = this.chartBase.showTooltip();
+
+                    select(nodeList[i]).classed('tooltip', true);
+                }
+            })
+            .on('mouseout', (d: any, i, nodeList: any) => {
+                if (nodeList[i]) {
+                    select(nodeList[i])
+                        .style('fill', () => color(colors(d.data[this.categoryField]) + '').darker(0) + '') // point
+                        // .style('stroke', null)
+                        // .style('stroke-width', null);
+                }
+
+                this.chartBase.hideTooltip();
+                select(nodeList[i]).classed('tooltip', false);
+            })
+            .on('mousemove', (d: any, i: number, nodeList: any) => {
+                const textElement: any = this.tooltipGroup.select('text').text(`${d.data[this.categoryField]}: ${this.numberFmt(d.data[this.valueField])}`);
+                const textWidth = textElement.node().getComputedTextLength() + 10;
+                
+                let xPosition = event.x;
+                let yPosition = event.offsetY - 30;
+                
+                if (isIE()) {
+                    yPosition += height / 2;
+                }
+
+                // let yPosition = height / 2 - (event.clientY - rect.y);
+                if (xPosition + textWidth > width) {
+                    xPosition = xPosition - textWidth;
+                }
+                console.log('event : ', event);
+                this.tooltipGroup.attr('transform', `translate(${xPosition}, ${yPosition})`).selectAll('rect').attr('width', textWidth);
+            });
         
         let currentSeries = null;
         series.transition()

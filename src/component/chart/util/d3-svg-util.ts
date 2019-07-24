@@ -24,3 +24,15 @@ export const getTransformByArray = (transform: string = 'translate(0, 0)'): Arra
     }
     return translate;
 };
+
+export const isIE = (): boolean => {
+    let returnValue: boolean = false;
+    const agent = navigator.userAgent.toLowerCase();
+    if ((navigator.appName == 'Netscape' && agent.indexOf('trident') != -1) || 
+        (agent.indexOf('msie') != -1) ||
+        (agent.indexOf('edge') != -1)) {
+        // ie일 경우
+        returnValue = true;
+    }
+    return returnValue;
+}

@@ -104,10 +104,12 @@ export class StackedVerticalBarSeries extends SeriesBase {
                             
                             select(nodeList[i])
                                 .style('fill', () => color(fill).darker(2) + '') // point
-                                .style('stroke', 'f5330c')
-                                .style('stroke-width', 2);
+                                // .style('stroke', '#f5330c')
+                                // .style('stroke-width', 2);
 
                             this.tooltipGroup = this.chartBase.showTooltip();
+                            select(nodeList[i]).classed('tooltip', true);
+                            
                         })
                         .on('mouseout', (d: any, i, nodeList: any) => {
                             const target: any = nodeList[i];
@@ -116,10 +118,11 @@ export class StackedVerticalBarSeries extends SeriesBase {
 
                             select(nodeList[i])
                                 .style('fill', () => color(fill).darker(0) + '') // point
-                                .style('stroke', null)
-                                .style('stroke-width', null);
+                                // .style('stroke', null)
+                                // .style('stroke-width', null);
 
                             this.chartBase.hideTooltip();
+                            select(nodeList[i]).classed('tooltip', false);
                         })
                         .on('mousemove', (d: any, i, nodeList: any) => {
                             const target: any = nodeList[i];
