@@ -139,7 +139,7 @@ export class BasicDonutSeries extends SeriesBase {
                 
                 let xPosition = event.x;
                 let yPosition = event.offsetY - 30;
-                
+
                 if (isIE()) {
                     yPosition += height / 2;
                 }
@@ -148,7 +148,7 @@ export class BasicDonutSeries extends SeriesBase {
                 if (xPosition + textWidth > width) {
                     xPosition = xPosition - textWidth;
                 }
-                console.log('event : ', event);
+                
                 this.tooltipGroup.attr('transform', `translate(${xPosition}, ${yPosition})`).selectAll('rect').attr('width', textWidth);
             });
         
