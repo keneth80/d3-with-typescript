@@ -1,0 +1,88 @@
+import { Selection, BaseType } from 'd3-selection';
+import { area, line } from 'd3-shape';
+
+import { Scale } from '../chart/chart-base';
+import { SeriesBase } from '../chart/series-base';
+
+export interface BasicAreaSeriesConfiguration {
+    selector?: string;
+    xField: string;
+    yField: string;
+}
+
+export class BasicAreaSeries extends SeriesBase {
+    private area: any;
+
+    private line: any;
+
+    private selector: string = 'basic-area';
+
+    private xField: string;
+
+    private yField: string;
+
+    constructor(configuration: BasicAreaSeriesConfiguration) {
+        super();
+        if (configuration) {
+            if (configuration.selector) {
+                this.selector = configuration.selector;
+            }
+
+            if (configuration.xField) {
+                this.xField = configuration.xField;
+            }
+
+            if (configuration.yField) {
+                this.yField = configuration.yField;
+            }
+        }
+    }
+
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
+                  mainGroup: Selection<BaseType, any, HTMLElement, any>) {
+        this.svg = svg;
+        if (!mainGroup.select(`.${this.selector}-group`).node()) {
+            this.mainGroup = mainGroup.append('g').attr('class', `${this.selector}-group`);
+        }
+    }
+
+    drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {
+        const x: any = scales.find((scale: Scale) => scale.orinet === 'bottom').scale;
+        const y: any = scales.find((scale: Scale) => scale.orinet === 'left').scale;
+        
+        this.area = area()
+            .x((d: any) => {
+                return x(d[this.xField]) + 1; 
+            })
+            .y0(height)
+            .y1((d: any) => {
+                return y(d[this.yField]); 
+            });
+
+        this.line = line()
+            .x((d: any) => { return x(d[this.xField]); })
+            .y((d: any) => { return y(d[this.yField]); });
+
+        this.mainGroup.selectAll(`.${this.selector}-path`)
+            .data([chartData])
+                .join(
+                    (enter) => enter.append('path').attr('class', `${this.selector}-path`),
+                    (update) => update,
+                    (exit) => exit.remove
+                )
+                .style('fill', 'lightsteelblue')
+                .attr('d', this.area);
+
+        this.mainGroup.selectAll(`.${this.selector}-line`)
+            .data([chartData])
+                .join(
+                    (enter) => enter.append('path').attr('class', `${this.selector}-line`),
+                    (update) => update,
+                    (exit) => exit.remove
+                )
+                .style('fill', 'none')
+                .style('stroke', 'steelblue')
+                .style('stroke-width', 2)
+                .attr('d', this.line);
+    }
+}

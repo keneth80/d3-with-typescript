@@ -20,6 +20,7 @@ import { StackedVerticalBarSeries } from './component/series/stacked-vertical-ba
 import { GroupedVerticalBarSeries } from './component/series/grouped-vertical-bar-series';
 import { BasicPieSeries } from './component/series/basic-pie-series';
 import { BasicDonutSeries } from './component/series/basic-donut-series';
+import { BasicAreaSeries } from './component/series/basic-area-series';
 
 class SalesModel {
     salesperson: string;
@@ -534,6 +535,51 @@ const donutChart = () => {
     }).draw();
 }
 
+const areaChart = () => {
+    const parseTime = timeParse("%d-%b-%y");
+    csv('./component/mock-data/area-data.csv', (d: any, index: number, columns: Array<string>) => {
+        d.date = parseTime(d.date);
+        d.close = +d.close;
+        return d;
+    })
+    .then((data) => {
+        const basicAreaSeries = new BasicAreaSeries({
+            xField: 'date',
+            yField: 'close'
+        });
+
+        const areaChart = new BasicChart({
+            selector: '#area',
+            data: data.map((d: any, i: number) => d),
+            margin: {
+                left: 65,
+                right: 50
+            },
+            calcField: 'close',
+            isResize: 'Y',
+            axes: [
+                {
+                    field: 'date',
+                    type: 'time',
+                    placement: 'bottom'
+                },
+                {
+                    field: 'close',
+                    type: 'number',
+                    placement: 'left',
+                    tickFormat: 's'
+                }
+            ],
+            series: [
+                basicAreaSeries
+            ]
+        }).draw();
+    })
+    .catch((error: any) => {
+        console.log('Error : ', error);
+    });
+}
+
 excute();
 
 boxplot();
@@ -549,3 +595,5 @@ groupedBar();
 pieChart();
 
 donutChart();
+
+areaChart();
