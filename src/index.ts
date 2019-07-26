@@ -2,11 +2,10 @@ import './style.css';
 
 import { min, max, quantile, mean } from 'd3-array';
 import { randomUniform, randomNormal } from 'd3-random';
-import { scaleOrdinal, scaleQuantile } from 'd3-scale';
+import { scaleOrdinal } from 'd3-scale';
 import { timeParse } from 'd3-time-format';
 import { schemeCategory10 } from 'd3-scale-chromatic';
 import { csv } from 'd3-fetch';
-import { DocumentSelectionExample } from './component/document-selection-example';
 import { BasicChart } from './component/basic-chart';
 import { VerticalBarSeries } from './component/series/vertical-bar-series';
 import { BasicLineSeries } from './component/series/basic-line-series';

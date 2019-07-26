@@ -1,15 +1,18 @@
-import { Selection, BaseType } from 'd3-selection';
-import { Subject, Observable } from 'rxjs';
+import { Selection, BaseType, select } from 'd3-selection';
+import { transition } from 'd3-transition';
 
+import { colorDarker } from '../chart/util/d3-svg-util';
 import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
-import { transition } from 'd3-transition';
-import { easeQuadIn } from 'd3-ease';
 
 export interface VerticalBarSeriesConfiguration {
     selector?: string;
     xField: string;
     yField: string;
+    style?: {
+        fill: string,
+        stroke: string,
+    }
 }
 
 export class VerticalBarSeries extends SeriesBase {
@@ -20,6 +23,8 @@ export class VerticalBarSeries extends SeriesBase {
     private yField: string;
 
     private transition: any;
+
+    private style: any = {};
 
     constructor(configuration: VerticalBarSeriesConfiguration) {
         super();
@@ -34,6 +39,15 @@ export class VerticalBarSeries extends SeriesBase {
 
             if (configuration.yField) {
                 this.yField = configuration.yField;
+            }
+
+            if (configuration.style) {
+                this.style = {...configuration.style};
+            } else {
+                this.style = {
+                    fill: 'steelblue',
+                    stroke: '#2803fc'
+                };
             }
         }
 
@@ -53,6 +67,10 @@ export class VerticalBarSeries extends SeriesBase {
     drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {
         const x: any = scales.find((scale: Scale) => scale.orinet === 'bottom').scale;
         const y: any = scales.find((scale: Scale) => scale.orinet === 'left').scale;
+
+        const fill = this.style.fill;
+        const stroke = this.style.stroke;
+
         this.mainGroup.selectAll(`.${this.selector}`)
             .data(chartData)
                 .join(
@@ -61,10 +79,20 @@ export class VerticalBarSeries extends SeriesBase {
                             event.preventDefault();
                             event.stopPropagation();
                             this.itemClickSubject.next(data);
+                        })
+                        .on('mouseover', (d: any, i, nodeList: any) => {
+                            select(nodeList[i])
+                                .style('fill', () => colorDarker(fill, 2) + '');
+                        })
+                        .on('mouseout', (d: any, i, nodeList: any) => {
+                            select(nodeList[i])
+                                .style('fill', fill);
                         }),
                     (update) => update,
                     (exit) => exit.remove
                 )
+                .style('stroke', stroke)
+                .style('fill', fill)
                 .attr('x', (data: any) => { 
                     return x(data[this.xField]); 
                 })

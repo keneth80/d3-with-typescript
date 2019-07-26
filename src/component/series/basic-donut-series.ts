@@ -1,12 +1,12 @@
 import { schemeDark2, interpolateSpectral } from 'd3-scale-chromatic';
 import { Selection, BaseType, select, event } from 'd3-selection';
 import { pie, arc } from 'd3-shape';
-import { color } from 'd3-color';
 import { scaleOrdinal, } from 'd3-scale';
 import { transition } from 'd3-transition';
 import { quantize, interpolate } from 'd3-interpolate';
 import { format } from 'd3-format';
 
+import { colorDarker } from '../chart/util/d3-svg-util';
 import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
 import { isIE } from '../chart/util/d3-svg-util';
@@ -113,7 +113,7 @@ export class BasicDonutSeries extends SeriesBase {
             .on('mouseover', (d: any, i, nodeList: any) => {
                 if (nodeList[i]) {
                     select(nodeList[i])
-                        .style('fill', () => color(colors(d.data[this.categoryField]) + '').darker(2) + '') // point
+                        .style('fill', () => colorDarker(colors(d.data[this.categoryField]), 2)) // point
                         // .style('stroke', '#f5330c')
                         // .style('stroke-width', 2);
 
@@ -125,7 +125,7 @@ export class BasicDonutSeries extends SeriesBase {
             .on('mouseout', (d: any, i, nodeList: any) => {
                 if (nodeList[i]) {
                     select(nodeList[i])
-                        .style('fill', () => color(colors(d.data[this.categoryField]) + '').darker(0) + '') // point
+                        .style('fill', () => colors(d.data[this.categoryField]) + '') // point
                         // .style('stroke', null)
                         // .style('stroke-width', null);
                 }

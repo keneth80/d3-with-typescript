@@ -1,3 +1,5 @@
+import { color } from 'd3-color';
+
 export const getTransformByArray = (transform: string = 'translate(0, 0)'): Array<string> => {
     const translateString = transform.substring(transform.indexOf('translate('), transform.indexOf(')') + 1);
     let translate = ['0', '0'];
@@ -35,4 +37,8 @@ export const isIE = (): boolean => {
         returnValue = true;
     }
     return returnValue;
+}
+
+export const colorDarker = (fill: any, value: number = 2): any => {
+    return color(fill).darker(value);
 }

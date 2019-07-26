@@ -2,11 +2,10 @@ import '../../chart.css'
 
 import { min, max, extent } from 'd3-array';
 import { timeFormat } from 'd3-time-format';
-import { format } from 'd3-format';
 import { scaleBand, scaleLinear, scaleTime, scalePoint } from 'd3-scale';
-import { select, event, Selection, BaseType } from 'd3-selection';
+import { select, Selection, BaseType } from 'd3-selection';
 import { axisBottom, axisLeft, axisTop, axisRight } from 'd3-axis';
-import { fromEvent, Subscription, Observable, Subject } from 'rxjs';
+import { fromEvent, Subscription, Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 
 import { IChart } from './chart.interface';

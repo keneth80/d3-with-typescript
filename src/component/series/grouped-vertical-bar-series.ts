@@ -1,11 +1,10 @@
 import { Selection, select, BaseType, mouse, event } from 'd3-selection';
 import { scaleOrdinal, scaleBand } from 'd3-scale';
-import { color } from 'd3-color';
 import { format } from 'd3-format';
 
 import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
-import { getTransformByArray } from '../chart/util/d3-svg-util';
+import { colorDarker } from '../chart/util/d3-svg-util';
 
 export interface GroupedVerticalBarSeriesConfiguration {
     selector?: string;
@@ -102,7 +101,7 @@ export class GroupedVerticalBarSeries extends SeriesBase {
                     (enter) => enter.append('rect').attr('class', 'grouped-bar-item')
                         .on('mouseover', (d: any, i, nodeList: any) => {
                             select(nodeList[i])
-                                .style('fill', () => color(z(d.key) + '').darker(2) + '') // point
+                                .style('fill', () => colorDarker(z(d.key), 2)) // point
                                 // .style('stroke', '#f5330c')
                                 // .style('stroke-width', 2);
         
@@ -111,7 +110,7 @@ export class GroupedVerticalBarSeries extends SeriesBase {
                         })
                         .on('mouseout', (d: any, i, nodeList: any) => {
                             select(nodeList[i])
-                                .style('fill', () => color(z(d.key) + '').darker(0) + '') // point
+                                .style('fill', () => z(d.key) + '') // point
                                 // .style('stroke', null)
                                 // .style('stroke-width', null);
         

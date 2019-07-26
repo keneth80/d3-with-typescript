@@ -2,10 +2,10 @@ import { Selection, select, BaseType, mouse } from 'd3-selection';
 import { scaleOrdinal } from 'd3-scale';
 import { stack } from 'd3-shape';
 import { format } from 'd3-format';
-import { color } from 'd3-color';
 
 import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
+import { colorDarker } from '../chart/util/d3-svg-util';
 
 export interface StackedVerticalBarSeriesConfiguration {
     selector?: string;
@@ -103,7 +103,7 @@ export class StackedVerticalBarSeries extends SeriesBase {
                             const fill: string = z(column) + '';
                             
                             select(nodeList[i])
-                                .style('fill', () => color(fill).darker(2) + '') // point
+                                .style('fill', () => colorDarker(fill, 2)) // point
                                 // .style('stroke', '#f5330c')
                                 // .style('stroke-width', 2);
 
@@ -117,7 +117,7 @@ export class StackedVerticalBarSeries extends SeriesBase {
                             const fill: string = z(column) + '';
 
                             select(nodeList[i])
-                                .style('fill', () => color(fill).darker(0) + '') // point
+                                .style('fill', () => fill) // point
                                 // .style('stroke', null)
                                 // .style('stroke-width', null);
 
