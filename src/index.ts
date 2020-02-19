@@ -1,11 +1,14 @@
 import './style.css';
 
-import { min, max, quantile, mean } from 'd3-array';
+import { min, max, quantile, mean, range } from 'd3-array';
 import { randomUniform, randomNormal } from 'd3-random';
 import { scaleOrdinal } from 'd3-scale';
 import { timeParse } from 'd3-time-format';
 import { schemeCategory10 } from 'd3-scale-chromatic';
 import { csv } from 'd3-fetch';
+
+import * as _ from 'lodash';
+
 import { BasicChart } from './component/basic-chart';
 import { VerticalBarSeries } from './component/series/vertical-bar-series';
 import { BasicLineSeries } from './component/series/basic-line-series';
@@ -20,6 +23,8 @@ import { GroupedVerticalBarSeries } from './component/series/grouped-vertical-ba
 import { BasicPieSeries } from './component/series/basic-pie-series';
 import { BasicDonutSeries } from './component/series/basic-donut-series';
 import { BasicAreaSeries } from './component/series/basic-area-series';
+import { BasicCanvasScatterPlotModel, BasicCanvasScatterPlot } from './component/series/basic-canvas-scatter-plot';
+import { BasicGaugeSeries } from './component/series/basic-gauge-series';
 
 class SalesModel {
     salesperson: string;
@@ -579,6 +584,78 @@ const areaChart = () => {
     });
 }
 
+const canvasScatter = () => {
+    const randomX = randomNormal(0, 30);
+    const randomY = randomNormal(0, 30);
+    const numberPoints = 300000;
+    console.time('data');
+    const data = range(numberPoints).map((d: number) => {
+        return new BasicCanvasScatterPlotModel(
+            randomX(),
+            randomY(),
+            d,
+            false
+        );
+    });
+    console.timeEnd('data');
+    const scatterPlot = new BasicCanvasScatterPlot({
+        selector: 'scatter',
+        canvasClass: '#scatter-canvas'
+    });
+    console.time('scatter');
+    const scatterChart = new BasicChart({
+        selector: '#scatter-axis-svg',
+        data,
+        margin: {
+            top: 10, right: 10, bottom: 30, left: 30
+        },
+        calcField: 'y',
+        isResize: 'Y',
+        axes: [
+            {
+                field: 'x',
+                type: 'number',
+                placement: 'bottom'
+            },
+            {
+                field: 'y',
+                type: 'number',
+                placement: 'left'
+            }
+        ],
+        series: [
+            scatterPlot
+        ]
+    }).draw();
+    console.timeEnd('scatter');
+}
+
+const gaugeChart = () => {
+    const basicGaugeSereis = new BasicGaugeSeries({
+        clipWidth: 100,
+        clipHeight: 110,
+        ringWidth: 30,
+        minValue: 0,
+        maxValue: 10,
+        transitionMs: 1000
+    });
+
+    const gaugeChart = new BasicChart({
+        selector: '#gauge',
+        data: [3],
+        margin: {
+            top: 10, right: 0, bottom: 30, left: 0
+        },
+        min:0,
+        max: 10,
+        isResize: 'Y',
+        axes: [],
+        series: [
+            basicGaugeSereis
+        ]
+    }).draw();
+}
+
 excute();
 
 boxplot();
@@ -596,3 +673,7 @@ pieChart();
 donutChart();
 
 areaChart();
+
+canvasScatter();
+
+gaugeChart();
