@@ -1,4 +1,5 @@
 import { ISeries } from "./series.interface";
+import { IFunctions } from "./functions.interface";
 
 export interface Axis {
     field: any; // data propertie
@@ -9,6 +10,8 @@ export interface Axis {
     visible?: boolean;
     isRound?: boolean; // nice() call 여부
     tickFormat?: string;
+    isGridLine?: boolean;
+    isZoom?: boolean;
 }
 
 export interface Margin {
@@ -31,6 +34,8 @@ export interface ChartConfiguration<T = any> {
     axes?: Array<Axis>;
 
     series?: Array<ISeries<T>>;
+
+    functions?: Array<IFunctions<T>>;
 
     data: T;
 

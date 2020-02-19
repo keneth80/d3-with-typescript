@@ -42,3 +42,13 @@ export const isIE = (): boolean => {
 export const colorDarker = (fill: any, value: number = 2): any => {
     return color(fill).darker(value);
 }
+
+export const guid = () => {
+    const s4 = () => {
+        return Math.floor((1 + Math.random()) * 0x10000)
+            .toString(16)
+            .substring(1);
+    }
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+    s4() + '-' + s4() + s4() + s4();
+}
