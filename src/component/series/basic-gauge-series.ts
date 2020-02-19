@@ -102,7 +102,7 @@ export class BasicGaugeSeries extends SeriesBase {
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
                   mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
-        // svg.select('.series-group').attr('clip-path', null);
+        svg.select('.series-group').attr('clip-path', null);
         if (!mainGroup.select(`.${this.selector}-group`).node()) {
             this.mainGroup = mainGroup.append('g').attr('class', `${this.selector}-group`);
             this.arcGroup = mainGroup.append('g').attr('class', `${this.selector}-arc-group`);
