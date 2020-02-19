@@ -57,3 +57,19 @@ rect.tooltip {
     stroke: #f5330c;
     stroke-width: 2;
 }
+
+text {
+    font: 10px sans-serif;
+}
+
+.plot {
+    position: absolute;
+}
+
+#scatter-canvas {
+    z-index: 2;
+}
+
+#scatter-axis-svg {
+    z-index: 1;
+}

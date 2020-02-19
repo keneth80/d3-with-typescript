@@ -1,15 +1,15 @@
 {
-    "name": "typescript-webpack-seed",
+    "name": "d3-with-typescript",
     "version": "1.0.0",
-    "description": "typescript webpack seed",
+    "description": "d3-with-typescript",
     "main": "index.ts",
     "scripts": {
         "build": "cross-env NODE_ENV=development webpack --mode development",
         "build-prod": "cross-env NODE_ENV=production webpack --mode production",
         "dev": "webpack-dev-server --open --mode development"
     },
-    "author": "",
-    "license": "ISC",
+    "author": "pretty9967@naver.com",
+    "license": "MIT",
     "devDependencies": {
         "@babel/core": "^7.4.5",
         "@babel/preset-env": "^7.4.5",
@@ -37,6 +37,7 @@
     },
     "dependencies": {
         "d3": "^5.9.2",
+        "lodash": "^4.17.15",
         "rxjs": "~6.5.2"
     }
 }

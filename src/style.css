@@ -2,3 +2,9 @@
     border: 2px solid #888;
     background-color: #eee;
 }
+
+.result.gauge {
+    width: 700px;
+    height: 350px;
+    margin: 0 auto;
+}
