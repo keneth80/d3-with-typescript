@@ -43,11 +43,13 @@ export class ChartBase<T = any> implements IChart {
 
     protected height: number;
 
-    protected originalData: any;
+    protected originalData: Array<T>;
 
     protected svg: Selection<BaseType, any, HTMLElement, any>;
 
     protected mainGroup: Selection<BaseType, any, HTMLElement, any>;
+
+    protected seriesGroup: Selection<BaseType, any, HTMLElement, any>;
 
     protected seriesList: Array<ISeries> = [];
 
@@ -221,6 +223,9 @@ export class ChartBase<T = any> implements IChart {
             .attr('class', 'main-group')
             .attr('transform', `translate(${this.margin.left}, ${this.margin.top})`);
 
+        this.seriesGroup = this.mainGroup.append('g')
+            .attr('class', 'series-group');
+
         this.axisGroups.bottom = this.mainGroup.append('g')
             .attr('class', 'x-axis-group')
             .attr('transform', `translate(0, ${this.height})`);
@@ -295,7 +300,7 @@ export class ChartBase<T = any> implements IChart {
             if (this.seriesList && this.seriesList.length) {
                 this.seriesList.map((series: ISeries) => {
                     series.chartBase = this;
-                    series.setSvgElement(this.svg, this.mainGroup);
+                    series.setSvgElement(this.svg, this.seriesGroup);
                     series.drawSeries(this.data, this.scales, this.width, this.height);
                 });
             }
