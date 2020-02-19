@@ -584,11 +584,10 @@ const areaChart = () => {
     });
 }
 
-const canvasScatter = () => {
+const canvasScatter = (id: string) => {
     const randomX = randomNormal(0, 30);
     const randomY = randomNormal(0, 30);
-    const numberPoints = 300000;
-    console.time('data');
+    const numberPoints = 100000;
     const data = range(numberPoints).map((d: number) => {
         return new BasicCanvasScatterPlotModel(
             randomX(),
@@ -597,14 +596,11 @@ const canvasScatter = () => {
             false
         );
     });
-    console.timeEnd('data');
     const scatterPlot = new BasicCanvasScatterPlot({
-        selector: 'scatter',
-        canvasClass: '#scatter-canvas'
+        selector: 'scatter'
     });
-    console.time('scatter');
     const scatterChart = new BasicChart({
-        selector: '#scatter-axis-svg',
+        selector: id,
         data,
         margin: {
             top: 10, right: 10, bottom: 30, left: 30
@@ -627,7 +623,6 @@ const canvasScatter = () => {
             scatterPlot
         ]
     }).draw();
-    console.timeEnd('scatter');
 }
 
 const gaugeChart = () => {
@@ -674,6 +669,10 @@ donutChart();
 
 areaChart();
 
-canvasScatter();
+canvasScatter('#scatter');
+
+canvasScatter('#scatter2');
+
+canvasScatter('#scatter3');
 
 gaugeChart();
