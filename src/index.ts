@@ -585,17 +585,18 @@ const areaChart = () => {
 }
 
 const canvasScatter = (id: string) => {
-    const randomX = randomNormal(0, 30);
-    const randomY = randomNormal(0, 30);
+    const randomX = randomNormal(0, 9);
+    const randomY = randomNormal(0, 9);
     const numberPoints = 100000;
     const data = range(numberPoints).map((d: number) => {
         return new BasicCanvasScatterPlotModel(
-            randomX(),
-            randomY(),
+            +randomX().toFixed(2),
+            +randomY().toFixed(2),
             d,
             false
         );
     });
+    
     const scatterPlot = new BasicCanvasScatterPlot({
         selector: 'scatter'
     });
