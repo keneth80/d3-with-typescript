@@ -1,6 +1,7 @@
 import { Selection, BaseType, select, mouse } from 'd3-selection';
 import { quadtree } from 'd3-quadtree';
-import { Subject, Observable } from 'rxjs';
+import { interval, timer } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
@@ -19,7 +20,7 @@ export class BasicCanvasScatterPlotModel {
     ) {
         Object.assign(this, {
             x, y, i, selected
-        })
+        });
     }
 }
 
@@ -70,6 +71,8 @@ export class BasicCanvasScatterPlot extends SeriesBase {
         const x: any = scales.find((scale: Scale) => scale.orinet === 'bottom').scale;
         const y: any = scales.find((scale: Scale) => scale.orinet === 'left').scale;
 
+        // TODO: position별로 indexing 해서 loop 돌면서 덮어버리고 최종 겹치지 않는 dot에 대해서만 출력하도록 한다.
+
         const quadTreeObj: any = quadtree()
             .extent([[-1, -1], [width + 1, height + 1]])
             .addAll(chartData.map((d: BasicCanvasScatterPlotModel) => [d.x, d.y]));
@@ -116,16 +119,70 @@ export class BasicCanvasScatterPlot extends SeriesBase {
                 this.selectedPoint = closest;
                 const selectedIndex = this.indexing[this.selectedPoint[0] + '.' + this.selectedPoint[1]];
                 if (this.selectedPoint) {
-                    this.drawPoint(new BasicCanvasScatterPlotModel(this.selectedPoint[0], this.selectedPoint[1], 0, true), pointRadius, x, y, pointerContext);
+                    this.itemClickSubject.next(chartData[selectedIndex]);
+                    this.drawPoint(
+                        new BasicCanvasScatterPlotModel(
+                            this.selectedPoint[0], 
+                            this.selectedPoint[1], 
+                            0, 
+                            true
+                        ), 
+                        pointRadius, 
+                        x, 
+                        y, 
+                        pointerContext
+                    );
                 }
             }
         });
 
-        // TODO: 3단계에 걸쳐서 그리기.
-        chartData.forEach((point: BasicCanvasScatterPlotModel, index: number) => {
-            this.indexing[point.x + '.' + point.y] = index;
-            this.drawPoint(point, pointRadius, x, y, context);
-        });
+        // 갯수를 끊어 그리기
+        const totalCount = chartData.length;
+        if (totalCount >= 100000) {
+            const svgWidth = parseInt(this.svg.style('width'));
+            const svgHeight = parseInt(this.svg.style('height'));
+            const progressSvg = select((this.svg.node() as HTMLElement).parentElement)
+                .append('svg')
+                .style('z-index', 4)
+                .style('position', 'absolute')
+                .style('background-color', 'none')
+                .attr('width', svgWidth - 2)
+                .attr('height', svgHeight - 2)
+                .lower();
+                           
+            const shareCount = 5;
+            const source = interval(500);
+            const timer$ = timer((shareCount + 1) * 500);
+            const example = source.pipe(takeUntil(timer$));
+            example.subscribe(val => {
+                for (let j = val * (totalCount / shareCount); j < (val + 1) * (totalCount / shareCount); j++ ) {
+                    this.indexing[chartData[j].x + '.' + chartData[j].y] = j;
+                    this.drawPoint(chartData[j], pointRadius, x, y, context);
+                }
+                this.drawProgress(
+                    totalCount, 
+                    (val + 1) * (totalCount / shareCount), 
+                    {
+                        width: svgWidth, 
+                        height: svgHeight, 
+                        target: progressSvg
+                    }
+                );
+            }, (error) => {
+                console.log('scatter plot Error', error);
+            }, () => {
+                progressSvg.remove();
+            });
+        } else {
+            chartData.forEach((point: BasicCanvasScatterPlotModel, index: number) => {
+                this.indexing[point.x + '.' + point.y] = index;
+                this.drawPoint(point, pointRadius, x, y, context);
+            });
+        }
+
+        // TODO: 그려진 후 zoom 기능 활성화.
+        // zoom plugin과 어떻게 연계를 해야할 지 고민
+        // https://bl.ocks.org/mbostock/4343214 참고
     }
 
     search(quadtree: any, x0: number, y0: number, x3: number, y3: number) {
@@ -152,6 +209,11 @@ export class BasicCanvasScatterPlot extends SeriesBase {
     drawPoint(point: BasicCanvasScatterPlotModel, r: number, xScale: any, yScale: any, context: any) {
         const cx = xScale(point.x);
         const cy = yScale(point.y);
+
+        // cx, cy과 해당영역에 출력이 되는지? 좌표가 마이너스면 출력 안하는 로직을 넣어야 함.
+        if (cx < 0 || cy < 0) {
+            return;
+        }
 
         context.beginPath();
         context.arc(cx, cy, r, 0, 2 * Math.PI);
