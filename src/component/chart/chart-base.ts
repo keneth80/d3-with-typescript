@@ -251,6 +251,51 @@ export class ChartBase<T = any> implements IChart {
             }
         }
     }
+    
+    updateAxisForZoom(
+        reScale: Array<any>
+    ) {
+        this.scales = this.setupScale(this.config.axes, this.width, this.height, reScale);
+
+        this.scales.map((scale: Scale) => {
+            let orientedScale: any = null;
+            if (scale.orinet === 'right') {
+                orientedScale = axisRight(scale.scale);
+            } else if (scale.orinet === 'left') {
+                orientedScale = axisLeft(scale.scale);
+            } else if (scale.orinet === 'top') {
+                orientedScale = axisTop(scale.scale);
+            } else {
+                orientedScale = axisBottom(scale.scale);
+            }
+
+            if (scale.isGridLine) {
+                if (scale.orinet === 'right' || scale.orinet === 'left') {
+                    orientedScale.tickSize(-this.width);
+                } else {
+                    orientedScale.tickSize(-this.height);
+                }
+            }
+
+            if (scale.type === 'number') {
+                if (scale.tickFormat) {
+                    orientedScale.ticks(null, scale.tickFormat);
+                    // orientedScale.tickFormat(timeFormat(scale.tickFormat));
+                }
+            } else if (scale.type === 'time') {
+                if (scale.tickFormat) {
+                    orientedScale.tickFormat(timeFormat(scale.tickFormat));
+                }
+            }
+            
+            if (scale.visible) {
+                this.axisGroups[scale.orinet].call(
+                    orientedScale
+                );
+            }
+        });
+        this.updateSeries();
+    }
 
     updateRescaleAxis() {
         this.scales.map((scale: Scale) => {
