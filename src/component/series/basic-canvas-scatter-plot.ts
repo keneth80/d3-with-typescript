@@ -1,7 +1,7 @@
 import { Selection, BaseType, select, mouse } from 'd3-selection';
 import { quadtree, Quadtree } from 'd3-quadtree';
-import { interval, timer } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { interval, timer, Observable, Observer } from 'rxjs';
+import { takeUntil, delay } from 'rxjs/operators';
 
 import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
@@ -87,15 +87,18 @@ export class BasicCanvasScatterPlot extends SeriesBase {
     drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {
         const x: any = scales.find((scale: Scale) => scale.orinet === 'bottom').scale;
         const y: any = scales.find((scale: Scale) => scale.orinet === 'left').scale;
+        const pointRadius = 4;
 
-        // TODO: position별로 indexing 해서 loop 돌면서 덮어버리고 최종 겹치지 않는 dot에 대해서만 출력하도록 한다.
+        const generateData: Array<[number, number]> = chartData.map((d: BasicCanvasScatterPlotModel, i: number) => {
+            // TODO: position별로 indexing 해서 loop 돌면서 덮어버리고 최종 겹치지 않는 dot에 대해서만 출력하도록 한다.
+            this.indexing[d.x + ',' + d.y] = i;
+            return [d.x, d.y];
+        });
 
         const quadTreeObj: any = quadtree()
             .extent([[-1, -1], [width + 1, height + 1]])
-            .addAll(chartData.map((d: BasicCanvasScatterPlotModel) => [d.x, d.y]));
+            .addAll(generateData);
 
-        const pointRadius = 4;
-        
         this.canvas
             .attr('width', width - 1)
             .attr('height', height - 1)
@@ -173,12 +176,36 @@ export class BasicCanvasScatterPlot extends SeriesBase {
                     } else {
                         this.chartBase.updateAxisForZoom([]);
                     }
+
+                    // Observable.create((observ: Observer<any>) => {
+                    //     observ.next(true);
+                    //     observ.complete();
+                    // }).pipe(
+                    //     delay(200)
+                    // ).subscribe(() => {
+                    //     if (startX < endX && startY < endY) {
+                    //         this.chartBase.updateAxisForZoom([
+                    //             {
+                    //                 field: this.xField,
+                    //                 min: xStartValue,
+                    //                 max: xEndValue
+                    //             },
+                    //             {
+                    //                 field: this.yField,
+                    //                 min: yStartValue,
+                    //                 max: yEndValue
+                    //             }
+                    //         ]);
+                    //     } else {
+                    //         this.chartBase.updateAxisForZoom([]);
+                    //     }
+                    // });
                     
                 } else {
                     this.selection(
                         x, 
                         y,
-                        chartData, 
+                        generateData, 
                         quadTreeObj, 
                         pointerContext, 
                         {
@@ -190,7 +217,7 @@ export class BasicCanvasScatterPlot extends SeriesBase {
             });
 
         // 갯수를 끊어 그리기
-        const totalCount = chartData.length;
+        const totalCount = generateData.length;
         if (totalCount >= 100000) {
             const svgWidth = parseInt(this.svg.style('width'));
             const svgHeight = parseInt(this.svg.style('height'));
@@ -209,7 +236,7 @@ export class BasicCanvasScatterPlot extends SeriesBase {
             const example = source.pipe(takeUntil(timer$));
             example.subscribe(val => {
                 for (let j = val * (totalCount / shareCount); j < (val + 1) * (totalCount / shareCount); j++ ) {
-                    this.indexing[chartData[j].x + ',' + chartData[j].y] = j;
+                    // this.indexing[chartData[j].x + ',' + chartData[j].y] = j;
                     this.drawPoint(chartData[j], pointRadius, x, y, context);
                 }
                 this.drawProgress(
@@ -227,8 +254,7 @@ export class BasicCanvasScatterPlot extends SeriesBase {
                 progressSvg.remove();
             });
         } else {
-            chartData.forEach((point: BasicCanvasScatterPlotModel, index: number) => {
-                this.indexing[point.x + ',' + point.y] = index;
+            chartData.forEach((point: BasicCanvasScatterPlotModel) => {
                 this.drawPoint(point, pointRadius, x, y, context);
             });
         }
