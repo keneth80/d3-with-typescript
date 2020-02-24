@@ -598,7 +598,9 @@ const canvasScatter = (id: string) => {
     });
     
     const scatterPlot = new BasicCanvasScatterPlot({
-        selector: 'scatter'
+        selector: 'scatter',
+        xField: 'x',
+        yField: 'y'
     });
     const scatterChart = new BasicChart({
         selector: id,
