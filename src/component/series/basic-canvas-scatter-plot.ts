@@ -1,48 +1,63 @@
 import { Selection, BaseType, select, mouse } from 'd3-selection';
-import { quadtree } from 'd3-quadtree';
+import { quadtree, Quadtree } from 'd3-quadtree';
 import { interval, timer } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
+import { min, max } from 'd3';
 
 export class BasicCanvasScatterPlotModel {
     x: number;
     y: number;
     i: number; // save the index of the point as a property, this is useful
     selected: boolean;
+    obj: any;
 
     constructor(
         x: number,
         y: number,
         i: number, // save the index of the point as a property, this is useful
-        selected: boolean
+        selected: boolean,
+        obj: any
     ) {
         Object.assign(this, {
-            x, y, i, selected
+            x, y, i, selected, obj
         });
     }
 }
 
 export interface BasicCanvasScatterPlotConfiguration {
     selector?: string;
+    xField: string;
+    yField: string;
 }
 
 export class BasicCanvasScatterPlot extends SeriesBase {
-    private selector: string = 'basic-scatter';
-
-    private selectedPoint: [number, number];
-
-    private indexing: any = {};
-
     protected canvas: Selection<BaseType, any, HTMLElement, any>;
 
     protected pointerCanvas: Selection<BaseType, any, HTMLElement, any>;
+
+    private selector: string = 'basic-scatter';
+
+    private indexing: any = {};
+
+    private xField: string = 'x';
+
+    private yField: string = 'y';
 
     constructor(configuration: BasicCanvasScatterPlotConfiguration) {
         super();
         if (configuration.selector) {
             this.selector = configuration.selector;
+        }
+
+        if (configuration.xField) {
+            this.xField = configuration.xField;
+        }
+
+        if (configuration.yField) {
+            this.yField = configuration.yField;
         }
     }
 
@@ -55,6 +70,7 @@ export class BasicCanvasScatterPlot extends SeriesBase {
         if (!this.canvas) {            
             this.canvas = select((this.svg.node() as HTMLElement).parentElement)
                 .append('canvas')
+                .attr('class', 'drawing-canvas')
                 .style('z-index', 2)
                 .style('position', 'absolute');
         }
@@ -62,6 +78,7 @@ export class BasicCanvasScatterPlot extends SeriesBase {
         if (!this.pointerCanvas) {
             this.pointerCanvas = select((this.svg.node() as HTMLElement).parentElement)
                 .append('canvas')
+                .attr('class', 'pointer-canvas')
                 .style('z-index', 3)
                 .style('position', 'absolute');
         }
@@ -89,52 +106,88 @@ export class BasicCanvasScatterPlot extends SeriesBase {
             .attr('height', height - 1)
             .style('transform', `translate(${(this.chartBase.chartMargin.left + 1)}px, ${(this.chartBase.chartMargin.top + 1)}px)`);
 
-        const context = (this.canvas.node() as any).getContext('2d');
+            const pointerContext = (this.pointerCanvas.node() as any).getContext('2d');
 
-        const pointerContext = (this.pointerCanvas.node() as any).getContext('2d');
-        pointerContext.strokeStyle = 'white';
-        pointerContext.fillStyle = 'red';    
-
-        context.clearRect(0, 0, width, height);
-        context.fillStyle = 'steelblue';
-        context.strokeWidth = 1;
-        context.strokeStyle = 'white';
-
-        this.pointerCanvas.on('click', () => {
-            const mouseEvent = mouse(this.pointerCanvas.node() as any);
+            const context = (this.canvas.node() as any).getContext('2d');
+            context.clearRect(0, 0, width, height);
+            context.fillStyle = 'steelblue';
+            context.strokeWidth = 1;
+            context.strokeStyle = 'white';
     
-            const xClicked = x.invert(mouseEvent[0]);
-            const yClicked = y.invert(mouseEvent[1]);
-
-            const closest = quadTreeObj.find(xClicked, yClicked);
-
-            const dX = x(closest[0]);
-            const dY = y(closest[1]);
-
-            const distance = this.euclideanDistance(mouseEvent[0], mouseEvent[1], dX, dY);
-
-            pointerContext.clearRect(0, 0, width, height);
-
-            if(distance < pointRadius) {
-                this.selectedPoint = closest;
-                const selectedIndex = this.indexing[this.selectedPoint[0] + '.' + this.selectedPoint[1]];
-                if (this.selectedPoint) {
-                    this.itemClickSubject.next(chartData[selectedIndex]);
-                    this.drawPoint(
-                        new BasicCanvasScatterPlotModel(
-                            this.selectedPoint[0], 
-                            this.selectedPoint[1], 
-                            0, 
-                            true
-                        ), 
-                        pointRadius, 
-                        x, 
-                        y, 
-                        pointerContext
+            let isMouseDown = false;
+            let isMouseMove = false;
+            let startX = 0;
+            let startY = 0;
+            let endX = 0;
+            let endY = 0;
+    
+            this.pointerCanvas.on('mousedown', () => {
+                const mouseEvent = mouse(this.pointerCanvas.node() as any);
+                startX = mouseEvent[0];
+                startY = mouseEvent[1];
+                isMouseDown = true;
+            });
+    
+            this.pointerCanvas.on('mousemove', () => {
+                if (isMouseDown) {
+                    isMouseMove = true;
+                    const mouseEvent = mouse(this.pointerCanvas.node() as any);
+                    const moveX = mouseEvent[0];
+                    const moveY = mouseEvent[1];
+                    pointerContext.clearRect(0, 0, width, height);
+                    this.drawZoomBox(
+                        pointerContext,
+                        min([startX, moveX]), min([startY, moveY]),
+                        max([startX, moveX]), max([startY, moveY])
                     );
                 }
-            }
-        });
+            });
+    
+            this.pointerCanvas.on('mouseup', () => {
+                isMouseDown = false;
+                isMouseMove = false;
+    
+                const mouseEvent = mouse(this.pointerCanvas.node() as any);
+                endX = mouseEvent[0];
+                endY = mouseEvent[1];
+                pointerContext.clearRect(0, 0, width, height);
+                if (Math.abs(startX - endX) > pointRadius * 2 && Math.abs(startY - endY) > pointRadius * 2) {
+                    const xStartValue = x.invert(startX);
+                    const yStartValue = y.invert(startY);
+                    const xEndValue = x.invert(endX);
+                    const yEndValue = y.invert(endY);
+
+                    if (startX < endX && startY < endY) {
+                        this.chartBase.updateAxisForZoom([
+                            {
+                                field: this.xField,
+                                min: xStartValue,
+                                max: xEndValue
+                            },
+                            {
+                                field: this.yField,
+                                min: yStartValue,
+                                max: yEndValue
+                            }
+                        ]);
+                    } else {
+                        this.chartBase.updateAxisForZoom([]);
+                    }
+                    
+                } else {
+                    this.selection(
+                        x, 
+                        y,
+                        chartData, 
+                        quadTreeObj, 
+                        pointerContext, 
+                        {
+                            x: endX, y: endY, 
+                            width, height, 
+                            pointRadius
+                        });
+                }
+            });
 
         // 갯수를 끊어 그리기
         const totalCount = chartData.length;
@@ -156,7 +209,7 @@ export class BasicCanvasScatterPlot extends SeriesBase {
             const example = source.pipe(takeUntil(timer$));
             example.subscribe(val => {
                 for (let j = val * (totalCount / shareCount); j < (val + 1) * (totalCount / shareCount); j++ ) {
-                    this.indexing[chartData[j].x + '.' + chartData[j].y] = j;
+                    this.indexing[chartData[j].x + ',' + chartData[j].y] = j;
                     this.drawPoint(chartData[j], pointRadius, x, y, context);
                 }
                 this.drawProgress(
@@ -175,7 +228,7 @@ export class BasicCanvasScatterPlot extends SeriesBase {
             });
         } else {
             chartData.forEach((point: BasicCanvasScatterPlotModel, index: number) => {
-                this.indexing[point.x + '.' + point.y] = index;
+                this.indexing[point.x + ',' + point.y] = index;
                 this.drawPoint(point, pointRadius, x, y, context);
             });
         }
@@ -183,6 +236,61 @@ export class BasicCanvasScatterPlot extends SeriesBase {
         // TODO: 그려진 후 zoom 기능 활성화.
         // zoom plugin과 어떻게 연계를 해야할 지 고민
         // https://bl.ocks.org/mbostock/4343214 참고
+    }
+
+    selection(
+        x: any, y: any, chartData: Array<any>,
+        quadTreeObj: Quadtree<[number, number]>, 
+        pointerContext: any, 
+        geometry: {width: number, height: number, x: number, y: number, pointRadius: number}
+    ) {
+        pointerContext.strokeStyle = 'white';
+        pointerContext.fillStyle = 'red';
+        const xClicked = x.invert(geometry.x);
+        const yClicked = y.invert(geometry.y);
+
+        const closest = quadTreeObj.find(xClicked, yClicked);
+        const dX = x(closest[0]);
+        const dY = y(closest[1]);
+
+        const distance = this.euclideanDistance(geometry.x, geometry.y, dX, dY);
+
+        pointerContext.clearRect(0, 0, geometry.width, geometry.height);
+        if(distance < geometry.pointRadius) {
+            const selectedPoint = closest;
+            const selectedIndex = this.indexing[selectedPoint[0] + ',' + selectedPoint[1]];
+            
+            if (selectedPoint) {
+                this.itemClickSubject.next(chartData[selectedIndex]);
+                this.drawPoint(
+                    new BasicCanvasScatterPlotModel(
+                        selectedPoint[0], 
+                        selectedPoint[1], 
+                        0, 
+                        true,
+                        {}
+                    ), 
+                    geometry.pointRadius, 
+                    x, 
+                    y, 
+                    pointerContext
+                );
+            }
+        }
+    }
+
+    drawZoomBox(
+        pointerContext: any,
+        startX: number, startY: number,
+        endX: number, endY: number
+    ) {
+        pointerContext.strokeStyle = 'blue';
+        pointerContext.fillStyle = 'rgba(5,222,255,0.5)';
+        pointerContext.beginPath();
+        pointerContext.rect(startX, startY, Math.abs(endX - startX), Math.abs(endY - startY));
+        pointerContext.closePath();
+        pointerContext.fill();
+        pointerContext.stroke();
     }
 
     search(quadtree: any, x0: number, y0: number, x3: number, y3: number) {
