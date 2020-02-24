@@ -251,7 +251,7 @@ export class ChartBase<T = any> implements IChart {
             }
         }
     }
-    
+
     updateAxisForZoom(
         reScale: Array<any>
     ) {
@@ -426,7 +426,7 @@ export class ChartBase<T = any> implements IChart {
     protected updateAxis() {
         this.originDomains = {};
 
-        this.scales = this.setupScale(this.config.axes);
+        this.scales = this.setupScale(this.config.axes, this.width, this.height);
 
         this.scales.map((scale: Scale) => {
             let orientedScale: any = null;
@@ -528,14 +528,19 @@ export class ChartBase<T = any> implements IChart {
         return data;
     }
 
-    protected setupScale(axes: Array<Axis> = []): Array<Scale> {
+    protected setupScale(
+        axes: Array<Axis> = [],
+        width: number = 0,
+        height: number = 0,
+        reScaleAxes: Array<any> = []
+    ): Array<Scale> {
         const returnAxes: Array<Scale> = [];
         axes.map((axis: Axis) => {
             let range = <any>[];
             if (axis.placement === 'bottom' || axis.placement === 'top') {
-                range = [0, this.width];
+                range = [0, width];
             } else {
-                range = [this.height, 0];
+                range = [height, 0];
             }
 
             let scale = null;
@@ -569,16 +574,35 @@ export class ChartBase<T = any> implements IChart {
                         this.max = max(this.data.map((item: T) => parseFloat(item[axis.field])));
                     }
 
-                    // TODO : index string domain 지정.
+                    if (!this.min) {
+                        this.min = min(this.data.map((item: T) => parseFloat(item[axis.field])));
+                    }
 
-                    if (axis.isRound === true) {
-                        scale.domain(
-                            [this.min, this.max]
-                        ).nice();
+                    if (reScaleAxes.length) {
+                        const reScale = reScaleAxes.find((d: any) => d.field === axis.field);
+                        const reScaleMin = reScale.min;
+                        const reScaleMax = reScale.max;
+
+                        if (axis.isRound === true) {
+                            scale.domain(
+                                [reScaleMin, reScaleMax]
+                            ).nice();
+                        } else {
+                            scale.domain(
+                                [reScaleMin, reScaleMax]
+                            );
+                        }
                     } else {
-                        scale.domain(
-                            [this.min, this.max]
-                        );
+                        // TODO : index string domain 지정.
+                        if (axis.isRound === true) {
+                            scale.domain(
+                                [this.min, this.max]
+                            ).nice();
+                        } else {
+                            scale.domain(
+                                [this.min, this.max]
+                            );
+                        }
                     }
                 }
             }
