@@ -25,6 +25,7 @@ import { BasicDonutSeries } from './component/series/basic-donut-series';
 import { BasicAreaSeries } from './component/series/basic-area-series';
 import { BasicCanvasScatterPlotModel, BasicCanvasScatterPlot } from './component/series/basic-canvas-scatter-plot';
 import { BasicGaugeSeries } from './component/series/basic-gauge-series';
+import { BasicZoomSelection } from './component/functions/basic-zoom-selection';
 
 class SalesModel {
     salesperson: string;
@@ -46,6 +47,31 @@ class SalesModel {
             assets,
             dateStr,
             date
+        });
+    }
+
+    static clone({
+        salesperson,
+        sales,
+        assets,
+        dateStr,
+        date
+    }): SalesModel {
+        return new SalesModel(salesperson, sales, assets, dateStr, date);
+    }
+}
+
+class PlotModel {
+    xValue: number;
+    yValue: number;
+
+    constructor(
+        xValue: number,
+        yValue: number
+    ) {
+        Object.assign(this, {
+            xValue,
+            yValue
         });
     }
 
@@ -126,7 +152,6 @@ const excute = () => {
 
     const basicChart: BasicChart = new BasicChart({
         selector: '#chart',
-        calcField: 'sales',
         data: data.map((item: SalesModel) => {
             item.date = parseTime(item.dateStr);
             return item;
@@ -135,8 +160,6 @@ const excute = () => {
             top: 40
         },
         isResize: 'Y',
-        min: 0,
-        max: max(data.map((item: SalesModel) => item.assets)),
         axes: [
             {
                 field: 'salesperson',
@@ -146,9 +169,11 @@ const excute = () => {
                 // domain: data.map((item: any) => item.salesperson)
             },
             {
-                field: 'sales',
+                field: 'assets',
                 type: 'number',
-                placement: 'left'
+                placement: 'left',
+                min: 0,
+                max: max(data.map((item: SalesModel) => item.assets)),
             },
             {
                 field: 'date',
@@ -224,8 +249,6 @@ const boxplot = () => {
         selector: '#boxplot',
         data: boxPlotData,
         isResize: 'Y',
-        min: min(globalCounts),
-        max: max(globalCounts),
         axes: [
             {
                 field: 'key',
@@ -237,7 +260,9 @@ const boxplot = () => {
             {
                 field: 'sales',
                 type: 'number',
-                placement: 'left'
+                placement: 'left',
+                min: min(globalCounts), // 여러개의 field를 참조해야할 경우에는 min, max를 지정해야 정상작동을 한다.
+                max: max(globalCounts)
             }
         ],
         series: [
@@ -429,8 +454,6 @@ const groupedBar = () => {
             margin: {
                 left: 65
             },
-            min: -2000000,
-            max: max(data, d => max(data.columns.slice(1), key => d[key])),
             isResize: 'Y',
             axes: [
                 {
@@ -444,7 +467,9 @@ const groupedBar = () => {
                     type: 'number',
                     placement: 'left',
                     tickFormat: 's',
-                    isRound: true
+                    isRound: true,
+                    min: -2000000, // 여러개의 field를 참조해야할 경우에는 min, max를 지정해야 정상작동을 한다.
+                    max: max(data, d => max(data.columns.slice(1), key => d[key])),
                 }
             ],
             series: [
@@ -587,13 +612,14 @@ const areaChart = () => {
 const canvasScatter = (id: string) => {
     const randomX = randomNormal(0, 9);
     const randomY = randomNormal(0, 9);
-    const numberPoints = 100000;
+    const numberPoints = 200000;
     const data = range(numberPoints).map((d: number) => {
         return new BasicCanvasScatterPlotModel(
             +randomX().toFixed(2),
             +randomY().toFixed(2),
             d,
-            false
+            false,
+            {}
         );
     });
     
@@ -624,6 +650,13 @@ const canvasScatter = (id: string) => {
         ],
         series: [
             scatterPlot
+        ],
+        functions: [
+            // new BasicZoomSelection({
+            //     xField: 'x',
+            //     yField: 'y',
+            //     targetGroup: ''
+            // })
         ]
     }).draw();
 }
@@ -673,9 +706,5 @@ donutChart();
 areaChart();
 
 canvasScatter('#scatter');
-
-canvasScatter('#scatter2');
-
-canvasScatter('#scatter3');
 
 gaugeChart();
