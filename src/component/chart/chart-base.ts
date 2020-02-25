@@ -31,13 +31,11 @@ export interface Scale {
     tickFormat?: string;
     isGridLine: boolean;
     isZoom: boolean;
+    min?: number;
+    max?: number;
 }
 
 export class ChartBase<T = any> implements IChart {
-    public min: number = 0;
-
-    public max: number = Infinity;
-
     public isResize: boolean = false;
 
     protected data: Array<T> = [];
@@ -125,36 +123,6 @@ export class ChartBase<T = any> implements IChart {
 
         // data setup origin data 와 분리.
         this.data = this.setupData(this.config.data);
-
-        let targetValues: Array<number> = undefined;
-
-        // setup min value
-        if (!this.config.hasOwnProperty('min')) {
-            if (this.config.calcField) {
-                targetValues = this.data.map((item: T) => parseFloat(item[this.config.calcField]));
-            } else {
-                new Error('please setup configuration calcField because min, max value');
-            }
-
-            this.min = min(targetValues);
-        } else {
-            this.min = this.config.min;
-        }
-
-        // setup max value
-        if (!this.config.hasOwnProperty('max')) {
-            if (!this.config.calcField) {
-                new Error('please setup configuration calcField because min, max value')
-            } else {
-                if (!targetValues || !targetValues.length) {
-                    targetValues = this.data.map((item: T) => parseFloat(item[this.config.calcField]));
-                }
-            }
-
-            this.max = max(targetValues);
-        } else {
-            this.max = this.config.max;
-        }
 
         if (this.config.series && this.config.series.length) {
             this.seriesList = this.config.series;
@@ -294,6 +262,7 @@ export class ChartBase<T = any> implements IChart {
                 );
             }
         });
+        
         this.updateSeries();
     }
 
@@ -567,21 +536,21 @@ export class ChartBase<T = any> implements IChart {
                 scale.domain(extent(this.data, (item: T) => item[axis.field]));
             } else {
                 scale = scaleLinear().range(range);
+                if (!axis.max) {
+                    axis.max = max(this.data.map((item: T) => parseFloat(item[axis.field])));
+                }
+
+                if (!axis.min) {
+                    axis.min = min(this.data.map((item: T) => parseFloat(item[axis.field])));
+                }
+
                 if (axis.domain) {
                     scale.domain(axis.domain);
                 } else {
-                    if (!this.max) {
-                        this.max = max(this.data.map((item: T) => parseFloat(item[axis.field])));
-                    }
-
-                    if (!this.min) {
-                        this.min = min(this.data.map((item: T) => parseFloat(item[axis.field])));
-                    }
-
                     if (reScaleAxes.length) {
                         const reScale = reScaleAxes.find((d: any) => d.field === axis.field);
-                        const reScaleMin = reScale.min;
-                        const reScaleMax = reScale.max;
+                        const reScaleMin = +reScale.min.toFixed(2);
+                        const reScaleMax = +reScale.max.toFixed(2);
 
                         if (axis.isRound === true) {
                             scale.domain(
@@ -596,11 +565,11 @@ export class ChartBase<T = any> implements IChart {
                         // TODO : index string domain 지정.
                         if (axis.isRound === true) {
                             scale.domain(
-                                [this.min, this.max]
+                                [axis.min, axis.max]
                             ).nice();
                         } else {
                             scale.domain(
-                                [this.min, this.max]
+                                [axis.min, axis.max]
                             );
                         }
                     }
@@ -614,7 +583,7 @@ export class ChartBase<T = any> implements IChart {
                 visible: axis.visible === false ? false : true,
                 tickFormat: axis.tickFormat ? axis.tickFormat : undefined,
                 isGridLine: axis.isGridLine === true ? true : false,
-                isZoom: axis.isZoom === true ? true : false,
+                isZoom: axis.isZoom === true ? true : false
             });
         });
         return returnAxes;
