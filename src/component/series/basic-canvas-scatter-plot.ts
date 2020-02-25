@@ -91,11 +91,21 @@ export class BasicCanvasScatterPlot extends SeriesBase {
     }
 
     drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {
-        const x: any = scales.find((scale: Scale) => scale.orinet === 'bottom').scale;
-        const y: any = scales.find((scale: Scale) => scale.orinet === 'left').scale;
+        const xScale: Scale = scales.find((scale: Scale) => scale.orinet === 'bottom');
+        const yScale: Scale = scales.find((scale: Scale) => scale.orinet === 'left');
+        const x: any = xScale.scale;
+        const y: any = yScale.scale;
+        
+        const xmin = xScale.min;
+        const xmax = xScale.max;
+        const ymin = yScale.min;
+        const ymax = yScale.max;
+
         const pointRadius = 4;
 
-        const generateData: Array<[number, number]> = chartData.map((d: BasicCanvasScatterPlotModel, i: number) => {
+        const generateData: Array<[number, number]> = chartData
+        .filter((d: BasicCanvasScatterPlotModel) => d.x >= xmin && d.x <= xmax && d.y >= ymin && d.y <= ymax)
+        .map((d: BasicCanvasScatterPlotModel, i: number) => {
             // TODO: position별로 indexing 해서 loop 돌면서 덮어버리고 최종 겹치지 않는 dot에 대해서만 출력하도록 한다.
             this.indexing[d.x + ',' + d.y] = i;
             return [d.x, d.y];
