@@ -1,11 +1,11 @@
 import { Selection, BaseType, select, mouse } from 'd3-selection';
 import { quadtree, Quadtree } from 'd3-quadtree';
-import { interval, timer, Observable, Observer } from 'rxjs';
-import { takeUntil, delay } from 'rxjs/operators';
+import { min, max } from 'd3-array';
+import { interval, timer } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
-import { min, max } from 'd3';
 
 export class BasicCanvasScatterPlotModel {
     x: number;
@@ -104,12 +104,12 @@ export class BasicCanvasScatterPlot extends SeriesBase {
         const pointRadius = 4;
 
         const generateData: Array<[number, number]> = chartData
-        .filter((d: BasicCanvasScatterPlotModel) => d.x >= xmin && d.x <= xmax && d.y >= ymin && d.y <= ymax)
-        .map((d: BasicCanvasScatterPlotModel, i: number) => {
-            // TODO: position별로 indexing 해서 loop 돌면서 덮어버리고 최종 겹치지 않는 dot에 대해서만 출력하도록 한다.
-            this.indexing[d.x + ',' + d.y] = i;
-            return [d.x, d.y];
-        });
+            .filter((d: BasicCanvasScatterPlotModel) => d.x >= xmin && d.x <= xmax && d.y >= ymin && d.y <= ymax)
+            .map((d: BasicCanvasScatterPlotModel, i: number) => {
+                // TODO: position별로 indexing 해서 loop 돌면서 덮어버리고 최종 겹치지 않는 dot에 대해서만 출력하도록 한다.
+                this.indexing[d.x + ',' + d.y] = i;
+                return [d.x, d.y];
+            });
 
         const quadTreeObj: any = quadtree()
             .extent([[-1, -1], [width + 1, height + 1]])
@@ -186,8 +186,8 @@ export class BasicCanvasScatterPlot extends SeriesBase {
                         },
                         {
                             field: this.yField,
-                            min: yStartValue,
-                            max: yEndValue
+                            min: yEndValue,
+                            max: yStartValue
                         }
                     ]);
                 } else {
@@ -274,8 +274,8 @@ export class BasicCanvasScatterPlot extends SeriesBase {
     ) {
         pointerContext.strokeStyle = 'white';
         pointerContext.fillStyle = 'red';
-        const xClicked = x.invert(geometry.x);
-        const yClicked = y.invert(geometry.y);
+        const xClicked = +x.invert(geometry.x).toFixed(2);
+        const yClicked = +y.invert(geometry.y).toFixed(2);
 
         const closest = quadTreeObj.find(xClicked, yClicked);
         const dX = x(closest[0]);
