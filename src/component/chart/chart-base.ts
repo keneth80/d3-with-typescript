@@ -513,6 +513,8 @@ export class ChartBase<T = any> implements IChart {
             }
 
             let scale = null;
+            let minValue = 0;
+            let maxValue = 0;
             if (axis.type === 'string') {
                 scale = scaleBand().range(range).padding(axis.padding ? +axis.padding : 0).paddingOuter(0.1);
                 if (axis.domain) {
@@ -536,6 +538,7 @@ export class ChartBase<T = any> implements IChart {
                 scale.domain(extent(this.data, (item: T) => item[axis.field]));
             } else {
                 scale = scaleLinear().range(range);
+                
                 if (!axis.max) {
                     axis.max = max(this.data.map((item: T) => parseFloat(item[axis.field])));
                 }
@@ -544,32 +547,35 @@ export class ChartBase<T = any> implements IChart {
                     axis.min = min(this.data.map((item: T) => parseFloat(item[axis.field])));
                 }
 
+                minValue = axis.min;
+                maxValue = axis.max;
+
                 if (axis.domain) {
                     scale.domain(axis.domain);
                 } else {
                     if (reScaleAxes.length) {
                         const reScale = reScaleAxes.find((d: any) => d.field === axis.field);
-                        const reScaleMin = +reScale.min.toFixed(2);
-                        const reScaleMax = +reScale.max.toFixed(2);
+                        minValue = +reScale.min.toFixed(2);
+                        maxValue = +reScale.max.toFixed(2);
 
                         if (axis.isRound === true) {
                             scale.domain(
-                                [reScaleMin, reScaleMax]
+                                [minValue, maxValue]
                             ).nice();
                         } else {
                             scale.domain(
-                                [reScaleMin, reScaleMax]
+                                [minValue, maxValue]
                             );
                         }
                     } else {
                         // TODO : index string domain 지정.
                         if (axis.isRound === true) {
                             scale.domain(
-                                [axis.min, axis.max]
+                                [minValue, maxValue]
                             ).nice();
                         } else {
                             scale.domain(
-                                [axis.min, axis.max]
+                                [minValue, maxValue]
                             );
                         }
                     }
@@ -583,7 +589,9 @@ export class ChartBase<T = any> implements IChart {
                 visible: axis.visible === false ? false : true,
                 tickFormat: axis.tickFormat ? axis.tickFormat : undefined,
                 isGridLine: axis.isGridLine === true ? true : false,
-                isZoom: axis.isZoom === true ? true : false
+                isZoom: axis.isZoom === true ? true : false,
+                min: minValue,
+                max: maxValue
             });
         });
         return returnAxes;
