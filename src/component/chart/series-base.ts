@@ -35,7 +35,7 @@ export class SeriesBase implements ISeries {
     drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {
 
     }
-    
+
     drawProgress(
         totalCount: number, 
         currentCount: number, 
