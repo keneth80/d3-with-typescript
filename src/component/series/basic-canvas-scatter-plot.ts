@@ -46,6 +46,12 @@ export class BasicCanvasScatterPlot extends SeriesBase {
 
     private yField: string = 'y';
 
+    private prevCanvas: any = null;
+
+    private isRestore: boolean = false;
+
+    private isZoom: boolean = false;
+
     constructor(configuration: BasicCanvasScatterPlotConfiguration) {
         super();
         if (configuration.selector) {
@@ -109,116 +115,100 @@ export class BasicCanvasScatterPlot extends SeriesBase {
             .attr('height', height - 1)
             .style('transform', `translate(${(this.chartBase.chartMargin.left + 1)}px, ${(this.chartBase.chartMargin.top + 1)}px)`);
 
-            const pointerContext = (this.pointerCanvas.node() as any).getContext('2d');
+        const pointerContext = (this.pointerCanvas.node() as any).getContext('2d');
 
-            const context = (this.canvas.node() as any).getContext('2d');
+        const context = (this.canvas.node() as any).getContext('2d');
             context.clearRect(0, 0, width, height);
             context.fillStyle = 'steelblue';
             context.strokeWidth = 1;
             context.strokeStyle = 'white';
     
-            let isMouseDown = false;
-            let isMouseMove = false;
-            let startX = 0;
-            let startY = 0;
-            let endX = 0;
-            let endY = 0;
-    
-            this.pointerCanvas.on('mousedown', () => {
+        let isMouseDown = false;
+        let isMouseMove = false;
+        let startX = 0;
+        let startY = 0;
+        let endX = 0;
+        let endY = 0;
+
+        this.pointerCanvas.on('mousedown', () => {
+            const mouseEvent = mouse(this.pointerCanvas.node() as any);
+            startX = mouseEvent[0];
+            startY = mouseEvent[1];
+            isMouseDown = true;
+        });
+
+        this.pointerCanvas.on('mousemove', () => {
+            if (isMouseDown) {
+                isMouseMove = true;
                 const mouseEvent = mouse(this.pointerCanvas.node() as any);
-                startX = mouseEvent[0];
-                startY = mouseEvent[1];
-                isMouseDown = true;
-            });
-    
-            this.pointerCanvas.on('mousemove', () => {
-                if (isMouseDown) {
-                    isMouseMove = true;
-                    const mouseEvent = mouse(this.pointerCanvas.node() as any);
-                    const moveX = mouseEvent[0];
-                    const moveY = mouseEvent[1];
-                    pointerContext.clearRect(0, 0, width, height);
-                    this.drawZoomBox(
-                        pointerContext,
-                        min([startX, moveX]), min([startY, moveY]),
-                        max([startX, moveX]), max([startY, moveY])
-                    );
-                }
-            });
-    
-            this.pointerCanvas.on('mouseup', () => {
-                isMouseDown = false;
-                isMouseMove = false;
-    
-                const mouseEvent = mouse(this.pointerCanvas.node() as any);
-                endX = mouseEvent[0];
-                endY = mouseEvent[1];
+                const moveX = mouseEvent[0];
+                const moveY = mouseEvent[1];
                 pointerContext.clearRect(0, 0, width, height);
-                if (Math.abs(startX - endX) > pointRadius * 2 && Math.abs(startY - endY) > pointRadius * 2) {
-                    const xStartValue = x.invert(startX);
-                    const yStartValue = y.invert(startY);
-                    const xEndValue = x.invert(endX);
-                    const yEndValue = y.invert(endY);
+                this.drawZoomBox(
+                    pointerContext,
+                    min([startX, moveX]), min([startY, moveY]),
+                    max([startX, moveX]), max([startY, moveY])
+                );
+            }
+        });
 
-                    if (startX < endX && startY < endY) {
-                        this.chartBase.updateAxisForZoom([
-                            {
-                                field: this.xField,
-                                min: xStartValue,
-                                max: xEndValue
-                            },
-                            {
-                                field: this.yField,
-                                min: yStartValue,
-                                max: yEndValue
-                            }
-                        ]);
-                    } else {
-                        this.chartBase.updateAxisForZoom([]);
-                    }
+        this.pointerCanvas.on('mouseup', () => {
+            isMouseDown = false;
+            isMouseMove = false;
 
-                    // Observable.create((observ: Observer<any>) => {
-                    //     observ.next(true);
-                    //     observ.complete();
-                    // }).pipe(
-                    //     delay(200)
-                    // ).subscribe(() => {
-                    //     if (startX < endX && startY < endY) {
-                    //         this.chartBase.updateAxisForZoom([
-                    //             {
-                    //                 field: this.xField,
-                    //                 min: xStartValue,
-                    //                 max: xEndValue
-                    //             },
-                    //             {
-                    //                 field: this.yField,
-                    //                 min: yStartValue,
-                    //                 max: yEndValue
-                    //             }
-                    //         ]);
-                    //     } else {
-                    //         this.chartBase.updateAxisForZoom([]);
-                    //     }
-                    // });
-                    
-                } else {
-                    this.selection(
-                        x, 
-                        y,
-                        generateData, 
-                        quadTreeObj, 
-                        pointerContext, 
+            const mouseEvent = mouse(this.pointerCanvas.node() as any);
+            endX = mouseEvent[0];
+            endY = mouseEvent[1];
+            pointerContext.clearRect(0, 0, width, height);
+            if (Math.abs(startX - endX) > pointRadius * 2 && Math.abs(startY - endY) > pointRadius * 2) {
+                const xStartValue = x.invert(startX);
+                const yStartValue = y.invert(startY);
+                const xEndValue = x.invert(endX);
+                const yEndValue = y.invert(endY);
+
+                if (startX < endX && startY < endY) {
+                    this.isZoom = true;
+                    this.chartBase.updateAxisForZoom([
                         {
-                            x: endX, y: endY, 
-                            width, height, 
-                            pointRadius
-                        });
+                            field: this.xField,
+                            min: xStartValue,
+                            max: xEndValue
+                        },
+                        {
+                            field: this.yField,
+                            min: yStartValue,
+                            max: yEndValue
+                        }
+                    ]);
+                } else {
+                    this.isRestore = true;
+                    this.chartBase.updateAxisForZoom([]);
                 }
-            });
+                
+            } else {
+                this.selection(
+                    x, 
+                    y,
+                    generateData, 
+                    quadTreeObj, 
+                    pointerContext, 
+                    {
+                        x: endX, y: endY, 
+                        width, height, 
+                        pointRadius
+                    });
+            }
+        });
+
+        if (this.isRestore && this.prevCanvas) {
+            context.putImageData(this.prevCanvas, 0, 0);
+            this.isRestore = false;
+            return;
+        }
 
         // 갯수를 끊어 그리기
         const totalCount = generateData.length;
-        if (totalCount >= 100000) {
+        if (!this.isZoom && totalCount >= 100000) {
             const svgWidth = parseInt(this.svg.style('width'));
             const svgHeight = parseInt(this.svg.style('height'));
             const progressSvg = select((this.svg.node() as HTMLElement).parentElement)
@@ -236,7 +226,6 @@ export class BasicCanvasScatterPlot extends SeriesBase {
             const example = source.pipe(takeUntil(timer$));
             example.subscribe(val => {
                 for (let j = val * (totalCount / shareCount); j < (val + 1) * (totalCount / shareCount); j++ ) {
-                    // this.indexing[chartData[j].x + ',' + chartData[j].y] = j;
                     this.drawPoint(chartData[j], pointRadius, x, y, context);
                 }
                 this.drawProgress(
@@ -251,17 +240,20 @@ export class BasicCanvasScatterPlot extends SeriesBase {
             }, (error) => {
                 console.log('scatter plot Error', error);
             }, () => {
+                if (!this.prevCanvas) {
+                    this.prevCanvas = context.getImageData(0, 0, width, height);
+                }
                 progressSvg.remove();
             });
         } else {
+            this.isZoom = false;
             chartData.forEach((point: BasicCanvasScatterPlotModel) => {
                 this.drawPoint(point, pointRadius, x, y, context);
             });
+            if (!this.prevCanvas) {
+                this.prevCanvas = context.getImageData(0, 0, width, height);
+            }
         }
-
-        // TODO: 그려진 후 zoom 기능 활성화.
-        // zoom plugin과 어떻게 연계를 해야할 지 고민
-        // https://bl.ocks.org/mbostock/4343214 참고
     }
 
     selection(
