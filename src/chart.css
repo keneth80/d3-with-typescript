@@ -61,15 +61,3 @@ rect.tooltip {
 text {
     font: 10px sans-serif;
 }
-
-.plot {
-    position: absolute;
-}
-
-#scatter-canvas {
-    z-index: 2;
-}
-
-#scatter-axis-svg {
-    z-index: 1;
-}
