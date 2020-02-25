@@ -12,6 +12,8 @@ export interface Axis {
     tickFormat?: string;
     isGridLine?: boolean;
     isZoom?: boolean;
+    min?: number, // only type is number
+    max?: number  // only type is number
 }
 
 export interface Margin {
@@ -34,7 +36,7 @@ export interface ChartConfiguration<T = any> {
     axes?: Array<Axis>;
 
     series?: Array<ISeries<T>>;
-
+    
     functions?: Array<IFunctions<T>>;
 
     data: T;
