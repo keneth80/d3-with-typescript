@@ -171,8 +171,6 @@ export class BasicGaugeSeries extends SeriesBase {
 
         const svgWidth = parseFloat(this.svg.style('width'));
 
-        console.log('size : ', width, height, elementWidth, svgWidth);
-
         this.svg.select('g.series-group').attr('transform', `translate(${elementWidth / 2}, ${this.r / 2})`);
 
         const centerTx = this.centerTransition(elementWidth, svgWidth, this.r);

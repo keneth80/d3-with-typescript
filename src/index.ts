@@ -26,6 +26,8 @@ import { BasicAreaSeries } from './component/series/basic-area-series';
 import { BasicCanvasScatterPlotModel, BasicCanvasScatterPlot } from './component/series/basic-canvas-scatter-plot';
 import { BasicGaugeSeries } from './component/series/basic-gauge-series';
 import { BasicZoomSelection } from './component/functions/basic-zoom-selection';
+import { topologyData, topologyData2 } from './component/mock-data/topology-data';
+import { BasicTopology, TopologyGroupElement, TopologyData } from './component/series/basic-topology';
 
 class SalesModel {
     salesperson: string;
@@ -102,6 +104,48 @@ const data: Array<SalesModel> = [
     new SalesModel('Charles', 13, 35, '3-Apr-12'),
     new SalesModel('Mary', 29, 67, '26-Mar-12')
 ];
+
+const topologyExcute = () => {
+    const groups = topologyData.result.frameworks.map((item: any) => {
+        const currentData = {
+            rawID: item.rawID,
+            frameworkID: item.frameworkID,
+            frameworkSetID: item.frameworkSetID,
+            status: item.status,
+            previousStatus: item.previousStatus,
+            updateDateTime: item.updateDateTime,
+            fullName: item.fullName
+        };
+        return new TopologyGroupElement(item.fullName, 0, 0, 50, 50, 5, 5, currentData, item.members);
+    })
+    // .filter((item: TopologyGroupElement, index: number) => index === 0);
+
+    const machines = topologyData.result.machines.map((item: any) => {
+        return new TopologyGroupElement(item.fullName, 0, 0, 50, 50, 5, 5, item, []);
+    });
+
+    const topology = new BasicTopology({
+        selector: 'topology'
+    });
+
+    const basicChart: BasicChart = new BasicChart({
+        selector: '#basic-topology',
+        data: [
+            new TopologyData(groups, machines)
+        ],
+        margin: {
+            top: 5,
+            left: 10,
+            right: 10,
+            bottom: 5
+        },
+        isResize: 'Y',
+        axes: [],
+        series: [
+            topology
+        ]
+    }).draw();
+}
 
 const excute = () => {
     const parseTime = timeParse('%d-%b-%y');
@@ -612,7 +656,7 @@ const areaChart = () => {
 const canvasScatter = (id: string) => {
     const randomX = randomNormal(0, 9);
     const randomY = randomNormal(0, 9);
-    const numberPoints = 200000;
+    const numberPoints = 300000;
     const data = range(numberPoints).map((d: number) => {
         return new BasicCanvasScatterPlotModel(
             +randomX().toFixed(2),
@@ -632,7 +676,7 @@ const canvasScatter = (id: string) => {
         selector: id,
         data,
         margin: {
-            top: 10, right: 10, bottom: 30, left: 30
+            top: 10, right: 10, bottom: 30, left: 40
         },
         calcField: 'y',
         isResize: 'Y',
@@ -652,11 +696,6 @@ const canvasScatter = (id: string) => {
             scatterPlot
         ],
         functions: [
-            // new BasicZoomSelection({
-            //     xField: 'x',
-            //     yField: 'y',
-            //     targetGroup: ''
-            // })
         ]
     }).draw();
 }
@@ -667,18 +706,16 @@ const gaugeChart = () => {
         clipHeight: 110,
         ringWidth: 30,
         minValue: 0,
-        maxValue: 10,
+        maxValue: 100,
         transitionMs: 1000
     });
 
     const gaugeChart = new BasicChart({
         selector: '#gauge',
-        data: [3],
+        data: [37],
         margin: {
             top: 10, right: 0, bottom: 30, left: 0
         },
-        min:0,
-        max: 10,
         isResize: 'Y',
         axes: [],
         series: [
@@ -686,6 +723,8 @@ const gaugeChart = () => {
         ]
     }).draw();
 }
+
+topologyExcute();
 
 excute();
 

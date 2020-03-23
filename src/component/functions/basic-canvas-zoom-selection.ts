@@ -4,7 +4,7 @@ import { zoom } from 'd3-zoom';
 import { Scale } from '../chart/chart-base';
 import { FunctionsBase } from '../chart/functions-base';
 
-export interface BasicZoomSelectionConfiguration {
+export interface BasicCanvasZoomSelectionConfiguration {
     targetGroup: string;
     xField: string;
     yField: string;
@@ -13,7 +13,7 @@ export interface BasicZoomSelectionConfiguration {
     direction?: string; // both, x, y default: both
 }
 
-export class BasicZoomSelection extends FunctionsBase {
+export class BasicCanvasZoomSelection extends FunctionsBase {
     private targetGroup: string = '';
 
     private targetElements: any;
@@ -34,7 +34,7 @@ export class BasicZoomSelection extends FunctionsBase {
 
     private originScaleY: any = {};
 
-    constructor(configuration: BasicZoomSelectionConfiguration) {
+    constructor(configuration: BasicCanvasZoomSelectionConfiguration) {
         super();
         if (configuration) {
             if (configuration.targetGroup) {
@@ -72,7 +72,7 @@ export class BasicZoomSelection extends FunctionsBase {
                 .style('fill', 'none')
                 .style('pointer-events', 'all');
             this.zoomTarget.lower();
-        }   
+        }
     }
 
     drawFunctions(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {

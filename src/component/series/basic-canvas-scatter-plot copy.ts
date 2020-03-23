@@ -52,8 +52,6 @@ export class BasicCanvasScatterPlot extends SeriesBase {
 
     private isZoom: boolean = false;
 
-    private dotCheck: any = {};
-
     constructor(configuration: BasicCanvasScatterPlotConfiguration) {
         super();
         if (configuration.selector) {
@@ -105,22 +103,13 @@ export class BasicCanvasScatterPlot extends SeriesBase {
 
         const pointRadius = 4;
 
-        const tempIndex = {};
         const generateData: Array<[number, number]> = chartData
             .filter((d: BasicCanvasScatterPlotModel) => d.x >= xmin && d.x <= xmax && d.y >= ymin && d.y <= ymax)
-            // .filter((d: BasicCanvasScatterPlotModel) => {
-            //     // scale로 변환하여 pointRadius / 2 만큼의 가중치를 주고 position 별로 unique하게 관리한다.
-            //     if (tempIndex[x(d.x).toFixed(0), y(d.y).toFixed(0)])
-            //     return tempIndex[x(d.x).toFixed(0), y(d.y).toFixed(0)]
-            // })
             .map((d: BasicCanvasScatterPlotModel, i: number) => {
-                // TODO: data 별로 indexing 해서 loop 돌면서 덮어버리고 최종 겹치지 않는 dot에 대해서만 출력하도록 한다.
+                // TODO: position별로 indexing 해서 loop 돌면서 덮어버리고 최종 겹치지 않는 dot에 대해서만 출력하도록 한다.
                 this.indexing[d.x + ',' + d.y] = i;
-                // tempIndex[d.x.toFixed(1) + ',' + d.y.toFixed(1)] = d;
                 return [d.x, d.y];
             });
-
-        // console.log('size : ', generateData.length, Object.keys(tempIndex).length);
 
         const quadTreeObj: any = quadtree()
             .extent([[-1, -1], [width + 1, height + 1]])
@@ -182,10 +171,10 @@ export class BasicCanvasScatterPlot extends SeriesBase {
             endY = mouseEvent[1];
             pointerContext.clearRect(0, 0, width, height);
             if (Math.abs(startX - endX) > pointRadius * 2 && Math.abs(startY - endY) > pointRadius * 2) {
-                const xStartValue = +x.invert(startX).toFixed(2);
-                const yStartValue = +y.invert(startY).toFixed(2);
-                const xEndValue = +x.invert(endX).toFixed(2);
-                const yEndValue = +y.invert(endY).toFixed(2);
+                const xStartValue = x.invert(startX);
+                const yStartValue = y.invert(startY);
+                const xEndValue = x.invert(endX);
+                const yEndValue = y.invert(endY);
 
                 if (startX < endX && startY < endY) {
                     this.isZoom = true;
@@ -361,12 +350,6 @@ export class BasicCanvasScatterPlot extends SeriesBase {
         if (cx < 0 || cy < 0) {
             return;
         }
-
-        // if (this.dotCheck[cx.toFixed(2) + '.' + cy.toFixed(2)]) {
-        //     return;
-        // }
-
-        // this.dotCheck[cx.toFixed(2) + '.' + cy.toFixed(2)] = 1;
 
         context.beginPath();
         context.arc(cx, cy, r, 0, 2 * Math.PI);

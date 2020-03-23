@@ -39,7 +39,7 @@ module.exports = {
                 use: 'url-loader'
             },
             {
-                test: /\.(txt|csv)$/,
+                test: /\.(txt|csv|svg)$/,
                 use: [
                   {
                     loader: 'file-loader',
@@ -61,7 +61,8 @@ module.exports = {
         }),
 
         new CopyWebpackPlugin([
-            { from: './src/component/mock-data/**', to: './component/mock-data', flatten: true }
+            { from: './src/component/mock-data/**', to: './component/mock-data', flatten: true },
+            { from: './src/assets/image/**', to: './assets/image', flatten: true }
         ])
 
         // new BundleAnalyzerPlugin()

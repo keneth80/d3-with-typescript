@@ -1,5 +1,5 @@
 import { Selection, BaseType } from 'd3-selection';
-import { area, line } from 'd3-shape';
+import { area, line, Area, Line } from 'd3-shape';
 
 import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
@@ -11,9 +11,9 @@ export interface BasicAreaSeriesConfiguration {
 }
 
 export class BasicAreaSeries extends SeriesBase {
-    private area: any;
+    private area: Area<[number, number]>;
 
-    private line: any;
+    private line: Line<[number, number]>;
 
     private selector: string = 'basic-area';
 
