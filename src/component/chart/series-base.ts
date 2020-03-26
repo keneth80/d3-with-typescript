@@ -6,7 +6,7 @@ import { ISeries } from './series.interface';
 
 export class SeriesBase implements ISeries {
     selector: string;
-    
+
     displayName: string;
 
     protected svg: Selection<BaseType, any, HTMLElement, any>;
@@ -31,11 +31,7 @@ export class SeriesBase implements ISeries {
         return this.itemClickSubject.asObservable();
     }
 
-    select(displayName: string) {
-
-    };
-
-    unselect(displayName: string){
+    select(displayName: string, isSelected: boolean) {
 
     };
 

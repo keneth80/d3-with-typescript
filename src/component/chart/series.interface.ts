@@ -13,9 +13,7 @@ export interface ISeries<T = any> {
 
     selector: string;
 
-    select(displayName: string): void;
-
-    unselect(displayName: string): void;
+    select(displayName: string, isSelected: boolean): void;
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, mainGroup: Selection<BaseType, any, HTMLElement, any>): void;
 

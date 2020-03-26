@@ -171,3 +171,7 @@ export const getMaxText = (texts: string[] = []) => {
 
     return texts[targetIndex];
 }
+
+export const drawSvgCheckBox = () => {
+    
+}

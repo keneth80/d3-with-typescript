@@ -77,4 +77,8 @@ export class BasicPlotSeries extends SeriesBase {
                 .attr('cy', (data: any) => { return y(data[this.yField]); })
                 .attr('r', 5);
     }
+
+    select(displayName: string, isSelected: boolean) {
+        this.mainGroup.selectAll(`.${this.selector}`).style('opacity', isSelected ? null : 0.4);
+    }
 }

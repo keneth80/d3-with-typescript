@@ -106,4 +106,8 @@ export class VerticalBarSeries extends SeriesBase {
                     // return height - y(data[this.yField]); 
                 });
     }
+
+    select(displayName: string, isSelected: boolean) {
+        this.mainGroup.selectAll(`.${this.selector}`).style('opacity', isSelected ? null : 0.4);
+    }
 }

@@ -123,4 +123,11 @@ export class BasicLineSeries extends SeriesBase {
                     .attr('r', 5);
         }
     }
+
+    select(displayName: string, isSelected: boolean) {
+        this.mainGroup.selectAll(`.${this.selector}`).style('opacity', isSelected ? null : 0.4);
+        if (this.isDot) {
+            this.dotGroup.selectAll(`.${this.dotClass}`).style('opacity', isSelected ? null : 0.4);
+        }
+    }
 }

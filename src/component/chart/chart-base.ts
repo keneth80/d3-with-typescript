@@ -41,6 +41,11 @@ interface ContainerSize {
     height: number;
 }
 
+interface LegendItem {
+    label: string; 
+    selected: boolean;
+}
+
 export class ChartBase<T = any> implements IChart {
     public isResize: boolean = false;
 
@@ -141,6 +146,10 @@ export class ChartBase<T = any> implements IChart {
     };
 
     private legendPadding: number = 5;
+
+    private currentLegend: string = null;
+
+    private currentLegendNode: any = null;
 
     constructor(
         configuration: ChartConfiguration
@@ -730,12 +739,18 @@ export class ChartBase<T = any> implements IChart {
             return;
         }
 
-        const keys: string[] = this.seriesList.map((series: ISeries) => series.displayName ? series.displayName : series.selector);
+        const keys: Array<LegendItem> = this.seriesList.map((series: ISeries) => {
+            const label: string = series.displayName ? series.displayName : series.selector;
+            return {
+                label,
+                selected: true
+            }
+        });
         
         const legendItemGroup = this.legendGroup.selectAll('.legend-item-group')
             .data(keys)
             .join(
-                (enter) => enter.append('g').attr('class', 'legend-item-group'),
+                (enter) => enter.append('g').attr('class', 'legend-item-group').on('click', this.onLegendItemClick),
                 (update) => {
                     update.selectAll('*').remove();
                     return update;
@@ -749,7 +764,7 @@ export class ChartBase<T = any> implements IChart {
             });
       
         legendItemGroup.selectAll('.legend-item')
-            .data((d: string) => [d])
+            .data((d: LegendItem) => [d])
             .join(
                 (enter) => enter.append('rect').attr('class', 'legend-item'),
                 (update) => update,
@@ -757,13 +772,13 @@ export class ChartBase<T = any> implements IChart {
             )
             .attr('width', this.legendItemSize.width)
             .attr('height', this.legendItemSize.width)
-            .attr('fill', (d: string) => {
-                const index = keys.indexOf(d);
+            .attr('fill', (d: LegendItem) => {
+                const index = keys.findIndex((key: LegendItem) => d.label === key.label);
                 return this.colors[index];
             });
       
         legendItemGroup.selectAll('.legend-label')
-            .data((d: string) => [d])
+            .data((d: LegendItem) => [d])
             .join(
                 (enter) => enter.append('text').attr('class', 'legend-label'),
                 (update) => update,
@@ -774,27 +789,42 @@ export class ChartBase<T = any> implements IChart {
                 return `translate(${(this.legendPadding + this.legendItemSize.width)}, 5)`;
             })
             .attr('dy', '.35em')
-            .text((d: string) => { return d; });
+            .text((d: LegendItem) => { return d.label; });
 
         
         if (this.legendPlacement === Placement.TOP || this.legendPlacement === Placement.BOTTOM) {
             let currentX = 0;
             const xpositions = [0];
 
-            legendItemGroup.selectAll('.legend-label').each((d: string) => {
-                const index = keys.indexOf(d);
-                const legendItemWidth = this.legendItemSize.width + this.legendPadding * 2 + getTextWidth(d, this.defaultLegendStyle.font.size, this.defaultLegendStyle.font.family);
+            legendItemGroup.selectAll('.legend-label').each((d: LegendItem) => {
+                const index = keys.findIndex((key: LegendItem) => d.label === key.label);
+                const textWidth = Math.round(getTextWidth(d.label, this.defaultLegendStyle.font.size, this.defaultLegendStyle.font.family));
+                const legendItemWidth = this.legendItemSize.width + this.legendPadding * 2 + textWidth;
                 currentX = currentX + legendItemWidth;
                 xpositions.push(currentX);
             });
             
-            legendItemGroup.attr('transform', (d: any) => {
+            legendItemGroup.attr('transform', (d: LegendItem) => {
                 const addX = this.width - currentX;
-                const index = keys.indexOf(d);
+                const index = keys.findIndex((key: LegendItem) => d.label === key.label);
                 const x = index > 0 ? xpositions[index] : 0;
                 return `translate(${addX + x}, ${this.legendPadding})`;
             });
-            
+        }
+    }
+
+    protected onLegendItemClick = (d: LegendItem, index: number, nodeList: any) => {
+        this.currentLegend = d.label;
+        d.selected = !d.selected;
+        if (d.selected === false) {
+            select(nodeList[index]).style('opacity', 0.5);
+        } else {
+            select(nodeList[index]).style('opacity', null);
+        }
+
+        const target: ISeries = this.seriesList.find((series: ISeries) => (series.displayName ? series.displayName : series.selector) === d.label);
+        if (target) {
+            target.select(d.label, d.selected);
         }
     }
 
