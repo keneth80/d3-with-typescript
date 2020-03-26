@@ -5,6 +5,8 @@ import { ChartBase, Scale } from './chart-base';
 import { ISeries } from './series.interface';
 
 export class SeriesBase implements ISeries {
+    displayName: string;
+
     protected svg: Selection<BaseType, any, HTMLElement, any>;
 
     protected mainGroup: Selection<BaseType, any, HTMLElement, any>;
@@ -27,12 +29,20 @@ export class SeriesBase implements ISeries {
         return this.itemClickSubject.asObservable();
     }
 
+    select(displayName: string) {
+
+    };
+
+    unselect(displayName: string){
+
+    };
+
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
         mainGroup: Selection<BaseType, any, HTMLElement, any>) {
 
     }
 
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {
+    drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number, index: number, color: string) {
 
     }
 

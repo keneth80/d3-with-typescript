@@ -5,6 +5,7 @@ import { Subject, Observable } from 'rxjs';
 import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
 import { getTransformByArray, wrapTextByRowLimit } from '../chart/util/d3-svg-util';
+import { SeriesConfiguration } from '../chart/series.interface';
 
 export class Geometry {
     id: string = '';
@@ -85,8 +86,8 @@ export class TopologyData {
     }
 }
 
-export interface BasicTopologyConfiguration {
-    selector?: string;
+export interface BasicTopologyConfiguration extends SeriesConfiguration {
+    
 }
 
 export class BasicTopology extends SeriesBase {
@@ -135,7 +136,7 @@ export class BasicTopology extends SeriesBase {
         const memberSize = memberCountList.reduce((prev: Number, current: number) => +prev + +current);
         for (let i = 0; i < memberCountList.length; i++) {
             currentMemberCount += memberCountList[i];
-            console.log(`MemberCount ${i}: ${memberCountList[i]} => ${currentMemberCount}`);
+            // console.log(`MemberCount ${i}: ${memberCountList[i]} => ${currentMemberCount}`);
             if (memberSize / 2 <= currentMemberCount) {
                 bottomStartIndex = i;
                 break;
@@ -170,10 +171,6 @@ export class BasicTopology extends SeriesBase {
             .attr('width', width)
             .attr('height', height)
             .style('fill', 'none');
-        
-        console.log(`variables => groupSize(${sectorSize}), memberSize(${memberSize}), 
-        bottomStartIndex(${bottomStartIndex}), topGroupSize(${topSectorSize}), 
-        calcWidth(${calcWidth}), memberWidth(${memberWidth})`);
 
         const sectorPositions: Array<Array<number>> = [];
         

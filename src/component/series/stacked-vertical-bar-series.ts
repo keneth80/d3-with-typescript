@@ -6,9 +6,9 @@ import { format } from 'd3-format';
 import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
 import { colorDarker } from '../chart/util/d3-svg-util';
+import { SeriesConfiguration } from '../chart/series.interface';
 
-export interface StackedVerticalBarSeriesConfiguration {
-    selector?: string;
+export interface StackedVerticalBarSeriesConfiguration extends SeriesConfiguration {
     xField: string;
     yField: string;
     columns: Array<string>;

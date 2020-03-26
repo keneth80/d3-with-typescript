@@ -10,8 +10,9 @@ import { colorDarker } from '../chart/util/d3-svg-util';
 import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
 import { isIE } from '../chart/util/d3-svg-util';
+import { SeriesConfiguration } from '../chart/series.interface';
 
-export interface BasicDonutSeriesConfiguration {
+export interface BasicDonutSeriesConfiguration extends SeriesConfiguration {
     selector?: string;
     categoryField: string;
     valueField: string;

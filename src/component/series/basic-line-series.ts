@@ -1,16 +1,19 @@
 import { Selection, BaseType } from 'd3-selection';
 import { line, curveMonotoneX } from 'd3-shape';
+import { scaleOrdinal } from 'd3-scale';
+import { schemeCategory10 } from 'd3-scale-chromatic';
 import { Subject, Observable } from 'rxjs';
 
 import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
+import { SeriesConfiguration } from '../chart/series.interface';
 
-export interface BasicLineSeriesConfiguration {
-    selector?: string;
+export interface BasicLineSeriesConfiguration extends SeriesConfiguration {
     dotSelector?: string;
     xField: string;
     yField: string;
     isDot?: boolean;
+    colors?: string[];
     style?: {
         stroke?: string;
         fill?: string;
@@ -31,6 +34,8 @@ export class BasicLineSeries extends SeriesBase {
     private yField: string;
 
     private isDot: boolean = true;
+
+    private colors: string[] = [];
 
     constructor(configuration: BasicLineSeriesConfiguration) {
         super();
@@ -69,9 +74,10 @@ export class BasicLineSeries extends SeriesBase {
         }
     }
 
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {
+    drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number, index: number, color: string) {
         const x: any = scales.find((scale: Scale) => scale.orinet === 'bottom').scale;
         const y: any = scales.find((scale: Scale) => scale.orinet === 'left').scale;
+
         let padding = 0;
 
         if (x.bandwidth) {
@@ -95,6 +101,7 @@ export class BasicLineSeries extends SeriesBase {
                     (update) => update,
                     (exit) => exit.remove
                 )
+                .style('stroke', color)
                 .style('fill', 'none')
                 .attr('d', this.line);
 
@@ -111,6 +118,8 @@ export class BasicLineSeries extends SeriesBase {
                         (update) => update,
                         (exit) => exit.remove
                     )
+                    .style('stroke', '#fff')
+                    .style('fill', (d: any) => color)
                     .attr('cx', (data: any, i) => { return x(data[this.xField]) + padding; })
                     .attr('cy', (data: any) => { return y(data[this.yField]); })
                     .attr('r', 5);

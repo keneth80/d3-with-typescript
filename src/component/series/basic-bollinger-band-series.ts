@@ -4,9 +4,9 @@ import { Subject, Observable } from 'rxjs';
 
 import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
+import { SeriesConfiguration } from '../chart/series.interface';
 
-export interface BasicBollingerBandSeriesConfiguration {
-    selector?: string;
+export interface BasicBollingerBandSeriesConfiguration extends SeriesConfiguration {
     xField: string;
     style?: {
         stroke?: string;

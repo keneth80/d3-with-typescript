@@ -5,9 +5,9 @@ import { format } from 'd3-format';
 import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
 import { colorDarker } from '../chart/util/d3-svg-util';
+import { SeriesConfiguration } from '../chart/series.interface';
 
-export interface GroupedVerticalBarSeriesConfiguration {
-    selector?: string;
+export interface GroupedVerticalBarSeriesConfiguration extends SeriesConfiguration {
     xField: string;
     columns: Array<string>;
 }

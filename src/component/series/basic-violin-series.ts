@@ -7,9 +7,9 @@ import { area, curveCatmullRom } from 'd3-shape';
 
 import { SeriesBase } from '../chart/series-base';
 import { Scale } from '../chart/chart-base';
+import { SeriesConfiguration } from '../chart/series.interface';
 
-export interface BasicViolinSeriesConfiguration {
-    selector?: string;
+export interface BasicViolinSeriesConfiguration extends SeriesConfiguration {
     xField: string;
     yField: string;
 }

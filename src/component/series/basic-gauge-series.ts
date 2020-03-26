@@ -9,9 +9,9 @@ import { color, rgb } from 'd3-color';
 
 import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
+import { SeriesConfiguration } from '../chart/series.interface';
 
-export interface BasicGaugeSeriesConfiguration {
-    selector?: string;
+export interface BasicGaugeSeriesConfiguration extends SeriesConfiguration {
     clipWidth: number;
     clipHeight: number;
     ringInset?: number;

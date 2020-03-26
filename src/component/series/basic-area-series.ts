@@ -3,9 +3,9 @@ import { area, line, Area, Line } from 'd3-shape';
 
 import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
+import { SeriesConfiguration } from '../chart/series.interface';
 
-export interface BasicAreaSeriesConfiguration {
-    selector?: string;
+export interface BasicAreaSeriesConfiguration extends SeriesConfiguration {
     xField: string;
     yField: string;
 }

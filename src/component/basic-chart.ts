@@ -11,8 +11,4 @@ export class BasicChart<T = any> extends ChartBase {
     bootstrap() {
         super.bootstrap();
     }
-
-    updateAxis() {
-        super.updateAxis();
-    }
 }

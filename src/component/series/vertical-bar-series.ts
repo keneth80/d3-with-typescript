@@ -4,9 +4,9 @@ import { transition } from 'd3-transition';
 import { colorDarker } from '../chart/util/d3-svg-util';
 import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
+import { SeriesConfiguration } from '../chart/series.interface';
 
-export interface VerticalBarSeriesConfiguration {
-    selector?: string;
+export interface VerticalBarSeriesConfiguration extends SeriesConfiguration {
     xField: string;
     yField: string;
     style?: {

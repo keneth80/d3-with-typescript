@@ -29,6 +29,8 @@ import { BasicZoomSelection } from './component/functions/basic-zoom-selection';
 import { topologyData, topologyData2 } from './component/mock-data/topology-data';
 import { BasicTopology, TopologyGroupElement, TopologyData } from './component/series/basic-topology';
 
+import { Placement } from './component/chart/chart-configuration';
+
 class SalesModel {
     salesperson: string;
     sales: number;
@@ -196,13 +198,25 @@ const excute = () => {
 
     const basicChart: BasicChart = new BasicChart({
         selector: '#chart',
+        // title: {
+        //     placement: Placement.TOP,
+        //     content: 'Multi Series Chart',
+        //     // style: {
+        //     //     size: 16,
+        //     //     color: '#ff0000',
+        //     //     font: 'monospace'
+        //     // }
+        // },
         data: data.map((item: SalesModel) => {
             item.date = parseTime(item.dateStr);
             return item;
         }),
-        margin: {
-            top: 40
-        },
+        // margin: {
+        //     top: 30,
+        //     bottom: 30,
+        //     left: 40,
+        //     right: 20
+        // },
         isResize: 'Y',
         axes: [
             {

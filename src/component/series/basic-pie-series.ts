@@ -7,9 +7,9 @@ import { interpolateSpectral } from 'd3-scale-chromatic';
 
 import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
+import { SeriesConfiguration } from '../chart/series.interface';
 
-export interface BasicPieSeriesConfiguration {
-    selector?: string;
+export interface BasicPieSeriesConfiguration extends SeriesConfiguration {
     categoryField: string;
     valueField: string;
     innerRadius?: number;

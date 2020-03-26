@@ -117,7 +117,7 @@ export const wrapTextByRowLimit = (text: any, width: number, limitRowCount: numb
         return text;
     }
 
-    const compare = osName.indexOf('Windows') > -1 ? 8 : 2; // OS에 따라 ...의 사이즈 차이가 있음.
+    const compare = osName.indexOf('Windows') > -1 ? 8 : 2;
     
     let words: Array<string> = text.text().split('').reverse(),
         word: string,
@@ -132,7 +132,7 @@ export const wrapTextByRowLimit = (text: any, width: number, limitRowCount: numb
     while ((word = words.pop()) && !isOver) {
         line.push(word);
         tspan.text(line.join(''));
-        if (tspan.node().getComputedTextLength() > width - compare) {
+        if (tspan.node().getComputedTextLength() > width - compare) { // OS에 따라 ...의 사이즈 차이가 있음.
             lineCount++;
             line.pop();
             tspan.text(line.join(''));

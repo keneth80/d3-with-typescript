@@ -3,18 +3,19 @@ import '../../chart.css';
 import { min, max, extent } from 'd3-array';
 import { timeSecond } from 'd3-time';
 import { timeFormat } from 'd3-time-format';
-import { scaleBand, scaleLinear, scaleTime, scalePoint } from 'd3-scale';
+import { scaleBand, scaleLinear, scaleTime, scalePoint, scaleOrdinal, ScaleOrdinal } from 'd3-scale';
+import { schemeCategory10 } from 'd3-scale-chromatic';
 import { select, Selection, BaseType, event } from 'd3-selection';
 import { axisBottom, axisLeft, axisTop, axisRight } from 'd3-axis';
 import { brushX, brushY } from 'd3-brush';
 
-import { fromEvent, Subscription, Subject } from 'rxjs';
-import { debounceTime } from 'rxjs/operators';
+import { fromEvent, Subscription, Subject, of, Observable, Observer } from 'rxjs';
+import { debounceTime, delay } from 'rxjs/operators';
 
 import { IChart } from './chart.interface';
-import { ChartConfiguration, Axis, Margin } from './chart-configuration';
+import { ChartConfiguration, Axis, Margin, Placement, ChartTitle } from './chart-configuration';
 import { ISeries } from './series.interface';
-import { guid } from './util/d3-svg-util';
+import { guid, textWrapping } from './util/d3-svg-util';
 import { IFunctions } from './functions.interface';
 
 export interface ISeriesConfiguration {
@@ -33,6 +34,11 @@ export interface Scale {
     isZoom: boolean;
     min?: number;
     max?: number;
+}
+
+interface ContainerSize {
+    width: number;
+    height: number;
 }
 
 export class ChartBase<T = any> implements IChart {
@@ -58,6 +64,10 @@ export class ChartBase<T = any> implements IChart {
 
     protected seriesGroup: Selection<BaseType, any, HTMLElement, any>;
 
+    protected titleGroup: Selection<BaseType, any, BaseType, any>;
+
+    protected legendGroup: Selection<BaseType, any, BaseType, any>;
+
     protected seriesList: Array<ISeries> = [];
 
     protected functionList: Array<IFunctions> = [];
@@ -69,12 +79,24 @@ export class ChartBase<T = any> implements IChart {
     protected tooltipGroup: Selection<BaseType, any, HTMLElement, any>;
 
     protected margin: Margin = {
-        top: 20, left: 40, bottom: 40, right: 20
-    };
+        top: 30, left: 10, bottom: 30, right: 20
+    }; // default margin
 
     protected axisGroups: any = {
         top: null, left: null, bottom: null, right: null
     };
+
+    protected tickSize: number = 6;
+
+    protected tickPadding: number = 2;
+
+    protected defaultStyle: any = {
+        font: {
+            family: 'Arial, Helvetica, sans-serif',
+            size: 16,
+            color: '#999'
+        }
+    }
 
     private config: ChartConfiguration;
 
@@ -87,6 +109,24 @@ export class ChartBase<T = any> implements IChart {
     private idleTimeout: any;
 
     private maskId: string;
+
+    private colors: Array<string>;
+
+    private isCustomMargin: boolean = false;
+
+    private titleContainerSize: ContainerSize = {
+        width: 0, height: 0
+    };
+
+    private isLegend: boolean = false;
+
+    private legendPlacement: string = Placement.RIGHT;
+
+    private legendContainerSize: ContainerSize = {
+        width: 0, height: 0
+    };
+
+    private isUpdateDisplay: boolean = true;
 
     constructor(
         configuration: ChartConfiguration
@@ -107,6 +147,10 @@ export class ChartBase<T = any> implements IChart {
         return this.margin;
     }
 
+    getColorBySeriesIndex(index: number): string {
+        return this.colors[index];
+    }
+
     chartClick() {
         return this.chartClickSubject.asObservable();
     }
@@ -115,6 +159,9 @@ export class ChartBase<T = any> implements IChart {
         // initialize size setup
         if (this.config.margin) {
             Object.assign(this.margin, this.config.margin);
+            this.isCustomMargin = true;
+        } else {
+            this.isCustomMargin = false;
         }
 
         this.svg = select(this.config.selector);
@@ -132,9 +179,20 @@ export class ChartBase<T = any> implements IChart {
             this.functionList = this.config.functions;
         }
 
+        if (this.config.colors && this.config.colors.length) {
+            this.colors = this.config.colors;
+        } else {
+            this.colors = schemeCategory10.map((color: string) => color);
+        }
+
+        if (this.config.legend) {
+            this.isLegend = true;
+            this.legendPlacement = this.config.legend.placement;
+        }
+
         this.maskId = guid();
         
-        this.makeContainer();
+        this.initContainer();
         this.addEventListner();
     }
 
@@ -205,12 +263,15 @@ export class ChartBase<T = any> implements IChart {
     }
 
     updateSeries() {
+        if (!this.isUpdateDisplay) {
+            return;
+        }
         try {
             if (this.seriesList && this.seriesList.length) {
-                this.seriesList.map((series: ISeries) => {
+                this.seriesList.map((series: ISeries, index: number) => {
                     series.chartBase = this;
                     series.setSvgElement(this.svg, this.seriesGroup);
-                    series.drawSeries(this.data, this.scales, this.width, this.height);
+                    series.drawSeries(this.data, this.scales, this.width, this.height, index, this.colors[index]);
                 });
             }
         } catch(error) {
@@ -312,6 +373,8 @@ export class ChartBase<T = any> implements IChart {
                 this.setupBrush(scale);
             }
         });
+
+        // console.log('maxTextWidth : ', maxTextWidth);
     }
 
     protected updateFunctions() {
@@ -336,45 +399,97 @@ export class ChartBase<T = any> implements IChart {
 
         this.width = this.svgWidth - this.margin.left - this.margin.right,
         this.height = this.svgHeight - this.margin.top - this.margin.bottom;
+
+        if (this.config.title) {
+            this.titleContainerSize.width = this.config.title.placement === Placement.TOP || this.config.title.placement === Placement.BOTTOM ? this.width : 20;
+            this.titleContainerSize.height = this.config.title.placement === Placement.TOP || this.config.title.placement === Placement.BOTTOM ? 20 : this.height;
+            this.width = this.width - (this.config.title.placement === Placement.LEFT || this.config.title.placement === Placement.RIGHT ? 20 : 0);
+            this.height = this.height - (this.config.title.placement === Placement.LEFT || this.config.title.placement === Placement.RIGHT ? 0 : 20);
+        }
     }
 
-    protected makeContainer() {
-        this.clipPath = this.svg.append('defs')
-            .append('svg:clipPath')
-                .attr('id', this.maskId)
-                .append('rect')
-                .attr('width', this.width)
-                .attr('height', this.height)
-                .attr('x', 0)
-                .attr('y', 0);
+    protected initContainer() {
+        
+        const x = this.margin.left + (this.config.title && this.config.title.placement === Placement.LEFT ? this.titleContainerSize.width : 0);
+        const y = this.margin.top + (this.config.title && this.config.title.placement === Placement.TOP ? this.titleContainerSize.height : 0);
+        const width = this.width;
+        const height = this.height;
 
-        this.mainGroup = this.svg.append('g')
-            .attr('class', 'main-group')
-            .attr('transform', `translate(${this.margin.left}, ${this.margin.top})`);
+        if (!this.clipPath) {
+            this.clipPath = this.svg.append('defs')
+                .append('svg:clipPath')
+                    .attr('id', this.maskId)
+                    .append('rect')
+                    .attr('width', width)
+                    .attr('height', height)
+                    .attr('x', 0)
+                    .attr('y', 0);
+        }
 
-        this.seriesGroup = this.svg.append('g')
-            .attr('class', 'series-group')
-            .attr('transform', `translate(${this.margin.left}, ${this.margin.top})`)
+        this.clipPath
+            .attr('width', width)
+            .attr('height', height)
+            .attr('x', 0)
+            .attr('y', 0);
+
+        if (!this.mainGroup) {
+            this.mainGroup = this.svg.append('g')
+                .attr('class', 'main-group')
+        }
+        this.mainGroup.attr('transform', `translate(${x}, ${y})`);
+
+        if (this.config.title) {
+            this.titleGroup = this.svg.selectAll('.title-group')
+                .data([this.config.title])
+                .join(
+                    (enter) => enter.append('g').attr('class', 'title-group'),
+                    (update) => update,
+                    (exit) => exit.remove()
+                );
+        }
+
+        if (this.isLegend) {
+            if (!this.legendGroup) {
+                this.legendGroup = this.svg.append('g').attr('class', 'legend-group');
+            }
+        }
+
+        if (!this.seriesGroup) {
+            this.seriesGroup = this.svg.append('g')
+                .attr('class', 'series-group')
+        }
+        this.seriesGroup
+            .attr('transform', `translate(${x}, ${y})`)
             .attr('clip-path', `url(#${this.maskId})`);
 
-        this.axisGroups.bottom = this.mainGroup.append('g')
-            .attr('class', 'x-axis-group')
-            .attr('transform', `translate(0, ${this.height})`);
+        if (!this.axisGroups.bottom) {
+            this.axisGroups.bottom = this.mainGroup.append('g')
+                .attr('class', 'x-axis-group')
+        }
+        this.axisGroups.bottom.attr('transform', `translate(0, ${height})`);
 
-        this.axisGroups.top = this.mainGroup.append('g')
-            .attr('class', 'x-top-axis-group')
-            .attr('transform', `translate(0, 0)`);
+        if (!this.axisGroups.top) {
+            this.axisGroups.top = this.mainGroup.append('g')
+                .attr('class', 'x-top-axis-group')
+        }
+        this.axisGroups.top.attr('transform', `translate(0, 0)`);
+        
+        if (!this.axisGroups.left) {
+            this.axisGroups.left = this.mainGroup.append('g')
+            .attr('class', 'y-axis-group')
+        }
 
-        this.axisGroups.left = this.mainGroup.append('g')
-            .attr('class', 'y-axis-group');
+        if (!this.axisGroups.right) {
+            this.axisGroups.right = this.mainGroup.append('g')
+                .attr('class', 'y-right-axis-group')
+        }
+        this.axisGroups.right.attr('transform', `translate(${width - this.margin.right}, 0)`);
 
-        this.axisGroups.right = this.mainGroup.append('g')
-            .attr('class', 'y-right-axis-group')
-            .attr('transform', `translate(${this.width - this.margin.right}, 0)`);
-
-        this.tooltipGroup = this.svg.append('g')
-            .attr('class', 'tooltip-group')
-            .style('display', 'none');
+        if (!this.tooltipGroup) {
+            this.tooltipGroup = this.svg.append('g')
+                .attr('class', 'tooltip-group')
+        }
+        this.tooltipGroup.style('display', 'none');
     }
 
     protected addEventListner() {
@@ -392,7 +507,68 @@ export class ChartBase<T = any> implements IChart {
         this.chartClickSubject.next();
     }
 
+    protected updateTitle() {
+        if (this.titleGroup) {
+            this.titleGroup.attr('transform', (d: ChartTitle) => {
+                let titleX = 0;
+                let titleY = 0;
+                if (d.placement === Placement.RIGHT) {
+                    titleX = this.width + this.margin.left + this.margin.right - 3;
+                } else if (d.placement === Placement.BOTTOM) {
+                    titleY = this.height + this.margin.top + this.titleContainerSize.height;
+                }
+                const rotate = 
+                    d.placement === Placement.LEFT || d.placement === Placement.RIGHT ? 90 : 0;
+                return `translate(${titleX}, ${titleY}) rotate(${rotate})`;
+            });
+
+            this.titleGroup.selectAll('.chart-title')
+                .data((d: ChartTitle) => [d])
+                .join(
+                    (enter) => enter.append('text').attr('class', 'chart-title'),
+                    (update) => update,
+                    (exit) => exit.remove()
+                )
+                .style('font-size', (d: ChartTitle) => {
+                    return (d.style && d.style.size ? d.style.size : this.defaultStyle.font.size) + 'px';
+                })
+                .style('stroke', (d: ChartTitle) => {
+                    return (d.style && d.style.color ? d.style.color : this.defaultStyle.font.color)
+                })
+                .style('stroke-width', 0.5)
+                .style('font-family', (d: ChartTitle) => {
+                    return (d.style && d.style.font ? d.style.font : this.defaultStyle.font.family)
+                })
+                .text((d: ChartTitle) => d.content)
+                .attr('dy', '.35em')
+                .attr('transform', (d: ChartTitle, index: number, nodeList: Array<any>) => {
+                    // const textWidth = 
+                    //     d.placement === Placement.TOP || d.placement === Placement.BOTTOM ? nodeList[index].getComputedTextLength() : 20;
+                    const textNode = nodeList[index].getBoundingClientRect();
+                    const textWidth = 
+                        d.placement === Placement.TOP || d.placement === Placement.BOTTOM ? textNode.width : 20;
+                    const textHeight = textNode.height;
+                    
+                    let x = 0;
+                    let y = 0;
+                    if (d.placement === Placement.TOP || d.placement === Placement.BOTTOM) {
+                        x = (this.width + this.margin.left + this.margin.right) / 2 - textWidth / 2;
+                        y = this.titleContainerSize.height / 2 + textHeight / 2 - 3;
+                    } else {
+                        x = (this.height + this.margin.top + this.margin.bottom) / 2 - textHeight / 2;
+                        y = -(textWidth / 2 + 3);
+                    }
+                    const translate = `translate(${x}, ${y})`;
+                    return translate;
+                });
+        }
+    }
+
     protected updateAxis() {
+        const maxTextWidth = {};
+
+        let isAxisUpdate: boolean = false;
+
         this.originDomains = {};
 
         this.scales = this.setupScale(this.config.axes, this.width, this.height);
@@ -437,7 +613,102 @@ export class ChartBase<T = any> implements IChart {
             if (scale.isZoom === true) {
                 this.setupBrush(scale);
             }
+
+            // axis의 텍스트가 길어지면 margin도 덩달아 늘어나야함. 단, config.margin이 없을 때
+            if (!this.isCustomMargin) {
+                // 가장 긴 텍스트를 찾아서 사이즈를 저장하고 margin에 더해야함
+                if (!maxTextWidth[scale.orinet]) {
+                    maxTextWidth[scale.orinet] = 0;
+                }
+                let textLength = 0;
+                let longTextNode: any = null;
+                if (scale.orinet === Placement.LEFT || scale.orinet === Placement.RIGHT) {
+                    this.axisGroups[scale.orinet].selectAll('.tick').each((d: any, index: number, node: Array<any>) => {
+                        if (textLength < d + ''.length) {
+                            longTextNode = node[index];
+                        }
+                    });
+                    if (longTextNode) {
+                        const textWidth = longTextNode.getBoundingClientRect().width;
+                        if (maxTextWidth[scale.orinet] < textWidth) {
+                            maxTextWidth[scale.orinet] = textWidth;
+                        }
+                    }
+                    
+                } else {
+                    this.axisGroups[scale.orinet].selectAll('.tick').each((d: any, index: number, node: Array<any>) => {
+                        if (textLength < d + ''.length) {
+                            longTextNode = node[index];
+                        }
+                    });
+                    if (longTextNode) {
+                        const textHeight = longTextNode.getBoundingClientRect().height;
+                        if (maxTextWidth[scale.orinet] < textHeight) {
+                            maxTextWidth[scale.orinet] = textHeight;
+                        }
+                    }
+                }
+            }
         });
+
+        if (!this.isCustomMargin) {
+            const padding = 10; // 10 는 여백.
+            Object.keys(maxTextWidth).map((orient: string) => {
+                if (this.margin[orient] < maxTextWidth[orient]) {
+                    this.margin[orient] = Math.round(maxTextWidth[orient]) + padding;
+                    isAxisUpdate = true;
+                    this.isUpdateDisplay = false;
+                    console.log('axis is high ==> ', this.margin);
+                }
+            });
+        }
+
+        console.log('maxTextWidth : ', maxTextWidth, this.margin);
+        return new Promise((resolve, reject) => {
+            if (this.isUpdateDisplay) {
+                resolve();
+            } else {
+                if (isAxisUpdate) {
+                    this.isUpdateDisplay = true;
+                    this.setRootSize();
+                    this.initContainer();
+                    this.updateDisplay();
+                }
+            }
+        });
+    }
+
+    protected updateLegend() {
+        const keys: string[] = []; 
+        const colorScale: ScaleOrdinal<string, any> = scaleOrdinal().range(this.colors); 
+        const width: number = 0;
+
+        const legendKey = keys.slice().reverse();
+        const legend = this.legendGroup.selectAll('.legend-item-group')
+            .data(legendKey)
+            .join(
+                (enter) => enter.append('g').attr('class', 'legend-item-group'),
+                (update) => {
+                    update.selectAll('*').remove();
+                    return update;
+                },
+                (exit) => exit.remove()
+            )
+            .attr('transform', (d: any, i: number) => { return 'translate(0,' + i * 20 + ')'; });
+      
+        legend.append('rect')
+            .attr('x', width - 19)
+            .attr('width', 19)
+            .attr('height', 19)
+            .attr('fill', (d) => {
+                return colorScale(d) + '';
+            });
+      
+        legend.append('text')
+            .attr('x', width - 24)
+            .attr('y', 9.5)
+            .attr('dy', '0.32em')
+            .text((d) => { return d; });
     }
 
     protected setupBrush(scale: any) {
@@ -486,10 +757,19 @@ export class ChartBase<T = any> implements IChart {
     }
 
     protected updateDisplay() {
-        this.updateAxis();
-        this.updateSeries();
-        // POINT: 해당 기능이 series에 의존함으로 series를 먼저 그린뒤에 function을 설정 하도록 한다.
-        this.updateFunctions(); 
+        if (this.width <= 50 || this.height < 50) {
+            console.log('It is too small to draw.');
+            return;
+        }
+
+        // 기준이되는 axis가 완료된 후에 나머지를 그린다.
+        this.updateAxis()
+            .then(() => {
+                this.updateSeries();
+                // POINT: 해당 기능이 series에 의존함으로 series를 먼저 그린뒤에 function을 설정 하도록 한다.
+                this.updateFunctions();
+                this.updateTitle();
+            });
     }
 
     protected setupData(data: Array<T>) {

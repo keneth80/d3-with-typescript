@@ -3,9 +3,9 @@ import { Subject, Observable } from 'rxjs';
 
 import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
+import { SeriesConfiguration } from '../chart/series.interface';
 
-export interface LabelSeriesConfiguration {
-    selector?: string;
+export interface LabelSeriesConfiguration extends SeriesConfiguration {
     xField: string;
     yField: string;
     templete?: any;
