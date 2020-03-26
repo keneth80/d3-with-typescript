@@ -25,8 +25,6 @@ export class BasicLineSeries extends SeriesBase {
 
     private line: any;
 
-    private selector: string = 'basic-line';
-
     private dotClass: string = 'basic-line-dot';
 
     private xField: string;

@@ -38,8 +38,6 @@ export class BasicCanvasScatterPlot extends SeriesBase {
 
     protected pointerCanvas: Selection<BaseType, any, HTMLElement, any>;
 
-    private selector: string = 'basic-scatter';
-
     private indexing: any = {};
 
     private xField: string = 'x';
@@ -106,7 +104,7 @@ export class BasicCanvasScatterPlot extends SeriesBase {
         const pointRadius = 4;
 
         const tempIndex = {};
-        const generateData: Array<[number, number]> = chartData
+        const generateData: Array<any> = chartData
             .filter((d: BasicCanvasScatterPlotModel) => d.x >= xmin && d.x <= xmax && d.y >= ymin && d.y <= ymax)
             // .filter((d: BasicCanvasScatterPlotModel) => {
             //     // scale로 변환하여 pointRadius / 2 만큼의 가중치를 주고 position 별로 unique하게 관리한다.

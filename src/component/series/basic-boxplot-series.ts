@@ -23,8 +23,6 @@ export interface BoxplotModel {
 }
 
 export class BasicBoxplotSeries extends SeriesBase {
-    private selector: string = 'basic-boxplot';
-
     private xField: string;
 
     private maxWidth: number;

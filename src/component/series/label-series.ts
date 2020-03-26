@@ -12,8 +12,6 @@ export interface LabelSeriesConfiguration extends SeriesConfiguration {
 }
 
 export class LabelSeries extends SeriesBase {
-    private selector: string = 'label';
-
     private xField: string;
 
     private yField: string;

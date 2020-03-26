@@ -15,8 +15,6 @@ export interface StackedVerticalBarSeriesConfiguration extends SeriesConfigurati
 }
 
 export class StackedVerticalBarSeries extends SeriesBase {
-    private selector: string = 'stacked-bar';
-
     private xField: string;
 
     private yField: string;

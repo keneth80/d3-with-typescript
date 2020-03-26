@@ -19,8 +19,6 @@ export interface BasicDonutSeriesConfiguration extends SeriesConfiguration {
 }
 
 export class BasicDonutSeries extends SeriesBase {
-    private selector: string = 'donut';
-
     private categoryField: string;
 
     private valueField: string;

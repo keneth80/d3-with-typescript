@@ -38,8 +38,6 @@ export class BasicCanvasScatterPlot extends SeriesBase {
 
     protected pointerCanvas: Selection<BaseType, any, HTMLElement, any>;
 
-    private selector: string = 'basic-scatter';
-
     private indexing: any = {};
 
     private xField: string = 'x';
@@ -103,7 +101,7 @@ export class BasicCanvasScatterPlot extends SeriesBase {
 
         const pointRadius = 4;
 
-        const generateData: Array<[number, number]> = chartData
+        const generateData: Array<any> = chartData
             .filter((d: BasicCanvasScatterPlotModel) => d.x >= xmin && d.x <= xmax && d.y >= ymin && d.y <= ymax)
             .map((d: BasicCanvasScatterPlotModel, i: number) => {
                 // TODO: position별로 indexing 해서 loop 돌면서 덮어버리고 최종 겹치지 않는 dot에 대해서만 출력하도록 한다.

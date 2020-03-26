@@ -13,8 +13,6 @@ export interface GroupedVerticalBarSeriesConfiguration extends SeriesConfigurati
 }
 
 export class GroupedVerticalBarSeries extends SeriesBase {
-    private selector: string = 'grouped-bar';
-
     private xField: string;
 
     private yField: string;

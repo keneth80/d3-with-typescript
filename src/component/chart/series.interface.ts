@@ -11,6 +11,8 @@ export interface ISeries<T = any> {
 
     displayName: string;
 
+    selector: string;
+
     select(displayName: string): void;
 
     unselect(displayName: string): void;

@@ -15,8 +15,6 @@ export interface BasicViolinSeriesConfiguration extends SeriesConfiguration {
 }
 
 export class BasicViolinSeries extends SeriesBase {
-    private selector: string = 'basic-violin';
-
     private xField: string;
 
     private yField: string;

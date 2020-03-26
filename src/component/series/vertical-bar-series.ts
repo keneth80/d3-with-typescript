@@ -16,8 +16,6 @@ export interface VerticalBarSeriesConfiguration extends SeriesConfiguration {
 }
 
 export class VerticalBarSeries extends SeriesBase {
-    private selector: string = 'bar';
-
     private xField: string;
 
     private yField: string;

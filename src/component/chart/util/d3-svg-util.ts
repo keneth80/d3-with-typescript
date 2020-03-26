@@ -149,3 +149,25 @@ export const wrapTextByRowLimit = (text: any, width: number, limitRowCount: numb
     }
     return text;
 };
+
+export const getTextWidth = (text, fontSize, fontFace) => {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    context.font = fontSize + 'px ' + fontFace;
+    const targetText: TextMetrics = context.measureText(text);
+    const width = targetText.width;
+    return width;
+};
+
+export const getMaxText = (texts: string[] = []) => {
+    let maxLength = 0;
+    let targetIndex = 0;
+    texts.forEach((text: string, index: number) => {
+        if (maxLength < text.length) {
+            maxLength = text.length;
+            targetIndex = index;
+        }
+    });
+
+    return texts[targetIndex];
+}

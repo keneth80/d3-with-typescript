@@ -22,8 +22,6 @@ export interface BollingerBandModel {
 }
 
 export class BasicBollingerBandSeries extends SeriesBase {
-    private selector: string = 'basic-bollinger-band';
-
     private xField: string;
 
     constructor(configuration: BasicBollingerBandSeriesConfiguration) {

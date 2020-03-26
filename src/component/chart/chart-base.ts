@@ -15,7 +15,7 @@ import { debounceTime, delay } from 'rxjs/operators';
 import { IChart } from './chart.interface';
 import { ChartConfiguration, Axis, Margin, Placement, ChartTitle } from './chart-configuration';
 import { ISeries } from './series.interface';
-import { guid, textWrapping } from './util/d3-svg-util';
+import { guid, textWrapping, getTextWidth, getMaxText } from './util/d3-svg-util';
 import { IFunctions } from './functions.interface';
 
 export interface ISeriesConfiguration {
@@ -90,10 +90,18 @@ export class ChartBase<T = any> implements IChart {
 
     protected tickPadding: number = 2;
 
-    protected defaultStyle: any = {
+    protected defaultTitleStyle: any = {
         font: {
             family: 'Arial, Helvetica, sans-serif',
             size: 16,
+            color: '#999'
+        }
+    }
+
+    protected defaultLegendStyle: any = {
+        font: {
+            family: 'Arial, Helvetica, sans-serif',
+            size: 12,
             color: '#999'
         }
     }
@@ -118,15 +126,21 @@ export class ChartBase<T = any> implements IChart {
         width: 0, height: 0
     };
 
+    private titlePlacement: string = Placement.TOP;
+
     private isLegend: boolean = false;
 
     private legendPlacement: string = Placement.RIGHT;
+
+    private legendItemSize: ContainerSize = {
+        width: 10, height: 10
+    };
 
     private legendContainerSize: ContainerSize = {
         width: 0, height: 0
     };
 
-    private isUpdateDisplay: boolean = true;
+    private legendPadding: number = 5;
 
     constructor(
         configuration: ChartConfiguration
@@ -183,6 +197,10 @@ export class ChartBase<T = any> implements IChart {
             this.colors = this.config.colors;
         } else {
             this.colors = schemeCategory10.map((color: string) => color);
+        }
+
+        if (this.config.title) {
+            this.titlePlacement = this.config.title.placement;
         }
 
         if (this.config.legend) {
@@ -263,9 +281,6 @@ export class ChartBase<T = any> implements IChart {
     }
 
     updateSeries() {
-        if (!this.isUpdateDisplay) {
-            return;
-        }
         try {
             if (this.seriesList && this.seriesList.length) {
                 this.seriesList.map((series: ISeries, index: number) => {
@@ -373,8 +388,6 @@ export class ChartBase<T = any> implements IChart {
                 this.setupBrush(scale);
             }
         });
-
-        // console.log('maxTextWidth : ', maxTextWidth);
     }
 
     protected updateFunctions() {
@@ -401,17 +414,38 @@ export class ChartBase<T = any> implements IChart {
         this.height = this.svgHeight - this.margin.top - this.margin.bottom;
 
         if (this.config.title) {
-            this.titleContainerSize.width = this.config.title.placement === Placement.TOP || this.config.title.placement === Placement.BOTTOM ? this.width : 20;
-            this.titleContainerSize.height = this.config.title.placement === Placement.TOP || this.config.title.placement === Placement.BOTTOM ? 20 : this.height;
-            this.width = this.width - (this.config.title.placement === Placement.LEFT || this.config.title.placement === Placement.RIGHT ? 20 : 0);
-            this.height = this.height - (this.config.title.placement === Placement.LEFT || this.config.title.placement === Placement.RIGHT ? 0 : 20);
+            this.titleContainerSize.width = this.titlePlacement === Placement.TOP || this.titlePlacement === Placement.BOTTOM ? this.width : 20;
+            this.titleContainerSize.height = this.titlePlacement === Placement.TOP || this.titlePlacement === Placement.BOTTOM ? 20 : this.height;
+            this.width = this.width - (this.titlePlacement === Placement.LEFT || this.titlePlacement === Placement.RIGHT ? 20 : 0);
+            this.height = this.height - (this.titlePlacement === Placement.LEFT || this.titlePlacement === Placement.RIGHT ? 0 : 20);
+        }
+
+        if (this.config.legend) {
+            const padding = 5;
+            const targetText = getMaxText(this.seriesList.map((series: ISeries) => series.displayName || series.selector));
+            const targetTextWidth = getTextWidth(targetText, this.defaultLegendStyle.font.size, this.defaultLegendStyle.font.family);
+            const targetTextHeight = 15;
+
+            this.legendContainerSize.width = this.legendPadding * 2 + this.legendItemSize.width + padding + Math.round(targetTextWidth);
+            this.legendContainerSize.height = 
+                this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ? 
+                this.height : 
+                this.legendPadding * 2 + targetTextHeight;
+            
+            this.width = this.width - (this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ? this.legendContainerSize.width : 0);
+            this.height = this.height - (this.legendPlacement === Placement.TOP || this.legendPlacement === Placement.BOTTOM ? this.legendContainerSize.height : 0);
+            
         }
     }
 
     protected initContainer() {
-        
-        const x = this.margin.left + (this.config.title && this.config.title.placement === Placement.LEFT ? this.titleContainerSize.width : 0);
-        const y = this.margin.top + (this.config.title && this.config.title.placement === Placement.TOP ? this.titleContainerSize.height : 0);
+        const x = this.margin.left
+            + (this.config.title && this.titlePlacement === Placement.LEFT ? this.titleContainerSize.width : 0)
+            + (this.config.legend && this.legendPlacement === Placement.LEFT ? this.legendContainerSize.width : 0);
+        const y = this.margin.top 
+            + (this.config.title && this.titlePlacement === Placement.TOP ? this.titleContainerSize.height : 0)
+            + (this.config.legend && this.legendPlacement === Placement.TOP ? this.legendContainerSize.height : 0);
+
         const width = this.width;
         const height = this.height;
 
@@ -452,6 +486,24 @@ export class ChartBase<T = any> implements IChart {
             if (!this.legendGroup) {
                 this.legendGroup = this.svg.append('g').attr('class', 'legend-group');
             }
+            this.legendGroup.attr('transform', () => {
+                let translate = 'translate(0, 0)';
+                if (this.legendPlacement === Placement.RIGHT) {
+                    translate = `translate(${this.margin.left + width + this.margin.right}, ${y})`;
+                } else if (this.legendPlacement === Placement.LEFT) {
+                    translate = `translate(${this.titleContainerSize.width}, ${y})`;
+                } else if (this.legendPlacement === Placement.TOP) {
+                    translate = `translate(${this.margin.left}, ${this.titleContainerSize.height + this.legendPadding})`;
+                } else {
+                    const isTitle: boolean = this.config.title ? true : false;
+                    let y = this.margin.top + this.margin.bottom + height;
+                    if (isTitle && this.titlePlacement === Placement.TOP) {
+                        y += this.titleContainerSize.height;
+                    }
+                    translate = `translate(${this.margin.left}, ${y})`;
+                }
+                return translate;
+            });
         }
 
         if (!this.seriesGroup) {
@@ -483,7 +535,7 @@ export class ChartBase<T = any> implements IChart {
             this.axisGroups.right = this.mainGroup.append('g')
                 .attr('class', 'y-right-axis-group')
         }
-        this.axisGroups.right.attr('transform', `translate(${width - this.margin.right}, 0)`);
+        this.axisGroups.right.attr('transform', `translate(${width}, 0)`);
 
         if (!this.tooltipGroup) {
             this.tooltipGroup = this.svg.append('g')
@@ -515,7 +567,7 @@ export class ChartBase<T = any> implements IChart {
                 if (d.placement === Placement.RIGHT) {
                     titleX = this.width + this.margin.left + this.margin.right - 3;
                 } else if (d.placement === Placement.BOTTOM) {
-                    titleY = this.height + this.margin.top + this.titleContainerSize.height;
+                    titleY = this.height + this.margin.top + this.titleContainerSize.height + this.legendContainerSize.height;
                 }
                 const rotate = 
                     d.placement === Placement.LEFT || d.placement === Placement.RIGHT ? 90 : 0;
@@ -530,14 +582,14 @@ export class ChartBase<T = any> implements IChart {
                     (exit) => exit.remove()
                 )
                 .style('font-size', (d: ChartTitle) => {
-                    return (d.style && d.style.size ? d.style.size : this.defaultStyle.font.size) + 'px';
+                    return (d.style && d.style.size ? d.style.size : this.defaultTitleStyle.font.size) + 'px';
                 })
                 .style('stroke', (d: ChartTitle) => {
-                    return (d.style && d.style.color ? d.style.color : this.defaultStyle.font.color)
+                    return (d.style && d.style.color ? d.style.color : this.defaultTitleStyle.font.color)
                 })
                 .style('stroke-width', 0.5)
                 .style('font-family', (d: ChartTitle) => {
-                    return (d.style && d.style.font ? d.style.font : this.defaultStyle.font.family)
+                    return (d.style && d.style.font ? d.style.font : this.defaultTitleStyle.font.family)
                 })
                 .text((d: ChartTitle) => d.content)
                 .attr('dy', '.35em')
@@ -566,7 +618,8 @@ export class ChartBase<T = any> implements IChart {
 
     protected updateAxis() {
         const maxTextWidth = {};
-
+        const padding = 10; // 10 는 axis 여백.
+        
         let isAxisUpdate: boolean = false;
 
         this.originDomains = {};
@@ -629,7 +682,7 @@ export class ChartBase<T = any> implements IChart {
                         }
                     });
                     if (longTextNode) {
-                        const textWidth = longTextNode.getBoundingClientRect().width;
+                        const textWidth = Math.round(longTextNode.getBoundingClientRect().width);
                         if (maxTextWidth[scale.orinet] < textWidth) {
                             maxTextWidth[scale.orinet] = textWidth;
                         }
@@ -642,7 +695,7 @@ export class ChartBase<T = any> implements IChart {
                         }
                     });
                     if (longTextNode) {
-                        const textHeight = longTextNode.getBoundingClientRect().height;
+                        const textHeight = Math.round(longTextNode.getBoundingClientRect().height);
                         if (maxTextWidth[scale.orinet] < textHeight) {
                             maxTextWidth[scale.orinet] = textHeight;
                         }
@@ -652,40 +705,35 @@ export class ChartBase<T = any> implements IChart {
         });
 
         if (!this.isCustomMargin) {
-            const padding = 10; // 10 는 여백.
             Object.keys(maxTextWidth).map((orient: string) => {
-                if (this.margin[orient] < maxTextWidth[orient]) {
-                    this.margin[orient] = Math.round(maxTextWidth[orient]) + padding;
+                if (this.margin[orient] < maxTextWidth[orient] + padding) {
+                    this.margin[orient] = maxTextWidth[orient] + padding;
                     isAxisUpdate = true;
-                    this.isUpdateDisplay = false;
                     console.log('axis is high ==> ', this.margin);
                 }
             });
         }
 
-        console.log('maxTextWidth : ', maxTextWidth, this.margin);
         return new Promise((resolve, reject) => {
-            if (this.isUpdateDisplay) {
-                resolve();
+            if (isAxisUpdate) {
+                this.setRootSize();
+                this.initContainer();
+                this.updateDisplay();
             } else {
-                if (isAxisUpdate) {
-                    this.isUpdateDisplay = true;
-                    this.setRootSize();
-                    this.initContainer();
-                    this.updateDisplay();
-                }
+                resolve();
             }
         });
     }
 
     protected updateLegend() {
-        const keys: string[] = []; 
-        const colorScale: ScaleOrdinal<string, any> = scaleOrdinal().range(this.colors); 
-        const width: number = 0;
+        if (!this.isLegend) {
+            return;
+        }
 
-        const legendKey = keys.slice().reverse();
-        const legend = this.legendGroup.selectAll('.legend-item-group')
-            .data(legendKey)
+        const keys: string[] = this.seriesList.map((series: ISeries) => series.displayName ? series.displayName : series.selector);
+        
+        const legendItemGroup = this.legendGroup.selectAll('.legend-item-group')
+            .data(keys)
             .join(
                 (enter) => enter.append('g').attr('class', 'legend-item-group'),
                 (update) => {
@@ -694,21 +742,60 @@ export class ChartBase<T = any> implements IChart {
                 },
                 (exit) => exit.remove()
             )
-            .attr('transform', (d: any, i: number) => { return 'translate(0,' + i * 20 + ')'; });
-      
-        legend.append('rect')
-            .attr('x', width - 19)
-            .attr('width', 19)
-            .attr('height', 19)
-            .attr('fill', (d) => {
-                return colorScale(d) + '';
+            .attr('transform', (d: any, index: number) => {
+                if (this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT)
+                return this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ? 
+                    `translate(${this.legendPadding}, ${index * 20})` : `translate(${this.legendPadding}, ${this.legendPadding})`;
             });
       
-        legend.append('text')
-            .attr('x', width - 24)
-            .attr('y', 9.5)
-            .attr('dy', '0.32em')
-            .text((d) => { return d; });
+        legendItemGroup.selectAll('.legend-item')
+            .data((d: string) => [d])
+            .join(
+                (enter) => enter.append('rect').attr('class', 'legend-item'),
+                (update) => update,
+                (exit) => exit.remove()
+            )
+            .attr('width', this.legendItemSize.width)
+            .attr('height', this.legendItemSize.width)
+            .attr('fill', (d: string) => {
+                const index = keys.indexOf(d);
+                return this.colors[index];
+            });
+      
+        legendItemGroup.selectAll('.legend-label')
+            .data((d: string) => [d])
+            .join(
+                (enter) => enter.append('text').attr('class', 'legend-label'),
+                (update) => update,
+                (exit) => exit.remove()
+            )
+            .style('font-size', this.defaultLegendStyle.font.size)
+            .attr('transform', (d: any, index: number) => {
+                return `translate(${(this.legendPadding + this.legendItemSize.width)}, 5)`;
+            })
+            .attr('dy', '.35em')
+            .text((d: string) => { return d; });
+
+        
+        if (this.legendPlacement === Placement.TOP || this.legendPlacement === Placement.BOTTOM) {
+            let currentX = 0;
+            const xpositions = [0];
+
+            legendItemGroup.selectAll('.legend-label').each((d: string) => {
+                const index = keys.indexOf(d);
+                const legendItemWidth = this.legendItemSize.width + this.legendPadding * 2 + getTextWidth(d, this.defaultLegendStyle.font.size, this.defaultLegendStyle.font.family);
+                currentX = currentX + legendItemWidth;
+                xpositions.push(currentX);
+            });
+            
+            legendItemGroup.attr('transform', (d: any) => {
+                const addX = this.width - currentX;
+                const index = keys.indexOf(d);
+                const x = index > 0 ? xpositions[index] : 0;
+                return `translate(${addX + x}, ${this.legendPadding})`;
+            });
+            
+        }
     }
 
     protected setupBrush(scale: any) {
@@ -758,7 +845,9 @@ export class ChartBase<T = any> implements IChart {
 
     protected updateDisplay() {
         if (this.width <= 50 || this.height < 50) {
-            console.log('It is too small to draw.');
+            if (console && console.log) {
+                console.log('It is too small to draw.');
+            }
             return;
         }
 
@@ -766,6 +855,7 @@ export class ChartBase<T = any> implements IChart {
         this.updateAxis()
             .then(() => {
                 this.updateSeries();
+                this.updateLegend();
                 // POINT: 해당 기능이 series에 의존함으로 series를 먼저 그린뒤에 function을 설정 하도록 한다.
                 this.updateFunctions();
                 this.updateTitle();
@@ -936,6 +1026,8 @@ export class ChartBase<T = any> implements IChart {
         this.isResize = true;
 
         this.setRootSize();
+
+        this.initContainer();
 
         this.clipPath.attr('width', this.width)
                 .attr('height', this.height)

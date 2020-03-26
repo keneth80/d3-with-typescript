@@ -5,6 +5,8 @@ import { ChartBase, Scale } from './chart-base';
 import { ISeries } from './series.interface';
 
 export class SeriesBase implements ISeries {
+    selector: string;
+    
     displayName: string;
 
     protected svg: Selection<BaseType, any, HTMLElement, any>;

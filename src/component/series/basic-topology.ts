@@ -95,8 +95,6 @@ export class BasicTopology extends SeriesBase {
 
     private currentSector: any;
 
-    private selector: string = 'basic-topology';
-
     private boldColor: string = '#0384fc';
 
     constructor(configuration: BasicTopologyConfiguration) {

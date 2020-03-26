@@ -15,8 +15,6 @@ export interface BasicPlotSeriesConfiguration extends SeriesConfiguration {
 }
 
 export class BasicPlotSeries extends SeriesBase {
-    private selector: string = 'basic-plot';
-
     private xField: string;
 
     private yField: string;
@@ -52,7 +50,7 @@ export class BasicPlotSeries extends SeriesBase {
         }
     }
 
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {
+    drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number, index: number, color: string) {
         const x: any = scales.find((scale: Scale) => scale.orinet === 'top').scale;
         const y: any = scales.find((scale: Scale) => scale.orinet === 'left').scale;
         
@@ -73,12 +71,10 @@ export class BasicPlotSeries extends SeriesBase {
                     (update) => update,
                     (exit) => exit.remove
                 )
+                .style('fill', this.style && this.style.fill || color)
+                .style('stroke', this.style && this.style.stroke || '#fff')
                 .attr('cx', (data: any, i) => { return x(data[this.xField]) + padding; })
                 .attr('cy', (data: any) => { return y(data[this.yField]); })
                 .attr('r', 5);
-        if (this.style) {
-            elements.style('fill', this.style.fill || '#000')
-                .style('stroke', this.style.stroke || '#fff')
-        }
     }
 }

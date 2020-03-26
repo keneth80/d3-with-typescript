@@ -187,19 +187,21 @@ const excute = () => {
     });
 
     const plotSeries = new BasicPlotSeries({
-        selector: 'plot-series',
+        selector: 'basic-plot-sales',
         yField: 'sales',
-        xField: 'date',
-        style: {
-            fill: '#ff00ff',
-            stroke: '#fff'
-        }
+        xField: 'date'
+    });
+
+    const plotSeries2 = new BasicPlotSeries({
+        selector: 'basic-plot-assets',
+        yField: 'assets',
+        xField: 'date'
     });
 
     const basicChart: BasicChart = new BasicChart({
         selector: '#chart',
         // title: {
-        //     placement: Placement.TOP,
+        //     placement: Placement.BOTTOM,
         //     content: 'Multi Series Chart',
         //     // style: {
         //     //     size: 16,
@@ -207,6 +209,9 @@ const excute = () => {
         //     //     font: 'monospace'
         //     // }
         // },
+        legend: {
+            placement: Placement.BOTTOM
+        },
         data: data.map((item: SalesModel) => {
             item.date = parseTime(item.dateStr);
             return item;
@@ -238,14 +243,22 @@ const excute = () => {
                 type: 'time',
                 placement: 'top',
                 // tickFormat: '%y/%m/%d'
+            },
+            {
+                field: 'assets',
+                type: 'number',
+                placement: 'right',
+                min: 0,
+                max: max(data.map((item: SalesModel) => item.assets)),
             }
         ],
         series: [
             verticalBarSeries,
             basicLineSeries,
             basicLineSeries2,
-            labelSeries,
-            plotSeries
+            // labelSeries,
+            plotSeries,
+            plotSeries2
         ]
     }).draw();
 };

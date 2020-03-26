@@ -31,8 +31,6 @@ export interface BasicGaugeSeriesConfiguration extends SeriesConfiguration {
 }
 
 export class BasicGaugeSeries extends SeriesBase {
-    private selector: string = 'gauge';
-
     private arcGroup: any;
 
     private labelGroup: any;

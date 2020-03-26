@@ -17,8 +17,6 @@ export interface BasicPieSeriesConfiguration extends SeriesConfiguration {
 }
 
 export class BasicPieSeries extends SeriesBase {
-    private selector: string = 'pie';
-
     private categoryField: string;
 
     private valueField: string;

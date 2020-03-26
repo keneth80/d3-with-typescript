@@ -15,8 +15,6 @@ export class BasicAreaSeries extends SeriesBase {
 
     private line: Line<[number, number]>;
 
-    private selector: string = 'basic-area';
-
     private xField: string;
 
     private yField: string;
