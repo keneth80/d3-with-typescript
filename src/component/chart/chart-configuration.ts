@@ -45,6 +45,7 @@ export interface ChartTitle {
 
 export interface ChartLegend {
     placement: string; // top, bottom, left, right
+    isCheckBox?: boolean; // default: true
     // shape?: string;
 }
 

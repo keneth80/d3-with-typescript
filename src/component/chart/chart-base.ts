@@ -15,7 +15,7 @@ import { debounceTime, delay } from 'rxjs/operators';
 import { IChart } from './chart.interface';
 import { ChartConfiguration, Axis, Margin, Placement, ChartTitle } from './chart-configuration';
 import { ISeries } from './series.interface';
-import { guid, textWrapping, getTextWidth, getMaxText } from './util/d3-svg-util';
+import { guid, textWrapping, getTextWidth, getMaxText, drawSvgCheckBox } from './util/d3-svg-util';
 import { IFunctions } from './functions.interface';
 
 export interface ISeriesConfiguration {
@@ -44,6 +44,7 @@ interface ContainerSize {
 interface LegendItem {
     label: string; 
     selected: boolean;
+    isHide: boolean;
 }
 
 export class ChartBase<T = any> implements IChart {
@@ -151,6 +152,8 @@ export class ChartBase<T = any> implements IChart {
 
     private currentLegendNode: any = null;
 
+    private isCheckBox: boolean = true;
+
     constructor(
         configuration: ChartConfiguration
     ) {
@@ -215,6 +218,7 @@ export class ChartBase<T = any> implements IChart {
         if (this.config.legend) {
             this.isLegend = true;
             this.legendPlacement = this.config.legend.placement;
+            this.isCheckBox = this.config.legend.isCheckBox === false ? this.config.legend.isCheckBox : true;
         }
 
         this.maskId = guid();
@@ -435,7 +439,7 @@ export class ChartBase<T = any> implements IChart {
             const targetTextWidth = getTextWidth(targetText, this.defaultLegendStyle.font.size, this.defaultLegendStyle.font.family);
             const targetTextHeight = 15;
 
-            this.legendContainerSize.width = this.legendPadding * 2 + this.legendItemSize.width + padding + Math.round(targetTextWidth);
+            this.legendContainerSize.width = this.legendPadding * 2 + this.legendItemSize.width + padding + Math.round(targetTextWidth) + (this.isCheckBox ? 15 : 0);
             this.legendContainerSize.height = 
                 this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ? 
                 this.height : 
@@ -743,14 +747,15 @@ export class ChartBase<T = any> implements IChart {
             const label: string = series.displayName ? series.displayName : series.selector;
             return {
                 label,
-                selected: true
+                selected: true,
+                isHide: false
             }
         });
         
         const legendItemGroup = this.legendGroup.selectAll('.legend-item-group')
             .data(keys)
             .join(
-                (enter) => enter.append('g').attr('class', 'legend-item-group').on('click', this.onLegendItemClick),
+                (enter) => enter.append('g').attr('class', 'legend-item-group'),
                 (update) => {
                     update.selectAll('*').remove();
                     return update;
@@ -762,8 +767,22 @@ export class ChartBase<T = any> implements IChart {
                 return this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ? 
                     `translate(${this.legendPadding}, ${index * 20})` : `translate(${this.legendPadding}, ${this.legendPadding})`;
             });
+        
+        legendItemGroup.each((d: LegendItem, index: number, nodeList: any) => {
+            drawSvgCheckBox(select(nodeList[index]), this.onLegendCheckBoxItemClick);
+        })
+        
+
+        const legendLabelGroup = legendItemGroup.selectAll('.legend-label-group')
+            .data((d: any) =>[d])
+            .join(
+                (enter) => enter.append('g').attr('class', 'legend-label-group').on('click', this.onLegendItemClick),
+                (update) => update,
+                (exit) => exit.remove()
+            )
+            .attr('transform', 'translate(15, 0)');
       
-        legendItemGroup.selectAll('.legend-item')
+        legendLabelGroup.selectAll('.legend-item')
             .data((d: LegendItem) => [d])
             .join(
                 (enter) => enter.append('rect').attr('class', 'legend-item'),
@@ -777,7 +796,7 @@ export class ChartBase<T = any> implements IChart {
                 return this.colors[index];
             });
       
-        legendItemGroup.selectAll('.legend-label')
+        legendLabelGroup.selectAll('.legend-label')
             .data((d: LegendItem) => [d])
             .join(
                 (enter) => enter.append('text').attr('class', 'legend-label'),
@@ -796,10 +815,11 @@ export class ChartBase<T = any> implements IChart {
             let currentX = 0;
             const xpositions = [0];
 
-            legendItemGroup.selectAll('.legend-label').each((d: LegendItem) => {
+            legendLabelGroup.selectAll('.legend-label').each((d: LegendItem) => {
+                const checkboxPadding = 15;
                 const index = keys.findIndex((key: LegendItem) => d.label === key.label);
                 const textWidth = Math.round(getTextWidth(d.label, this.defaultLegendStyle.font.size, this.defaultLegendStyle.font.family));
-                const legendItemWidth = this.legendItemSize.width + this.legendPadding * 2 + textWidth;
+                const legendItemWidth = this.legendItemSize.width + this.legendPadding * 2 + textWidth + checkboxPadding;
                 currentX = currentX + legendItemWidth;
                 xpositions.push(currentX);
             });
@@ -811,6 +831,18 @@ export class ChartBase<T = any> implements IChart {
                 return `translate(${addX + x}, ${this.legendPadding})`;
             });
         }
+    }
+
+    protected onLegendCheckBoxItemClick = (d: LegendItem, index: number, nodeList: any) => {
+        d.isHide = !d.isHide;
+        const target: ISeries = this.seriesList.find((series: ISeries) => (series.displayName ? series.displayName : series.selector) === d.label);
+        if (target) {
+            target.hide(d.label, d.isHide);
+            if (!d.isHide && !d.selected) {
+                target.select(d.label, d.selected);
+            }
+        }
+        
     }
 
     protected onLegendItemClick = (d: LegendItem, index: number, nodeList: any) => {

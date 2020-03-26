@@ -35,6 +35,10 @@ export class SeriesBase implements ISeries {
 
     };
 
+    hide(displayName: string, isHide: boolean) {
+        
+    }
+
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
         mainGroup: Selection<BaseType, any, HTMLElement, any>) {
 

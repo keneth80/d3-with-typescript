@@ -24,6 +24,10 @@ export class VerticalBarSeries extends SeriesBase {
 
     private style: any = {};
 
+    private isSelected: boolean = true;
+
+    private isHide: boolean = false;
+
     constructor(configuration: VerticalBarSeriesConfiguration) {
         super();
         if (configuration) {
@@ -108,6 +112,12 @@ export class VerticalBarSeries extends SeriesBase {
     }
 
     select(displayName: string, isSelected: boolean) {
+        this.isSelected = isSelected;
         this.mainGroup.selectAll(`.${this.selector}`).style('opacity', isSelected ? null : 0.4);
+    }
+
+    hide(displayName: string, isHide: boolean) {
+        this.isHide = isHide;
+        this.mainGroup.selectAll(`.${this.selector}`).style('opacity', !isHide ? null : 0);
     }
 }

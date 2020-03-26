@@ -210,7 +210,8 @@ const excute = () => {
         //     // }
         // },
         legend: {
-            placement: Placement.BOTTOM
+            placement: Placement.BOTTOM,
+            isCheckBox: true
         },
         data: data.map((item: SalesModel) => {
             item.date = parseTime(item.dateStr);

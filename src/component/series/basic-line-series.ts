@@ -130,4 +130,11 @@ export class BasicLineSeries extends SeriesBase {
             this.dotGroup.selectAll(`.${this.dotClass}`).style('opacity', isSelected ? null : 0.4);
         }
     }
+
+    hide(displayName: string, isHide: boolean) {
+        this.mainGroup.selectAll(`.${this.selector}`).style('opacity', !isHide ? null : 0);
+        if (this.isDot) {
+            this.dotGroup.selectAll(`.${this.dotClass}`).style('opacity', !isHide ? null : 0);
+        }
+    }
 }

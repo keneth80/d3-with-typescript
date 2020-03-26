@@ -1,5 +1,6 @@
 import { color } from 'd3-color';
-import { select } from 'd3-selection';
+import { select, event, Selection, BaseType } from 'd3-selection';
+import { line } from 'd3-shape';
 
 export const getTransformByArray = (transform: string = 'translate(0, 0)'): Array<string> => {
     const translateString = transform.substring(transform.indexOf('translate('), transform.indexOf(')') + 1);
@@ -150,7 +151,7 @@ export const wrapTextByRowLimit = (text: any, width: number, limitRowCount: numb
     return text;
 };
 
-export const getTextWidth = (text, fontSize, fontFace) => {
+export const getTextWidth = (text: string, fontSize: number, fontFace: string) => {
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
     context.font = fontSize + 'px ' + fontFace;
@@ -172,6 +173,80 @@ export const getMaxText = (texts: string[] = []) => {
     return texts[targetIndex];
 }
 
-export const drawSvgCheckBox = () => {
+export const drawSvgCheckBox = <T = any>(
+    selection: any,
+    clickEvent: any = null,
+    size: number = 10,
+    x: number = 0,
+    y: number = 0,
+    rx: number = 0,
+    ry: number = 0,
+    markStrokeWidth: number = 1,
+    boxStrokeWidth: number = 1,
+    checked: boolean = true
+): Selection<BaseType, any, BaseType, any> => {
+
+    const g: Selection<BaseType, any, BaseType, any> = selection.selectAll('.checkbox-group')
+        .data((d: T) => [
+            {
+                size, x, y, rx, ry, markStrokeWidth, boxStrokeWidth, checked, data: d
+            }
+        ])
+        .join(
+            (enter) => enter.append('g').attr('class', 'checkbox-group'),
+            (update) => update,
+            (exit) => exit.remove()
+        );
     
+    const box = g.selectAll('.checkbox-background')
+        .data((d: any) => [d])
+        .join(
+            (enter) => enter.append('rect').attr('class', 'checkbox-background'),
+            (update) => update,
+            (exit) => exit.remove()
+        )
+        .attr('width', (d: any) => d.size)
+        .attr('height', (d: any) => d.size)
+        .attr('x', (d: any) => d.x)
+        .attr('y', (d: any) => d.y)
+        .attr('rx', (d: any) => d.rx)
+        .attr('ry', (d: any) => d.ry)
+        .style('fill-opacity', 0)
+        .style('stroke-width', (d: any) => d.boxStrokeWidth)
+        .style('stroke', 'black');
+
+    const coordinates: Array<any> = [
+        [x + (size / 8), y + (size / 3)],
+        [x + (size / 2.2), (y + size) - (size / 4)],
+        [(x + size) - (size / 8), (y + (size / 10))]
+    ];
+
+    const lineObj = line()
+            .x((d: any) => { return d[0]; })
+            .y((d: any) => { return d[1]; });
+
+    const mark = g.selectAll('.checkbox-mark')
+        .data((d: any) => [d])
+        .join(
+            (enter) => enter.append('path').attr('class', 'checkbox-mark'),
+            (update) => update,
+            (exit) => exit.remove()
+        )
+        .attr('d', lineObj(coordinates))
+        .style('stroke-width', (d: any) => d.markStrokeWidth)
+        .style('stroke', 'black')
+        .style('fill', 'none')
+        .style('opacity', (d: any) => (d.checked)? 1 : 0);
+
+    g.on('click', (d: any, index: number, nodeList: any) => {
+        d.checked = !d.checked;
+        mark.style('opacity', (d.checked)? 1 : 0);
+
+        if (clickEvent) {
+            clickEvent(d.data, index, nodeList);
+        }
+        event.stopPropagation();
+    });
+
+    return g;
 }
