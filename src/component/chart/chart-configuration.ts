@@ -16,7 +16,8 @@ export interface Axis {
     padding?: number;
     visible?: boolean;
     isRound?: boolean; // nice() call 여부
-    tickFormat?: string;
+    tickFormat?: any;
+    tickSize?: number;
     isGridLine?: boolean;
     isZoom?: boolean;
     min?: number, // only type is number

@@ -207,6 +207,20 @@ const excute = () => {
         xField: 'date'
     });
 
+    /*
+    d3.time.format("%Y-%m-%d")	1986-01-28
+    d3.time.format("%m/%d/%Y")	01/28/1986
+    d3.time.format("%H:%M")	    11:39
+    d3.time.format("%H:%M %p")	11:39 AM
+    d3.time.format("%B %d")	    January 28
+    d3.time.format("%d %b")	    28 Jan
+    d3.time.format("%d-%b-%y")	28-Jan-86
+    d3.time.format("%S s")	    13 s
+    d3.time.format("%M m")	    39 m
+    d3.time.format("%H h")	    11 h
+    d3.time.format("%a")	    Tue
+    */
+
     const basicChart: BasicChart = new BasicChart({
         selector: '#chart',
         title: {
@@ -253,7 +267,8 @@ const excute = () => {
                 field: 'date',
                 type: 'time',
                 placement: 'top',
-                // tickFormat: '%y/%m/%d'
+                tickFormat: '%Y/%m/%d',
+                tickSize: 6
             },
             {
                 field: 'assets',

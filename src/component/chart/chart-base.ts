@@ -30,6 +30,7 @@ export interface Scale {
     type: string;
     visible: boolean;
     tickFormat?: string;
+    tickSize?: number;
     isGridLine: boolean;
     isZoom: boolean;
     min?: number;
@@ -399,6 +400,10 @@ export class ChartBase<T = any> implements IChart {
                 if (scale.tickFormat) {
                     orientedScale.tickFormat(timeFormat(scale.tickFormat));
                 }
+
+                if (scale.tickSize) {
+                    orientedScale.ticks(scale.tickSize);
+                }
             }
             
             if (scale.visible) {
@@ -685,6 +690,9 @@ export class ChartBase<T = any> implements IChart {
                 if (scale.tickFormat) {
                     orientedScale.tickFormat(timeFormat(scale.tickFormat));
                 }
+                if (scale.tickSize) {
+                    orientedScale.ticks(scale.tickSize);
+                }
             }
             
             if (scale.visible) {
@@ -711,19 +719,20 @@ export class ChartBase<T = any> implements IChart {
                             longTextNode = node[index];
                         }
                     });
+
                     if (longTextNode) {
                         const textWidth = Math.round(longTextNode.getBoundingClientRect().width);
                         if (maxTextWidth[scale.orinet] < textWidth) {
                             maxTextWidth[scale.orinet] = textWidth;
                         }
                     }
-                    
                 } else {
                     this.axisGroups[scale.orinet].selectAll('.tick').each((d: any, index: number, node: Array<any>) => {
                         if (textLength < d + ''.length) {
                             longTextNode = node[index];
                         }
                     });
+                    
                     if (longTextNode) {
                         const textHeight = Math.round(longTextNode.getBoundingClientRect().height);
                         if (maxTextWidth[scale.orinet] < textHeight) {
@@ -734,6 +743,7 @@ export class ChartBase<T = any> implements IChart {
             }
         });
 
+        // margin 설정이 따로 없으면 자동으로 계산해서 margin을 갱신한다.9ㅐ
         if (!this.isCustomMargin) {
             Object.keys(maxTextWidth).map((orient: string) => {
                 if (this.margin[orient] < maxTextWidth[orient] + padding) {
@@ -1153,6 +1163,7 @@ export class ChartBase<T = any> implements IChart {
                 type: axis.type,
                 visible: axis.visible === false ? false : true,
                 tickFormat: axis.tickFormat ? axis.tickFormat : undefined,
+                tickSize: axis.tickSize ? axis.tickSize : undefined,
                 isGridLine: axis.isGridLine === true ? true : false,
                 isZoom: axis.isZoom === true ? true : false,
                 min: minValue,
