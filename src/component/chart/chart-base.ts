@@ -633,7 +633,8 @@ export class ChartBase<T = any> implements IChart {
                     let x = 0;
                     let y = 0;
                     if (d.placement === Placement.TOP || d.placement === Placement.BOTTOM) {
-                        x = (this.width + this.margin.left + this.margin.right) / 2 - textWidth / 2;
+                        x = (this.width + this.margin.left + this.margin.right) / 2 - textWidth / 2 + 
+                            (this.isLegend && (this.legendPlacement === Placement.LEFT)? this.legendContainerSize.width : 0);
                         y = this.titleContainerSize.height / 2 + textHeight / 2 - 3;
                     } else {
                         x = (this.height + this.margin.top + this.margin.bottom) / 2 - textHeight / 2;
@@ -790,7 +791,7 @@ export class ChartBase<T = any> implements IChart {
             .attr('transform', (d: any, index: number) => {
                 const x = this.legendPlacement === Placement.LEFT ? this.legendPadding : 0;
                 return this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ? 
-                    `translate(${x + addTitleWidth}, ${index * 20 + addAllWidth})` : `translate(0, 0)`;
+                    `translate(${x + addTitleWidth}, ${index * 20 + addAllWidth})` : 'translate(0, 0)';
             });
 
         if (this.isAll) {
