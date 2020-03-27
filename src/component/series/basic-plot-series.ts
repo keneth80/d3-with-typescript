@@ -11,7 +11,8 @@ export interface BasicPlotSeriesConfiguration extends SeriesConfiguration {
     style?: {
         stroke?: string;
         fill?: string;
-    }
+    },
+    radius?: number;
 }
 
 export class BasicPlotSeries extends SeriesBase {
@@ -20,6 +21,8 @@ export class BasicPlotSeries extends SeriesBase {
     private yField: string;
 
     private style: any;
+
+    private radius: number = 4;
 
     constructor(configuration: BasicPlotSeriesConfiguration) {
         super();
@@ -38,6 +41,10 @@ export class BasicPlotSeries extends SeriesBase {
 
             if (configuration.style) {
                 this.style = configuration.style;
+            }
+
+            if (configuration.radius) {
+                this.radius = configuration.radius;
             }
         }
     }
@@ -75,7 +82,7 @@ export class BasicPlotSeries extends SeriesBase {
                 .style('stroke', this.style && this.style.stroke || '#fff')
                 .attr('cx', (data: any, i) => { return x(data[this.xField]) + padding; })
                 .attr('cy', (data: any) => { return y(data[this.yField]); })
-                .attr('r', 5);
+                .attr('r', this.radius);
     }
 
     select(displayName: string, isSelected: boolean) {

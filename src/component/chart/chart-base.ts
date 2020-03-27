@@ -1232,5 +1232,4 @@ export class ChartBase<T = any> implements IChart {
 
         this.isResize = false;
     }
-
 }

@@ -164,7 +164,11 @@ const excute = () => {
         selector: 'basic-line-sales',
         dotSelector: 'basic-line-sales-dot',
         yField: 'sales',
-        xField: 'salesperson'
+        xField: 'salesperson',
+        dot: {
+            isCurve: true,
+            radius: 3
+        }
     });
     basicLineSeries.$currentItem.subscribe((item: any) => {
         console.log('basicLineSeries.item : ', item);
@@ -180,7 +184,11 @@ const excute = () => {
         selector: 'basic-line-assets',
         dotSelector: 'basic-line-assets-dot',
         yField: 'assets',
-        xField: 'salesperson'
+        xField: 'salesperson',
+        dot: {
+            isCurve: false,
+            radius: 3
+        }
     });
     basicLineSeries2.$currentItem.subscribe((item: any) => {
         console.log('basicLineSerie2s.item : ', item);
@@ -189,7 +197,8 @@ const excute = () => {
     const plotSeries = new BasicPlotSeries({
         selector: 'basic-plot-sales',
         yField: 'sales',
-        xField: 'date'
+        xField: 'date',
+        radius: 3
     });
 
     const plotSeries2 = new BasicPlotSeries({
@@ -201,7 +210,7 @@ const excute = () => {
     const basicChart: BasicChart = new BasicChart({
         selector: '#chart',
         title: {
-            placement: Placement.BOTTOM,
+            placement: Placement.TOP,
             content: 'Multi Series Chart',
             // style: {
             //     size: 16,
@@ -368,8 +377,7 @@ const bollinger = () => {
     const lineSeries = new BasicLineSeries({
         selector: 'bollinger-line',
         xField: 'key',
-        yField: 'close',
-        isDot: false
+        yField: 'close'
     });
 
     const bollingerChart = new BasicChart({

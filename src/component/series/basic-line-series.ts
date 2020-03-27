@@ -12,7 +12,10 @@ export interface BasicLineSeriesConfiguration extends SeriesConfiguration {
     dotSelector?: string;
     xField: string;
     yField: string;
-    isDot?: boolean;
+    dot?: {
+        radius?: number,
+        isCurve: boolean // default : false
+    }
     colors?: string[];
     style?: {
         stroke?: string;
@@ -31,9 +34,13 @@ export class BasicLineSeries extends SeriesBase {
 
     private yField: string;
 
-    private isDot: boolean = true;
+    private isDot: boolean = false;
 
     private colors: string[] = [];
+
+    private radius: number = 4;
+
+    private isCurve: boolean = false;
 
     constructor(configuration: BasicLineSeriesConfiguration) {
         super();
@@ -54,8 +61,10 @@ export class BasicLineSeries extends SeriesBase {
                 this.yField = configuration.yField;
             }
 
-            if (configuration.isDot === false) {
-                this.isDot = false;
+            if (configuration.dot) {
+                this.isDot = true;
+                this.radius = configuration.dot.radius || 4;
+                this.isCurve = configuration.dot.isCurve === true ? true : false;
             }
         }
     }
@@ -73,6 +82,7 @@ export class BasicLineSeries extends SeriesBase {
     }
 
     drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number, index: number, color: string) {
+        // TODO : 스케일 정보 가져올 때 필드를 참조해서 가져오도록 한다.
         const x: any = scales.find((scale: Scale) => scale.orinet === 'bottom').scale;
         const y: any = scales.find((scale: Scale) => scale.orinet === 'left').scale;
 
@@ -89,8 +99,11 @@ export class BasicLineSeries extends SeriesBase {
             }) // set the x values for the line generator
             .y((data: any) => { 
                 return y(data[this.yField]); 
-            }) // set the y values for the line generator 
-            .curve(curveMonotoneX); // apply smoothing to the line
+            }); // set the y values for the line generator
+
+        if (this.isCurve) {
+            this.line.curve(curveMonotoneX); // apply smoothing to the line
+        }
 
         this.mainGroup.selectAll(`.${this.selector}`)
             .data([chartData])
@@ -120,7 +133,7 @@ export class BasicLineSeries extends SeriesBase {
                     .style('fill', (d: any) => color)
                     .attr('cx', (data: any, i) => { return x(data[this.xField]) + padding; })
                     .attr('cy', (data: any) => { return y(data[this.yField]); })
-                    .attr('r', 5);
+                    .attr('r', this.radius);
         }
     }
 
