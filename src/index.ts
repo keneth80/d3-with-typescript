@@ -200,18 +200,19 @@ const excute = () => {
 
     const basicChart: BasicChart = new BasicChart({
         selector: '#chart',
-        // title: {
-        //     placement: Placement.BOTTOM,
-        //     content: 'Multi Series Chart',
-        //     // style: {
-        //     //     size: 16,
-        //     //     color: '#ff0000',
-        //     //     font: 'monospace'
-        //     // }
-        // },
-        legend: {
+        title: {
             placement: Placement.BOTTOM,
-            isCheckBox: true
+            content: 'Multi Series Chart',
+            // style: {
+            //     size: 16,
+            //     color: '#ff0000',
+            //     font: 'monospace'
+            // }
+        },
+        legend: {
+            placement: Placement.RIGHT,
+            isCheckBox: true,
+            isAll: true
         },
         data: data.map((item: SalesModel) => {
             item.date = parseTime(item.dateStr);
