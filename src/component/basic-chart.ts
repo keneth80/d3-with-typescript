@@ -8,7 +8,7 @@ export class BasicChart<T = any> extends ChartBase {
         super(configuration);
     }
 
-    bootstrap() {
-        super.bootstrap();
+    bootstrap(configuration: ChartConfiguration) {
+        super.bootstrap(configuration);
     }
 }

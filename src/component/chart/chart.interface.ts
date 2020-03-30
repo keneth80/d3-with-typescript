@@ -1,7 +1,8 @@
 import { Selection, BaseType } from 'd3-selection';
+import { ChartConfiguration } from './chart-configuration';
 
 export interface IChart {
-    bootstrap() :void;
+    bootstrap(configuration: ChartConfiguration) :void;
 
     draw(): void;
 

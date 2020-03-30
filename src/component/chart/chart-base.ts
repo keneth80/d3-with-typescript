@@ -25,6 +25,7 @@ export interface ISeriesConfiguration {
 }
 
 export interface Scale {
+    field: string;
     orient: string;
     scale: any;
     type: string;
@@ -194,7 +195,7 @@ export class ChartBase<T = any> implements IChart {
         configuration: ChartConfiguration
     ) {
         this.config = configuration;
-        this.bootstrap();
+        this.bootstrap(this.config);
     }
 
     get chartData(): Array<T> {
@@ -217,46 +218,46 @@ export class ChartBase<T = any> implements IChart {
         return this.chartClickSubject.asObservable();
     }
 
-    bootstrap() {
+    bootstrap(configuration: ChartConfiguration) {
         // initialize size setup
-        if (this.config.margin) {
-            Object.assign(this.margin, this.config.margin);
+        if (configuration.margin) {
+            Object.assign(this.margin, configuration.margin);
             this.isCustomMargin = true;
         } else {
             this.isCustomMargin = false;
         }
 
-        this.svg = select(this.config.selector);
+        this.svg = select(configuration.selector);
 
         this.setRootSize();
 
         // data setup origin data 와 분리.
-        this.data = this.setupData(this.config.data);
+        this.data = this.setupData(configuration.data);
 
-        if (this.config.series && this.config.series.length) {
-            this.seriesList = this.config.series;
+        if (configuration.series && configuration.series.length) {
+            this.seriesList = configuration.series;
         }
 
-        if (this.config.functions && this.config.functions.length) {
-            this.functionList = this.config.functions;
+        if (configuration.functions && configuration.functions.length) {
+            this.functionList = configuration.functions;
         }
 
-        if (this.config.colors && this.config.colors.length) {
+        if (configuration.colors && configuration.colors.length) {
             this.colors = this.config.colors;
         } else {
             this.colors = schemeCategory10.map((color: string) => color);
         }
 
-        if (this.config.title) {
+        if (configuration.title) {
             this.isTitle = true;
-            this.titlePlacement = this.config.title.placement;
+            this.titlePlacement = configuration.title.placement;
         }
 
-        if (this.config.legend) {
+        if (configuration.legend) {
             this.isLegend = true;
-            this.legendPlacement = this.config.legend.placement;
-            this.isCheckBox = this.config.legend.isCheckBox === false ? this.config.legend.isCheckBox : true;
-            this.isAll = this.config.legend.isAll === false ? this.config.legend.isAll : true;
+            this.legendPlacement = configuration.legend.placement;
+            this.isCheckBox = configuration.legend.isCheckBox === false ? configuration.legend.isCheckBox : true;
+            this.isAll = configuration.legend.isAll === false ? configuration.legend.isAll : true;
         }
 
         this.maskId = guid();
@@ -1293,6 +1294,7 @@ export class ChartBase<T = any> implements IChart {
             }
 
             returnAxes.push({
+                field: axis.field,
                 orient: axis.placement,
                 scale,
                 type: axis.type,

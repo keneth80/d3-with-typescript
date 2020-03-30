@@ -83,8 +83,8 @@ export class BasicLineSeries extends SeriesBase {
 
     drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number, index: number, color: string) {
         // TODO : 스케일 정보 가져올 때 필드를 참조해서 가져오도록 한다.
-        const x: any = scales.find((scale: Scale) => scale.orient === 'bottom').scale;
-        const y: any = scales.find((scale: Scale) => scale.orient === 'left').scale;
+        const x: any = scales.find((scale: Scale) => scale.field === this.xField).scale;
+        const y: any = scales.find((scale: Scale) => scale.field === this.yField).scale;
 
         let padding = 0;
 

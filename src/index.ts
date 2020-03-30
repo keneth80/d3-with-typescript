@@ -174,12 +174,6 @@ const excute = () => {
         console.log('basicLineSeries.item : ', item);
     });
 
-    const labelSeries = new LabelSeries({
-        selector: 'sales-label',
-        yField: 'sales',
-        xField: 'salesperson'
-    });
-
     const basicLineSeries2 = new BasicLineSeries({
         selector: 'basic-line-assets',
         dotSelector: 'basic-line-assets-dot',
@@ -192,6 +186,12 @@ const excute = () => {
     });
     basicLineSeries2.$currentItem.subscribe((item: any) => {
         console.log('basicLineSerie2s.item : ', item);
+    });
+
+    const labelSeries = new LabelSeries({
+        selector: 'sales-label',
+        yField: 'sales',
+        xField: 'salesperson'
     });
 
     const plotSeries = new BasicPlotSeries({
@@ -284,7 +284,6 @@ const excute = () => {
                 type: 'number',
                 placement: 'left',
                 min: 0,
-                max: max(data.map((item: SalesModel) => item.assets)),
                 title: {
                     content: 'assets',
                     align: Align.TOP
@@ -302,7 +301,7 @@ const excute = () => {
                 // },
             },
             {
-                field: 'assets',
+                field: 'sales',
                 type: 'number',
                 placement: 'right',
                 min: 0,
