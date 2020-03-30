@@ -91,8 +91,8 @@ export class BasicCanvasScatterPlot extends SeriesBase {
     }
 
     drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {
-        const xScale: Scale = scales.find((scale: Scale) => scale.orinet === 'bottom');
-        const yScale: Scale = scales.find((scale: Scale) => scale.orinet === 'left');
+        const xScale: Scale = scales.find((scale: Scale) => scale.orient === 'bottom');
+        const yScale: Scale = scales.find((scale: Scale) => scale.orient === 'left');
         const x: any = xScale.scale;
         const y: any = yScale.scale;
         

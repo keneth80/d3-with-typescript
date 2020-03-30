@@ -76,8 +76,8 @@ export class BasicCanvasZoomSelection extends FunctionsBase {
     }
 
     drawFunctions(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {
-        const x: any = scales.find((scale: Scale) => scale.orinet === this.xDirection).scale;
-        const y: any = scales.find((scale: Scale) => scale.orinet === this.yDirection).scale;
+        const x: any = scales.find((scale: Scale) => scale.orient === this.xDirection).scale;
+        const y: any = scales.find((scale: Scale) => scale.orient === this.yDirection).scale;
 
         Object.assign(this.originScaleX, x);
         Object.assign(this.originScaleY, y);
@@ -91,8 +91,8 @@ export class BasicCanvasZoomSelection extends FunctionsBase {
         const updateChart = () => {
             const newX = event.transform.rescaleX(x);
             const newY = event.transform.rescaleY(y);
-            scales.find((scale: Scale) => scale.orinet === this.xDirection).scale = newX;
-            scales.find((scale: Scale) => scale.orinet === this.yDirection).scale = newY;
+            scales.find((scale: Scale) => scale.orient === this.xDirection).scale = newX;
+            scales.find((scale: Scale) => scale.orient === this.yDirection).scale = newY;
             this.chartBase.updateRescaleAxis();
             this.chartBase.updateSeries();
         };

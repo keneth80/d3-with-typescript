@@ -29,7 +29,7 @@ import { BasicZoomSelection } from './component/functions/basic-zoom-selection';
 import { topologyData, topologyData2 } from './component/mock-data/topology-data';
 import { BasicTopology, TopologyGroupElement, TopologyData } from './component/series/basic-topology';
 
-import { Placement } from './component/chart/chart-configuration';
+import { Placement, Align } from './component/chart/chart-configuration';
 
 class SalesModel {
     salesperson: string;
@@ -272,6 +272,10 @@ const excute = () => {
                 type: 'string',
                 placement: 'bottom',
                 padding: 0.2,
+                title: {
+                    content: 'sales person',
+                    align: Align.RIGHT
+                }
                 // domain: data.map((item: any) => item.salesperson)
             },
             {
@@ -280,13 +284,17 @@ const excute = () => {
                 placement: 'left',
                 min: 0,
                 max: max(data.map((item: SalesModel) => item.assets)),
+                title: {
+                    content: 'assets',
+                    align: Align.TOP
+                },
             },
             {
                 field: 'date',
                 type: 'time',
                 placement: 'top',
                 tickFormat: '%Y/%m/%d',
-                tickSize: 6
+                tickSize: 6,
             },
             {
                 field: 'assets',

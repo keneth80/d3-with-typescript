@@ -48,8 +48,8 @@ export class LabelSeries extends SeriesBase {
     }
 
     drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {
-        const x: any = scales.find((scale: Scale) => scale.orinet === 'bottom').scale;
-        const y: any = scales.find((scale: Scale) => scale.orinet === 'left').scale;
+        const x: any = scales.find((scale: Scale) => scale.orient === 'bottom').scale;
+        const y: any = scales.find((scale: Scale) => scale.orient === 'left').scale;
         this.mainGroup.selectAll(`.${this.selector}`)
             .data(chartData)
                 .join(

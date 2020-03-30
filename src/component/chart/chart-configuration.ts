@@ -14,6 +14,24 @@ export enum ScaleType {
     STRING = 'string'
 }
 
+export enum Align {
+    CENTER = 'center',
+    LEFT = 'left',
+    RIGHT = 'right',
+    TOP = 'top',
+    BOTTOM = 'bottom'
+}
+
+export interface AxisTitle {
+    align: string; // top, bottom, left, right, center default: center
+    content: string; // title text
+    style?: {
+        size?: number;
+        color?: string;
+        font?: string;
+    }
+}
+
 export interface Axis {
     field: any; // data propertie
     type: string; // default: number, option: number or string or point or time => number: scaleLinear, time: scaleTime, string: scaleBand, point: scalePoint for range
@@ -26,8 +44,9 @@ export interface Axis {
     tickSize?: number;
     isGridLine?: boolean;
     isZoom?: boolean;
-    min?: number, // only type is number
-    max?: number  // only type is number
+    min?: number; // only type is number
+    max?: number;  // only type is number
+    title?: AxisTitle;
 }
 
 export interface Margin {

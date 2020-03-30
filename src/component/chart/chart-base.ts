@@ -13,7 +13,7 @@ import { fromEvent, Subscription, Subject, of, Observable, Observer } from 'rxjs
 import { debounceTime, delay } from 'rxjs/operators';
 
 import { IChart } from './chart.interface';
-import { ChartConfiguration, Axis, Margin, Placement, ChartTitle, ScaleType } from './chart-configuration';
+import { ChartConfiguration, Axis, Margin, Placement, ChartTitle, ScaleType, Align, AxisTitle } from './chart-configuration';
 import { ISeries } from './series.interface';
 import { guid, textWrapping, getTextWidth, getMaxText, drawSvgCheckBox } from './util/d3-svg-util';
 import { IFunctions } from './functions.interface';
@@ -25,7 +25,7 @@ export interface ISeriesConfiguration {
 }
 
 export interface Scale {
-    orinet: string;
+    orient: string;
     scale: any;
     type: string;
     visible: boolean;
@@ -35,6 +35,7 @@ export interface Scale {
     isZoom: boolean;
     min?: number;
     max?: number;
+    title?: AxisTitle;
 }
 
 interface ContainerSize {
@@ -89,21 +90,13 @@ export class ChartBase<T = any> implements IChart {
         top: 30, left: 10, bottom: 30, right: 20
     }; // default margin
 
-    protected axisGroups: any = {
-        top: null, left: null, bottom: null, right: null
-    };
-
-    protected tickSize: number = 6;
-
-    protected tickPadding: number = 2;
-
     protected defaultTitleStyle: any = {
         font: {
             family: 'Arial, Helvetica, sans-serif',
             size: 16,
             color: '#999'
         }
-    }
+    };
 
     protected defaultLegendStyle: any = {
         font: {
@@ -111,7 +104,23 @@ export class ChartBase<T = any> implements IChart {
             size: 12,
             color: '#999'
         }
+    };
+
+    protected defaultAxisLabelStyle: any = {
+        font: {
+            family: 'Arial, Helvetica, sans-serif',
+            size: 10,
+            color: '#000'
+        }
     }
+
+    protected defaultAxisTitleStyle: any = {
+        font: {
+            family: 'Arial, Helvetica, sans-serif',
+            size: 12,
+            color: '#000'
+        }
+    };
 
     private config: ChartConfiguration;
 
@@ -128,6 +137,20 @@ export class ChartBase<T = any> implements IChart {
     private colors: Array<string>;
 
     private isCustomMargin: boolean = false;
+
+    // ===================== axis configuration start ===================== //
+    private axisGroups: any = {
+        top: null, left: null, bottom: null, right: null
+    };
+
+    private tickSize: number = 6;
+
+    private tickPadding: number = 2;
+
+    private axisTitleMargin: Margin = {
+        top: 0, left: 0, bottom: 0, right: 0
+    }; // axis title margin
+    // ===================== axis configuration end ===================== //
 
     // ===================== Title configuration start ===================== //
     private isTitle: boolean = false;
@@ -333,18 +356,18 @@ export class ChartBase<T = any> implements IChart {
     updateRescaleAxis(isZoom: boolean = true) {
         this.scales.map((scale: Scale) => {
             let orientedScale: any = null;
-            if (scale.orinet === Placement.RIGHT) {
+            if (scale.orient === Placement.RIGHT) {
                 orientedScale = axisRight(scale.scale);
-            } else if (scale.orinet === Placement.LEFT) {
+            } else if (scale.orient === Placement.LEFT) {
                 orientedScale = axisLeft(scale.scale);
-            } else if (scale.orinet === Placement.TOP) {
+            } else if (scale.orient === Placement.TOP) {
                 orientedScale = axisTop(scale.scale);
             } else {
                 orientedScale = axisBottom(scale.scale);
             }
 
             if (scale.isGridLine) {
-                if (scale.orinet === Placement.RIGHT || scale.orinet === Placement.LEFT) {
+                if (scale.orient === Placement.RIGHT || scale.orient === Placement.LEFT) {
                     orientedScale.tickSize(-this.width);
                 } else {
                     orientedScale.tickSize(-this.height);
@@ -366,7 +389,7 @@ export class ChartBase<T = any> implements IChart {
             }
             
             if (scale.visible) {
-                this.axisGroups[scale.orinet].call(
+                this.axisGroups[scale.orient].call(
                     orientedScale
                 );
             }
@@ -397,8 +420,20 @@ export class ChartBase<T = any> implements IChart {
         this.svgWidth = parseFloat(this.svg.style('width'));
         this.svgHeight = parseFloat(this.svg.style('height'));
 
-        this.width = this.svgWidth - this.margin.left - this.margin.right,
-        this.height = this.svgHeight - this.margin.top - this.margin.bottom;
+        // axis title check
+        if (this.config.axes && this.config.axes.length) {
+            const axisTitleHeight = 15;
+            this.config.axes.forEach((axis: Axis) => {
+                if (axis.title) {
+                    this.axisTitleMargin[axis.placement] = axisTitleHeight;
+                }
+            });
+        }
+
+        console.log('setRootSize.axisTitleMargin : ', this.config.title, this.axisTitleMargin);
+
+        this.width = this.svgWidth - (this.margin.left + this.margin.right) - (this.axisTitleMargin.left + this.axisTitleMargin.right);
+        this.height = this.svgHeight - (this.margin.top + this.margin.bottom) - (this.axisTitleMargin.top + this.axisTitleMargin.bottom);
 
         if (this.isTitle) {
             this.titleContainerSize.width = this.titlePlacement === Placement.TOP || this.titlePlacement === Placement.BOTTOM ? this.width : 20;
@@ -421,15 +456,14 @@ export class ChartBase<T = any> implements IChart {
             
             this.width = this.width - (this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ? this.legendContainerSize.width : 0);
             this.height = this.height - (this.legendPlacement === Placement.TOP || this.legendPlacement === Placement.BOTTOM ? this.legendContainerSize.height : 0);
-            
         }
     }
 
     protected initContainer() {
-        const x = this.margin.left
+        const x = this.margin.left + this.axisTitleMargin.left
             + (this.isTitle && this.titlePlacement === Placement.LEFT ? this.titleContainerSize.width : 0)
             + (this.isLegend && this.legendPlacement === Placement.LEFT ? this.legendContainerSize.width : 0);
-        const y = this.margin.top 
+        const y = this.margin.top + this.axisTitleMargin.top
             + (this.isTitle && this.titlePlacement === Placement.TOP ? this.titleContainerSize.height : 0)
             + (this.isLegend && this.legendPlacement === Placement.TOP ? this.legendContainerSize.height : 0);
 
@@ -477,7 +511,7 @@ export class ChartBase<T = any> implements IChart {
             this.legendGroup.attr('transform', () => {
                 let translate = 'translate(0, 0)';
                 if (this.legendPlacement === Placement.RIGHT) {
-                    x = (this.margin.left + width + this.margin.right);
+                    x = (this.margin.left + this.margin.right + this.axisTitleMargin.left + this.axisTitleMargin.right + width);
                     translate = `translate(${x}, ${y})`;
                 } else if (this.legendPlacement === Placement.LEFT) {
                     x = (this.isTitle && this.titlePlacement === Placement.RIGHT ? this.titleContainerSize.width : 0);
@@ -485,11 +519,12 @@ export class ChartBase<T = any> implements IChart {
                 } else if (this.legendPlacement === Placement.TOP) {
                     translate = `translate(${this.margin.left}, ${this.titleContainerSize.height + this.legendPadding})`;
                 } else {
-                    let y = this.margin.top + this.margin.bottom + height;
+                    x = this.margin.left;
+                    let y = (this.margin.top + this.margin.bottom) + (this.axisTitleMargin.top + this.axisTitleMargin.bottom) + height;
                     if (this.isTitle && this.titlePlacement === Placement.TOP) {
                         y += this.titleContainerSize.height;
                     }
-                    translate = `translate(${this.margin.left}, ${y})`;
+                    translate = `translate(${x}, ${y})`;
                 }
                 return translate;
             });
@@ -574,6 +609,7 @@ export class ChartBase<T = any> implements IChart {
                     (update) => update,
                     (exit) => exit.remove()
                 )
+                // .style('text-anchor', 'middle')
                 .style('font-size', (d: ChartTitle) => {
                     return (d.style && d.style.size ? d.style.size : this.defaultTitleStyle.font.size) + 'px';
                 })
@@ -623,18 +659,18 @@ export class ChartBase<T = any> implements IChart {
         this.scales.map((scale: Scale) => {
             let orientedScale: any = null;
             let bandWidth: number = -1;
-            if (scale.orinet === Placement.RIGHT) {
+            if (scale.orient === Placement.RIGHT) {
                 orientedScale = axisRight(scale.scale);
-            } else if (scale.orinet === Placement.LEFT) {
+            } else if (scale.orient === Placement.LEFT) {
                 orientedScale = axisLeft(scale.scale);
-            } else if (scale.orinet === Placement.TOP) {
+            } else if (scale.orient === Placement.TOP) {
                 orientedScale = axisTop(scale.scale);
             } else {
                 orientedScale = axisBottom(scale.scale);
             }
 
             if (scale.isGridLine) {
-                if (scale.orinet === Placement.RIGHT || scale.orinet === Placement.LEFT) {
+                if (scale.orient === Placement.RIGHT || scale.orient === Placement.LEFT) {
                     orientedScale.tickSize(-this.width);
                 } else {
                     orientedScale.tickSize(-this.height);
@@ -656,9 +692,16 @@ export class ChartBase<T = any> implements IChart {
             } else if (scale.type === ScaleType.STRING) {
                 bandWidth = scale.scale.bandwidth();
             }
+
+            this.axisGroups[scale.orient].selectAll('text')
+                .style('font-size', this.defaultAxisLabelStyle.font.size + 'px')
+                .style('font-family', this.defaultAxisLabelStyle.font.family);
+                // .style('font-weight', 100)
+                // .style('stroke-width', 0.5)
+                // .style('stroke', this.defaultAxisLabelStyle.font.color);
             
             if (scale.visible) {
-                this.axisGroups[scale.orinet].call(
+                this.axisGroups[scale.orient].call(
                     orientedScale
                 );
             }
@@ -670,13 +713,13 @@ export class ChartBase<T = any> implements IChart {
             // axis의 텍스트가 길어지면 margin도 덩달아 늘어나야함. 단, config.margin이 없을 때
             if (!this.isCustomMargin) {
                 // 가장 긴 텍스트를 찾아서 사이즈를 저장하고 margin에 더해야함
-                if (!maxTextWidth[scale.orinet]) {
-                    maxTextWidth[scale.orinet] = 0;
+                if (!maxTextWidth[scale.orient]) {
+                    maxTextWidth[scale.orient] = 0;
                 }
                 let textLength = 0;
                 let longTextNode: any = null;
-                if (scale.orinet === Placement.LEFT || scale.orinet === Placement.RIGHT) {
-                    this.axisGroups[scale.orinet].selectAll('.tick').each((d: any, index: number, node: Array<any>) => {
+                if (scale.orient === Placement.LEFT || scale.orient === Placement.RIGHT) {
+                    this.axisGroups[scale.orient].selectAll('.tick').each((d: any, index: number, node: Array<any>) => {
                         const currentTextSize = (d + '').length;
                         if (textLength < currentTextSize) {
                             textLength = currentTextSize;
@@ -686,12 +729,12 @@ export class ChartBase<T = any> implements IChart {
 
                     if (longTextNode) {
                         const textWidth = Math.round(longTextNode.getBoundingClientRect().width);
-                        if (maxTextWidth[scale.orinet] < textWidth) {
-                            maxTextWidth[scale.orinet] = textWidth;
+                        if (maxTextWidth[scale.orient] < textWidth) {
+                            maxTextWidth[scale.orient] = textWidth;
                         }
                     }
                 } else {
-                    this.axisGroups[scale.orinet].selectAll('.tick').each((d: any, index: number, node: Array<any>) => {
+                    this.axisGroups[scale.orient].selectAll('.tick').each((d: any, index: number, node: Array<any>) => {
                         // string일 때 bandWidth 보다 텍스트 사이즈가 더 크면 wordrap한다.
                         if (bandWidth > 0) {
                             const textNode: any = select(node[index]).select('text');
@@ -710,15 +753,80 @@ export class ChartBase<T = any> implements IChart {
                     
                     if (longTextNode) {
                         const textHeight = Math.round(longTextNode.getBoundingClientRect().height);
-                        if (maxTextWidth[scale.orinet] < textHeight) {
-                            maxTextWidth[scale.orinet] = textHeight;
+                        if (maxTextWidth[scale.orient] < textHeight) {
+                            maxTextWidth[scale.orient] = textHeight;
                         }
                     }
                 }
             }
+
+            if (scale.title) {
+                this.axisGroups[scale.orient].selectAll(`.axis-${scale.orient}-title`)
+                    .data([
+                        scale.title
+                    ])
+                    .join(
+                        (enter) => enter.append('text').attr('class', `axis-${scale.orient}-title`),
+                        (update) => update,
+                        (exit) => exit.remove()
+                    )
+                    .attr('dy', () => {
+                        return scale.orient === Placement.TOP ? '0em' : '1em';
+                    })
+                    .style('text-anchor', 'middle')
+                    .style('font-weight', 100)
+                    .style('fill', this.defaultAxisTitleStyle.font.color)
+                    .style('font-size', this.defaultAxisTitleStyle.font.size)
+                    .style('font-family', this.defaultAxisTitleStyle.font.family)
+                    .text((d: AxisTitle) => {
+                        return d.content;
+                    })
+                    .attr('transform', (d: AxisTitle) => {
+                        return scale.orient === Placement.LEFT || scale.orient === Placement.RIGHT ? 'rotate(-90)': '';
+                    })
+                    .attr('y', (d: AxisTitle, index: number, node: any) => {
+                        const padding = 5;
+                        let y = 0;
+                        if (scale.orient === Placement.LEFT) {
+                            y = 0 - (this.margin.left + this.axisTitleMargin.left - padding);
+                        } else if (scale.orient === Placement.RIGHT) {
+                            y = this.margin.right - padding;
+                        } else if (scale.orient === Placement.BOTTOM) {
+                            y = this.margin.bottom - padding;
+                        } else {
+                            y = -this.axisTitleMargin.top - padding;
+                        }
+                        return y;
+                    })
+                    .attr('x', (d: AxisTitle) => {
+                        let x = 0;
+                        if (scale.orient === Placement.LEFT || scale.orient === Placement.RIGHT) {
+                            if (d.align === Align.CENTER) {
+                                x = 0 - (this.height / 2);
+                            } else if (d.align === Align.TOP) {
+                                x = -padding;
+                            } else if (d.align === Align.BOTTOM) {
+                                x = 0 - (this.height - padding);
+                            } else {
+                                x = 0 - (this.height / 2);
+                            }
+                        } else if (scale.orient === Placement.BOTTOM || scale.orient === Placement.TOP) {
+                            if (d.align === Align.CENTER) {
+                                x = this.width / 2;
+                            } else if (d.align === Align.LEFT) {
+                                x = padding;
+                            } else if (d.align === Align.RIGHT) {
+                                x = this.width - padding;
+                            } else {
+                                x = this.width / 2;
+                            }
+                        }
+                        return x;
+                    });
+            }
         });
 
-        // margin 설정이 따로 없으면 자동으로 계산해서 margin을 갱신한다.9ㅐ
+        // margin 설정이 따로 없으면 자동으로 계산해서 margin을 갱신한다.
         if (!this.isCustomMargin) {
             Object.keys(maxTextWidth).map((orient: string) => {
                 if (this.margin[orient] < maxTextWidth[orient] + padding) {
@@ -981,11 +1089,11 @@ export class ChartBase<T = any> implements IChart {
     protected setupBrush(scale: any) {
         let brush = null;
         if (scale.type === ScaleType.NUMBER || scale.type === ScaleType.TIME) {
-            if (scale.orinet === Placement.RIGHT || scale.orinet === Placement.LEFT) {
+            if (scale.orient === Placement.RIGHT || scale.orient === Placement.LEFT) {
                 let left = 0;
                 let width = 0;
 
-                if (scale.orinet === Placement.LEFT) {
+                if (scale.orient === Placement.LEFT) {
                     left = -1 * this.margin.left;
                 } else {
                     width = this.width;
@@ -998,7 +1106,7 @@ export class ChartBase<T = any> implements IChart {
                 let height = 0;
 
                 // top margin 때문에 처리.
-                if (scale.orinet === Placement.TOP) {
+                if (scale.orient === Placement.TOP) {
                     top = this.margin.top * -1;
                 } else {
                     height = this.margin.bottom;
@@ -1008,23 +1116,23 @@ export class ChartBase<T = any> implements IChart {
                     .extent([ [0, top], [this.width, height] ]);
             }
             brush.on('end', () => {
-                this.updateBrushHandler(scale.orinet, brush);
+                this.updateBrushHandler(scale.orient, brush);
             });
         }
 
         if (brush) {
-            if (!this.axisGroups[scale.orinet].select('.brush' + scale.orinet).node()) {
-                this.axisGroups[scale.orinet].append('g')
-                    .attr('class', 'brush' + scale.orinet);
+            if (!this.axisGroups[scale.orient].select('.brush' + scale.orient).node()) {
+                this.axisGroups[scale.orient].append('g')
+                    .attr('class', 'brush' + scale.orient);
             }
-            this.axisGroups[scale.orinet].select('.brush' + scale.orinet).call(
+            this.axisGroups[scale.orient].select('.brush' + scale.orient).call(
                 brush
             );
         }
     }
 
     protected updateDisplay() {
-        if (this.width <= 50 || this.height < 50) {
+        if (this.width <= 50 || this.height <= 50) {
             if (console && console.log) {
                 console.log('It is too small to draw.');
             }
@@ -1133,7 +1241,7 @@ export class ChartBase<T = any> implements IChart {
             }
 
             returnAxes.push({
-                orinet: axis.placement,
+                orient: axis.placement,
                 scale,
                 type: axis.type,
                 visible: axis.visible === false ? false : true,
@@ -1142,7 +1250,8 @@ export class ChartBase<T = any> implements IChart {
                 isGridLine: axis.isGridLine === true ? true : false,
                 isZoom: axis.isZoom === true ? true : false,
                 min: minValue,
-                max: maxValue
+                max: maxValue,
+                title: axis.title
             });
         });
         return returnAxes;
@@ -1150,7 +1259,7 @@ export class ChartBase<T = any> implements IChart {
 
     protected updateBrushHandler(orient: string = 'bottom', brush: any) {
         const extent = event.selection;
-        const axis: any = this.scales.find((scale: Scale) => scale.orinet === orient).scale;
+        const axis: any = this.scales.find((scale: Scale) => scale.orient === orient).scale;
 
         if (!extent) {
             if (!this.idleTimeout) return this.idleTimeout = setTimeout(this.idled, 350);
