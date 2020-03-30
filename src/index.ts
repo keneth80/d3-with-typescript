@@ -274,7 +274,7 @@ const excute = () => {
                 padding: 0.2,
                 title: {
                     content: 'sales person',
-                    align: Align.RIGHT
+                    align: Align.CENTER
                 },
                 isGridLine: true
                 // domain: data.map((item: any) => item.salesperson)
@@ -296,6 +296,10 @@ const excute = () => {
                 placement: 'top',
                 tickFormat: '%Y/%m/%d',
                 tickSize: 6,
+                // title: {
+                //     content: 'Date',
+                //     align: Align.CENTER
+                // },
             },
             {
                 field: 'assets',

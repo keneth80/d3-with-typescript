@@ -615,17 +615,25 @@ export class ChartBase<T = any> implements IChart {
             this.titleGroup.attr('transform', (d: ChartTitle) => {
                 let titleX = 0;
                 let titleY = 0;
+                const padding = 5;
                 if (d.placement === Placement.RIGHT) {
                     titleX = 
-                        this.width + this.margin.left + this.margin.right - 3 +
+                        this.width + this.margin.left + this.margin.right + this.titleContainerSize.width +
                         (this.isLegend && (this.legendPlacement === Placement.RIGHT || this.legendPlacement === Placement.LEFT)? this.legendContainerSize.width : 0);
+                    titleY = this.height;
+                } else if (d.placement === Placement.LEFT) {
+                    titleX = this.titleContainerSize.width;
+                    titleY = this.height;
                 } else if (d.placement === Placement.BOTTOM) {
                     titleY = 
-                        this.height + this.margin.top + this.titleContainerSize.height + 
-                        (this.isLegend && (this.legendPlacement === Placement.TOP || this.legendPlacement === Placement.BOTTOM)? this.legendContainerSize.height : 0);
+                        this.height + (this.margin.top + this.margin.bottom) + (this.axisTitleMargin.top + this.axisTitleMargin.bottom) + 
+                        (this.isLegend && (this.legendPlacement === Placement.TOP || this.legendPlacement === Placement.BOTTOM)? this.legendContainerSize.height : 0) -
+                        padding;
+                } else {
+                    titleY = padding;
                 }
                 const rotate = 
-                    d.placement === Placement.LEFT || d.placement === Placement.RIGHT ? 90 : 0;
+                    d.placement === Placement.LEFT || d.placement === Placement.RIGHT ? -90 : 0;
                 return `translate(${titleX}, ${titleY}) rotate(${rotate})`;
             });
 
@@ -643,29 +651,32 @@ export class ChartBase<T = any> implements IChart {
                 .style('stroke', (d: ChartTitle) => {
                     return (d.style && d.style.color ? d.style.color : this.defaultTitleStyle.font.color)
                 })
+                .style('text-anchor', 'middle')
                 .style('stroke-width', 0.5)
                 .style('font-family', (d: ChartTitle) => {
                     return (d.style && d.style.font ? d.style.font : this.defaultTitleStyle.font.family)
                 })
                 .text((d: ChartTitle) => d.content)
-                .attr('dy', '.35em')
+                .attr('dy', '0em')
+                // .attr('dy', (d: ChartTitle) => {
+                //     return d.placement === Placement.TOP ? '0em': '1em';
+                // })
                 .attr('transform', (d: ChartTitle, index: number, nodeList: Array<any>) => {
                     // const textWidth = 
                     //     d.placement === Placement.TOP || d.placement === Placement.BOTTOM ? nodeList[index].getComputedTextLength() : 20;
                     const textNode = nodeList[index].getBoundingClientRect();
-                    const textWidth = 
-                        d.placement === Placement.TOP || d.placement === Placement.BOTTOM ? textNode.width : 20;
+                    // const textWidth = 
+                    //     d.placement === Placement.TOP || d.placement === Placement.BOTTOM ? textNode.width : 20;
                     const textHeight = textNode.height;
                     
                     let x = 0;
                     let y = 0;
                     if (d.placement === Placement.TOP || d.placement === Placement.BOTTOM) {
-                        x = (this.width + this.margin.left + this.margin.right) / 2 - textWidth / 2 + 
+                        x = (this.width + this.margin.left + this.margin.right) / 2 - 
                             (this.isLegend && (this.legendPlacement === Placement.LEFT)? this.legendContainerSize.width : 0);
                         y = this.titleContainerSize.height / 2 + textHeight / 2 - 3;
                     } else {
-                        x = (this.height + this.margin.top + this.margin.bottom) / 2 - textHeight / 2;
-                        y = -(textWidth / 2 + 3);
+                        x = (this.height + this.margin.top + this.margin.bottom) / 2 - textHeight / 2;;
                     }
                     const translate = `translate(${x}, ${y})`;
                     return translate;
