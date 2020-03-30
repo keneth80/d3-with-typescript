@@ -65,9 +65,9 @@ export const textWrapping = (text: any, width: number) => {
         let word = null;
         let lineNumber = 0;
         const lineHeight = 1.1; // ems
-        const x = text.attr('x');
-        const y = text.attr('y');
-        const dy = 0; //parseFloat(text.attr('dy')),
+        const x = text.attr('x') || 0;
+        const y = text.attr('y') || 0;
+        const dy = parseFloat(text.attr('dy') || '0');
         let tspan = text.text(null)
                         .append('tspan')
                         .attr('x', x)

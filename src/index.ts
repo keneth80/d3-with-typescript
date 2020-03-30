@@ -91,13 +91,13 @@ class PlotModel {
 }
 
 const data: Array<SalesModel> = [
-    new SalesModel('Bob', 33, 80, '1-May-12'),
-    new SalesModel('Robin', 12, 40, '29-Apr-12'),
+    new SalesModel('BobBobBobBobBobBobBob', 33, 180, '1-May-12'),
+    new SalesModel('Robin', 12, 140, '29-Apr-12'),
     new SalesModel('Anne', 41, null, '27-Apr-12'),
-    new SalesModel('Mark', 16, 50, '26-Apr-12'),
-    new SalesModel('Joe', 59, 95, '25-Apr-12'),
-    new SalesModel('Eve', 38, 60, '20-Apr-12'),
-    new SalesModel('Karen', 21, 55, '19-Apr-12'),
+    new SalesModel('Mark', 16, 150, '26-Apr-12'),
+    new SalesModel('Joe', 59, 195, '25-Apr-12'),
+    new SalesModel('Eve', 38, 160, '20-Apr-12'),
+    new SalesModel('Karen', 21, 155, '19-Apr-12'),
     new SalesModel('Kirsty', 25, 37, '18-Apr-12'),
     new SalesModel('Chris', 30, 50, '17-Apr-12'),
     new SalesModel('Lisa', 47, 77, '9-Apr-12'),
@@ -208,6 +208,7 @@ const excute = () => {
     });
 
     /*
+    // d3 date format
     d3.time.format("%Y-%m-%d")	1986-01-28
     d3.time.format("%m/%d/%Y")	01/28/1986
     d3.time.format("%H:%M")	    11:39
@@ -219,6 +220,23 @@ const excute = () => {
     d3.time.format("%M m")	    39 m
     d3.time.format("%H h")	    11 h
     d3.time.format("%a")	    Tue
+
+    // d3 number format
+    // 참조: http://bl.ocks.org/zanarmstrong/05c1e95bf7aa16c4768e
+    // Enter a number: 1000
+    d3.format("")	    1000
+    d3.format("s")	    1k
+    d3.format(",%")	    100,000%
+    d3.format("+,%")	+100,000%
+    d3.format(",.1%")	100,000.0%
+    d3.format(".4r")	1000
+    d3.format(".4f")	1000.0000
+    d3.format(".4n")	1,000
+    d3.format(".3n")	1.00e+3
+    d3.format(",d")	    1,000
+    d3.format(",.0f")	1,000
+    d3.format(".0f")	1000
+    d3.format(".0e")	1e+3
     */
 
     const basicChart: BasicChart = new BasicChart({

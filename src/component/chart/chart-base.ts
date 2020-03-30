@@ -13,7 +13,7 @@ import { fromEvent, Subscription, Subject, of, Observable, Observer } from 'rxjs
 import { debounceTime, delay } from 'rxjs/operators';
 
 import { IChart } from './chart.interface';
-import { ChartConfiguration, Axis, Margin, Placement, ChartTitle } from './chart-configuration';
+import { ChartConfiguration, Axis, Margin, Placement, ChartTitle, ScaleType } from './chart-configuration';
 import { ISeries } from './series.interface';
 import { guid, textWrapping, getTextWidth, getMaxText, drawSvgCheckBox } from './util/d3-svg-util';
 import { IFunctions } from './functions.interface';
@@ -325,78 +325,37 @@ export class ChartBase<T = any> implements IChart {
     ) {
         this.scales = this.setupScale(this.config.axes, this.width, this.height, reScale);
 
-        this.scales.map((scale: Scale) => {
-            let orientedScale: any = null;
-            if (scale.orinet === 'right') {
-                orientedScale = axisRight(scale.scale);
-            } else if (scale.orinet === 'left') {
-                orientedScale = axisLeft(scale.scale);
-            } else if (scale.orinet === 'top') {
-                orientedScale = axisTop(scale.scale);
-            } else {
-                orientedScale = axisBottom(scale.scale);
-            }
-
-            if (scale.isGridLine) {
-                if (scale.orinet === 'right' || scale.orinet === 'left') {
-                    orientedScale.tickSize(-this.width);
-                } else {
-                    orientedScale.tickSize(-this.height);
-                }
-            }
-
-            if (scale.type === 'number') {
-                if (scale.tickFormat) {
-                    orientedScale.ticks(null, scale.tickFormat);
-                    // orientedScale.tickFormat(timeFormat(scale.tickFormat));
-                }
-            } else if (scale.type === 'time') {
-                if (scale.tickFormat) {
-                    orientedScale.tickFormat(timeFormat(scale.tickFormat));
-                }
-            }
-            
-            if (scale.visible) {
-                this.axisGroups[scale.orinet].call(
-                    orientedScale
-                );
-            }
-        });
+        this.updateRescaleAxis(false);
         
         this.updateSeries();
     }
 
-    updateRescaleAxis() {
+    updateRescaleAxis(isZoom: boolean = true) {
         this.scales.map((scale: Scale) => {
             let orientedScale: any = null;
-            if (scale.orinet === 'right') {
+            if (scale.orinet === Placement.RIGHT) {
                 orientedScale = axisRight(scale.scale);
-            } else if (scale.orinet === 'left') {
+            } else if (scale.orinet === Placement.LEFT) {
                 orientedScale = axisLeft(scale.scale);
-                // orientedScale.tickSize(-this.width);
-                // orientedScale.ticks(5);
-            } else if (scale.orinet === 'top') {
+            } else if (scale.orinet === Placement.TOP) {
                 orientedScale = axisTop(scale.scale);
             } else {
                 orientedScale = axisBottom(scale.scale);
-                // orientedScale.tickSize(-this.height);
-                // orientedScale.ticks(5);
             }
 
             if (scale.isGridLine) {
-                if (scale.orinet === 'right' || scale.orinet === 'left') {
+                if (scale.orinet === Placement.RIGHT || scale.orinet === Placement.LEFT) {
                     orientedScale.tickSize(-this.width);
                 } else {
                     orientedScale.tickSize(-this.height);
                 }
             }
 
-            if (scale.type === 'number') {
+            if (scale.type === ScaleType.NUMBER) {
                 if (scale.tickFormat) {
                     orientedScale.ticks(null, scale.tickFormat);
-                    // orientedScale.tickFormat(timeFormat(scale.tickFormat));
                 }
-            } else if (scale.type === 'time') {
+            } else if (scale.type === ScaleType.TIME) {
                 if (scale.tickFormat) {
                     orientedScale.tickFormat(timeFormat(scale.tickFormat));
                 }
@@ -412,7 +371,7 @@ export class ChartBase<T = any> implements IChart {
                 );
             }
 
-            if (scale.isZoom === true) {
+            if (isZoom && scale.isZoom === true) {
                 this.setupBrush(scale);
             }
         });
@@ -663,36 +622,39 @@ export class ChartBase<T = any> implements IChart {
 
         this.scales.map((scale: Scale) => {
             let orientedScale: any = null;
-            if (scale.orinet === 'right') {
+            let bandWidth: number = -1;
+            if (scale.orinet === Placement.RIGHT) {
                 orientedScale = axisRight(scale.scale);
-            } else if (scale.orinet === 'left') {
+            } else if (scale.orinet === Placement.LEFT) {
                 orientedScale = axisLeft(scale.scale);
-            } else if (scale.orinet === 'top') {
+            } else if (scale.orinet === Placement.TOP) {
                 orientedScale = axisTop(scale.scale);
             } else {
                 orientedScale = axisBottom(scale.scale);
             }
 
             if (scale.isGridLine) {
-                if (scale.orinet === 'right' || scale.orinet === 'left') {
+                if (scale.orinet === Placement.RIGHT || scale.orinet === Placement.LEFT) {
                     orientedScale.tickSize(-this.width);
                 } else {
                     orientedScale.tickSize(-this.height);
                 }
             }
 
-            if (scale.type === 'number') {
+            if (scale.type === ScaleType.NUMBER) {
                 if (scale.tickFormat) {
                     orientedScale.ticks(null, scale.tickFormat);
                     // orientedScale.tickFormat(timeFormat(scale.tickFormat));
                 }
-            } else if (scale.type === 'time') {
+            } else if (scale.type === ScaleType.TIME) {
                 if (scale.tickFormat) {
                     orientedScale.tickFormat(timeFormat(scale.tickFormat));
                 }
                 if (scale.tickSize) {
                     orientedScale.ticks(scale.tickSize);
                 }
+            } else if (scale.type === ScaleType.STRING) {
+                bandWidth = scale.scale.bandwidth();
             }
             
             if (scale.visible) {
@@ -715,7 +677,9 @@ export class ChartBase<T = any> implements IChart {
                 let longTextNode: any = null;
                 if (scale.orinet === Placement.LEFT || scale.orinet === Placement.RIGHT) {
                     this.axisGroups[scale.orinet].selectAll('.tick').each((d: any, index: number, node: Array<any>) => {
-                        if (textLength < d + ''.length) {
+                        const currentTextSize = (d + '').length;
+                        if (textLength < currentTextSize) {
+                            textLength = currentTextSize;
                             longTextNode = node[index];
                         }
                     });
@@ -728,8 +692,19 @@ export class ChartBase<T = any> implements IChart {
                     }
                 } else {
                     this.axisGroups[scale.orinet].selectAll('.tick').each((d: any, index: number, node: Array<any>) => {
-                        if (textLength < d + ''.length) {
-                            longTextNode = node[index];
+                        // string일 때 bandWidth 보다 텍스트 사이즈가 더 크면 wordrap한다.
+                        if (bandWidth > 0) {
+                            const textNode: any = select(node[index]).select('text');
+                            const textNodeWidth = textNode.node().getComputedTextLength();
+                            const currentTextSize = (d + '').length;
+                            if (textNodeWidth > bandWidth) {
+                                textWrapping(textNode, bandWidth);
+                            }
+
+                            if (textLength < currentTextSize) {
+                                textLength = currentTextSize;
+                                longTextNode = node[index];
+                            }
                         }
                     });
                     
@@ -1005,12 +980,12 @@ export class ChartBase<T = any> implements IChart {
 
     protected setupBrush(scale: any) {
         let brush = null;
-        if (scale.type === 'number' || scale.type === 'time') {
-            if (scale.orinet === 'right' || scale.orinet === 'left') {
+        if (scale.type === ScaleType.NUMBER || scale.type === ScaleType.TIME) {
+            if (scale.orinet === Placement.RIGHT || scale.orinet === Placement.LEFT) {
                 let left = 0;
                 let width = 0;
 
-                if (scale.orinet === 'left') {
+                if (scale.orinet === Placement.LEFT) {
                     left = -1 * this.margin.left;
                 } else {
                     width = this.width;
@@ -1023,7 +998,7 @@ export class ChartBase<T = any> implements IChart {
                 let height = 0;
 
                 // top margin 때문에 처리.
-                if (scale.orinet === 'top') {
+                if (scale.orinet === Placement.TOP) {
                     top = this.margin.top * -1;
                 } else {
                     height = this.margin.bottom;
@@ -1081,7 +1056,7 @@ export class ChartBase<T = any> implements IChart {
         const returnAxes: Array<Scale> = [];
         axes.map((axis: Axis) => {
             let range = <any>[];
-            if (axis.placement === 'bottom' || axis.placement === 'top') {
+            if (axis.placement === Placement.BOTTOM || axis.placement === Placement.TOP) {
                 range = [0, width];
             } else {
                 range = [height, 0];
@@ -1090,7 +1065,7 @@ export class ChartBase<T = any> implements IChart {
             let scale = null;
             let minValue = 0;
             let maxValue = 0;
-            if (axis.type === 'string') {
+            if (axis.type === ScaleType.STRING) {
                 scale = scaleBand().range(range).padding(axis.padding ? +axis.padding : 0).paddingOuter(0.1);
                 if (axis.domain) {
                     scale.domain(axis.domain);
@@ -1108,7 +1083,7 @@ export class ChartBase<T = any> implements IChart {
                         this.data.map((item: T) => item[axis.field])
                     );
                 }
-            } else if (axis.type === 'time') {
+            } else if (axis.type === ScaleType.TIME) {
                 scale = scaleTime().range(range);
                 scale.domain(extent(this.data, (item: T) => item[axis.field]));
             } else {
@@ -1190,7 +1165,7 @@ export class ChartBase<T = any> implements IChart {
             let domainStart = 0;
             let domainEnd = 0;
 
-            if (orient === 'top' || orient === 'bottom') {
+            if (orient === Placement.TOP || orient === Placement.BOTTOM) {
                 domainStart = axis.invert(extent[0]);
                 domainEnd = axis.invert(extent[1]);
             } else { // left, right 는 아래에서 위로 정렬이기 때문.
@@ -1206,11 +1181,11 @@ export class ChartBase<T = any> implements IChart {
 
         let currnetAxis: any = null;
 
-        if (orient === 'left') {
+        if (orient === Placement.LEFT) {
             currnetAxis = axisLeft(axis);
-        } else if (orient === 'right') {
+        } else if (orient === Placement.RIGHT) {
             currnetAxis = axisRight(axis);
-        } else if (orient === 'top') {
+        } else if (orient === Placement.TOP) {
             currnetAxis = axisTop(axis);
         } else {
             currnetAxis = axisBottom(axis);

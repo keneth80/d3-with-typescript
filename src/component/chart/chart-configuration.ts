@@ -8,6 +8,12 @@ export enum Placement {
     RIGHT = 'right'
 }
 
+export enum ScaleType {
+    NUMBER = 'number',
+    TIME = 'time',
+    STRING = 'string'
+}
+
 export interface Axis {
     field: any; // data propertie
     type: string; // default: number, option: number or string or point or time => number: scaleLinear, time: scaleTime, string: scaleBand, point: scalePoint for range
