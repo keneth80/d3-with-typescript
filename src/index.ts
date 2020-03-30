@@ -275,7 +275,8 @@ const excute = () => {
                 title: {
                     content: 'sales person',
                     align: Align.RIGHT
-                }
+                },
+                isGridLine: true
                 // domain: data.map((item: any) => item.salesperson)
             },
             {

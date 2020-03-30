@@ -15,7 +15,7 @@ import { debounceTime, delay } from 'rxjs/operators';
 import { IChart } from './chart.interface';
 import { ChartConfiguration, Axis, Margin, Placement, ChartTitle, ScaleType, Align, AxisTitle } from './chart-configuration';
 import { ISeries } from './series.interface';
-import { guid, textWrapping, getTextWidth, getMaxText, drawSvgCheckBox } from './util/d3-svg-util';
+import { guid, textWrapping, getTextWidth, getMaxText, drawSvgCheckBox, getAxisByPlacement } from './util/d3-svg-util';
 import { IFunctions } from './functions.interface';
 
 export interface ISeriesConfiguration {
@@ -140,6 +140,10 @@ export class ChartBase<T = any> implements IChart {
 
     // ===================== axis configuration start ===================== //
     private axisGroups: any = {
+        top: null, left: null, bottom: null, right: null
+    };
+
+    private gridLineGroups: any = {
         top: null, left: null, bottom: null, right: null
     };
 
@@ -366,13 +370,13 @@ export class ChartBase<T = any> implements IChart {
                 orientedScale = axisBottom(scale.scale);
             }
 
-            if (scale.isGridLine) {
-                if (scale.orient === Placement.RIGHT || scale.orient === Placement.LEFT) {
-                    orientedScale.tickSize(-this.width);
-                } else {
-                    orientedScale.tickSize(-this.height);
-                }
-            }
+            // if (scale.isGridLine) {
+            //     if (scale.orient === Placement.RIGHT || scale.orient === Placement.LEFT) {
+            //         orientedScale.tickSize(-this.width);
+            //     } else {
+            //         orientedScale.tickSize(-this.height);
+            //     }
+            // }
 
             if (scale.type === ScaleType.NUMBER) {
                 if (scale.tickFormat) {
@@ -429,8 +433,6 @@ export class ChartBase<T = any> implements IChart {
                 }
             });
         }
-
-        console.log('setRootSize.axisTitleMargin : ', this.config.title, this.axisTitleMargin);
 
         this.width = this.svgWidth - (this.margin.left + this.margin.right) - (this.axisTitleMargin.left + this.axisTitleMargin.right);
         this.height = this.svgHeight - (this.margin.top + this.margin.bottom) - (this.axisTitleMargin.top + this.axisTitleMargin.bottom);
@@ -493,6 +495,30 @@ export class ChartBase<T = any> implements IChart {
         }
         this.mainGroup.attr('transform', `translate(${x}, ${y})`);
 
+        // grid line setup
+        if (!this.gridLineGroups.bottom) {
+            this.gridLineGroups.bottom = this.mainGroup.append('g')
+                .attr('class', 'x-grid-group')
+        }
+        this.gridLineGroups.bottom.attr('transform', `translate(0, ${height})`);
+
+        if (!this.gridLineGroups.top) {
+            this.gridLineGroups.top = this.mainGroup.append('g')
+                .attr('class', 'x-top-grid-group')
+        }
+        this.gridLineGroups.top.attr('transform', `translate(0, 0)`);
+        
+        if (!this.gridLineGroups.left) {
+            this.gridLineGroups.left = this.mainGroup.append('g')
+            .attr('class', 'y-grid-group')
+        }
+
+        if (!this.gridLineGroups.right) {
+            this.gridLineGroups.right = this.mainGroup.append('g')
+                .attr('class', 'y-right-grid-group')
+        }
+        this.gridLineGroups.right.attr('transform', `translate(${width}, 0)`);
+
         if (this.isTitle) {
             this.titleGroup = this.svg.selectAll('.title-group')
                 .data([this.config.title])
@@ -538,6 +564,7 @@ export class ChartBase<T = any> implements IChart {
             .attr('transform', `translate(${x}, ${y})`)
             .attr('clip-path', `url(#${this.maskId})`);
 
+        // axis group setup
         if (!this.axisGroups.bottom) {
             this.axisGroups.bottom = this.mainGroup.append('g')
                 .attr('class', 'x-axis-group')
@@ -669,14 +696,6 @@ export class ChartBase<T = any> implements IChart {
                 orientedScale = axisBottom(scale.scale);
             }
 
-            if (scale.isGridLine) {
-                if (scale.orient === Placement.RIGHT || scale.orient === Placement.LEFT) {
-                    orientedScale.tickSize(-this.width);
-                } else {
-                    orientedScale.tickSize(-this.height);
-                }
-            }
-
             if (scale.type === ScaleType.NUMBER) {
                 if (scale.tickFormat) {
                     orientedScale.ticks(null, scale.tickFormat);
@@ -703,6 +722,28 @@ export class ChartBase<T = any> implements IChart {
             if (scale.visible) {
                 this.axisGroups[scale.orient].call(
                     orientedScale
+                );
+            }
+
+            if (scale.isGridLine) {
+                const targetScale = getAxisByPlacement(scale.orient, scale.scale);
+                if (scale.tickSize) {
+                    targetScale.ticks(scale.tickSize);
+                }
+                const tickFmt: any = ' ';
+                if (scale.orient === Placement.RIGHT || scale.orient === Placement.LEFT) {
+                    targetScale.tickSize(-this.width).tickFormat(tickFmt);
+                } else {
+                    targetScale.tickSize(-this.height).tickFormat(tickFmt);
+                }
+
+                this.gridLineGroups[scale.orient]
+                    .style('stroke', '#ccc')
+                    .style('stroke-opacity', 0.3)
+                    .style('shape-rendering', 'crispEdges');
+
+                this.gridLineGroups[scale.orient].call(
+                    targetScale
                 );
             }
 

@@ -83,6 +83,8 @@ export interface ChartConfiguration<T = any> {
 
     isResize?: string; // 'Y' or 'N'
 
+    isGridLine?: boolean; // 'Y' or 'N' default: 'N'
+
     legend?: ChartLegend; // legend display
 
     margin?: Margin; // custom margin

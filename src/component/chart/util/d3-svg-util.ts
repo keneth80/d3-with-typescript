@@ -1,6 +1,8 @@
 import { color } from 'd3-color';
 import { select, event, Selection, BaseType } from 'd3-selection';
 import { line } from 'd3-shape';
+import { Placement } from '../chart-configuration';
+import { axisTop, axisLeft, axisRight, axisBottom } from 'd3';
 
 export const getTransformByArray = (transform: string = 'translate(0, 0)'): Array<string> => {
     const translateString = transform.substring(transform.indexOf('translate('), transform.indexOf(')') + 1);
@@ -249,4 +251,16 @@ export const drawSvgCheckBox = <T = any>(
     });
 
     return g;
+}
+
+export const getAxisByPlacement = (placement: string, scale: any) => {
+    if (placement === Placement.TOP) {
+        return axisTop(scale);
+    } else if (placement === Placement.LEFT) {
+        return axisLeft(scale);
+    } else if (placement === Placement.RIGHT) {
+        return axisRight(scale);
+    } else {
+        return axisBottom(scale);
+    }
 }
