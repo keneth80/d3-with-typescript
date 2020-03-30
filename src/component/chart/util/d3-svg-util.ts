@@ -215,7 +215,8 @@ export const drawSvgCheckBox = <T = any>(
         .attr('ry', (d: any) => d.ry)
         .style('fill-opacity', 0)
         .style('stroke-width', (d: any) => d.boxStrokeWidth)
-        .style('stroke', 'black');
+        .style('stroke', 'black')
+        .style('shape-rendering', 'crispEdges');
 
     const coordinates: Array<any> = [
         [x + (size / 8), y + (size / 3)],
@@ -235,6 +236,7 @@ export const drawSvgCheckBox = <T = any>(
             (exit) => exit.remove()
         )
         .attr('d', lineObj(coordinates))
+        .style('shape-rendering', 'crispEdges')
         .style('stroke-width', (d: any) => d.markStrokeWidth)
         .style('stroke', 'black')
         .style('fill', 'none')
