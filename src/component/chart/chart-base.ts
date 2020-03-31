@@ -336,8 +336,8 @@ export class ChartBase<T = any> implements IChart {
             .attr('dy', '1.2em')
             .style('text-anchor', 'start')
             .style('fill', '#fff')
-            .attr('font-size', '16px')
-            .attr('font-weight', 'bold');
+            .attr('font-size', '14px')
+            .attr('font-weight', '100');
     }
 
     destroy() {

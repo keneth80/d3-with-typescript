@@ -3,7 +3,7 @@ import './style.css';
 import { min, max, quantile, mean, range } from 'd3-array';
 import { randomUniform, randomNormal } from 'd3-random';
 import { scaleOrdinal } from 'd3-scale';
-import { timeParse } from 'd3-time-format';
+import { timeParse, timeFormat } from 'd3-time-format';
 import { schemeCategory10 } from 'd3-scale-chromatic';
 import { csv } from 'd3-fetch';
 
@@ -135,7 +135,7 @@ const lineChart = () => {
             })
         );
     });
-
+    const parseTime = timeFormat('%H:%M:%S %m-%d');
     let basicChart: BasicChart = new BasicChart({
         selector: '#linechart',
         legend: {
@@ -145,7 +145,7 @@ const lineChart = () => {
         },
         tooltip: {
             tooltipTextParser: (d: any) => {
-                return `${d.member} \n Date: ${d.date} \n Value: ${d.value}`
+                return `${d.member} \n Date: ${parseTime(d.date)} \n Value: ${d.value}`
             }
         },
         data: lineData.map((item: any) => {
