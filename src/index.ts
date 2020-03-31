@@ -134,7 +134,7 @@ const lineChart = () => {
         );
     });
 
-    const basicChart: BasicChart = new BasicChart({
+    let basicChart: BasicChart = new BasicChart({
         selector: '#linechart',
         legend: {
             placement: Placement.TOP,
@@ -178,6 +178,55 @@ const lineChart = () => {
         ],
         series
     });
+
+    basicChart.destroy();
+    basicChart = null;
+
+    basicChart = new BasicChart({
+        selector: '#linechart',
+        legend: {
+            placement: Placement.TOP,
+            isCheckBox: false,
+            isAll: false
+        },
+        data: [],
+        // data: lineData.map((item: any) => {
+        //     item.date = new Date(item.time)
+        //     return item;
+        // }),
+        // margin: {
+        //     top: 30,
+        //     bottom: 30,
+        //     left: 40,
+        //     right: 20
+        // },
+        isResize: 'Y',
+        axes: [
+            {
+                field: 'date',
+                type: 'time',
+                placement: Placement.BOTTOM,
+                tickFormat: '%H:%M %m-%d',
+                tickSize: 5,
+                title: {
+                    content: 'Date',
+                    align: Align.CENTER
+                },
+            },
+            {
+                field: 'value',
+                type: 'number',
+                placement: Placement.LEFT,
+                min: 0,
+                title: {
+                    content: 'Value',
+                    align: Align.TOP
+                },
+            }
+        ],
+        series
+    });
+
     basicChart.chartData = lineData.map((item: any) => {
         item.date = new Date(item.time)
         return item;

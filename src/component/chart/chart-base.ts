@@ -230,6 +230,12 @@ export class ChartBase<T = any> implements IChart {
 
         this.svg = select(configuration.selector);
 
+        if (!this.svg) {
+            if (console && console.log) {
+                console.log('is not svg!');
+            }
+        }
+
         this.setRootSize();
 
         // data setup origin data 와 분리.
