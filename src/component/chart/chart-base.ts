@@ -1016,7 +1016,7 @@ export class ChartBase<T = any> implements IChart {
 
         
         if (this.legendPlacement === Placement.TOP || this.legendPlacement === Placement.BOTTOM) {
-            let currentX = this.isAll ? 20 : 0;
+            let currentX = (this.isAll ? 20 : 0) + this.axisTitleMargin.left;
             const xpositions = [currentX];
 
             legendLabelGroup.selectAll('.legend-label').each((d: LegendItem) => {
@@ -1028,7 +1028,7 @@ export class ChartBase<T = any> implements IChart {
             });
             
             legendItemGroup.attr('transform', (d: LegendItem) => {
-                const addX = this.width - currentX;
+                const addX = this.width + this.margin.left + this.axisTitleMargin.left - currentX;
                 const index = keys.findIndex((key: LegendItem) => d.label === key.label);
                 const x = xpositions[index];
                 return `translate(${addX + x}, ${this.legendPadding})`;

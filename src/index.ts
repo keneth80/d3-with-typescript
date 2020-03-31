@@ -31,6 +31,8 @@ import { BasicTopology, TopologyGroupElement, TopologyData } from './component/s
 
 import { Placement, Align } from './component/chart/chart-configuration';
 
+import { lineData } from './component/mock-data/line-one-field-data';
+
 class SalesModel {
     salesperson: string;
     sales: number;
@@ -106,6 +108,77 @@ const data: Array<SalesModel> = [
     new SalesModel('Charles', 13, 35, '3-Apr-12'),
     new SalesModel('Mary', 29, 67, '26-Mar-12')
 ];
+
+const lineChart = () => {
+    const fields = lineData.map((item: any) => item.member);
+    const members = Array.from(new Set(fields));
+    const series = [];
+    
+    members.map((member: string) => {
+        const filter = (d: any) => {
+            return d.member === member;
+        };
+
+        series.push(
+            new BasicLineSeries({
+                selector: 'basic-line-' + member,
+                dotSelector: 'basic-line-' + member + '-dot',
+                yField: 'value',
+                xField: 'date',
+                dot: {
+                    isCurve: false,
+                    radius: 3
+                },
+                filter
+            })
+        );
+    });
+
+    const basicChart: BasicChart = new BasicChart({
+        selector: '#linechart',
+        legend: {
+            placement: Placement.TOP,
+            isCheckBox: false,
+            isAll: false
+        },
+        // data: [],
+        data: lineData.map((item: any) => {
+            item.date = new Date(item.time)
+            return item;
+        }),
+        // margin: {
+        //     top: 30,
+        //     bottom: 30,
+        //     left: 40,
+        //     right: 20
+        // },
+        isResize: 'Y',
+        axes: [
+            {
+                field: 'date',
+                type: 'time',
+                placement: Placement.BOTTOM,
+                tickFormat: '%H:%M %m-%d',
+                tickSize: 5,
+                title: {
+                    content: 'Date',
+                    align: Align.CENTER
+                },
+            },
+            {
+                field: 'value',
+                type: 'number',
+                placement: Placement.LEFT,
+                min: 0,
+                title: {
+                    content: 'Value',
+                    align: Align.TOP
+                },
+            }
+        ],
+        series
+    }).draw();
+}
 
 const topologyExcute = () => {
     const groups = topologyData.result.frameworks.map((item: any) => {
@@ -255,6 +328,7 @@ const excute = () => {
             isCheckBox: true,
             isAll: true
         },
+        // data: [],
         data: data.map((item: SalesModel) => {
             item.date = parseTime(item.dateStr);
             return item;
@@ -305,7 +379,7 @@ const excute = () => {
                 type: 'number',
                 placement: 'right',
                 min: 0,
-                max: max(data.map((item: SalesModel) => item.assets)),
+                // max: max(data.map((item: SalesModel) => item.assets)),
             }
         ],
         series: [
@@ -805,6 +879,8 @@ const gaugeChart = () => {
         ]
     }).draw();
 }
+
+lineChart();
 
 topologyExcute();
 

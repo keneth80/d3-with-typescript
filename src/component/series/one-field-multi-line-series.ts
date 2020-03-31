@@ -8,7 +8,7 @@ import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
 
-export interface BasicLineSeriesConfiguration extends SeriesConfiguration {
+export interface OneFieldMultiLineSeriesConfiguration extends SeriesConfiguration {
     dotSelector?: string;
     xField: string;
     yField: string;
@@ -18,19 +18,17 @@ export interface BasicLineSeriesConfiguration extends SeriesConfiguration {
     }
     colors?: string[];
     style?: {
-        strokWidth?: number;
         stroke?: string;
         fill?: string;
-    },
-    filter?: any;
+    }
 }
 
-export class BasicLineSeries extends SeriesBase {
+export class OneFieldMultiLineSeries extends SeriesBase {
     protected dotGroup: Selection<BaseType, any, HTMLElement, any>;
 
     private line: any;
 
-    private dotClass: string = 'basic-line-dot';
+    private dotClass: string = 'one-field-multi-line-dot';
 
     private xField: string;
 
@@ -44,11 +42,7 @@ export class BasicLineSeries extends SeriesBase {
 
     private isCurve: boolean = false;
 
-    private dataFilter: any;
-
-    private strokeWidth: number = 2;
-
-    constructor(configuration: BasicLineSeriesConfiguration) {
+    constructor(configuration: OneFieldMultiLineSeriesConfiguration) {
         super();
         if (configuration) {
             if (configuration.selector) {
@@ -72,14 +66,6 @@ export class BasicLineSeries extends SeriesBase {
                 this.radius = configuration.dot.radius || 4;
                 this.isCurve = configuration.dot.isCurve === true ? true : false;
             }
-
-            if (configuration.filter) {
-                this.dataFilter = configuration.filter;
-            }
-
-            if (configuration.style) {
-                this.strokeWidth = configuration.style.strokWidth || this.strokeWidth;
-            }
         }
     }
 
@@ -96,7 +82,6 @@ export class BasicLineSeries extends SeriesBase {
     }
 
     drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number, index: number, color: string) {
-        // TODO : 스케일 정보 가져올 때 필드를 참조해서 가져오도록 한다.
         const x: any = scales.find((scale: Scale) => scale.field === this.xField).scale;
         const y: any = scales.find((scale: Scale) => scale.field === this.yField).scale;
 
@@ -119,18 +104,13 @@ export class BasicLineSeries extends SeriesBase {
             this.line.curve(curveMonotoneX); // apply smoothing to the line
         }
 
-        const lineData = [!this.dataFilter ? chartData : chartData.filter((item: any) => this.dataFilter(item))];
-
-        console.log('lineData : ', lineData);
-
         this.mainGroup.selectAll(`.${this.selector}`)
-            .data(lineData)
+            .data([chartData])
                 .join(
                     (enter) => enter.append('path').attr('class', this.selector),
                     (update) => update,
                     (exit) => exit.remove
                 )
-                .style('stroke-width', this.strokeWidth)
                 .style('stroke', color)
                 .style('fill', 'none')
                 .attr('d', this.line);
@@ -148,9 +128,8 @@ export class BasicLineSeries extends SeriesBase {
                         (update) => update,
                         (exit) => exit.remove
                     )
-                    .style('stroke-width', this.radius / 2)
-                    .style('stroke', (d: any) => color)
-                    .style('fill', '#fff')
+                    .style('stroke', '#fff')
+                    .style('fill', (d: any) => color)
                     .attr('cx', (data: any, i) => { return x(data[this.xField]) + padding; })
                     .attr('cy', (data: any) => { return y(data[this.yField]); })
                     .attr('r', this.radius);
