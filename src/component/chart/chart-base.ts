@@ -1,4 +1,4 @@
-import '../../chart.css';
+import './chart.css';
 
 import { min, max, extent } from 'd3-array';
 import { timeSecond } from 'd3-time';

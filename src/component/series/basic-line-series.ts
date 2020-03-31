@@ -125,8 +125,6 @@ export class BasicLineSeries extends SeriesBase {
 
         const lineData = [!this.dataFilter ? chartData : chartData.filter((item: any) => this.dataFilter(item))];
 
-        console.log('lineData : ', lineData);
-
         this.mainGroup.selectAll(`.${this.selector}`)
             .data(lineData)
                 .join(
