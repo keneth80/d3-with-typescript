@@ -1,7 +1,5 @@
 import { Selection, BaseType, select, event } from 'd3-selection';
 import { line, curveMonotoneX } from 'd3-shape';
-import { scaleOrdinal } from 'd3-scale';
-import { schemeCategory10 } from 'd3-scale-chromatic';
 import { format } from 'd3-format';
 import { transition } from 'd3-transition';
 
@@ -10,7 +8,7 @@ import { Subject, Observable } from 'rxjs';
 import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
-import { colorDarker, textBreak } from '../chart/util/d3-svg-util';
+import { textBreak } from '../chart/util/d3-svg-util';
 
 export interface BasicLineSeriesConfiguration extends SeriesConfiguration {
     dotSelector?: string;
@@ -20,11 +18,10 @@ export interface BasicLineSeriesConfiguration extends SeriesConfiguration {
         radius?: number,
         isCurve: boolean // default : false
     }
-    colors?: string[];
     style?: {
         strokWidth?: number;
-        stroke?: string;
-        fill?: string;
+        // stroke?: string;
+        // fill?: string;
     },
     filter?: any;
     animation?: boolean;
@@ -43,13 +40,7 @@ export class BasicLineSeries extends SeriesBase {
 
     private yField: string;
 
-    private isDot: boolean = false;
-
-    private colors: string[] = [];
-
-    private radius: number = 4;
-
-    private isCurve: boolean = false;
+    private config: BasicLineSeriesConfiguration;
 
     private dataFilter: any;
 
@@ -63,6 +54,7 @@ export class BasicLineSeries extends SeriesBase {
 
     constructor(configuration: BasicLineSeriesConfiguration) {
         super();
+        this.config = configuration;
         if (configuration) {
             if (configuration.selector) {
                 this.selector = configuration.selector;
@@ -82,12 +74,6 @@ export class BasicLineSeries extends SeriesBase {
 
             if (configuration.yField) {
                 this.yField = configuration.yField;
-            }
-
-            if (configuration.dot) {
-                this.isDot = true;
-                this.radius = configuration.dot.radius || 4;
-                this.isCurve = configuration.dot.isCurve === true ? true : false;
             }
 
             if (configuration.filter) {
@@ -125,7 +111,7 @@ export class BasicLineSeries extends SeriesBase {
         
         if (this.isAnimation) {
             this.mainGroup.attr('transform', `translate(${-width}, 0)`);
-            if (this.isDot) {
+            if (this.config.dot) {
                 this.dotGroup.attr('transform', `translate(${-width}, 0)`);
             }
         }
@@ -148,7 +134,7 @@ export class BasicLineSeries extends SeriesBase {
                 return y(data[this.yField]); 
             }); // set the y values for the line generator
 
-        if (this.isCurve) {
+        if (this.config.dot && this.config.dot.isCurve) {
             this.line.curve(curveMonotoneX); // apply smoothing to the line
         }
 
@@ -166,7 +152,8 @@ export class BasicLineSeries extends SeriesBase {
                 .style('fill', 'none')
                 .attr('d', this.line);
 
-        if (this.isDot) {
+        if (this.config.dot) {
+            const radius = (this.config.dot.radius || 4);
             const dots = this.dotGroup.selectAll(`.${this.dotClass}`)
                 .data(lineData)
                     .join(
@@ -179,16 +166,16 @@ export class BasicLineSeries extends SeriesBase {
                         (update) => update,
                         (exit) => exit.remove
                     )
-                    .style('stroke-width', this.radius / 2)
+                    .style('stroke-width', radius / 2)
                     .style('stroke', color)
                     .style('fill', '#fff')
                     .attr('cx', (data: any, i) => { return x(data[this.xField]) + padding; })
                     .attr('cy', (data: any) => { return y(data[this.yField]); })
-                    .attr('r', this.radius);
+                    .attr('r', radius);
             if (this.chartBase.tooltip) {
                 dots
                     .on('mouseover', (d: any, i, nodeList: any) => {
-                        select(nodeList[i]).attr('r', this.radius * 2);
+                        select(nodeList[i]).attr('r', radius * 2);
                             // .style('fill', () => colorDarker(color, 2)); // point
 
                         this.tooltipGroup = this.chartBase.showTooltip();
@@ -196,7 +183,7 @@ export class BasicLineSeries extends SeriesBase {
                     })
                     .on('mouseout', (d: any, i, nodeList: any) => {
                         select(nodeList[i])
-                            .attr('r', this.radius) // point
+                            .attr('r', radius) // point
                             // .style('stroke', null)
                             // .style('stroke-width', null);
 
@@ -217,7 +204,7 @@ export class BasicLineSeries extends SeriesBase {
                         
                         let xPosition = event.x;
                         // let yPosition = event.offsetY + this.chartBase.chartMargin.top;
-                        let yPosition = event.offsetY + this.radius * 2;
+                        let yPosition = event.offsetY + radius * 2;
                         if (xPosition + textWidth > width) {
                             xPosition = xPosition - textWidth;
                         }
@@ -237,14 +224,14 @@ export class BasicLineSeries extends SeriesBase {
 
     select(displayName: string, isSelected: boolean) {
         this.mainGroup.selectAll(`.${this.selector}`).style('opacity', isSelected ? null : 0.4);
-        if (this.isDot) {
+        if (this.config.dot) {
             this.dotGroup.selectAll(`.${this.dotClass}`).style('opacity', isSelected ? null : 0.4);
         }
     }
 
     hide(displayName: string, isHide: boolean) {
         this.mainGroup.selectAll(`.${this.selector}`).style('opacity', !isHide ? null : 0);
-        if (this.isDot) {
+        if (this.config.dot) {
             this.dotGroup.selectAll(`.${this.dotClass}`).style('opacity', !isHide ? null : 0);
         }
     }
