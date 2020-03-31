@@ -3,6 +3,7 @@ import { line, curveMonotoneX } from 'd3-shape';
 import { scaleOrdinal } from 'd3-scale';
 import { schemeCategory10 } from 'd3-scale-chromatic';
 import { format } from 'd3-format';
+import { transition } from 'd3-transition';
 
 import { Subject, Observable } from 'rxjs';
 
@@ -26,6 +27,7 @@ export interface BasicLineSeriesConfiguration extends SeriesConfiguration {
         fill?: string;
     },
     filter?: any;
+    animation?: boolean;
 }
 
 export class BasicLineSeries extends SeriesBase {
@@ -54,6 +56,10 @@ export class BasicLineSeries extends SeriesBase {
     private strokeWidth: number = 2;
 
     private numberFmt: any;
+
+    private isAnimation: boolean = false;
+
+    private transition: any;
 
     constructor(configuration: BasicLineSeriesConfiguration) {
         super();
@@ -91,9 +97,16 @@ export class BasicLineSeries extends SeriesBase {
             if (configuration.style) {
                 this.strokeWidth = configuration.style.strokWidth || this.strokeWidth;
             }
+
+            if (configuration.hasOwnProperty('animation')) {
+                this.isAnimation = configuration.animation;
+            }
         }
 
         this.numberFmt = format(',d');
+
+        this.transition = transition().delay(500)
+        .duration(1000);
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
@@ -109,7 +122,14 @@ export class BasicLineSeries extends SeriesBase {
     }
 
     drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number, index: number, color: string) {
-        console.log('drawSeries : ', index, color, this.displayName);
+        
+        if (this.isAnimation) {
+            this.mainGroup.attr('transform', `translate(${-width}, 0)`);
+            if (this.isDot) {
+                this.dotGroup.attr('transform', `translate(${-width}, 0)`);
+            }
+        }
+
         const x: any = scales.find((scale: Scale) => scale.field === this.xField).scale;
         const y: any = scales.find((scale: Scale) => scale.field === this.yField).scale;
 
@@ -206,8 +226,12 @@ export class BasicLineSeries extends SeriesBase {
                             .attr('width', textWidth)
                             .attr('height', textHeight);
                     });
-            }    
-            
+            }   
+            this.dotGroup.transition(this.transition).attr('transform', `translate(0, 0)`);
+        }
+
+        if (this.isAnimation) {
+            this.mainGroup.transition(this.transition).attr('transform', `translate(0, 0)`);
         }
     }
 

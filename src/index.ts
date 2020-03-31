@@ -122,6 +122,7 @@ const lineChart = () => {
         series.push(
             new BasicLineSeries({
                 selector: 'basic-line-' + member,
+                animation: true,
                 displayName: member,
                 dotSelector: 'basic-line-' + member + '-dot',
                 yField: 'value',
@@ -159,6 +160,7 @@ const lineChart = () => {
                 placement: Placement.BOTTOM,
                 tickFormat: '%H:%M %m-%d',
                 tickSize: 5,
+                isGridLine: true,
                 title: {
                     content: 'Date',
                     align: Align.CENTER
