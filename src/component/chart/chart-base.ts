@@ -230,7 +230,7 @@ export class ChartBase<T = any> implements IChart {
 
         this.svg = select(configuration.selector);
 
-        if (!this.svg) {
+        if (!this.svg.node()) {
             if (console && console.log) {
                 console.log('is not svg!');
             }
