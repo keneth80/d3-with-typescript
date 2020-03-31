@@ -110,7 +110,7 @@ export class ChartBase<T = any> implements IChart {
     protected defaultAxisLabelStyle: any = {
         font: {
             family: 'Arial, Helvetica, sans-serif',
-            size: 10,
+            size: 12,
             color: '#000'
         }
     }
@@ -118,7 +118,7 @@ export class ChartBase<T = any> implements IChart {
     protected defaultAxisTitleStyle: any = {
         font: {
             family: 'Arial, Helvetica, sans-serif',
-            size: 12,
+            size: 14,
             color: '#000'
         }
     };

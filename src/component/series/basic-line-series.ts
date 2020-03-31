@@ -55,6 +55,10 @@ export class BasicLineSeries extends SeriesBase {
                 this.selector = configuration.selector;
             }
 
+            if (configuration.displayName) {
+                this.displayName = configuration.displayName;
+            }
+
             if (configuration.dotSelector) {
                 this.dotClass = configuration.dotSelector;
             }

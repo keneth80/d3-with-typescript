@@ -122,6 +122,7 @@ const lineChart = () => {
         series.push(
             new BasicLineSeries({
                 selector: 'basic-line-' + member,
+                displayName: member,
                 dotSelector: 'basic-line-' + member + '-dot',
                 yField: 'value',
                 xField: 'date',
