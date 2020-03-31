@@ -1,12 +1,15 @@
-import { Selection, BaseType } from 'd3-selection';
+import { Selection, BaseType, select, event } from 'd3-selection';
 import { line, curveMonotoneX } from 'd3-shape';
 import { scaleOrdinal } from 'd3-scale';
 import { schemeCategory10 } from 'd3-scale-chromatic';
+import { format } from 'd3-format';
+
 import { Subject, Observable } from 'rxjs';
 
 import { Scale } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
+import { colorDarker, textBreak } from '../chart/util/d3-svg-util';
 
 export interface BasicLineSeriesConfiguration extends SeriesConfiguration {
     dotSelector?: string;
@@ -28,6 +31,8 @@ export interface BasicLineSeriesConfiguration extends SeriesConfiguration {
 export class BasicLineSeries extends SeriesBase {
     protected dotGroup: Selection<BaseType, any, HTMLElement, any>;
 
+    private tooltipGroup: Selection<BaseType, any, HTMLElement, any>;
+
     private line: any;
 
     private dotClass: string = 'basic-line-dot';
@@ -47,6 +52,8 @@ export class BasicLineSeries extends SeriesBase {
     private dataFilter: any;
 
     private strokeWidth: number = 2;
+
+    private numberFmt: any;
 
     constructor(configuration: BasicLineSeriesConfiguration) {
         super();
@@ -85,6 +92,8 @@ export class BasicLineSeries extends SeriesBase {
                 this.strokeWidth = configuration.style.strokWidth || this.strokeWidth;
             }
         }
+
+        this.numberFmt = format(',d');
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
@@ -100,7 +109,7 @@ export class BasicLineSeries extends SeriesBase {
     }
 
     drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number, index: number, color: string) {
-        // TODO : 스케일 정보 가져올 때 필드를 참조해서 가져오도록 한다.
+        console.log('drawSeries : ', index, color, this.displayName);
         const x: any = scales.find((scale: Scale) => scale.field === this.xField).scale;
         const y: any = scales.find((scale: Scale) => scale.field === this.yField).scale;
 
@@ -123,10 +132,10 @@ export class BasicLineSeries extends SeriesBase {
             this.line.curve(curveMonotoneX); // apply smoothing to the line
         }
 
-        const lineData = [!this.dataFilter ? chartData : chartData.filter((item: any) => this.dataFilter(item))];
+        const lineData = !this.dataFilter ? chartData : chartData.filter((item: any) => this.dataFilter(item));
 
         this.mainGroup.selectAll(`.${this.selector}`)
-            .data(lineData)
+            .data([lineData])
                 .join(
                     (enter) => enter.append('path').attr('class', this.selector),
                     (update) => update,
@@ -138,8 +147,8 @@ export class BasicLineSeries extends SeriesBase {
                 .attr('d', this.line);
 
         if (this.isDot) {
-            this.dotGroup.selectAll(`.${this.dotClass}`)
-                .data(chartData)
+            const dots = this.dotGroup.selectAll(`.${this.dotClass}`)
+                .data(lineData)
                     .join(
                         (enter) => enter.append('circle').attr('class', this.dotClass)
                             .on('click', (data: any) => {
@@ -151,11 +160,54 @@ export class BasicLineSeries extends SeriesBase {
                         (exit) => exit.remove
                     )
                     .style('stroke-width', this.radius / 2)
-                    .style('stroke', (d: any) => color)
+                    .style('stroke', color)
                     .style('fill', '#fff')
                     .attr('cx', (data: any, i) => { return x(data[this.xField]) + padding; })
                     .attr('cy', (data: any) => { return y(data[this.yField]); })
                     .attr('r', this.radius);
+            if (this.chartBase.tooltip) {
+                dots
+                    .on('mouseover', (d: any, i, nodeList: any) => {
+                        select(nodeList[i]).attr('r', this.radius * 2);
+                            // .style('fill', () => colorDarker(color, 2)); // point
+
+                        this.tooltipGroup = this.chartBase.showTooltip();
+                        select(nodeList[i]).classed('tooltip', true);
+                    })
+                    .on('mouseout', (d: any, i, nodeList: any) => {
+                        select(nodeList[i])
+                            .attr('r', this.radius) // point
+                            // .style('stroke', null)
+                            // .style('stroke-width', null);
+
+                        this.chartBase.hideTooltip();
+                        select(nodeList[i]).classed('tooltip', false);
+                    })
+                    .on('mousemove', (d: any, i: number, nodeList: any) => {
+                        const textElement: any = this.tooltipGroup.select('text').attr('dy', '0em').text(
+                            this.chartBase.tooltip.tooltipTextParser(d)
+                        );
+
+                        textBreak(textElement, '\n');
+
+                        const parseTextNode = textElement.node().getBoundingClientRect();
+
+                        const textWidth = parseTextNode.width + 5;
+                        const textHeight = parseTextNode.height + 5;
+                        
+                        let xPosition = event.x;
+                        // let yPosition = event.offsetY + this.chartBase.chartMargin.top;
+                        let yPosition = event.offsetY + this.radius * 2;
+                        if (xPosition + textWidth > width) {
+                            xPosition = xPosition - textWidth;
+                        }
+                        this.tooltipGroup.attr('transform', `translate(${xPosition}, ${yPosition})`)
+                            .selectAll('rect')
+                            .attr('width', textWidth)
+                            .attr('height', textHeight);
+                    });
+            }    
+            
         }
     }
 

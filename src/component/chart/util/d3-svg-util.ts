@@ -94,6 +94,41 @@ export const textWrapping = (text: any, width: number) => {
     });
 }
 
+export const textBreak = (target: any, pattern: any = /\s+/) => { // /(\n|\r\n)/g
+    target.each((d: any, index: number, node: any) => {
+        
+        const text = select(node[index]);
+        let line = [];
+        const words = text.text().split(pattern).reverse();
+        // const words = text.text().split('').reverse();
+        let word = null;
+        let lineNumber = 0;
+        const lineHeight = 1.1; // ems
+        const x = text.attr('x') || 0;
+        const y = text.attr('y') || 0;
+        const dy = parseFloat(text.attr('dy') || '0');
+        let tspan = text.text(null)
+                        .append('tspan')
+                        .attr('x', x)
+                        .attr('y', y)
+                        .attr('dy', dy + 'em');
+        while (word = words.pop()) {
+            line.push(word);
+            tspan.text(line.join(''));
+            line.pop();
+            tspan.text(line.join(''));
+            line = [word];
+            // line.length = 0;
+            // line.concat([word]);
+            tspan = text.append('tspan')
+                        .attr('x', x)
+                        .attr('y', y)
+                        .attr('dy', ++lineNumber * lineHeight + dy + 'em')
+                        .text(word);
+        }
+    });
+}
+
 export const getOsName = () => {
     let OSName = 'Unknown';
     // if (window.navigator.userAgent.indexOf('Windows NT 10.0')!= -1) OSName='Windows 10';

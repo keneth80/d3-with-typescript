@@ -13,9 +13,9 @@ import { fromEvent, Subscription, Subject, of, Observable, Observer } from 'rxjs
 import { debounceTime, delay } from 'rxjs/operators';
 
 import { IChart } from './chart.interface';
-import { ChartConfiguration, Axis, Margin, Placement, ChartTitle, ScaleType, Align, AxisTitle } from './chart-configuration';
+import { ChartConfiguration, Axis, Margin, Placement, ChartTitle, ScaleType, Align, AxisTitle, ChartTooltip } from './chart-configuration';
 import { ISeries } from './series.interface';
-import { guid, textWrapping, getTextWidth, getMaxText, drawSvgCheckBox, getAxisByPlacement } from './util/d3-svg-util';
+import { guid, textWrapping, getTextWidth, getMaxText, drawSvgCheckBox, getAxisByPlacement, getTransformByArray } from './util/d3-svg-util';
 import { IFunctions } from './functions.interface';
 
 export interface ISeriesConfiguration {
@@ -208,7 +208,19 @@ export class ChartBase<T = any> implements IChart {
     }
 
     get chartMargin(): any {
-        return this.margin;
+        const transform: Array<string> = getTransformByArray(this.mainGroup.attr('transform'));
+        const left = +transform[0];
+        const top = +transform[1];
+        const right = this.svgWidth - (left + this.width);
+        const bottom = this.svgHeight - (top + this.height);
+        
+        return {
+            left, top, right, bottom
+        };
+    }
+
+    get tooltip(): ChartTooltip {
+        return this.config.tooltip;
     }
 
     getColorBySeriesIndex(index: number): string {
@@ -304,14 +316,13 @@ export class ChartBase<T = any> implements IChart {
                 (update) => update,
                 (exit) => exit.remove()
             )
-            .attr('rx', 5)
-            .attr('ry', 5)
+            .attr('rx', 3)
+            .attr('ry', 3)
             .attr('x', 0)
             .attr('y', 0)
             .attr('width', 60)
             .attr('height', 20)
-            .attr('fill', 'white')
-            .style('stroke', '#000')
+            .attr('fill', '#111')
             .style('fill-opacity', 0.6);
 
         this.tooltipGroup.selectAll('.tooltip-text')
@@ -324,7 +335,8 @@ export class ChartBase<T = any> implements IChart {
             .attr('x', 5)
             .attr('dy', '1.2em')
             .style('text-anchor', 'start')
-            .attr('font-size', '12px')
+            .style('fill', '#fff')
+            .attr('font-size', '16px')
             .attr('font-weight', 'bold');
     }
 

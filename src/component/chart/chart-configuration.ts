@@ -76,8 +76,14 @@ export interface ChartLegend {
     // shape?: string;
 }
 
+export interface ChartTooltip {
+    tooltipTextParser: any;
+}
+
 export interface ChartConfiguration<T = any> {
     selector: string;
+
+    tooltip?: ChartTooltip;
 
     title?: ChartTitle; // chart title
 
