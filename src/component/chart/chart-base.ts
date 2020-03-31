@@ -1257,13 +1257,22 @@ export class ChartBase<T = any> implements IChart {
             } else {
                 scale = scaleLinear().range(range);
                 
-                if (!axis.max) {
+                if (!axis.hasOwnProperty('max')) {
                     axis.max = max(this.data.map((item: T) => parseFloat(item[axis.field])));
+                    axis.max += Math.round(axis.max * 0.05);
                 }
 
-                if (!axis.min) {
+                if (!axis.hasOwnProperty('min')) {
                     axis.min = min(this.data.map((item: T) => parseFloat(item[axis.field])));
                 }
+
+                // if (!axis.max) {
+                //     axis.max = max(this.data.map((item: T) => parseFloat(item[axis.field])));
+                // }
+
+                // if (!axis.min) {
+                //     axis.min = min(this.data.map((item: T) => parseFloat(item[axis.field])));
+                // }
 
                 minValue = axis.min;
                 maxValue = axis.max;
