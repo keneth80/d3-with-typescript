@@ -141,11 +141,11 @@ const lineChart = () => {
             isCheckBox: false,
             isAll: false
         },
-        // data: [],
-        data: lineData.map((item: any) => {
-            item.date = new Date(item.time)
-            return item;
-        }),
+        data: [],
+        // data: lineData.map((item: any) => {
+        //     item.date = new Date(item.time)
+        //     return item;
+        // }),
         // margin: {
         //     top: 30,
         //     bottom: 30,
@@ -177,7 +177,11 @@ const lineChart = () => {
             }
         ],
         series
-    }).draw();
+    });
+    basicChart.chartData = lineData.map((item: any) => {
+        item.date = new Date(item.time)
+        return item;
+    });
 }
 
 const topologyExcute = () => {

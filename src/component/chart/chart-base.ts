@@ -204,6 +204,7 @@ export class ChartBase<T = any> implements IChart {
 
     set chartData(value: Array<T>) {
         this.data = value;
+        this.draw();
     }
 
     get chartMargin(): any {
