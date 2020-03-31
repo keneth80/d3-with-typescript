@@ -202,7 +202,7 @@ export class BasicLineSeries extends SeriesBase {
                         const textWidth = parseTextNode.width + 5;
                         const textHeight = parseTextNode.height + 5;
                         
-                        let xPosition = event.x;
+                        let xPosition = event.offsetX + radius * 2;
                         // let yPosition = event.offsetY + this.chartBase.chartMargin.top;
                         let yPosition = event.offsetY + radius * 2;
                         if (xPosition + textWidth > width) {
