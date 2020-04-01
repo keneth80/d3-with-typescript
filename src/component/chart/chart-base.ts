@@ -15,7 +15,7 @@ import { debounceTime, delay } from 'rxjs/operators';
 import { IChart } from './chart.interface';
 import { ChartConfiguration, Axis, Margin, Placement, ChartTitle, ScaleType, Align, AxisTitle, ChartTooltip } from './chart-configuration';
 import { ISeries } from './series.interface';
-import { guid, textWrapping, getTextWidth, getMaxText, drawSvgCheckBox, getAxisByPlacement, getTransformByArray } from './util/d3-svg-util';
+import { guid, textWrapping, getTextWidth, getMaxText, drawSvgCheckBox, getAxisByPlacement, getTransformByArray, getTextWidthByComputedTextLength } from './util/d3-svg-util';
 import { IFunctions } from './functions.interface';
 
 export interface ISeriesConfiguration {
@@ -390,14 +390,6 @@ export class ChartBase<T = any> implements IChart {
                 orientedScale = axisBottom(scale.scale);
             }
 
-            // if (scale.isGridLine) {
-            //     if (scale.orient === Placement.RIGHT || scale.orient === Placement.LEFT) {
-            //         orientedScale.tickSize(-this.width);
-            //     } else {
-            //         orientedScale.tickSize(-this.height);
-            //     }
-            // }
-
             if (scale.type === ScaleType.NUMBER) {
                 if (scale.tickFormat) {
                     orientedScale.ticks(null, scale.tickFormat);
@@ -406,10 +398,10 @@ export class ChartBase<T = any> implements IChart {
                 if (scale.tickFormat) {
                     orientedScale.tickFormat(timeFormat(scale.tickFormat));
                 }
+            }
 
-                if (scale.tickSize) {
-                    orientedScale.ticks(scale.tickSize);
-                }
+            if (scale.tickSize) {
+                orientedScale.ticks(scale.tickSize);
             }
             
             if (scale.visible) {
@@ -563,9 +555,10 @@ export class ChartBase<T = any> implements IChart {
                     x = (this.isTitle && this.titlePlacement === Placement.RIGHT ? this.titleContainerSize.width : 0);
                     translate = `translate(${x}, ${y})`;
                 } else if (this.legendPlacement === Placement.TOP) {
-                    translate = `translate(${this.margin.left}, ${this.titleContainerSize.height + this.legendPadding})`;
+                    translate = `translate(0, ${this.titleContainerSize.height + this.legendPadding})`;
+                    // translate = `translate(${this.margin.left}, ${this.titleContainerSize.height + this.legendPadding})`;
                 } else {
-                    x = this.margin.left;
+                    // x = this.margin.left;
                     let y = (this.margin.top + this.margin.bottom) + (this.axisTitleMargin.top + this.axisTitleMargin.bottom) + height;
                     if (this.isTitle && this.titlePlacement === Placement.TOP) {
                         y += this.titleContainerSize.height;
@@ -1035,30 +1028,38 @@ export class ChartBase<T = any> implements IChart {
 
         
         if (this.legendPlacement === Placement.TOP || this.legendPlacement === Placement.BOTTOM) {
-            let currentX = (this.isAll ? 20 : 0) + this.axisTitleMargin.left;
+            let currentX = (this.isAll ? 35 + this.legendPadding : this.legendPadding);
+            let lastLabelWidth = 0;
             const xpositions = [currentX];
 
-            legendLabelGroup.selectAll('.legend-label').each((d: LegendItem) => {
+            legendLabelGroup.selectAll('.legend-label').each((d: LegendItem, i: number, node: any) => {
                 const index = keys.findIndex((key: LegendItem) => d.label === key.label);
-                const textWidth = Math.round(getTextWidth(d.label, this.defaultLegendStyle.font.size, this.defaultLegendStyle.font.family));
-                const legendItemWidth = this.legendItemSize.width + this.legendPadding * 2 + textWidth + (this.isCheckBox ? checkboxPadding : 0);
-                currentX = currentX + legendItemWidth;
+                // const textWidth = Math.round(getTextWidth(d.label, this.defaultLegendStyle.font.size, this.defaultLegendStyle.font.family));
+                const textWidth = getTextWidthByComputedTextLength(node[i]);
+                const legendItemWidth = this.legendItemSize.width + this.legendPadding * 2 + textWidth + (this.isCheckBox === true ? checkboxPadding : 0);
+                currentX += legendItemWidth;
                 xpositions.push(currentX);
             });
-            
+
             legendItemGroup.attr('transform', (d: LegendItem) => {
-                const addX = this.width + this.margin.left + this.axisTitleMargin.left - currentX;
                 const index = keys.findIndex((key: LegendItem) => d.label === key.label);
                 const x = xpositions[index];
-                return `translate(${addX + x}, ${this.legendPadding})`;
+                return `translate(${x}, ${this.legendPadding})`;
             });
 
             if (this.isAll) {
                 this.legendGroup.selectAll('.legend-all-group').attr('transform', (d: LegendItem) => {
-                    const addX = this.width - currentX;
-                    return `translate(${addX}, ${this.legendPadding})`;
+                    return `translate(${this.legendPadding}, ${this.legendPadding})`;
                 });
             }
+
+            const legendGroupX = this.svgWidth - (this.legendGroup.node() as any).getBoundingClientRect().width - (this.margin.right + this.legendPadding);
+            const legendGroupTranslate = getTransformByArray(this.legendGroup.attr('transform'));
+
+            // TODO: legend align
+            this.legendGroup.attr('transform', () => {
+                return `translate(${legendGroupX}, ${legendGroupTranslate[1]})`;
+            });
         } else {
             if (this.isAll) {
                 this.legendGroup.selectAll('.legend-all-group').attr('transform', (d: LegendItem) => {

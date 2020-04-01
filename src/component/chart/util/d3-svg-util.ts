@@ -197,6 +197,10 @@ export const getTextWidth = (text: string, fontSize: number, fontFace: string) =
     return width;
 };
 
+export const getTextWidthByComputedTextLength = (text: any) => {
+    return text.getComputedTextLength();
+};
+
 export const getMaxText = (texts: string[] = []) => {
     let maxLength = 0;
     let targetIndex = 0;

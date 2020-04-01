@@ -140,8 +140,8 @@ const lineChart = () => {
         selector: '#linechart',
         legend: {
             placement: Placement.TOP,
-            isCheckBox: false,
-            isAll: false
+            isCheckBox: true,
+            isAll: true
         },
         tooltip: {
             tooltipTextParser: (d: any) => {
@@ -178,6 +178,8 @@ const lineChart = () => {
                 field: 'value',
                 type: 'number',
                 placement: Placement.LEFT,
+                isGridLine: true,
+                tickSize: 5,
                 min: 0,
                 title: {
                     content: 'Value',
@@ -333,7 +335,7 @@ const excute = () => {
             // }
         },
         legend: {
-            placement: Placement.RIGHT,
+            placement: Placement.TOP,
             isCheckBox: true,
             isAll: true
         },
