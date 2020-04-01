@@ -335,7 +335,7 @@ const excute = () => {
             // }
         },
         legend: {
-            placement: Placement.TOP,
+            placement: Placement.RIGHT,
             isCheckBox: true,
             isAll: true
         },
