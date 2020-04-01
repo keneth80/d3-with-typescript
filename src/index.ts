@@ -122,7 +122,7 @@ const lineChart = () => {
         series.push(
             new BasicLineSeries({
                 selector: 'basic-line-' + member,
-                animation: true,
+                // animation: true,
                 displayName: member,
                 dotSelector: 'basic-line-' + member + '-dot',
                 yField: 'value',
@@ -149,7 +149,15 @@ const lineChart = () => {
             }
         },
         data: lineData.map((item: any) => {
-            item.date = new Date(item.time)
+            const newDate = new Date();
+            newDate.setFullYear(item.time.substring(0,4));
+            newDate.setMonth(parseInt(item.time.substring(5,7)) - 1);
+            newDate.setDate(item.time.substring(8,10));
+            newDate.setHours(item.time.substring(11,13));
+            newDate.setMinutes(item.time.substring(14,16));
+            newDate.setSeconds(item.time.substring(17,19));
+            newDate.setMilliseconds(item.time.substring(20,22));
+            item.date = newDate;
             return item;
         }),
         isResize: 'Y',

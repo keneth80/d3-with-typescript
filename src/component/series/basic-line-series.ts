@@ -1,4 +1,4 @@
-import { Selection, BaseType, select, event } from 'd3-selection';
+import { Selection, BaseType, select, event, mouse } from 'd3-selection';
 import { line, curveMonotoneX } from 'd3-shape';
 import { format } from 'd3-format';
 import { transition } from 'd3-transition';
@@ -128,10 +128,12 @@ export class BasicLineSeries extends SeriesBase {
         this.line = line()
             .defined(data => data[this.yField])
             .x((data: any, i) => {
-                return x(data[this.xField]) + padding; 
+                const xposition = x(data[this.xField]) + padding;
+                return xposition; 
             }) // set the x values for the line generator
-            .y((data: any) => { 
-                return y(data[this.yField]); 
+            .y((data: any) => {
+                const yposition = y(data[this.yField]);
+                return yposition; 
             }); // set the y values for the line generator
 
         if (this.config.dot && this.config.dot.isCurve) {
@@ -202,12 +204,20 @@ export class BasicLineSeries extends SeriesBase {
                         const textWidth = parseTextNode.width + 5;
                         const textHeight = parseTextNode.height + 5;
                         
-                        let xPosition = event.offsetX + radius * 2;
+                        const padding = radius * 2 + 5;
+                        let xPosition = event.offsetX + padding;
                         // let yPosition = event.offsetY + this.chartBase.chartMargin.top;
-                        let yPosition = event.offsetY + radius * 2;
+                        let yPosition = event.offsetY + padding;
+
+                        
                         if (xPosition + textWidth > width) {
                             xPosition = xPosition - textWidth;
                         }
+
+                        // const rect = nodeList[index].getBoundingClientRect();
+                        // xPosition = event.pageX - rect.left - nodeList[index].clientLeft - window.pageXOffset + padding;
+                        // yPosition = event.pageY - rect.top - nodeList[index].clientTop - window.pageYOffset + padding;
+
                         this.tooltipGroup.attr('transform', `translate(${xPosition}, ${yPosition})`)
                             .selectAll('rect')
                             .attr('width', textWidth)
