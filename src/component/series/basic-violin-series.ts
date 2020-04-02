@@ -6,7 +6,7 @@ import { scaleLinear } from 'd3-scale';
 import { area, curveCatmullRom } from 'd3-shape';
 
 import { SeriesBase } from '../chart/series-base';
-import { Scale, ContainerSize } from '../chart/chart-base';
+import { Scale, ContainerSize } from '../chart/chart.interface';
 import { SeriesConfiguration } from '../chart/series.interface';
 
 export interface BasicViolinSeriesConfiguration extends SeriesConfiguration {

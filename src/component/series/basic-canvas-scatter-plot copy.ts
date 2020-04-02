@@ -4,7 +4,7 @@ import { min, max } from 'd3-array';
 import { interval, timer } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
-import { Scale, ContainerSize } from '../chart/chart-base';
+import { Scale, ContainerSize } from '../chart/chart.interface';
 import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
 

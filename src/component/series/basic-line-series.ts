@@ -6,7 +6,7 @@ import { easeLinear, easeCircle } from 'd3-ease';
 
 import { Subject, Observable } from 'rxjs';
 
-import { Scale, ContainerSize } from '../chart/chart-base';
+import { Scale, ContainerSize } from '../chart/chart.interface';
 import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
 import { textBreak } from '../chart/util/d3-svg-util';

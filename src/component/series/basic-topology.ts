@@ -2,7 +2,7 @@ import { Selection, select, BaseType, event } from 'd3-selection';
 import { linkHorizontal, linkVertical } from 'd3-shape';
 import { Subject, Observable } from 'rxjs';
 
-import { Scale, ContainerSize } from '../chart/chart-base';
+import { Scale, ContainerSize } from '../chart/chart.interface';
 import { SeriesBase } from '../chart/series-base';
 import { getTransformByArray, wrapTextByRowLimit } from '../chart/util/d3-svg-util';
 import { SeriesConfiguration } from '../chart/series.interface';

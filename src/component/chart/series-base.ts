@@ -1,8 +1,9 @@
 import { Selection, BaseType } from 'd3-selection';
 import { Subject, Observable } from 'rxjs';
 
-import { ChartBase, Scale, ContainerSize } from './chart-base';
+import { ChartBase } from './chart-base';
 import { ISeries, SeriesConfiguration } from './series.interface';
+import { Scale, ContainerSize } from './chart.interface';
 
 export class SeriesBase implements ISeries {
     selector: string;

@@ -5,7 +5,7 @@ import { transition } from 'd3-transition';
 import { quantize } from 'd3-interpolate';
 import { interpolateSpectral } from 'd3-scale-chromatic';
 
-import { Scale, ContainerSize } from '../chart/chart-base';
+import { Scale, ContainerSize } from '../chart/chart.interface';
 import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
 

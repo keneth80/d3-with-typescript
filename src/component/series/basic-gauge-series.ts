@@ -7,7 +7,7 @@ import { interpolateHsl } from 'd3-interpolate';
 import { format } from 'd3-format';
 import { color, rgb } from 'd3-color';
 
-import { Scale, ContainerSize } from '../chart/chart-base';
+import { Scale, ContainerSize } from '../chart/chart.interface';
 import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
 

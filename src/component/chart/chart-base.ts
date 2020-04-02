@@ -12,44 +12,12 @@ import { brushX, brushY } from 'd3-brush';
 import { fromEvent, Subscription, Subject, of, Observable, Observer } from 'rxjs';
 import { debounceTime, delay } from 'rxjs/operators';
 
-import { IChart } from './chart.interface';
+import { IChart, Scale, ContainerSize, LegendItem } from './chart.interface';
 import { ChartConfiguration, Axis, Margin, Placement, ChartTitle, ScaleType, Align, AxisTitle, ChartTooltip, Shape } from './chart-configuration';
 import { ISeries } from './series.interface';
 import { guid, textWrapping, getTextWidth, getMaxText, drawSvgCheckBox, getAxisByPlacement, getTransformByArray, getTextWidthByComputedTextLength, drawLegendColorItemByRect, drawLegendColorItemByCircle, drawLegendColorItemByLine } from './util/d3-svg-util';
 import { IFunctions } from './functions.interface';
 
-export interface ISeriesConfiguration {
-    selector?: string;
-    xField: string;
-    yField: string;
-}
-
-export interface Scale {
-    field: string;
-    orient: string;
-    scale: any;
-    type: string;
-    visible: boolean;
-    tickFormat?: string;
-    tickSize?: number;
-    isGridLine: boolean;
-    isZoom: boolean;
-    min?: number;
-    max?: number;
-    title?: AxisTitle;
-}
-
-export interface ContainerSize {
-    width: number;
-    height: number;
-}
-
-export interface LegendItem {
-    label: string; 
-    selected: boolean;
-    isHide: boolean;
-    shape: string;
-}
 
 export class ChartBase<T = any> implements IChart {
     public isResize: boolean = false;
@@ -423,7 +391,7 @@ export class ChartBase<T = any> implements IChart {
                 this.functionList.map((functionItem: IFunctions) => {
                     functionItem.chartBase = this;
                     functionItem.setSvgElement(this.svg, this.seriesGroup);
-                    functionItem.drawFunctions(this.data, this.scales, this.width, this.height);
+                    functionItem.drawFunctions(this.data, this.scales, {width: this.width, height: this.height});
                 });
             }
         } catch(error) {

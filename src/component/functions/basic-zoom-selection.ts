@@ -1,7 +1,7 @@
 import { Selection, BaseType, select, event } from 'd3-selection';
 import { zoom } from 'd3-zoom';
 
-import { Scale } from '../chart/chart-base';
+import { Scale, ContainerSize } from '../chart/chart.interface';
 import { FunctionsBase } from '../chart/functions-base';
 
 export interface BasicZoomSelectionConfiguration {
@@ -75,7 +75,7 @@ export class BasicZoomSelection extends FunctionsBase {
         }   
     }
 
-    drawFunctions(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {
+    drawFunctions(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
         const x: any = scales.find((scale: Scale) => scale.orient === this.xDirection).scale;
         const y: any = scales.find((scale: Scale) => scale.orient === this.yDirection).scale;
 
@@ -83,8 +83,8 @@ export class BasicZoomSelection extends FunctionsBase {
         Object.assign(this.originScaleY, y);
 
         this.zoomTarget
-            .attr('width', width)
-            .attr('height', height);
+            .attr('width', geometry.width)
+            .attr('height', geometry.height);
 
         this.targetElements = this.mainGroup.select(`.${this.targetGroup}`).selectAll('*');
 
@@ -100,7 +100,7 @@ export class BasicZoomSelection extends FunctionsBase {
         this.mainGroup.call(
             zoom()
             .scaleExtent([0.5, 10])
-            .extent([ [0, 0], [width, height] ]) // initialise the brush area: start at 0,0 and finishes at width,height: it means I select the whole graph area
+            .extent([ [0, 0], [geometry.width, geometry.height] ]) // initialise the brush area: start at 0,0 and finishes at width,height: it means I select the whole graph area
             .on('zoom', updateChart)
         );
     }

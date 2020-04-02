@@ -1,7 +1,8 @@
 import { Selection, BaseType } from 'd3-selection';
 import { Subject, Observable } from 'rxjs';
 
-import { ChartBase, Scale } from './chart-base';
+import { ChartBase } from './chart-base';
+import { Scale, ContainerSize } from '../chart/chart.interface';
 import { IFunctions } from './functions.interface';
 
 export class FunctionsBase implements IFunctions {
@@ -32,7 +33,7 @@ export class FunctionsBase implements IFunctions {
 
     }
 
-    drawFunctions(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {
+    drawFunctions(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
 
     }
 }

@@ -3,7 +3,7 @@ import { select, event, Selection, BaseType } from 'd3-selection';
 import { line } from 'd3-shape';
 import { Placement } from '../chart-configuration';
 import { axisTop, axisLeft, axisRight, axisBottom } from 'd3';
-import { LegendItem } from '../chart-base';
+import { LegendItem } from '../chart.interface';
 
 export const getTransformByArray = (transform: string = 'translate(0, 0)'): Array<string> => {
     const translateString = transform.substring(transform.indexOf('translate('), transform.indexOf(')') + 1);

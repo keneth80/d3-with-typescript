@@ -2,7 +2,7 @@ import { Selection, select, BaseType, mouse, event } from 'd3-selection';
 import { scaleOrdinal, scaleBand } from 'd3-scale';
 import { format } from 'd3-format';
 
-import { Scale, ContainerSize } from '../chart/chart-base';
+import { Scale, ContainerSize } from '../chart/chart.interface';
 import { SeriesBase } from '../chart/series-base';
 import { colorDarker } from '../chart/util/d3-svg-util';
 import { SeriesConfiguration } from '../chart/series.interface';

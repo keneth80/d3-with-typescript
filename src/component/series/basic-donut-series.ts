@@ -7,7 +7,7 @@ import { quantize, interpolate } from 'd3-interpolate';
 import { format } from 'd3-format';
 
 import { colorDarker } from '../chart/util/d3-svg-util';
-import { Scale, ContainerSize } from '../chart/chart-base';
+import { Scale, ContainerSize } from '../chart/chart.interface';
 import { SeriesBase } from '../chart/series-base';
 import { isIE } from '../chart/util/d3-svg-util';
 import { SeriesConfiguration } from '../chart/series.interface';

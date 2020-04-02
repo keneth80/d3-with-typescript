@@ -2,7 +2,7 @@ import { Selection, BaseType, select } from 'd3-selection';
 import { transition } from 'd3-transition';
 
 import { colorDarker } from '../chart/util/d3-svg-util';
-import { Scale, ContainerSize } from '../chart/chart-base';
+import { Scale, ContainerSize } from '../chart/chart.interface';
 import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
 
