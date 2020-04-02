@@ -98,14 +98,6 @@ export class BasicLineSeries extends SeriesBase {
     }
 
     drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
-        
-        // if (this.isAnimation) {
-        //     this.mainGroup.attr('transform', `translate(${-width}, 0)`);
-        //     if (this.config.dot) {
-        //         this.dotGroup.attr('transform', `translate(${-width}, 0)`);
-        //     }
-        // }
-
         const x: any = scales.find((scale: Scale) => scale.field === this.xField).scale;
         const y: any = scales.find((scale: Scale) => scale.field === this.yField).scale;
 
@@ -156,6 +148,13 @@ export class BasicLineSeries extends SeriesBase {
 
         if (this.config.dot) {
             const radius = (this.config.dot.radius || 4);
+            // dot설정이 있을 시 에는 mask 영역 늘리기
+            this.svg.selectAll('defs').selectAll('clipPath').selectAll('rect')
+                .attr('width', geometry.width + (radius * 2 + 2))
+                .attr('height', geometry.height + (radius * 2 + 2))
+                .attr('x', -(radius + 1))
+                .attr('y', -(radius + 1));
+
             const dots = this.dotGroup.selectAll(`.${this.dotClass}`)
                 .data(lineData)
                     .join(

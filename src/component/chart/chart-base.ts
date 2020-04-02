@@ -458,6 +458,7 @@ export class ChartBase<T = any> implements IChart {
                 .append('svg:clipPath')
                     .attr('id', this.maskId)
                     .append('rect')
+                    .attr('clas', 'series-mask')
                     .attr('width', width)
                     .attr('height', height)
                     .attr('x', 0)
