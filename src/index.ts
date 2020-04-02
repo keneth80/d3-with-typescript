@@ -1,5 +1,6 @@
 import './style.css';
 
+import { select } from 'd3-selection';
 import { min, max, quantile, mean, range } from 'd3-array';
 import { randomUniform, randomNormal } from 'd3-random';
 import { scaleOrdinal } from 'd3-scale';
@@ -118,28 +119,46 @@ const lineChart = () => {
         const filter = (d: any) => {
             return d.member === member;
         };
+        const currnetLineSeries = new BasicLineSeries({
+            selector: 'basic-line-' + member,
+            // animation: true,
+            displayName: member,
+            dotSelector: 'basic-line-' + member + '-dot',
+            yField: 'value',
+            xField: 'date',
+            dot: {
+                isCurve: false,
+                radius: 3
+            },
+            filter,
+            animation: true,
+            shape: Shape.LINE
+        });
 
         series.push(
-            new BasicLineSeries({
-                selector: 'basic-line-' + member,
-                // animation: true,
-                displayName: member,
-                dotSelector: 'basic-line-' + member + '-dot',
-                yField: 'value',
-                xField: 'date',
-                dot: {
-                    isCurve: false,
-                    radius: 3
-                },
-                filter,
-                animation: true,
-                shape: Shape.LINE
-            })
+            currnetLineSeries
         );
+
+        currnetLineSeries.$currentItem.subscribe((item: any) => {
+            console.log('select : ', item.event);
+            let x = item.event.offsetX;
+            let y = item.event.offsetY;
+            select('#linechart').select('.event-pointer').attr('transform', `translate(${x}, ${y})`);
+        });
     });
+
     const parseTime = timeFormat('%H:%M:%S %m-%d');
     let basicChart: BasicChart = new BasicChart({
         selector: '#linechart',
+        // title: {
+        //     placement: Placement.TOP,
+        //     content: 'Line Chart',
+        //     // style: {
+        //     //     size: 16,
+        //     //     color: '#ff0000',
+        //     //     font: 'monospace'
+        //     // }
+        // },
         legend: {
             placement: Placement.TOP,
             isCheckBox: true,
@@ -259,6 +278,11 @@ const excute = () => {
     });
     basicLineSeries.$currentItem.subscribe((item: any) => {
         console.log('basicLineSeries.item : ', item);
+        console.log('select : ', item.event);
+        let x = item.event.offsetX;
+        let y = item.event.offsetY;
+        select('#chart').select('.event-pointer').attr('transform', `translate(${x}, ${y})`);
+        
     });
 
     const basicLineSeries2 = new BasicLineSeries({

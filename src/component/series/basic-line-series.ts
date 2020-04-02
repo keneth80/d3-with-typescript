@@ -157,10 +157,14 @@ export class BasicLineSeries extends SeriesBase {
                 .data(lineData)
                     .join(
                         (enter) => enter.append('circle').attr('class', this.dotClass)
-                            .on('click', (data: any) => {
+                            .on('click', (data: any, index: number, nodeList: any) => {
                                 event.preventDefault();
                                 event.stopPropagation();
-                                this.itemClickSubject.next(data);
+                                this.itemClickSubject.next({
+                                    data,
+                                    target: nodeList[index],
+                                    event
+                                });
                             }),
                         (update) => update,
                         (exit) => exit.remove
