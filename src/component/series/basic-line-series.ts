@@ -51,8 +51,6 @@ export class BasicLineSeries extends SeriesBase {
 
     private isAnimation: boolean = false;
 
-    private transition: any;
-
     constructor(configuration: BasicLineSeriesConfiguration) {
         super(configuration);
         this.config = configuration;
