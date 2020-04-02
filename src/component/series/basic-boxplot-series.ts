@@ -28,12 +28,8 @@ export class BasicBoxplotSeries extends SeriesBase {
     private maxWidth: number;
 
     constructor(configuration: BasicBoxplotSeriesConfiguration) {
-        super();
+        super(configuration);
         if (configuration) {
-            if (configuration.selector) {
-                this.selector = configuration.selector;
-            }
-
             if (configuration.xField) {
                 this.xField = configuration.xField;
             }

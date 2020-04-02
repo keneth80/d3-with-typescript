@@ -19,12 +19,8 @@ export class LabelSeries extends SeriesBase {
     private templete: any;
 
     constructor(configuration: LabelSeriesConfiguration) {
-        super();
+        super(configuration);
         if (configuration) {
-            if (configuration.selector) {
-                this.selector = configuration.selector;
-            }
-
             if (configuration.xField) {
                 this.xField = configuration.xField;
             }

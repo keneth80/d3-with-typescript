@@ -53,11 +53,7 @@ export class BasicCanvasScatterPlot extends SeriesBase {
     private dotCheck: any = {};
 
     constructor(configuration: BasicCanvasScatterPlotConfiguration) {
-        super();
-        if (configuration.selector) {
-            this.selector = configuration.selector;
-        }
-
+        super(configuration);
         if (configuration.xField) {
             this.xField = configuration.xField;
         }

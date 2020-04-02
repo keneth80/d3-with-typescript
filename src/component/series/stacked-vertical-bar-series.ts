@@ -30,12 +30,8 @@ export class StackedVerticalBarSeries extends SeriesBase {
     private numberFmt: any;
 
     constructor(configuration: StackedVerticalBarSeriesConfiguration) {
-        super();
+        super(configuration);
         if (configuration) {
-            if (configuration.selector) {
-                this.selector = configuration.selector;
-            }
-
             if (configuration.xField) {
                 this.xField = configuration.xField;
             }

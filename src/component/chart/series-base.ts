@@ -2,12 +2,14 @@ import { Selection, BaseType } from 'd3-selection';
 import { Subject, Observable } from 'rxjs';
 
 import { ChartBase, Scale } from './chart-base';
-import { ISeries } from './series.interface';
+import { ISeries, SeriesConfiguration } from './series.interface';
 
 export class SeriesBase implements ISeries {
     selector: string;
 
-    displayName: string;
+    displayName: string; // legend 출력시 출력 명칭
+
+    shape: string; // legend 출력 시 색상아이템의 type
 
     protected svg: Selection<BaseType, any, HTMLElement, any>;
 
@@ -17,7 +19,19 @@ export class SeriesBase implements ISeries {
 
     private chart: ChartBase;
 
-    constructor() { }
+    constructor(configuration: SeriesConfiguration) {
+        if (configuration.selector) {
+            this.selector = configuration.selector;
+        }
+
+        if (configuration.displayName) {
+            this.displayName = configuration.displayName;
+        }
+
+        if (configuration.shape) {
+            this.shape = configuration.shape;
+        }
+    }
 
     set chartBase(value: ChartBase) {
         this.chart = value;
@@ -36,7 +50,7 @@ export class SeriesBase implements ISeries {
     };
 
     hide(displayName: string, isHide: boolean) {
-        
+
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 

@@ -4,12 +4,15 @@ import { Scale, ChartBase } from './chart-base';
 export interface SeriesConfiguration {
     selector?: string;
     displayName?: string;
+    shape?: string;
 }
 
 export interface ISeries<T = any> {
     chartBase: ChartBase;
 
-    displayName: string;
+    displayName: string; // legend 출력시 출력 명칭
+
+    shape: string; // legend 출력 시 색상아이템의 type
 
     selector: string;
 

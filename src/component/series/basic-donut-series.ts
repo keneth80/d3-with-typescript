@@ -38,12 +38,8 @@ export class BasicDonutSeries extends SeriesBase {
     private numberFmt: any;
 
     constructor(configuration: BasicDonutSeriesConfiguration) {
-        super();
+        super(configuration);
         if (configuration) {
-            if (configuration.selector) {
-                this.selector = configuration.selector;
-            }
-
             if (configuration.categoryField) {
                 this.categoryField = configuration.categoryField;
             }

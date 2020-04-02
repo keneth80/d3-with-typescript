@@ -30,12 +30,8 @@ export class BasicPieSeries extends SeriesBase {
     private isLabel: boolean = true;
 
     constructor(configuration: BasicPieSeriesConfiguration) {
-        super();
+        super(configuration);
         if (configuration) {
-            if (configuration.selector) {
-                this.selector = configuration.selector;
-            }
-
             if (configuration.categoryField) {
                 this.categoryField = configuration.categoryField;
             }

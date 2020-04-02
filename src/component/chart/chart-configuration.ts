@@ -22,6 +22,12 @@ export enum Align {
     BOTTOM = 'bottom'
 }
 
+export enum Shape {
+    LINE = 'line',
+    RECT = 'rect',
+    CIRCLE = 'circle'
+}
+
 export interface AxisTitle {
     align: string; // top, bottom, left, right, center default: center
     content: string; // title text

@@ -20,12 +20,8 @@ export class BasicAreaSeries extends SeriesBase {
     private yField: string;
 
     constructor(configuration: BasicAreaSeriesConfiguration) {
-        super();
+        super(configuration);
         if (configuration) {
-            if (configuration.selector) {
-                this.selector = configuration.selector;
-            }
-
             if (configuration.xField) {
                 this.xField = configuration.xField;
             }

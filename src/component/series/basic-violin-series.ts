@@ -22,12 +22,8 @@ export class BasicViolinSeries extends SeriesBase {
     private histogram: any;
 
     constructor(configuration: BasicViolinSeriesConfiguration) {
-        super();
+        super(configuration);
         if (configuration) {
-            if (configuration.selector) {
-                this.selector = configuration.selector;
-            }
-
             if (configuration.xField) {
                 this.xField = configuration.xField;
             }

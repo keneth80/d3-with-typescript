@@ -28,12 +28,8 @@ export class GroupedVerticalBarSeries extends SeriesBase {
     private numberFmt: any;
 
     constructor(configuration: GroupedVerticalBarSeriesConfiguration) {
-        super();
+        super(configuration);
         if (configuration) {
-            if (configuration.selector) {
-                this.selector = configuration.selector;
-            }
-
             if (configuration.xField) {
                 this.xField = configuration.xField;
             }

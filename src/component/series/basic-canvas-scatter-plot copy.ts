@@ -51,11 +51,7 @@ export class BasicCanvasScatterPlot extends SeriesBase {
     private isZoom: boolean = false;
 
     constructor(configuration: BasicCanvasScatterPlotConfiguration) {
-        super();
-        if (configuration.selector) {
-            this.selector = configuration.selector;
-        }
-
+        super(configuration);
         if (configuration.xField) {
             this.xField = configuration.xField;
         }

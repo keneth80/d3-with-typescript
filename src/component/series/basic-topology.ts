@@ -98,12 +98,7 @@ export class BasicTopology extends SeriesBase {
     private boldColor: string = '#0384fc';
 
     constructor(configuration: BasicTopologyConfiguration) {
-        super();
-        if (configuration) {
-            if (configuration.selector) {
-                this.selector = configuration.selector;
-            }
-        }
+        super(configuration);
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 

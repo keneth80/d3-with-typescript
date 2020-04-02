@@ -53,17 +53,9 @@ export class BasicLineSeries extends SeriesBase {
     private transition: any;
 
     constructor(configuration: BasicLineSeriesConfiguration) {
-        super();
+        super(configuration);
         this.config = configuration;
         if (configuration) {
-            if (configuration.selector) {
-                this.selector = configuration.selector;
-            }
-
-            if (configuration.displayName) {
-                this.displayName = configuration.displayName;
-            }
-
             if (configuration.dotSelector) {
                 this.dotClass = configuration.dotSelector;
             }

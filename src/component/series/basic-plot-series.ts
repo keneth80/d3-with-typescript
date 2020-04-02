@@ -25,12 +25,8 @@ export class BasicPlotSeries extends SeriesBase {
     private radius: number = 4;
 
     constructor(configuration: BasicPlotSeriesConfiguration) {
-        super();
+        super(configuration);
         if (configuration) {
-            if (configuration.selector) {
-                this.selector = configuration.selector;
-            }
-
             if (configuration.xField) {
                 this.xField = configuration.xField;
             }

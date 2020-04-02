@@ -67,12 +67,8 @@ export class BasicGaugeSeries extends SeriesBase {
     private arcColorFn = interpolateHsl(rgb('#e8e2ca'), rgb('#3e6c0a'));
 
     constructor(configuration: BasicGaugeSeriesConfiguration) {
-        super();
+        super(configuration);
         if (configuration) {
-            if (configuration.selector) {
-                this.selector = configuration.selector;
-            }
-
             let prop: string = undefined;
             for (prop in configuration) {
                 this.config[prop] = configuration[prop];

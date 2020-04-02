@@ -29,7 +29,7 @@ import { BasicZoomSelection } from './component/functions/basic-zoom-selection';
 import { topologyData, topologyData2 } from './component/mock-data/topology-data';
 import { BasicTopology, TopologyGroupElement, TopologyData } from './component/series/basic-topology';
 
-import { Placement, Align } from './component/chart/chart-configuration';
+import { Placement, Align, Shape } from './component/chart/chart-configuration';
 
 import { lineData } from './component/mock-data/line-one-field-data';
 
@@ -131,7 +131,8 @@ const lineChart = () => {
                     isCurve: false,
                     radius: 3
                 },
-                filter
+                filter,
+                shape: Shape.LINE
             })
         );
     });
@@ -252,7 +253,8 @@ const excute = () => {
         dot: {
             isCurve: true,
             radius: 3
-        }
+        },
+        shape: Shape.LINE
     });
     basicLineSeries.$currentItem.subscribe((item: any) => {
         console.log('basicLineSeries.item : ', item);
@@ -266,7 +268,8 @@ const excute = () => {
         dot: {
             isCurve: false,
             radius: 3
-        }
+        },
+        shape: Shape.LINE
     });
     basicLineSeries2.$currentItem.subscribe((item: any) => {
         console.log('basicLineSerie2s.item : ', item);
@@ -282,13 +285,15 @@ const excute = () => {
         selector: 'basic-plot-sales',
         yField: 'sales',
         xField: 'date',
-        radius: 3
+        radius: 3,
+        shape: Shape.CIRCLE
     });
 
     const plotSeries2 = new BasicPlotSeries({
         selector: 'basic-plot-assets',
         yField: 'assets',
-        xField: 'date'
+        xField: 'date',
+        shape: Shape.CIRCLE
     });
 
     /*

@@ -3,6 +3,7 @@ import { select, event, Selection, BaseType } from 'd3-selection';
 import { line } from 'd3-shape';
 import { Placement } from '../chart-configuration';
 import { axisTop, axisLeft, axisRight, axisBottom } from 'd3';
+import { LegendItem } from '../chart-base';
 
 export const getTransformByArray = (transform: string = 'translate(0, 0)'): Array<string> => {
     const translateString = transform.substring(transform.indexOf('translate('), transform.indexOf(')') + 1);
@@ -212,7 +213,7 @@ export const getMaxText = (texts: string[] = []) => {
     });
 
     return texts[targetIndex];
-}
+};
 
 export const drawSvgCheckBox = <T = any>(
     selection: any,
@@ -292,7 +293,7 @@ export const drawSvgCheckBox = <T = any>(
     });
 
     return g;
-}
+};
 
 export const getAxisByPlacement = (placement: string, scale: any) => {
     if (placement === Placement.TOP) {
@@ -304,4 +305,69 @@ export const getAxisByPlacement = (placement: string, scale: any) => {
     } else {
         return axisBottom(scale);
     }
+};
+
+export const drawLegendColorItemByRect = (
+    targetGroup: Selection<BaseType, LegendItem, BaseType, any>, 
+    legendItemSize: {width: number, height: number},
+    keys: Array<LegendItem> = [], 
+    colors: Array<string> = []
+) => {
+    return targetGroup.selectAll('.legend-item')
+            .data((d: LegendItem) => [d])
+            .join(
+                (enter) => enter.append('rect').attr('class', 'legend-item'),
+                (update) => update,
+                (exit) => exit.remove()
+            )
+            .attr('width', legendItemSize.width)
+            .attr('height', legendItemSize.width)
+            .attr('fill', (d: LegendItem) => {
+                const index = keys.findIndex((key: LegendItem) => d.label === key.label);
+                return colors[index];
+            });
+};
+
+export const drawLegendColorItemByCircle = (
+    targetGroup: Selection<BaseType, LegendItem, BaseType, any>, 
+    legendItemSize: {width: number, height: number},
+    keys: Array<LegendItem> = [], 
+    colors: Array<string> = []
+) => {
+    return targetGroup.selectAll('.legend-item')
+            .data((d: LegendItem) => [d])
+            .join(
+                (enter) => enter.append('circle').attr('class', 'legend-item'),
+                (update) => update,
+                (exit) => exit.remove()
+            )
+            .attr('r', legendItemSize.width / 2)
+            .attr('cx', legendItemSize.width / 2)
+            .attr('cy', legendItemSize.width / 2)
+            .attr('fill', (d: LegendItem) => {
+                const index = keys.findIndex((key: LegendItem) => d.label === key.label);
+                return colors[index];
+            });
+};
+
+export const drawLegendColorItemByLine = (
+    targetGroup: Selection<BaseType, LegendItem, BaseType, any>, 
+    legendItemSize: {width: number, height: number},
+    keys: Array<LegendItem> = [], 
+    colors: Array<string> = []
+) => {
+    return targetGroup.selectAll('.legend-item')
+            .data((d: LegendItem) => [d])
+            .join(
+                (enter) => enter.append('rect').attr('class', 'legend-item'),
+                (update) => update,
+                (exit) => exit.remove()
+            )
+            .attr('width', legendItemSize.width)
+            .attr('height', 3)
+            .attr('y', legendItemSize.width / 2 - 1)
+            .attr('fill', (d: LegendItem) => {
+                const index = keys.findIndex((key: LegendItem) => d.label === key.label);
+                return colors[index];
+            });
 }

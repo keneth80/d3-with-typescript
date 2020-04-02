@@ -13,9 +13,9 @@ import { fromEvent, Subscription, Subject, of, Observable, Observer } from 'rxjs
 import { debounceTime, delay } from 'rxjs/operators';
 
 import { IChart } from './chart.interface';
-import { ChartConfiguration, Axis, Margin, Placement, ChartTitle, ScaleType, Align, AxisTitle, ChartTooltip } from './chart-configuration';
+import { ChartConfiguration, Axis, Margin, Placement, ChartTitle, ScaleType, Align, AxisTitle, ChartTooltip, Shape } from './chart-configuration';
 import { ISeries } from './series.interface';
-import { guid, textWrapping, getTextWidth, getMaxText, drawSvgCheckBox, getAxisByPlacement, getTransformByArray, getTextWidthByComputedTextLength } from './util/d3-svg-util';
+import { guid, textWrapping, getTextWidth, getMaxText, drawSvgCheckBox, getAxisByPlacement, getTransformByArray, getTextWidthByComputedTextLength, drawLegendColorItemByRect, drawLegendColorItemByCircle, drawLegendColorItemByLine } from './util/d3-svg-util';
 import { IFunctions } from './functions.interface';
 
 export interface ISeriesConfiguration {
@@ -44,10 +44,11 @@ interface ContainerSize {
     height: number;
 }
 
-interface LegendItem {
+export interface LegendItem {
     label: string; 
     selected: boolean;
     isHide: boolean;
+    shape: string;
 }
 
 export class ChartBase<T = any> implements IChart {
@@ -935,8 +936,10 @@ export class ChartBase<T = any> implements IChart {
 
         const keys: Array<LegendItem> = this.seriesList.map((series: ISeries) => {
             const label: string = series.displayName ? series.displayName : series.selector;
+            const shape: string = series.shape ? series.shape : Shape.RECT;
             return {
                 label,
+                shape,
                 selected: true,
                 isHide: false
             }
@@ -995,7 +998,7 @@ export class ChartBase<T = any> implements IChart {
             });
         }
         
-        const legendLabelGroup = legendItemGroup.selectAll('.legend-label-group')
+        const legendLabelGroup: Selection<BaseType, any, BaseType, any> = legendItemGroup.selectAll('.legend-label-group')
             .data((d: any) =>[d])
             .join(
                 (enter) => enter.append('g').attr('class', 'legend-label-group').on('click', this.onLegendItemClick),
@@ -1003,20 +1006,16 @@ export class ChartBase<T = any> implements IChart {
                 (exit) => exit.remove()
             )
             .attr('transform', `translate(${checkboxPadding}, 0)`);
-      
-        legendLabelGroup.selectAll('.legend-item')
-            .data((d: LegendItem) => [d])
-            .join(
-                (enter) => enter.append('rect').attr('class', 'legend-item'),
-                (update) => update,
-                (exit) => exit.remove()
-            )
-            .attr('width', this.legendItemSize.width)
-            .attr('height', this.legendItemSize.width)
-            .attr('fill', (d: LegendItem) => {
-                const index = keys.findIndex((key: LegendItem) => d.label === key.label);
-                return this.colors[index];
-            });
+
+        legendLabelGroup.each((d: LegendItem, i: number, nodeList: any) => {
+            if (d.shape === Shape.LINE) {
+                drawLegendColorItemByLine(select(nodeList[i]), this.legendItemSize, keys, this.colors);
+            } else if (d.shape === Shape.CIRCLE) {
+                drawLegendColorItemByCircle(select(nodeList[i]), this.legendItemSize, keys, this.colors);
+            } else {
+                drawLegendColorItemByRect(select(nodeList[i]), this.legendItemSize, keys, this.colors);
+            }
+        })
       
         legendLabelGroup.selectAll('.legend-label')
             .data((d: LegendItem) => [d])
