@@ -132,6 +132,7 @@ const lineChart = () => {
                     radius: 3
                 },
                 filter,
+                animation: true,
                 shape: Shape.LINE
             })
         );
@@ -902,22 +903,22 @@ topologyExcute();
 
 excute();
 
-boxplot();
+// boxplot();
 
-bollinger();
+// bollinger();
 
-violin();
+// violin();
 
-stackedBar();
+// stackedBar();
 
-groupedBar();
+// groupedBar();
 
-pieChart();
+// pieChart();
 
-donutChart();
+// donutChart();
 
-areaChart();
+// areaChart();
 
-canvasScatter('#scatter');
+// canvasScatter('#scatter');
 
-gaugeChart();
+// gaugeChart();

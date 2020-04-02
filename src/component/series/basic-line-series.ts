@@ -2,10 +2,11 @@ import { Selection, BaseType, select, event, mouse } from 'd3-selection';
 import { line, curveMonotoneX } from 'd3-shape';
 import { format } from 'd3-format';
 import { transition } from 'd3-transition';
+import { easeLinear, easeCircle } from 'd3-ease';
 
 import { Subject, Observable } from 'rxjs';
 
-import { Scale } from '../chart/chart-base';
+import { Scale, ContainerSize } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
 import { textBreak } from '../chart/util/d3-svg-util';
@@ -82,9 +83,6 @@ export class BasicLineSeries extends SeriesBase {
         }
 
         this.numberFmt = format(',d');
-
-        this.transition = transition().delay(500)
-        .duration(1000);
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
@@ -99,14 +97,14 @@ export class BasicLineSeries extends SeriesBase {
         }
     }
 
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number, index: number, color: string) {
+    drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
         
-        if (this.isAnimation) {
-            this.mainGroup.attr('transform', `translate(${-width}, 0)`);
-            if (this.config.dot) {
-                this.dotGroup.attr('transform', `translate(${-width}, 0)`);
-            }
-        }
+        // if (this.isAnimation) {
+        //     this.mainGroup.attr('transform', `translate(${-width}, 0)`);
+        //     if (this.config.dot) {
+        //         this.dotGroup.attr('transform', `translate(${-width}, 0)`);
+        //     }
+        // }
 
         const x: any = scales.find((scale: Scale) => scale.field === this.xField).scale;
         const y: any = scales.find((scale: Scale) => scale.field === this.yField).scale;
@@ -134,7 +132,7 @@ export class BasicLineSeries extends SeriesBase {
 
         const lineData = !this.dataFilter ? chartData : chartData.filter((item: any) => this.dataFilter(item));
 
-        this.mainGroup.selectAll(`.${this.selector}`)
+        const lineSeries = this.mainGroup.selectAll(`.${this.selector}`)
             .data([lineData])
                 .join(
                     (enter) => enter.append('path').attr('class', this.selector),
@@ -145,6 +143,16 @@ export class BasicLineSeries extends SeriesBase {
                 .style('stroke', color)
                 .style('fill', 'none')
                 .attr('d', this.line);
+
+        if (this.isAnimation) {
+            lineSeries
+            .attr('stroke-dasharray', (d: any, i: number, nodeList: any) => nodeList[i].getTotalLength())
+            .attr('stroke-dashoffset', (d: any, i: number, nodeList: any) => nodeList[i].getTotalLength());
+
+            lineSeries.transition(
+                transition().delay(500).duration(1000).ease(easeLinear)
+            ).attr('stroke-dashoffset', 0);
+        }
 
         if (this.config.dot) {
             const radius = (this.config.dot.radius || 4);
@@ -165,7 +173,11 @@ export class BasicLineSeries extends SeriesBase {
                     .style('fill', '#fff')
                     .attr('cx', (data: any, i) => { return x(data[this.xField]) + padding; })
                     .attr('cy', (data: any) => { return y(data[this.yField]); })
-                    .attr('r', radius);
+                    .attr('r', this.isAnimation ? 0 : radius);
+
+            if (this.isAnimation) {
+                dots.transition(transition().delay(1500).duration(500).ease(easeCircle)).attr('r', radius);
+            }
             if (this.chartBase.tooltip) {
                 dots
                     .on('mouseover', (d: any, i, nodeList: any) => {
@@ -202,7 +214,7 @@ export class BasicLineSeries extends SeriesBase {
                         let yPosition = event.offsetY + padding;
 
                         
-                        if (xPosition + textWidth > width) {
+                        if (xPosition + textWidth > geometry.width) {
                             xPosition = xPosition - textWidth;
                         }
 
@@ -216,12 +228,12 @@ export class BasicLineSeries extends SeriesBase {
                             .attr('height', textHeight);
                     });
             }   
-            this.dotGroup.transition(this.transition).attr('transform', `translate(0, 0)`);
+            // this.dotGroup.transition(this.transition).attr('transform', `translate(0, 0)`);
         }
 
-        if (this.isAnimation) {
-            this.mainGroup.transition(this.transition).attr('transform', `translate(0, 0)`);
-        }
+        // if (this.isAnimation) {
+        //     this.mainGroup.transition(this.transition).attr('transform', `translate(0, 0)`);
+        // }
     }
 
     select(displayName: string, isSelected: boolean) {

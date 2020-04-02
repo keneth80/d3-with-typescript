@@ -7,7 +7,7 @@ import { quantize, interpolate } from 'd3-interpolate';
 import { format } from 'd3-format';
 
 import { colorDarker } from '../chart/util/d3-svg-util';
-import { Scale } from '../chart/chart-base';
+import { Scale, ContainerSize } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
 import { isIE } from '../chart/util/d3-svg-util';
 import { SeriesConfiguration } from '../chart/series.interface';
@@ -77,8 +77,8 @@ export class BasicDonutSeries extends SeriesBase {
             .attr('class', `${this.selector}-pie-line-group`);
     }
 
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {
-        const radius = Math.min(width, height) / 2;
+    drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
+        const radius = Math.min(geometry.width, geometry.height) / 2;
 
         const arcs = this.pieShape(chartData);
 
@@ -94,7 +94,7 @@ export class BasicDonutSeries extends SeriesBase {
             .innerRadius(radius * 0.9)
             .outerRadius(radius * 0.9);
 
-        this.mainGroup.attr('transform', `translate(${width / 2},${height / 2})`);
+        this.mainGroup.attr('transform', `translate(${geometry.width / 2},${geometry.height / 2})`);
 
         // ------- pie series -------
         const series = this.pieSeriesGroup.selectAll(`.${this.selector}-path`)
@@ -136,11 +136,11 @@ export class BasicDonutSeries extends SeriesBase {
                 let yPosition = event.offsetY - 30;
 
                 if (isIE()) {
-                    yPosition += height / 2;
+                    yPosition += geometry.height / 2;
                 }
 
                 // let yPosition = height / 2 - (event.clientY - rect.y);
-                if (xPosition + textWidth > width) {
+                if (xPosition + textWidth > geometry.width) {
                     xPosition = xPosition - textWidth;
                 }
                 

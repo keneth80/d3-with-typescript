@@ -7,7 +7,7 @@ import { interpolateHsl } from 'd3-interpolate';
 import { format } from 'd3-format';
 import { color, rgb } from 'd3-color';
 
-import { Scale } from '../chart/chart-base';
+import { Scale, ContainerSize } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
 
@@ -105,8 +105,8 @@ export class BasicGaugeSeries extends SeriesBase {
         }
     }
 
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {
-        this.r = height;
+    drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
+        this.r = geometry.height;
         this.pointerHeadLength = Math.round(this.r * this.config.pointerHeadLengthPercent);
 
         this.arc = arc()

@@ -6,7 +6,7 @@ import { scaleLinear } from 'd3-scale';
 import { area, curveCatmullRom } from 'd3-shape';
 
 import { SeriesBase } from '../chart/series-base';
-import { Scale } from '../chart/chart-base';
+import { Scale, ContainerSize } from '../chart/chart-base';
 import { SeriesConfiguration } from '../chart/series.interface';
 
 export interface BasicViolinSeriesConfiguration extends SeriesConfiguration {
@@ -42,7 +42,7 @@ export class BasicViolinSeries extends SeriesBase {
         }
     }
 
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {
+    drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
         const x: any = scales.find((scale: Scale) => scale.orient === 'bottom').scale;
         const y: any = scales.find((scale: Scale) => scale.orient === 'left').scale;
 

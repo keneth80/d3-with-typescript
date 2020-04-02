@@ -39,7 +39,7 @@ export interface Scale {
     title?: AxisTitle;
 }
 
-interface ContainerSize {
+export interface ContainerSize {
     width: number;
     height: number;
 }
@@ -358,7 +358,7 @@ export class ChartBase<T = any> implements IChart {
                 this.seriesList.map((series: ISeries, index: number) => {
                     series.chartBase = this;
                     series.setSvgElement(this.svg, this.seriesGroup);
-                    series.drawSeries(this.data, this.scales, this.width, this.height, index, this.colors[index]);
+                    series.drawSeries(this.data, this.scales, {width: this.width, height: this.height}, index, this.colors[index]);
                 });
             }
         } catch(error) {

@@ -4,7 +4,7 @@ import { min, max } from 'd3-array';
 import { interval, timer } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
-import { Scale } from '../chart/chart-base';
+import { Scale, ContainerSize } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
 
@@ -86,7 +86,7 @@ export class BasicCanvasScatterPlot extends SeriesBase {
         }
     }
 
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {
+    drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
         const xScale: Scale = scales.find((scale: Scale) => scale.orient === 'bottom');
         const yScale: Scale = scales.find((scale: Scale) => scale.orient === 'left');
         const x: any = xScale.scale;
@@ -117,23 +117,23 @@ export class BasicCanvasScatterPlot extends SeriesBase {
         // console.log('size : ', generateData.length, Object.keys(tempIndex).length);
 
         const quadTreeObj: any = quadtree()
-            .extent([[-1, -1], [width + 1, height + 1]])
+            .extent([[-1, -1], [geometry.width + 1, geometry.height + 1]])
             .addAll(generateData);
 
         this.canvas
-            .attr('width', width - 1)
-            .attr('height', height - 1)
+            .attr('width', geometry.width - 1)
+            .attr('height', geometry.height - 1)
             .style('transform', `translate(${(this.chartBase.chartMargin.left + 1)}px, ${(this.chartBase.chartMargin.top + 1)}px)`);
 
         this.pointerCanvas
-            .attr('width', width - 1)
-            .attr('height', height - 1)
+            .attr('width', geometry.width - 1)
+            .attr('height', geometry.height - 1)
             .style('transform', `translate(${(this.chartBase.chartMargin.left + 1)}px, ${(this.chartBase.chartMargin.top + 1)}px)`);
 
         const pointerContext = (this.pointerCanvas.node() as any).getContext('2d');
 
         const context = (this.canvas.node() as any).getContext('2d');
-            context.clearRect(0, 0, width, height);
+            context.clearRect(0, 0, geometry.width, geometry.height);
             context.fillStyle = 'steelblue';
             context.strokeWidth = 1;
             context.strokeStyle = 'white';
@@ -158,7 +158,7 @@ export class BasicCanvasScatterPlot extends SeriesBase {
                 const mouseEvent = mouse(this.pointerCanvas.node() as any);
                 const moveX = mouseEvent[0];
                 const moveY = mouseEvent[1];
-                pointerContext.clearRect(0, 0, width, height);
+                pointerContext.clearRect(0, 0, geometry.width, geometry.height);
                 this.drawZoomBox(
                     pointerContext,
                     min([startX, moveX]), min([startY, moveY]),
@@ -174,7 +174,7 @@ export class BasicCanvasScatterPlot extends SeriesBase {
             const mouseEvent = mouse(this.pointerCanvas.node() as any);
             endX = mouseEvent[0];
             endY = mouseEvent[1];
-            pointerContext.clearRect(0, 0, width, height);
+            pointerContext.clearRect(0, 0, geometry.width, geometry.height);
             if (Math.abs(startX - endX) > pointRadius * 2 && Math.abs(startY - endY) > pointRadius * 2) {
                 const xStartValue = +x.invert(startX).toFixed(2);
                 const yStartValue = +y.invert(startY).toFixed(2);
@@ -209,7 +209,7 @@ export class BasicCanvasScatterPlot extends SeriesBase {
                     pointerContext, 
                     {
                         x: endX, y: endY, 
-                        width, height, 
+                        width: geometry.width, height: geometry.height, 
                         pointRadius
                     });
             }
@@ -256,7 +256,7 @@ export class BasicCanvasScatterPlot extends SeriesBase {
                 console.log('scatter plot Error', error);
             }, () => {
                 if (!this.prevCanvas) {
-                    this.prevCanvas = context.getImageData(0, 0, width, height);
+                    this.prevCanvas = context.getImageData(0, 0, geometry.width, geometry.height);
                 }
                 progressSvg.remove();
             });
@@ -266,7 +266,7 @@ export class BasicCanvasScatterPlot extends SeriesBase {
                 this.drawPoint(point, pointRadius, x, y, context);
             });
             if (!this.prevCanvas) {
-                this.prevCanvas = context.getImageData(0, 0, width, height);
+                this.prevCanvas = context.getImageData(0, 0, geometry.width, geometry.height);
             }
         }
     }

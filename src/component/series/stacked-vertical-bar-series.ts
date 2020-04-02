@@ -3,7 +3,7 @@ import { scaleOrdinal } from 'd3-scale';
 import { stack } from 'd3-shape';
 import { format } from 'd3-format';
 
-import { Scale } from '../chart/chart-base';
+import { Scale, ContainerSize } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
 import { colorDarker } from '../chart/util/d3-svg-util';
 import { SeriesConfiguration } from '../chart/series.interface';
@@ -65,7 +65,7 @@ export class StackedVerticalBarSeries extends SeriesBase {
         }
     }
 
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {
+    drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
         const x: any = scales.find((scale: Scale) => scale.orient === 'bottom').scale;
         const y: any = scales.find((scale: Scale) => scale.orient === 'left').scale;
 
@@ -147,7 +147,7 @@ export class StackedVerticalBarSeries extends SeriesBase {
                 // .attr('height', (d: any) => { return Math.abs(y(d[0]) - y(d[1]) - y(0)); })
                 .attr('width', x.bandwidth());
         
-        this.drawLegend(keys, z, width);
+        this.drawLegend(keys, z, geometry.width);
     }
 
     drawLegend(keys: string[], z: any, width: number) {

@@ -2,7 +2,7 @@ import { Selection, select, BaseType, event } from 'd3-selection';
 import { linkHorizontal, linkVertical } from 'd3-shape';
 import { Subject, Observable } from 'rxjs';
 
-import { Scale } from '../chart/chart-base';
+import { Scale, ContainerSize } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
 import { getTransformByArray, wrapTextByRowLimit } from '../chart/util/d3-svg-util';
 import { SeriesConfiguration } from '../chart/series.interface';
@@ -113,7 +113,7 @@ export class BasicTopology extends SeriesBase {
         }
     }
 
-    drawSeries(chartData: Array<TopologyData>, scales: Array<Scale>, width: number, height: number) {
+    drawSeries(chartData: Array<TopologyData>, scales: Array<Scale>, geometry: ContainerSize) {
         const groups: Array<TopologyGroupElement> = chartData[0].groups;
         const SECTOR_PADDING = 10;
         const MEMBER_PADDING = 5;
@@ -140,10 +140,10 @@ export class BasicTopology extends SeriesBase {
         const memberPaddingCount = currentMemberCount + topSectorSize;
         const bottomGroupSize = sectorSize - topSectorSize;
         // padding 을 뺀 width
-        const calcWidth = width - (SECTOR_PADDING * (topSectorSize - 1)) - (MEMBER_PADDING * memberPaddingCount);
+        const calcWidth = geometry.width - (SECTOR_PADDING * (topSectorSize - 1)) - (MEMBER_PADDING * memberPaddingCount);
 
         // sector y point
-        const sectorPoint = height / (sectorSize > 1 ? 3 : 2);
+        const sectorPoint = geometry.height / (sectorSize > 1 ? 3 : 2);
 
         // secgor height
         const sectorHeight = sectorPoint * 0.75;
@@ -161,8 +161,8 @@ export class BasicTopology extends SeriesBase {
                 (update) => update,
                 (exit) => exit.remove()
             )
-            .attr('width', width)
-            .attr('height', height)
+            .attr('width', geometry.width)
+            .attr('height', geometry.height)
             .style('fill', 'none');
 
         const sectorPositions: Array<Array<number>> = [];
@@ -213,9 +213,9 @@ export class BasicTopology extends SeriesBase {
             .on('mouseout', this.onSectorMouseOut);
 
         const topGroupTotalWidth = sectorPositions[topSectorSize - 1][0] + sectorPositions[topSectorSize - 1][2];
-        if (sectorPositions.length && width > topGroupTotalWidth) {
+        if (sectorPositions.length && geometry.width > topGroupTotalWidth) {
             // 상단 center 정렬
-            const movex = width / 2 - topGroupTotalWidth / 2;
+            const movex = geometry.width / 2 - topGroupTotalWidth / 2;
             topSectorGroup.attr('transform', (data: TopologyGroupElement) => {
                 data.x = data.x + movex;
                 // sector가 하나일 경우에만 예외로 가운데 정렬.
@@ -271,9 +271,9 @@ export class BasicTopology extends SeriesBase {
             .on('mouseout', this.onSectorMouseOut);
         
         const bottomGroupTotalWidth = sectorPositions[sectorPositions.length - 1][0] + sectorPositions[sectorPositions.length - 1][2];
-        if (sectorPositions.length && width > bottomGroupTotalWidth) {
+        if (sectorPositions.length && geometry.width > bottomGroupTotalWidth) {
             // 하단 center 정렬
-            const movex = width / 2 - bottomGroupTotalWidth / 2;
+            const movex = geometry.width / 2 - bottomGroupTotalWidth / 2;
             bottomSectorGroup.attr('transform', (data: TopologyGroupElement) => {
                 data.x = data.x + movex;
                 return `translate(${data.x}, ${data.y})`
@@ -286,10 +286,10 @@ export class BasicTopology extends SeriesBase {
 
         // machine 그리기
         const machinePosition: Array<Array<number>> = [];
-        const calcMachineWidth = (width - MACHINE_PADDING * (machineSectors.length - 1)) / machineSectors.length;
+        const calcMachineWidth = (geometry.width - MACHINE_PADDING * (machineSectors.length - 1)) / machineSectors.length;
         const machineWidth = Math.min(Math.min(sectorHeight, MAX_MACHINE_WIDTH), calcMachineWidth);
         const machineTotalWidth = MACHINE_PADDING * (machineSectors.length - 1) + machineWidth * machineSectors.length;
-        const movex = width / 2 - machineTotalWidth / 2;
+        const movex = geometry.width / 2 - machineTotalWidth / 2;
         const machineGroup: Selection<BaseType, TopologyGroupElement, BaseType, any> = 
             this.mainGroup.selectAll(`.${this.selector}-sector-machine-group`)
                 .data(machineSectors)

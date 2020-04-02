@@ -5,7 +5,7 @@ import { transition } from 'd3-transition';
 import { quantize } from 'd3-interpolate';
 import { interpolateSpectral } from 'd3-scale-chromatic';
 
-import { Scale } from '../chart/chart-base';
+import { Scale, ContainerSize } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
 
@@ -66,8 +66,8 @@ export class BasicPieSeries extends SeriesBase {
         }
     }
 
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {
-        const radius = Math.min(width, height) / 2 - 40;
+    drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
+        const radius = Math.min(geometry.width, geometry.height) / 2 - 40;
 
         const color = scaleOrdinal()
             .domain(chartData.map(d => d[this.categoryField]))
@@ -77,11 +77,11 @@ export class BasicPieSeries extends SeriesBase {
             // .innerRadius(radius * 0.5)
             // .outerRadius(radius * 0.5);
             .innerRadius(this.innerRadius * 0.5)
-            .outerRadius(Math.min(width, height) / 2 - 1 * 0.5);
+            .outerRadius(Math.min(geometry.width, geometry.height) / 2 - 1 * 0.5);
 
         const arcs = this.pieShape(chartData);
 
-        this.mainGroup.attr('transform', `translate(${width / 2},${height / 2})`);
+        this.mainGroup.attr('transform', `translate(${geometry.width / 2},${geometry.height / 2})`);
 
         this.mainGroup.selectAll(`.${this.selector}-path`)
             .data(arcs)
@@ -105,7 +105,7 @@ export class BasicPieSeries extends SeriesBase {
                 .text((d: any) => `${d.data[this.categoryField]}: ${d.data[this.valueField].toLocaleString()}`);
 
         if (this.isLabel) {
-            const radius = Math.min(width, height) / 2 * 0.8;
+            const radius = Math.min(geometry.width, geometry.height) / 2 * 0.8;
             const arcLabel = arc().innerRadius(radius).outerRadius(radius);
     
             const texts = this.mainGroup.selectAll(`.${this.selector}-label`)

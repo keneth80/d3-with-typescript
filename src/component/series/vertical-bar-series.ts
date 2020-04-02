@@ -2,7 +2,7 @@ import { Selection, BaseType, select } from 'd3-selection';
 import { transition } from 'd3-transition';
 
 import { colorDarker } from '../chart/util/d3-svg-util';
-import { Scale } from '../chart/chart-base';
+import { Scale, ContainerSize } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
 
@@ -62,7 +62,7 @@ export class VerticalBarSeries extends SeriesBase {
         }
     }
 
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {
+    drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
         const x: any = scales.find((scale: Scale) => scale.orient === 'bottom').scale;
         const y: any = scales.find((scale: Scale) => scale.orient === 'left').scale;
 
@@ -95,7 +95,7 @@ export class VerticalBarSeries extends SeriesBase {
                     return x(data[this.xField]); 
                 })
                 .attr('width', x.bandwidth())
-                .attr('y', height)
+                .attr('y', geometry.height)
                 .attr('height', 0)
                 .transition(this.transition) // animation
                 .attr('y', (data: any) => {

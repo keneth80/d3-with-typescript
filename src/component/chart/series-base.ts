@@ -1,7 +1,7 @@
 import { Selection, BaseType } from 'd3-selection';
 import { Subject, Observable } from 'rxjs';
 
-import { ChartBase, Scale } from './chart-base';
+import { ChartBase, Scale, ContainerSize } from './chart-base';
 import { ISeries, SeriesConfiguration } from './series.interface';
 
 export class SeriesBase implements ISeries {
@@ -58,7 +58,7 @@ export class SeriesBase implements ISeries {
 
     }
 
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number, index: number, color: string) {
+    drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
 
     }
 

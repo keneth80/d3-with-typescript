@@ -2,7 +2,7 @@ import { Selection, select, BaseType, mouse, event } from 'd3-selection';
 import { scaleOrdinal, scaleBand } from 'd3-scale';
 import { format } from 'd3-format';
 
-import { Scale } from '../chart/chart-base';
+import { Scale, ContainerSize } from '../chart/chart-base';
 import { SeriesBase } from '../chart/series-base';
 import { colorDarker } from '../chart/util/d3-svg-util';
 import { SeriesConfiguration } from '../chart/series.interface';
@@ -59,7 +59,7 @@ export class GroupedVerticalBarSeries extends SeriesBase {
         }
     }
 
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {
+    drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
         const x: any = scales.find((scale: Scale) => scale.orient === 'bottom').scale;
         const y: any = scales.find((scale: Scale) => scale.orient === 'left').scale;
 
@@ -117,7 +117,7 @@ export class GroupedVerticalBarSeries extends SeriesBase {
                             
                             let xPosition = event.x;
                             let yPosition = event.offsetY -30;
-                            if (xPosition + textWidth > width) {
+                            if (xPosition + textWidth > geometry.width) {
                                 xPosition = xPosition - textWidth;
                             }
                             this.tooltipGroup.attr('transform', `translate(${xPosition}, ${yPosition})`).selectAll('rect').attr('width', textWidth);
@@ -136,7 +136,7 @@ export class GroupedVerticalBarSeries extends SeriesBase {
                 .attr('width', barx.bandwidth())
                 .attr('fill', (d: any) => z(d.key) + '');
         
-        this.drawLegend(keys, z, width);
+        this.drawLegend(keys, z, geometry.width);
     }
 
     drawLegend(keys: string[], z: any, width: number) {
