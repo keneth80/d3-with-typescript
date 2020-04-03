@@ -210,7 +210,7 @@ export class BasicLineSeries extends SeriesBase {
                         const textHeight = parseTextNode.height + 5;
                         
                         const padding = radius * 2 + 5;
-                        let xPosition = event.offsetX + padding;
+                        let xPosition = event.offsetX + padding + (isIE() ? this.chartBase.chartMargin.left : 0);
                         // let yPosition = event.offsetY + this.chartBase.chartMargin.top;
                         let yPosition = event.offsetY + padding + (isIE() ? this.chartBase.chartMargin.top : 0);
                         
