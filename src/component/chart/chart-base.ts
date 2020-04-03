@@ -325,7 +325,7 @@ export class ChartBase<T = any> implements IChart {
             if (this.seriesList && this.seriesList.length) {
                 this.seriesList.map((series: ISeries, index: number) => {
                     series.chartBase = this;
-                    series.setSvgElement(this.svg, this.seriesGroup);
+                    series.setSvgElement(this.svg, this.seriesGroup, index);
                     series.drawSeries(this.data, this.scales, {width: this.width, height: this.height}, index, this.colors[index]);
                 });
             }
@@ -388,9 +388,9 @@ export class ChartBase<T = any> implements IChart {
     protected updateFunctions() {
         try {
             if (this.functionList && this.functionList.length) {
-                this.functionList.map((functionItem: IFunctions) => {
+                this.functionList.forEach((functionItem: IFunctions, index: number) => {
                     functionItem.chartBase = this;
-                    functionItem.setSvgElement(this.svg, this.seriesGroup);
+                    functionItem.setSvgElement(this.svg, this.seriesGroup, index);
                     functionItem.drawFunctions(this.data, this.scales, {width: this.width, height: this.height});
                 });
             }

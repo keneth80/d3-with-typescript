@@ -15,12 +15,12 @@ export interface BasicLineSeriesConfiguration extends SeriesConfiguration {
     dotSelector?: string;
     xField: string;
     yField: string;
+    isCurve?: boolean; // default : false
     dot?: {
-        radius?: number,
-        isCurve: boolean // default : false
+        radius?: number
     }
     style?: {
-        strokWidth?: number;
+        strokeWidth?: number;
         // stroke?: string;
         // fill?: string;
     },
@@ -72,7 +72,7 @@ export class BasicLineSeries extends SeriesBase {
             }
 
             if (configuration.style) {
-                this.strokeWidth = configuration.style.strokWidth || this.strokeWidth;
+                this.strokeWidth = configuration.style.strokeWidth || this.strokeWidth;
             }
 
             if (configuration.hasOwnProperty('animation')) {
@@ -116,7 +116,7 @@ export class BasicLineSeries extends SeriesBase {
                 return yposition; 
             }); // set the y values for the line generator
 
-        if (this.config.dot && this.config.dot.isCurve) {
+        if (this.config.isCurve === true) {
             this.line.curve(curveMonotoneX); // apply smoothing to the line
         }
 

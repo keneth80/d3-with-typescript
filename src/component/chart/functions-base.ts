@@ -29,7 +29,7 @@ export class FunctionsBase implements IFunctions {
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
-        mainGroup: Selection<BaseType, any, HTMLElement, any>) {
+        mainGroup: Selection<BaseType, any, HTMLElement, any>, index: number) {
 
     }
 

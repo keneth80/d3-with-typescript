@@ -21,7 +21,7 @@ export interface ISeries<T = any> {
 
     hide(displayName: string, isHide: boolean): void;
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, mainGroup: Selection<BaseType, any, HTMLElement, any>): void;
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, mainGroup: Selection<BaseType, any, HTMLElement, any>, index: number): void;
 
     drawSeries(data: Array<T>, scales: Array<Scale>, geometry: ContainerSize, index: number, sereisColor: string): void;
 }

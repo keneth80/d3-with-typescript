@@ -33,6 +33,7 @@ import { BasicTopology, TopologyGroupElement, TopologyData } from './component/s
 import { Placement, Align, Shape } from './component/chart/chart-configuration';
 
 import { lineData } from './component/mock-data/line-one-field-data';
+import { BasicCanvasLineSeries } from './component/series/basic-canvas-line-series';
 
 class SalesModel {
     salesperson: string;
@@ -110,6 +111,103 @@ const data: Array<SalesModel> = [
     new SalesModel('Mary', 29, 67, '26-Mar-12')
 ];
 
+const canvasLineChart = () => {
+    const fields = lineData.map((item: any) => item.member);
+    const members = Array.from(new Set(fields));
+    const series = [];
+    
+    members.map((member: string) => {
+        const filter = (d: any) => {
+            return d.member === member;
+        };
+        const currnetLineSeries = new BasicCanvasLineSeries({
+            selector: 'basic-canvas-line-' + member,
+            // animation: true,
+            displayName: member,
+            shape: Shape.LINE,
+            dotSelector: 'basic-line-' + member + '-dot',
+            yField: 'value',
+            xField: 'date',
+            isCurve: false,
+            dot: {
+                radius: 3
+            },
+            filter,
+            animation: true
+        });
+
+        series.push(
+            currnetLineSeries
+        );
+
+        currnetLineSeries.$currentItem.subscribe((item: any) => {
+            console.log('select : ', item.event);
+            let x = item.event.offsetX;
+            let y = item.event.offsetY;
+            select('#linechart').select('.event-pointer').attr('transform', `translate(${x}, ${y})`);
+        });
+    });
+
+    const parseTime = timeFormat('%H:%M:%S %m-%d');
+    let basicChart: BasicChart = new BasicChart({
+        selector: '#canvaslinechart',
+        title: {
+            placement: Placement.TOP,
+            content: 'Canvas Line Chart'
+        },
+        legend: {
+            placement: Placement.TOP,
+            isCheckBox: true,
+            isAll: true
+        },
+        tooltip: {
+            tooltipTextParser: (d: any) => {
+                return `${d.member} \n Date: ${parseTime(d.date)} \n Value: ${d.value}`
+            }
+        },
+        data: lineData.map((item: any) => {
+            const newDate = new Date();
+            newDate.setFullYear(item.time.substring(0,4));
+            newDate.setMonth(parseInt(item.time.substring(5,7)) - 1);
+            newDate.setDate(item.time.substring(8,10));
+            newDate.setHours(item.time.substring(11,13));
+            newDate.setMinutes(item.time.substring(14,16));
+            newDate.setSeconds(item.time.substring(17,19));
+            newDate.setMilliseconds(item.time.substring(20,22));
+            item.date = newDate;
+            return item;
+        }),
+        isResize: 'Y',
+        axes: [
+            {
+                field: 'date',
+                type: 'time',
+                placement: Placement.BOTTOM,
+                tickFormat: '%H:%M %m-%d',
+                tickSize: 5,
+                isGridLine: true,
+                title: {
+                    content: 'Date',
+                    align: Align.CENTER
+                },
+            },
+            {
+                field: 'value',
+                type: 'number',
+                placement: Placement.LEFT,
+                isGridLine: true,
+                tickSize: 5,
+                min: 0,
+                title: {
+                    content: 'Value',
+                    align: Align.TOP
+                },
+            }
+        ],
+        series
+    }).draw();
+}
+
 const lineChart = () => {
     const fields = lineData.map((item: any) => item.member);
     const members = Array.from(new Set(fields));
@@ -126,8 +224,8 @@ const lineChart = () => {
             dotSelector: 'basic-line-' + member + '-dot',
             yField: 'value',
             xField: 'date',
+            isCurve: false,
             dot: {
-                isCurve: false,
                 radius: 3
             },
             filter,
@@ -270,8 +368,8 @@ const excute = () => {
         dotSelector: 'basic-line-sales-dot',
         yField: 'sales',
         xField: 'salesperson',
+        isCurve: true,
         dot: {
-            isCurve: true,
             radius: 3
         },
         shape: Shape.LINE
@@ -290,8 +388,8 @@ const excute = () => {
         dotSelector: 'basic-line-assets-dot',
         yField: 'assets',
         xField: 'salesperson',
+        isCurve: false,
         dot: {
-            isCurve: false,
             radius: 3
         },
         shape: Shape.LINE
@@ -541,6 +639,7 @@ const bollinger = () => {
 
     const lineSeries = new BasicLineSeries({
         selector: 'bollinger-line',
+        isCurve: false,
         xField: 'key',
         yField: 'close'
     });
@@ -925,6 +1024,8 @@ const gaugeChart = () => {
         ]
     }).draw();
 }
+
+canvasLineChart();
 
 lineChart();
 
