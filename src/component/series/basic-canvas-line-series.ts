@@ -141,7 +141,9 @@ export class BasicCanvasLineSeries extends SeriesBase {
         const x: any = xScale.scale;
         const y: any = yScale.scale;
 
-        const radius = (this.config.dot.radius || 4);
+        const radius = this.config.dot ? (this.config.dot.radius || 4) : 0;
+
+        const lineStroke = (this.config.style && this.config.style.strokeWidth) || 2;
 
         const xmin = xScale.min;
         const xmax = xScale.max;
@@ -157,14 +159,14 @@ export class BasicCanvasLineSeries extends SeriesBase {
         const chartData = !this.dataFilter ? lineData : lineData.filter((item: any) => this.dataFilter(item));
 
         this.canvas
-            .attr('width', geometry.width - 1)
-            .attr('height', geometry.height - 1)
-            .style('transform', `translate(${(this.chartBase.chartMargin.left + 1)}px, ${(this.chartBase.chartMargin.top + 1)}px)`);
+            .attr('width', geometry.width + radius * 2 + lineStroke * 2)
+            .attr('height', geometry.height + radius * 2 + lineStroke * 2)
+            .style('transform', `translate(${(this.chartBase.chartMargin.left - radius - lineStroke)}px, ${(this.chartBase.chartMargin.top - radius - lineStroke)}px)`);
 
         this.pointerCanvas
             .attr('width', geometry.width - 1)
             .attr('height', geometry.height - 1)
-            .style('transform', `translate(${(this.chartBase.chartMargin.left + 1)}px, ${(this.chartBase.chartMargin.top + 1)}px)`);
+            .style('transform', `translate(${(this.chartBase.chartMargin.left - radius - lineStroke)}px, ${(this.chartBase.chartMargin.top - radius - lineStroke)}px)`);
 
         const pointerContext = (this.pointerCanvas.node() as any).getContext('2d');
 
@@ -175,11 +177,11 @@ export class BasicCanvasLineSeries extends SeriesBase {
         this.line = line()
             .defined(data => data[this.yField])
             .x((data: any, i) => {
-                const xposition = x(data[this.xField]) + padding;
+                const xposition = x(data[this.xField]) + padding + radius + lineStroke;
                 return xposition; 
             }) // set the x values for the line generator
             .y((data: any) => {
-                const yposition = y(data[this.yField]);
+                const yposition = y(data[this.yField]) + radius + lineStroke;
                 return yposition; 
             })
             .context(context); // set the y values for the line generator
@@ -190,13 +192,13 @@ export class BasicCanvasLineSeries extends SeriesBase {
 
         this.line(chartData);
         context.fillStyle = 'white';
-        context.lineWidth = (this.config.style && this.config.style.strokeWidth) || 2;
+        context.lineWidth = lineStroke;
         context.strokeStyle = color;
         context.stroke();
 
         if (this.config.dot) {
             chartData.forEach((point: any) => {
-                this.drawPoint(x(point[this.xField]), y(point[this.yField]), radius, context);
+                this.drawPoint(x(point[this.xField]) + radius + lineStroke, y(point[this.yField]) + radius + lineStroke, radius, context);
             });
         }
     }
