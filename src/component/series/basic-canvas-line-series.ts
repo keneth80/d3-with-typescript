@@ -214,10 +214,10 @@ export class BasicCanvasLineSeries extends SeriesBase {
     }
 
     select(displayName: string, isSelected: boolean) {
-        this.mainGroup.selectAll(`.${this.selector}`).style('opacity', isSelected ? null : 0.4);
+        this.canvas.style('opacity', isSelected ? null : 0.4);
     }
 
     hide(displayName: string, isHide: boolean) {
-        this.mainGroup.selectAll(`.${this.selector}`).style('opacity', !isHide ? null : 0);
+        this.canvas.style('opacity', !isHide ? null : 0);
     }
 }
