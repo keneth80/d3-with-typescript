@@ -115,6 +115,7 @@ export class BasicCanvasLineSeries extends SeriesBase {
             .style('z-index', 1)
             .style('position', 'absolute');
 
+        // TODO: canvas 하나에 시리즈를 전부 그릴지 각각 canvas를 생성해서 그릴지 결정해야함. 현재는 각각 canvas를 생성해서 그리고 있음.
         if (!this.canvas) {            
             this.canvas = select((this.svg.node() as HTMLElement).parentElement)
                 .append('canvas')
