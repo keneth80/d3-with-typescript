@@ -364,6 +364,11 @@ const excute = () => {
             //     font: 'monospace'
             // }
         },
+        tooltip: {
+            tooltipTextParser: (d: any) => {
+                return `${d.salesperson} \n Date: ${d.date} \n Value: ${d.sales}`
+            }
+        },
         legend: {
             placement: Placement.RIGHT,
             isCheckBox: true,
