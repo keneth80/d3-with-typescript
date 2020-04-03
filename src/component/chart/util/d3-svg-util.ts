@@ -156,7 +156,7 @@ export const wrapTextByRowLimit = (text: any, width: number, limitRowCount: numb
         return text;
     }
 
-    const compare = osName.indexOf('Windows') > -1 ? (isIE ? 2 : 4) : 2;
+    const compare = osName.indexOf('Windows') > -1 ? (isIE() ? 0 : 4) : 3;
     
     let words: Array<string> = text.text().split('').reverse(),
         word: string,

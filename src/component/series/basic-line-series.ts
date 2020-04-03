@@ -9,7 +9,7 @@ import { Subject, Observable } from 'rxjs';
 import { Scale, ContainerSize } from '../chart/chart.interface';
 import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
-import { textBreak } from '../chart/util/d3-svg-util';
+import { textBreak, isIE } from '../chart/util/d3-svg-util';
 
 export interface BasicLineSeriesConfiguration extends SeriesConfiguration {
     dotSelector?: string;
@@ -212,8 +212,7 @@ export class BasicLineSeries extends SeriesBase {
                         const padding = radius * 2 + 5;
                         let xPosition = event.offsetX + padding;
                         // let yPosition = event.offsetY + this.chartBase.chartMargin.top;
-                        let yPosition = event.offsetY + padding;
-
+                        let yPosition = event.offsetY + padding + (isIE() ? this.chartBase.chartMargin.top : 0);
                         
                         if (xPosition + textWidth > geometry.width) {
                             xPosition = xPosition - textWidth;
