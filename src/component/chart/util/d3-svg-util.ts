@@ -150,13 +150,13 @@ export const getOsName = () => {
 
 const osName: string = getOsName();
 
-export const wrapTextByRowLimit = (text: any, width: number, limitRowCount: number = 100) => {
+export const wrapTextByRowLimit = (text: any, width: number, limitRowCount: number = 10) => {
     // let words = text.text().split(/\s+/).reverse(),
     if (text.node().getComputedTextLength() < width) {
         return text;
     }
 
-    const compare = osName.indexOf('Windows') > -1 ? 8 : 2;
+    const compare = osName.indexOf('Windows') > -1 ? 8 : 3;
     
     let words: Array<string> = text.text().split('').reverse(),
         word: string,
@@ -321,7 +321,7 @@ export const drawLegendColorItemByRect = (
                 (exit) => exit.remove()
             )
             .attr('width', legendItemSize.width)
-            .attr('height', legendItemSize.width)
+            .attr('height', legendItemSize.height)
             .attr('fill', (d: LegendItem) => {
                 const index = keys.findIndex((key: LegendItem) => d.label === key.label);
                 return colors[index];
