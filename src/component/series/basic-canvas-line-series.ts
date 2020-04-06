@@ -74,6 +74,12 @@ export class BasicCanvasLineSeries extends SeriesBase {
 
     private isAnimation: boolean = false;
 
+    private pointColor: any = {};
+
+    private offscreen: any;
+
+    private isMouseOver: boolean = false;
+
     constructor(configuration: BasicCanvasLineSeriesConfiguration) {
         super(configuration);
         this.config = configuration;
@@ -119,19 +125,33 @@ export class BasicCanvasLineSeries extends SeriesBase {
         if (!this.canvas) {            
             this.canvas = select((this.svg.node() as HTMLElement).parentElement)
                 .append('canvas')
+                .datum({
+                    index
+                })
                 .attr('class', 'drawing-canvas')
-                .style('z-index', index + 2)
+                .style('z-index', index + 3)
                 .style('position', 'absolute');
+        }
+
+        if (!select((this.svg.node() as HTMLElement).parentElement).select('.offscreen-canvas').node()) {            
+            this.offscreen = select((this.svg.node() as HTMLElement).parentElement)
+                .append('canvas')
+                .attr('class', 'offscreen-canvas')
+                .style('z-index', index + 2) // 2
+                .style('position', 'absolute')
+                .style('opacity', 0);
+        } else {
+            this.offscreen = select((this.svg.node() as HTMLElement).parentElement).select('.offscreen-canvas').style('z-index', index + 2); // 2
         }
 
         if (!select((this.svg.node() as HTMLElement).parentElement).select('.pointer-canvas').node()) {
             this.pointerCanvas = select((this.svg.node() as HTMLElement).parentElement)
                 .append('canvas')
                 .attr('class', 'pointer-canvas')
-                .style('z-index', index + 3)
+                .style('z-index', index + 4)
                 .style('position', 'absolute');
         } else {
-            this.pointerCanvas = select((this.svg.node() as HTMLElement).parentElement).select('.pointer-canvas').style('z-index', index + 3);
+            this.pointerCanvas = select((this.svg.node() as HTMLElement).parentElement).select('.pointer-canvas').style('z-index', index + 4);
         }
     }
 
@@ -156,32 +176,32 @@ export class BasicCanvasLineSeries extends SeriesBase {
             padding = x.bandwidth() / 2;
         }
 
+        const space: number = (radius + lineStroke) * 2;
+
         const chartData = !this.dataFilter ? lineData : lineData.filter((item: any) => this.dataFilter(item));
 
         this.canvas
-            .attr('width', geometry.width + radius * 2 + lineStroke * 2)
-            .attr('height', geometry.height + radius * 2 + lineStroke * 2)
-            .style('transform', `translate(${(this.chartBase.chartMargin.left - radius - lineStroke)}px, ${(this.chartBase.chartMargin.top - radius - lineStroke)}px)`);
+            .attr('width', geometry.width + space)
+            .attr('height', geometry.height + space)
+            .style('transform', `translate(${(this.chartBase.chartMargin.left - space / 2)}px, ${(this.chartBase.chartMargin.top - space / 2)}px)`);
 
         this.pointerCanvas
-            .attr('width', geometry.width - 1)
-            .attr('height', geometry.height - 1)
-            .style('transform', `translate(${(this.chartBase.chartMargin.left - radius - lineStroke)}px, ${(this.chartBase.chartMargin.top - radius - lineStroke)}px)`);
-
-        const pointerContext = (this.pointerCanvas.node() as any).getContext('2d');
+            .attr('width', geometry.width + space)
+            .attr('height', geometry.height + space)
+            .style('transform', `translate(${(this.chartBase.chartMargin.left - space / 2)}px, ${(this.chartBase.chartMargin.top - space / 2)}px)`);
 
         const context = (this.canvas.node() as any).getContext('2d');
-            context.clearRect(0, 0, geometry.width, geometry.height);
+            context.clearRect(0, 0, geometry.width + space, geometry.height + space);
             context.beginPath();
 
         this.line = line()
             .defined(data => data[this.yField])
             .x((data: any, i) => {
-                const xposition = x(data[this.xField]) + padding + radius + lineStroke;
+                const xposition = x(data[this.xField]) + padding + space / 2;
                 return xposition; 
             }) // set the x values for the line generator
             .y((data: any) => {
-                const yposition = y(data[this.yField]) + radius + lineStroke;
+                const yposition = y(data[this.yField]) + space / 2;
                 return yposition; 
             })
             .context(context); // set the y values for the line generator
@@ -197,10 +217,111 @@ export class BasicCanvasLineSeries extends SeriesBase {
         context.stroke();
 
         if (this.config.dot) {
-            chartData.forEach((point: any) => {
-                this.drawPoint(x(point[this.xField]) + radius + lineStroke, y(point[this.yField]) + radius + lineStroke, radius, context);
+            const prevData = this.offscreen.data()[0] || {};
+            
+            chartData.forEach((point: any, i: number) => {
+                const drawX = x(point[this.xField]) + space / 2;
+                const drawY = y(point[this.yField]) + space / 2;
+                this.drawPoint(drawX, drawY, radius, context);
+
+                // mouse over click event를 위한 데이터 인덱싱.
+                const colorIndex = Object.keys(prevData).length + i;
+                const memoryColor = this.getColor(colorIndex * 1000 + 1) + '';
+                this.pointColor[memoryColor] = {
+                    data: point, x: drawX, y: drawY, color, memoryColor
+                };
             });
+
+            // 각 시리즈 별로 인덱싱한 데이터를 머지 한다.
+            const mergeData = Object.assign(prevData, this.pointColor);
+
+            // 머지한 데이터를 canvas에 저장한다.
+            this.offscreen.data([mergeData]);
+            this.offscreen
+                .attr('width', geometry.width + space)
+                .attr('height', geometry.height + space)
+                .style('transform', `translate(${(this.chartBase.chartMargin.left - space / 2)}px, ${(this.chartBase.chartMargin.top - space / 2)}px)`);
+
+            const offerContext = (this.offscreen.node() as any).getContext('2d');
+            if (index === 0) {
+                offerContext.clearRect(0, 0, geometry.width + space, geometry.height + space);
+            }
+
+            if (this.chartBase.series.length - 1 === index) {
+                const keys = Object.keys(mergeData);
+
+                keys.forEach((key: any, i: number) => {
+                    const point = mergeData[key];
+                    const drawX = point.x;
+                    const drawY = point.y;
+
+                    // Space out the colors a bit
+                    offerContext.fillStyle = 'rgb(' + point.memoryColor + ')';
+    
+                    offerContext.beginPath();
+    
+                    offerContext.arc(drawX, drawY, radius, 0, 2 * Math.PI);
+    
+                    offerContext.fill();
+                });
+
+                this.pointerCanvas.on('mousemove', () => {
+                    this.drawTooltipPoint({
+                        width: geometry.width + space, height: geometry.height + space
+                    }, radius);
+                });
+            }
         }
+    }
+
+    drawTooltipPoint(geometry: ContainerSize, radius: number) {
+        const mouseEvent = mouse(this.pointerCanvas.node() as any);
+        const moveX = mouseEvent[0];
+        const moveY = mouseEvent[1];
+
+        const targetContext = (this.offscreen.node() as any).getContext('2d');
+        const currentData = targetContext.getImageData(moveX, moveY, 1, 1).data;
+        const key = currentData.slice(0,3).toString();
+        const selected = this.offscreen.data()[0][currentData.slice(0,3).toString()];
+        const pointerContext = (this.pointerCanvas.node() as any).getContext('2d');
+        pointerContext.fillStyle = '#fff';
+        pointerContext.lineWidth = this.strokeWidth;
+        pointerContext.clearRect(0, 0, geometry.width, geometry.height);
+        if (selected) {
+            pointerContext.strokeStyle = selected.color;
+            this.drawPoint(selected.x, selected.y, radius * 2, pointerContext);
+
+            this.tooltipGroup = this.chartBase.showTooltip();
+
+            const textElement: any = this.tooltipGroup.select('text').attr('dy', '0em').text(
+                this.chartBase.tooltip.tooltipTextParser(selected.data)
+            );
+
+            textBreak(textElement, '\n');
+
+            const parseTextNode = textElement.node().getBoundingClientRect();
+
+            const textWidth = parseTextNode.width + 5;
+            const textHeight = parseTextNode.height + 5;
+            
+            const padding = radius * 2;
+            let xPosition = selected.x + padding + this.chartBase.chartMargin.left;
+            
+            let yPosition = selected.y + padding + this.chartBase.chartMargin.top;
+            
+            if (xPosition + textWidth > geometry.width) {
+                xPosition = xPosition - textWidth;
+            }
+
+            this.tooltipGroup.attr('transform', `translate(${xPosition}, ${yPosition})`)
+                .selectAll('rect')
+                .attr('width', textWidth)
+                .attr('height', textHeight);
+        } else {
+            this.tooltipGroup = this.chartBase.hideTooltip();
+        }
+
+        // console.log('drawTooltipPoint : ', moveX, moveY, currentData, selected, key);
     }
 
     drawPoint(cx: any, cy: any, r: number, context: any) {
@@ -222,5 +343,9 @@ export class BasicCanvasLineSeries extends SeriesBase {
 
     hide(displayName: string, isHide: boolean) {
         this.canvas.style('opacity', !isHide ? null : 0);
+    }
+
+    private getColor(i: number) {
+        return (i % 256) + ',' + (Math.floor(i / 256) % 256) + ',' + (Math.floor(i / 65536) % 256);
     }
 }

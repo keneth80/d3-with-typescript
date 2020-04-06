@@ -192,6 +192,14 @@ export class ChartBase<T = any> implements IChart {
         return this.config.tooltip;
     }
 
+    get series(): Array<ISeries> {
+        return this.seriesList;
+    }
+
+    get functions(): Array<IFunctions> {
+        return this.functions;
+    }
+
     getColorBySeriesIndex(index: number): string {
         return this.colors[index];
     }
