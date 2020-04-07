@@ -144,7 +144,7 @@ const canvasLineChart = () => {
             console.log('select : ', item.event);
             let x = item.event.offsetX;
             let y = item.event.offsetY;
-            select('#linechart').select('.event-pointer').attr('transform', `translate(${x}, ${y})`);
+            select('#canvaslinechart').select('.event-pointer').attr('transform', `translate(${x}, ${y})`);
         });
     });
 

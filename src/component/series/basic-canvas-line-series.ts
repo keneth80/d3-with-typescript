@@ -270,11 +270,38 @@ export class BasicCanvasLineSeries extends SeriesBase {
                         width: geometry.width + space, height: geometry.height + space
                     }, radius);
                 });
+
+                this.pointerCanvas.on('click', () => {
+                    this.onClickItem({
+                        width: geometry.width + space, height: geometry.height + space
+                    }, radius);
+                });
             }
         }
     }
 
-    drawTooltipPoint(geometry: ContainerSize, radius: number) {
+    select(displayName: string, isSelected: boolean) {
+        this.canvas.style('opacity', isSelected ? null : 0.4);
+    }
+
+    hide(displayName: string, isHide: boolean) {
+        this.canvas.style('opacity', !isHide ? null : 0);
+    }
+
+    private onClickItem(geometry: ContainerSize, radius: number) {
+        const selectedItem: any = this.drawTooltipPoint(geometry, radius);
+        if (selectedItem) {
+            this.itemClickSubject.next({
+                data: selectedItem.data,
+                event: {
+                    offsetX: selectedItem.x + this.chartBase.chartMargin.left,
+                    offsetY: selectedItem.y + this.chartBase.chartMargin.top
+                }
+            });
+        }
+    }
+
+    private drawTooltipPoint(geometry: ContainerSize, radius: number) {
         const mouseEvent = mouse(this.pointerCanvas.node() as any);
         const moveX = mouseEvent[0];
         const moveY = mouseEvent[1];
@@ -322,9 +349,10 @@ export class BasicCanvasLineSeries extends SeriesBase {
         }
 
         // console.log('drawTooltipPoint : ', moveX, moveY, currentData, selected, key);
+        return selected;
     }
 
-    drawPoint(cx: any, cy: any, r: number, context: any) {
+    private drawPoint(cx: any, cy: any, r: number, context: any) {
         // cx, cy과 해당영역에 출력이 되는지? 좌표가 마이너스면 출력 안하는 로직을 넣어야 함.
         if (cx < 0 || cy < 0) {
             return;
@@ -335,14 +363,6 @@ export class BasicCanvasLineSeries extends SeriesBase {
         context.closePath();
         context.fill();
         context.stroke();
-    }
-
-    select(displayName: string, isSelected: boolean) {
-        this.canvas.style('opacity', isSelected ? null : 0.4);
-    }
-
-    hide(displayName: string, isHide: boolean) {
-        this.canvas.style('opacity', !isHide ? null : 0);
     }
 
     private getColor(i: number) {

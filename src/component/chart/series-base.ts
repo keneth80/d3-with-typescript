@@ -16,7 +16,11 @@ export class SeriesBase implements ISeries {
 
     protected mainGroup: Selection<BaseType, any, HTMLElement, any>;
 
-    protected itemClickSubject: Subject<any> = new Subject();
+    protected itemClickSubject: Subject<{
+        data: any,
+        target?: any,
+        event?: any
+    }> = new Subject();
 
     private chart: ChartBase;
 
