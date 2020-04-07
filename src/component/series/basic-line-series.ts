@@ -179,6 +179,7 @@ export class BasicLineSeries extends SeriesBase {
             if (this.isAnimation) {
                 dots.transition(transition().delay(1500).duration(500).ease(easeCircle)).attr('r', radius);
             }
+            
             if (this.chartBase.tooltip) {
                 dots
                     .on('mouseover', (d: any, i, nodeList: any) => {

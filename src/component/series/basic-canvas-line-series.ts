@@ -12,17 +12,21 @@ export class BasicCanvasLineSeriesModel {
     y: number;
     i: number; // save the index of the point as a property, this is useful
     selected: boolean;
-    obj: any;
+    color: string;
+    memoryColor: string;
+    data: any;
 
     constructor(
         x: number,
         y: number,
         i: number, // save the index of the point as a property, this is useful
+        color: string,
+        memoryColor: string,
         selected: boolean,
-        obj: any
+        data: any
     ) {
         Object.assign(this, {
-            x, y, i, selected, obj
+            x, y, i, selected, color, memoryColor, data
         });
     }
 }
@@ -222,9 +226,12 @@ export class BasicCanvasLineSeries extends SeriesBase {
                 // mouse over click event를 위한 데이터 인덱싱.
                 const colorIndex = Object.keys(prevData).length + i;
                 const memoryColor = this.getColor(colorIndex * 1000 + 1) + '';
-                this.pointColor[memoryColor] = {
-                    data: point, x: drawX, y: drawY, color, memoryColor
-                };
+                // this.pointColor[memoryColor] = {
+                //     data: point, x: drawX, y: drawY, color, memoryColor
+                // };
+                this.pointColor[memoryColor] = new BasicCanvasLineSeriesModel(
+                    drawX, drawY, colorIndex, color, memoryColor, false, point
+                );
             });
 
             // 각 시리즈 별로 인덱싱한 데이터를 머지 한다.
