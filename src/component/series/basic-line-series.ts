@@ -33,6 +33,8 @@ export class BasicLineSeries extends SeriesBase {
 
     private tooltipGroup: Selection<BaseType, any, HTMLElement, any>;
 
+    private seriespGroup: Selection<BaseType, any, HTMLElement, any>;
+
     private line: any;
 
     private dotClass: string = 'basic-line-dot';
@@ -86,6 +88,7 @@ export class BasicLineSeries extends SeriesBase {
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
                   mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
+        this.seriespGroup = mainGroup;
         if (!mainGroup.select(`.${this.selector}-group`).node()) {
             this.mainGroup = mainGroup.append('g').attr('class', `${this.selector}-group`);
         }
@@ -247,7 +250,9 @@ export class BasicLineSeries extends SeriesBase {
     hide(displayName: string, isHide: boolean) {
         this.mainGroup.selectAll(`.${this.selector}`).style('opacity', !isHide ? null : 0);
         if (this.config.dot) {
+            this.dotGroup.lower();
             this.dotGroup.selectAll(`.${this.dotClass}`).style('opacity', !isHide ? null : 0);
         }
+        this.mainGroup.lower();
     }
 }

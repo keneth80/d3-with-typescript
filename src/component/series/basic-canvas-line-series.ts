@@ -226,9 +226,8 @@ export class BasicCanvasLineSeries extends SeriesBase {
                 // mouse over click event를 위한 데이터 인덱싱.
                 const colorIndex = Object.keys(prevData).length + i;
                 const memoryColor = this.getColor(colorIndex * 1000 + 1) + '';
-                // this.pointColor[memoryColor] = {
-                //     data: point, x: drawX, y: drawY, color, memoryColor
-                // };
+
+                // TODO: 있는지 없는지 여부 파악해서 같은 포인트 지점에 몇개 있는지 알아야 함.
                 this.pointColor[memoryColor] = new BasicCanvasLineSeriesModel(
                     drawX, drawY, colorIndex, color, memoryColor, false, point
                 );
@@ -350,7 +349,7 @@ export class BasicCanvasLineSeries extends SeriesBase {
             this.tooltipGroup = this.chartBase.hideTooltip();
         }
 
-        // console.log('drawTooltipPoint : ', moveX, moveY, currentData, selected, key);
+        console.log('drawTooltipPoint : ', moveX, moveY, currentData, selected, key);
         return selected;
     }
 
