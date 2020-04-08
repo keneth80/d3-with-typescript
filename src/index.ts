@@ -150,6 +150,12 @@ const canvasLineChart = () => {
     const parseTime = timeFormat('%H:%M:%S %m-%d');
     let basicChart: BasicChart = new BasicChart({
         selector: '#canvaslinechart',
+        // margin: {
+        //     top: 10,
+        //     left: 40,
+        //     right: 20,
+        //     bottom: 30
+        // },
         title: {
             placement: Placement.TOP,
             content: 'Canvas Line Chart'
@@ -247,15 +253,21 @@ const lineChart = () => {
     const parseTime = timeFormat('%H:%M:%S %m-%d');
     let basicChart: BasicChart = new BasicChart({
         selector: '#linechart',
-        // title: {
-        //     placement: Placement.TOP,
-        //     content: 'Line Chart',
-        //     // style: {
-        //     //     size: 16,
-        //     //     color: '#ff0000',
-        //     //     font: 'monospace'
-        //     // }
+        // margin: {
+        //     top: 60,
+        //     left: 40,
+        //     right: 20,
+        //     bottom: 50
         // },
+        title: {
+            placement: Placement.TOP,
+            content: 'SVG Line Chart',
+            // style: {
+            //     size: 16,
+            //     color: '#ff0000',
+            //     font: 'monospace'
+            // }
+        },
         legend: {
             placement: Placement.TOP,
             isCheckBox: true,

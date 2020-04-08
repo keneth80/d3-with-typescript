@@ -231,8 +231,6 @@ export class ChartBase<T = any> implements IChart {
             }
         }
 
-        this.setRootSize();
-
         // data setup origin data 와 분리.
         this.data = this.setupData(configuration.data);
 
@@ -250,9 +248,11 @@ export class ChartBase<T = any> implements IChart {
             this.colors = schemeCategory10.map((color: string) => color);
         }
 
-        if (configuration.title) {
+        if (configuration.hasOwnProperty('title')) {
             this.isTitle = true;
             this.titlePlacement = configuration.title.placement;
+        } else {
+            this.isTitle = false;
         }
 
         if (configuration.legend) {
@@ -263,6 +263,8 @@ export class ChartBase<T = any> implements IChart {
         }
 
         this.maskId = guid();
+
+        this.setRootSize();
         
         this.initContainer();
         this.addEventListner();
@@ -439,6 +441,8 @@ export class ChartBase<T = any> implements IChart {
             this.height = this.height - (this.titlePlacement === Placement.LEFT || this.titlePlacement === Placement.RIGHT ? 0 : 20);
         }
 
+        console.log('this.titleContainerSize : ', this.config, this.isTitle, this.titleContainerSize);
+
         if (this.isLegend) {
             const padding = 5;
             const targetText = getMaxText(this.seriesList.map((series: ISeries) => series.displayName || series.selector));
@@ -540,6 +544,7 @@ export class ChartBase<T = any> implements IChart {
                     translate = `translate(${x}, ${y})`;
                 } else if (this.legendPlacement === Placement.TOP) {
                     translate = `translate(0, ${this.titleContainerSize.height + this.legendPadding})`;
+                    console.log('translate : ', translate, this.isTitle, this.titleContainerSize);
                     // translate = `translate(${this.margin.left}, ${this.titleContainerSize.height + this.legendPadding})`;
                 } else {
                     // x = this.margin.left;
@@ -671,7 +676,7 @@ export class ChartBase<T = any> implements IChart {
                     if (d.placement === Placement.TOP || d.placement === Placement.BOTTOM) {
                         x = (this.width + this.margin.left + this.margin.right) / 2 - 
                             (this.isLegend && (this.legendPlacement === Placement.LEFT)? this.legendContainerSize.width : 0);
-                        y = this.titleContainerSize.height / 2 + textHeight / 2 - 3;
+                        y = textHeight / 2 + 3;
                     } else {
                         x = (this.height + this.margin.top + this.margin.bottom) / 2 - textHeight / 2;;
                     }
