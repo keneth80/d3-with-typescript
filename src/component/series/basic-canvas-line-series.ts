@@ -6,7 +6,6 @@ import { Scale, ContainerSize } from '../chart/chart.interface';
 import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
 import { textBreak } from '../chart/util/d3-svg-util';
-import { rgb } from 'd3';
 
 export class BasicCanvasLineSeriesModel {
     x: number;
