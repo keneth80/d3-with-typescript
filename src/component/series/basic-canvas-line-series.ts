@@ -6,6 +6,7 @@ import { Scale, ContainerSize } from '../chart/chart.interface';
 import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
 import { textBreak } from '../chart/util/d3-svg-util';
+import { rgb } from 'd3';
 
 export class BasicCanvasLineSeriesModel {
     x: number;
@@ -79,6 +80,10 @@ export class BasicCanvasLineSeries extends SeriesBase {
 
     private isMouseOver: boolean = false;
 
+    private parentElement: Selection<BaseType, any, HTMLElement, any>;
+
+    private memoryCanvas: Selection<BaseType, any, HTMLElement, any>;
+
     constructor(configuration: BasicCanvasLineSeriesConfiguration) {
         super(configuration);
         this.config = configuration;
@@ -120,9 +125,10 @@ export class BasicCanvasLineSeries extends SeriesBase {
             .style('z-index', 1)
             .style('position', 'absolute');
 
-        // TODO: canvas 하나에 시리즈를 전부 그릴지 각각 canvas를 생성해서 그릴지 결정해야함. 현재는 각각 canvas를 생성해서 그리고 있음.
+        this.parentElement = select((this.svg.node() as HTMLElement).parentElement);
+
         if (!this.canvas) {            
-            this.canvas = select((this.svg.node() as HTMLElement).parentElement)
+            this.canvas = this.parentElement
                 .append('canvas')
                 .datum({
                     index
@@ -132,25 +138,30 @@ export class BasicCanvasLineSeries extends SeriesBase {
                 .style('position', 'absolute');
         }
 
+        // TODO: offerscreen을 캔버스 별로 만든다.
         if (!select((this.svg.node() as HTMLElement).parentElement).select('.offscreen-canvas').node()) {            
-            this.offscreen = select((this.svg.node() as HTMLElement).parentElement)
+            this.offscreen = this.parentElement
                 .append('canvas')
                 .attr('class', 'offscreen-canvas')
                 .style('z-index', index + 2) // 2
                 .style('position', 'absolute')
                 .style('opacity', 0);
         } else {
-            this.offscreen = select((this.svg.node() as HTMLElement).parentElement).select('.offscreen-canvas').style('z-index', index + 2); // 2
+            this.offscreen = this.parentElement.select('.offscreen-canvas').style('z-index', index + 2); // 2
         }
 
-        if (!select((this.svg.node() as HTMLElement).parentElement).select('.pointer-canvas').node()) {
-            this.pointerCanvas = select((this.svg.node() as HTMLElement).parentElement)
+        if (!this.memoryCanvas) {
+            this.memoryCanvas = select(document.createElement('canvas'));
+        }
+
+        if (!this.parentElement.select('.pointer-canvas').node()) {
+            this.pointerCanvas = this.parentElement
                 .append('canvas')
                 .attr('class', 'pointer-canvas')
                 .style('z-index', index + 4)
                 .style('position', 'absolute');
         } else {
-            this.pointerCanvas = select((this.svg.node() as HTMLElement).parentElement).select('.pointer-canvas').style('z-index', index + 4);
+            this.pointerCanvas = this.parentElement.select('.pointer-canvas').style('z-index', index + 4);
         }
     }
 
@@ -211,13 +222,22 @@ export class BasicCanvasLineSeries extends SeriesBase {
 
         this.line(chartData);
         context.fillStyle = 'white';
+        // context.fillStyle = color;
         context.lineWidth = lineStroke;
         context.strokeStyle = color;
         context.stroke();
 
         if (this.config.dot) {
+            this.memoryCanvas
+                .attr('width', geometry.width + space)
+                .attr('height', geometry.height + space);
+
+            const memoryCanvasContext = (this.memoryCanvas.node() as any).getContext('2d');
+            memoryCanvasContext.clearRect(0, 0, geometry.width + space, geometry.height + space);
+
             const prevData = this.offscreen.data()[0] || {};
             
+            const colorData = {};
             chartData.forEach((point: any, i: number) => {
                 const drawX = x(point[this.xField]) + space / 2;
                 const drawY = y(point[this.yField]) + space / 2;
@@ -227,11 +247,26 @@ export class BasicCanvasLineSeries extends SeriesBase {
                 const colorIndex = Object.keys(prevData).length + i;
                 const memoryColor = this.getColor(colorIndex * 1000 + 1) + '';
 
+                // Space out the colors a bit
+                memoryCanvasContext.fillStyle = 'rgb(' + memoryColor + ')';
+                memoryCanvasContext.beginPath();
+                memoryCanvasContext.arc(drawX, drawY, radius, 0, 2 * Math.PI);
+                memoryCanvasContext.fill();
+
                 // TODO: 있는지 없는지 여부 파악해서 같은 포인트 지점에 몇개 있는지 알아야 함.
                 this.pointColor[memoryColor] = new BasicCanvasLineSeriesModel(
                     drawX, drawY, colorIndex, color, memoryColor, false, point
                 );
+
+                colorData[memoryColor] = new BasicCanvasLineSeriesModel(
+                    drawX, drawY, i, color, memoryColor, false, point
+                );
             });
+
+            this.canvas.data([{
+                colorData,
+                memoryCanvasContext: memoryCanvasContext
+            }]);
 
             // 각 시리즈 별로 인덱싱한 데이터를 머지 한다.
             const mergeData = Object.assign(prevData, this.pointColor);
@@ -258,11 +293,8 @@ export class BasicCanvasLineSeries extends SeriesBase {
 
                     // Space out the colors a bit
                     offerContext.fillStyle = 'rgb(' + point.memoryColor + ')';
-    
                     offerContext.beginPath();
-    
                     offerContext.arc(drawX, drawY, radius, 0, 2 * Math.PI);
-    
                     offerContext.fill();
                 });
 
@@ -306,50 +338,60 @@ export class BasicCanvasLineSeries extends SeriesBase {
         const mouseEvent = mouse(this.pointerCanvas.node() as any);
         const moveX = mouseEvent[0];
         const moveY = mouseEvent[1];
-
-        const targetContext = (this.offscreen.node() as any).getContext('2d');
-        const currentData = targetContext.getImageData(moveX, moveY, 1, 1).data;
-        const key = currentData.slice(0,3).toString();
-        const selected = this.offscreen.data()[0][currentData.slice(0,3).toString()];
         const pointerContext = (this.pointerCanvas.node() as any).getContext('2d');
         pointerContext.fillStyle = '#fff';
         pointerContext.lineWidth = this.strokeWidth;
         pointerContext.clearRect(0, 0, geometry.width, geometry.height);
-        if (selected) {
-            pointerContext.strokeStyle = selected.color;
-            this.drawPoint(selected.x, selected.y, radius * 2, pointerContext);
+        const filterTargetCanvas = this.parentElement.selectAll('.drawing-canvas').filter((d: any, i: number, node: any) => parseInt(select(node[i]).style('opacity')) === 1);
+        const nodes = filterTargetCanvas.nodes().reverse();
+        let selected = null;
+        for (let i: number = 0; i < nodes.length; i++) {
+            const canvasData: any = select(nodes[i]).data()[0];
+            const cContext = canvasData.memoryCanvasContext;
+            const colorData = canvasData.colorData;
+            const cData = cContext.getImageData(moveX, moveY, 1, 1).data;
+            const cDataParse = cData.slice(0,3);
+            const ckey = cDataParse.toString();
+            selected = colorData[ckey];
+            if (selected) {
+                pointerContext.strokeStyle = selected.color;
+                this.drawPoint(selected.x, selected.y, radius * 2, pointerContext);
+    
+                this.tooltipGroup = this.chartBase.showTooltip();
+    
+                const textElement: any = this.tooltipGroup.select('text').attr('dy', '0em').text(
+                    this.chartBase.tooltip.tooltipTextParser(selected.data)
+                );
+    
+                textBreak(textElement, '\n');
+    
+                const parseTextNode = textElement.node().getBoundingClientRect();
+    
+                const textWidth = parseTextNode.width + 5;
+                const textHeight = parseTextNode.height + 5;
+                
+                const padding = radius * 2;
+                let xPosition = selected.x + padding + this.chartBase.chartMargin.left;
+                
+                let yPosition = selected.y + padding + this.chartBase.chartMargin.top;
+                
+                if (xPosition + textWidth > geometry.width) {
+                    xPosition = xPosition - textWidth;
+                }
+    
+                this.tooltipGroup.attr('transform', `translate(${xPosition}, ${yPosition})`)
+                    .selectAll('rect')
+                    .attr('width', textWidth)
+                    .attr('height', textHeight);
 
-            this.tooltipGroup = this.chartBase.showTooltip();
-
-            const textElement: any = this.tooltipGroup.select('text').attr('dy', '0em').text(
-                this.chartBase.tooltip.tooltipTextParser(selected.data)
-            );
-
-            textBreak(textElement, '\n');
-
-            const parseTextNode = textElement.node().getBoundingClientRect();
-
-            const textWidth = parseTextNode.width + 5;
-            const textHeight = parseTextNode.height + 5;
-            
-            const padding = radius * 2;
-            let xPosition = selected.x + padding + this.chartBase.chartMargin.left;
-            
-            let yPosition = selected.y + padding + this.chartBase.chartMargin.top;
-            
-            if (xPosition + textWidth > geometry.width) {
-                xPosition = xPosition - textWidth;
+                break;
             }
+        }
 
-            this.tooltipGroup.attr('transform', `translate(${xPosition}, ${yPosition})`)
-                .selectAll('rect')
-                .attr('width', textWidth)
-                .attr('height', textHeight);
-        } else {
+        if (!selected) {
             this.tooltipGroup = this.chartBase.hideTooltip();
         }
 
-        console.log('drawTooltipPoint : ', moveX, moveY, currentData, selected, key);
         return selected;
     }
 

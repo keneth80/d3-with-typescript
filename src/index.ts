@@ -141,7 +141,7 @@ const canvasLineChart = () => {
         );
 
         currnetLineSeries.$currentItem.subscribe((item: any) => {
-            console.log('select : ', item.event);
+            console.log('select : ', item);
             let x = item.event.offsetX;
             let y = item.event.offsetY;
             select('#canvaslinechart').select('.event-pointer').attr('transform', `translate(${x}, ${y})`);
