@@ -1,6 +1,5 @@
 import { Selection, BaseType, select, mouse } from 'd3-selection';
 import { line, curveMonotoneX } from 'd3-shape';
-import { format } from 'd3-format';
 
 import { Scale, ContainerSize } from '../chart/chart.interface';
 import { SeriesBase } from '../chart/series-base';
