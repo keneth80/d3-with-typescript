@@ -57,7 +57,7 @@ export class ChartBase<T = any> implements IChart {
     protected tooltipGroup: Selection<BaseType, any, HTMLElement, any>;
 
     protected margin: Margin = {
-        top: 30, left: 10, bottom: 30, right: 20
+        top: 10, left: 20, bottom: 30, right: 20
     }; // default margin
 
     protected defaultTitleStyle: any = {
@@ -215,6 +215,12 @@ export class ChartBase<T = any> implements IChart {
             this.isCustomMargin = true;
         } else {
             this.isCustomMargin = false;
+            this.config.axes.map((axis: Axis) => {
+                // 최초 axis padding을 조정해줌.
+                if (axis.placement === Placement.TOP || axis.placement === Placement.BOTTOM) {
+                    this.margin[axis.placement] = 30;
+                }
+            })
         }
 
         this.svg = select(configuration.selector);
@@ -410,15 +416,15 @@ export class ChartBase<T = any> implements IChart {
     }
 
     protected setRootSize() {
+        const titleTextHeight = 16;
         this.svgWidth = parseFloat(this.svg.style('width'));
         this.svgHeight = parseFloat(this.svg.style('height'));
 
         // axis title check
         if (this.config.axes && this.config.axes.length) {
-            const axisTitleHeight = 15;
             this.config.axes.forEach((axis: Axis) => {
                 if (axis.title) {
-                    this.axisTitleMargin[axis.placement] = axisTitleHeight;
+                    this.axisTitleMargin[axis.placement] = titleTextHeight;
                 }
             });
         }
@@ -437,13 +443,13 @@ export class ChartBase<T = any> implements IChart {
             const padding = 5;
             const targetText = getMaxText(this.seriesList.map((series: ISeries) => series.displayName || series.selector));
             const targetTextWidth = getTextWidth(targetText, this.defaultLegendStyle.font.size, this.defaultLegendStyle.font.family);
-            const targetTextHeight = 15;
+            // const targetTextHeight = 15;
 
             this.legendContainerSize.width = this.legendPadding * 2 + this.legendItemSize.width + padding + Math.round(targetTextWidth) + (this.isCheckBox ? 15 : 0);
             this.legendContainerSize.height = 
                 this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ? 
                 this.height : 
-                this.legendPadding * 2 + targetTextHeight;
+                this.legendPadding * 2 + titleTextHeight;
             
             this.width = this.width - (this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ? this.legendContainerSize.width : 0);
             this.height = this.height - (this.legendPlacement === Placement.TOP || this.legendPlacement === Placement.BOTTOM ? this.legendContainerSize.height : 0);
@@ -883,6 +889,7 @@ export class ChartBase<T = any> implements IChart {
                     isAxisUpdate = true;
                     // console.log('axis is high ==> ', this.margin);
                 }
+                // console.log('margin check : ', isAxisUpdate, this.config.selector, orient, this.margin[orient], maxTextWidth[orient] + padding);
             });
         }
 
