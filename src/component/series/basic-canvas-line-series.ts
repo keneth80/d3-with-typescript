@@ -57,8 +57,6 @@ export class BasicCanvasLineSeries extends SeriesBase {
 
     private line: any;
 
-    private dotClass: string = 'basic-canvas-line-dot';
-
     private xField: string;
 
     private yField: string;
@@ -69,9 +67,7 @@ export class BasicCanvasLineSeries extends SeriesBase {
 
     private strokeWidth: number = 2;
 
-    private numberFmt: any;
-
-    private isAnimation: boolean = false;
+    // private isAnimation: boolean = false;
 
     private parentElement: Selection<BaseType, any, HTMLElement, any>;
 
@@ -81,10 +77,6 @@ export class BasicCanvasLineSeries extends SeriesBase {
         super(configuration);
         this.config = configuration;
         if (configuration) {
-            if (configuration.dotSelector) {
-                this.dotClass = configuration.dotSelector;
-            }
-
             if (configuration.xField) {
                 this.xField = configuration.xField;
             }
@@ -105,8 +97,6 @@ export class BasicCanvasLineSeries extends SeriesBase {
             //     this.isAnimation = configuration.animation;
             // }
         }
-
-        this.numberFmt = format(',d');
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
