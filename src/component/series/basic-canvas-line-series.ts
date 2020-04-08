@@ -45,7 +45,7 @@ export interface BasicCanvasLineSeriesConfiguration extends SeriesConfiguration 
         // fill?: string;
     },
     filter?: any;
-    animation?: boolean;
+    // animation?: boolean;
 }
 
 export class BasicCanvasLineSeries extends SeriesBase {
@@ -72,12 +72,6 @@ export class BasicCanvasLineSeries extends SeriesBase {
     private numberFmt: any;
 
     private isAnimation: boolean = false;
-
-    private pointColor: any = {};
-
-    private offscreen: any;
-
-    private isMouseOver: boolean = false;
 
     private parentElement: Selection<BaseType, any, HTMLElement, any>;
 
@@ -107,9 +101,9 @@ export class BasicCanvasLineSeries extends SeriesBase {
                 this.strokeWidth = configuration.style.strokeWidth || this.strokeWidth;
             }
 
-            if (configuration.hasOwnProperty('animation')) {
-                this.isAnimation = configuration.animation;
-            }
+            // if (configuration.hasOwnProperty('animation')) {
+            //     this.isAnimation = configuration.animation;
+            // }
         }
 
         this.numberFmt = format(',d');
@@ -137,22 +131,11 @@ export class BasicCanvasLineSeries extends SeriesBase {
                 .style('position', 'absolute');
         }
 
-        // TODO: offerscreen을 캔버스 별로 만든다.
-        if (!select((this.svg.node() as HTMLElement).parentElement).select('.offscreen-canvas').node()) {            
-            this.offscreen = this.parentElement
-                .append('canvas')
-                .attr('class', 'offscreen-canvas')
-                .style('z-index', index + 2) // 2
-                .style('position', 'absolute')
-                .style('opacity', 0);
-        } else {
-            this.offscreen = this.parentElement.select('.offscreen-canvas').style('z-index', index + 2); // 2
-        }
-
         if (!this.memoryCanvas) {
             this.memoryCanvas = select(document.createElement('canvas'));
         }
 
+        // pointer canvas는 단 한개만 존재한다. 이벤트를 받는 canvas 임.
         if (!this.parentElement.select('.pointer-canvas').node()) {
             this.pointerCanvas = this.parentElement
                 .append('canvas')
@@ -234,8 +217,8 @@ export class BasicCanvasLineSeries extends SeriesBase {
             const memoryCanvasContext = (this.memoryCanvas.node() as any).getContext('2d');
             memoryCanvasContext.clearRect(0, 0, geometry.width + space, geometry.height + space);
 
-            const prevData = this.offscreen.data()[0] || {};
-            
+            const prevIndex = this.pointerCanvas.data()[0] || 0;
+            let colorIndex = 0;
             const colorData = {};
             chartData.forEach((point: any, i: number) => {
                 const drawX = x(point[this.xField]) + space / 2;
@@ -243,7 +226,7 @@ export class BasicCanvasLineSeries extends SeriesBase {
                 this.drawPoint(drawX, drawY, radius, context);
 
                 // mouse over click event를 위한 데이터 인덱싱.
-                const colorIndex = Object.keys(prevData).length + i;
+                colorIndex = prevIndex + i;
                 const memoryColor = this.getColor(colorIndex * 1000 + 1) + '';
 
                 // Space out the colors a bit
@@ -251,11 +234,6 @@ export class BasicCanvasLineSeries extends SeriesBase {
                 memoryCanvasContext.beginPath();
                 memoryCanvasContext.arc(drawX, drawY, radius, 0, 2 * Math.PI);
                 memoryCanvasContext.fill();
-
-                // TODO: 있는지 없는지 여부 파악해서 같은 포인트 지점에 몇개 있는지 알아야 함.
-                this.pointColor[memoryColor] = new BasicCanvasLineSeriesModel(
-                    drawX, drawY, colorIndex, color, memoryColor, false, point
-                );
 
                 colorData[memoryColor] = new BasicCanvasLineSeriesModel(
                     drawX, drawY, i, color, memoryColor, false, point
@@ -267,36 +245,10 @@ export class BasicCanvasLineSeries extends SeriesBase {
                 memoryCanvasContext: memoryCanvasContext
             }]);
 
-            // 각 시리즈 별로 인덱싱한 데이터를 머지 한다.
-            const mergeData = Object.assign(prevData, this.pointColor);
-
             // 머지한 데이터를 canvas에 저장한다.
-            this.offscreen.data([mergeData]);
-            this.offscreen
-                .attr('width', geometry.width + space)
-                .attr('height', geometry.height + space)
-                .style('transform', `translate(${(this.chartBase.chartMargin.left - space / 2)}px, ${(this.chartBase.chartMargin.top - space / 2)}px)`);
-
-            const offerContext = (this.offscreen.node() as any).getContext('2d');
-            if (index === 0) {
-                offerContext.clearRect(0, 0, geometry.width + space, geometry.height + space);
-            }
+            this.pointerCanvas.data([colorIndex]);
 
             if (this.chartBase.series.length - 1 === index) {
-                const keys = Object.keys(mergeData);
-
-                keys.forEach((key: any, i: number) => {
-                    const point = mergeData[key];
-                    const drawX = point.x;
-                    const drawY = point.y;
-
-                    // Space out the colors a bit
-                    offerContext.fillStyle = 'rgb(' + point.memoryColor + ')';
-                    offerContext.beginPath();
-                    offerContext.arc(drawX, drawY, radius, 0, 2 * Math.PI);
-                    offerContext.fill();
-                });
-
                 this.pointerCanvas.on('mousemove', () => {
                     this.drawTooltipPoint({
                         width: geometry.width + space, height: geometry.height + space

@@ -132,8 +132,7 @@ const canvasLineChart = () => {
             dot: {
                 radius: 3
             },
-            filter,
-            animation: true
+            filter
         });
 
         series.push(
