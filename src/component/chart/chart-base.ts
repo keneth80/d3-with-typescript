@@ -441,8 +441,6 @@ export class ChartBase<T = any> implements IChart {
             this.height = this.height - (this.titlePlacement === Placement.LEFT || this.titlePlacement === Placement.RIGHT ? 0 : 20);
         }
 
-        console.log('this.titleContainerSize : ', this.config, this.isTitle, this.titleContainerSize);
-
         if (this.isLegend) {
             const padding = 5;
             const targetText = getMaxText(this.seriesList.map((series: ISeries) => series.displayName || series.selector));
@@ -544,7 +542,6 @@ export class ChartBase<T = any> implements IChart {
                     translate = `translate(${x}, ${y})`;
                 } else if (this.legendPlacement === Placement.TOP) {
                     translate = `translate(0, ${this.titleContainerSize.height + this.legendPadding})`;
-                    console.log('translate : ', translate, this.isTitle, this.titleContainerSize);
                     // translate = `translate(${this.margin.left}, ${this.titleContainerSize.height + this.legendPadding})`;
                 } else {
                     // x = this.margin.left;
