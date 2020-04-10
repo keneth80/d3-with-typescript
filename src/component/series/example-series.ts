@@ -31,15 +31,15 @@ export class ExampleSeries extends SeriesBase {
                   seriesGroup: Selection<BaseType, any, HTMLElement, any>,
                   index: number) {
         this.svg = svg;
-        if (!seriesGroup.select(`.${this.selector}-group`).node()) {
-            this.mainGroup = seriesGroup.append('g').attr('class', `${this.selector}-group`);
+        if (!seriesGroup.select('.' + this.selector + '-group').node()) {
+            this.mainGroup = seriesGroup.append('g').attr('class', this.selector + '-group');
         }
     }
 
     drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
         const x: any = scales.find((scale: Scale) => scale.field === this.xField).scale;
         const y: any = scales.find((scale: Scale) => scale.field === this.yField).scale;
-        this.mainGroup.selectAll(`.${this.selector}`)
+        this.mainGroup.selectAll('.' + this.selector)
             .data(chartData)
                 .join(
                     (enter) => enter.append('rect').attr('class', this.selector),
@@ -57,16 +57,15 @@ export class ExampleSeries extends SeriesBase {
                 })
                 .attr('height', (data: any) => {
                     return Math.abs(y(data[this.yField]) - y(0));
-                    // return height - y(data[this.yField]); 
                 });
     }
 
     select(displayName: string, isSelected: boolean) {
-        this.mainGroup.selectAll(`.${this.selector}`).style('opacity', isSelected ? null : 0.4);
+        this.mainGroup.selectAll('.' + this.selector).style('opacity', isSelected ? null : 0.4);
     }
 
     hide(displayName: string, isHide: boolean) {
-        this.mainGroup.selectAll(`.${this.selector}`).style('opacity', !isHide ? null : 0);
+        this.mainGroup.selectAll('.' + this.selector).style('opacity', !isHide ? null : 0);
         this.mainGroup.lower();
     }
 }
