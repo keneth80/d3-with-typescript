@@ -269,6 +269,10 @@ export class BasicCanvasLineSeries extends SeriesBase {
                 event: {
                     offsetX: selectedItem.x + this.chartBase.chartMargin.left,
                     offsetY: selectedItem.y + this.chartBase.chartMargin.top
+                },
+                target: {
+                    width: radius,
+                    height: radius
                 }
             });
         }

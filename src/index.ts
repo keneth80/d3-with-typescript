@@ -34,6 +34,7 @@ import { Placement, Align, Shape } from './component/chart/chart-configuration';
 
 import { lineData } from './component/mock-data/line-one-field-data';
 import { BasicCanvasLineSeries } from './component/series/basic-canvas-line-series';
+import { ExampleSeries } from './component/series/example-series';
 
 class SalesModel {
     salesperson: string;
@@ -95,7 +96,7 @@ class PlotModel {
 }
 
 const data: Array<SalesModel> = [
-    new SalesModel('BobBobBobBobBobBobBob', 33, 180, '1-May-12'),
+    new SalesModel('Bob', 33, 180, '1-May-12'),
     new SalesModel('Robin', 12, 140, '29-Apr-12'),
     new SalesModel('Anne', 41, null, '27-Apr-12'),
     new SalesModel('Mark', 16, 150, '26-Apr-12'),
@@ -110,6 +111,36 @@ const data: Array<SalesModel> = [
     new SalesModel('Charles', 13, 35, '3-Apr-12'),
     new SalesModel('Mary', 29, 67, '26-Mar-12')
 ];
+
+const example = () => {
+    new BasicChart({
+        selector: '#example',
+        data,
+        isResize: 'Y',
+        axes: [
+            {
+                field: 'salesperson',
+                type: 'string',
+                placement: Placement.BOTTOM,
+            },
+            {
+                field: 'assets',
+                type: 'number',
+                placement: Placement.LEFT,
+                min: 0
+            }
+        ],
+        series: [
+            new ExampleSeries({
+                selector: 'examples',
+                xField: 'salesperson',
+                yField: 'assets'
+            })
+        ]
+    }).draw();
+};
+
+example();
 
 const canvasLineChart = () => {
     const fields = lineData.map((item: any) => item.member);
