@@ -112,10 +112,33 @@ const data: Array<SalesModel> = [
     new SalesModel('Mary', 29, 67, '26-Mar-12')
 ];
 
+const examples = [
+    {
+        salesperson: 'Bob',
+        assets: 33,
+    },
+    {
+        salesperson: 'Robin',
+        assets: 12,
+    },
+    {
+        salesperson: 'Anne',
+        assets: 41,
+    },
+    {
+        salesperson: 'Mark',
+        assets: 16,
+    },
+    {
+        salesperson: 'Joe',
+        assets: 59,
+    }
+]
+
 const example = () => {
     new BasicChart({
         selector: '#example',
-        data,
+        data: examples,
         isResize: 'Y',
         axes: [
             {
