@@ -1,5 +1,4 @@
 import { Selection, BaseType } from 'd3-selection';
-import { Subject, Observable } from 'rxjs';
 
 import { Scale, ContainerSize } from '../chart/chart.interface';
 import { SeriesBase } from '../chart/series-base';
