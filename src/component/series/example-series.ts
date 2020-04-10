@@ -42,16 +42,11 @@ export class ExampleSeries extends SeriesBase {
         this.mainGroup.selectAll(`.${this.selector}`)
             .data(chartData)
                 .join(
-                    (enter) => enter.append('rect').attr('class', this.selector)
-                        .on('click', (data: any) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            this.itemClickSubject.next(data);
-                        }),
+                    (enter) => enter.append('rect').attr('class', this.selector),
                     (update) => update,
                     (exit) => exit.remove
                 )
-                .style('stroke', color)
+                .style('stroke', '#fff')
                 .style('fill', color)
                 .attr('x', (data: any) => { 
                     return x(data[this.xField]); 
