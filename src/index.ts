@@ -139,7 +139,7 @@ const example = () => {
     new BasicChart({
         selector: '#example',
         data: examples,
-        isResize: 'Y',
+        isResize: true,
         axes: [
             {
                 field: 'salesperson',
@@ -236,7 +236,7 @@ const canvasLineChart = () => {
             item.date = newDate;
             return item;
         }),
-        isResize: 'Y',
+        isResize: true,
         axes: [
             {
                 field: 'date',
@@ -344,7 +344,7 @@ const lineChart = () => {
             item.date = newDate;
             return item;
         }),
-        isResize: 'Y',
+        isResize: true,
         axes: [
             {
                 field: 'date',
@@ -409,7 +409,7 @@ const topologyExcute = () => {
             right: 10,
             bottom: 5
         },
-        isResize: 'Y',
+        isResize: true,
         axes: [],
         series: [
             topology
@@ -548,7 +548,7 @@ const excute = () => {
         //     left: 40,
         //     right: 20
         // },
-        isResize: 'Y',
+        isResize: true,
         axes: [
             {
                 field: 'salesperson',
@@ -658,7 +658,7 @@ const boxplot = () => {
     const boxPlotChart = new BasicChart({
         selector: '#boxplot',
         data: boxPlotData,
-        isResize: 'Y',
+        isResize: true,
         axes: [
             {
                 field: 'key',
@@ -712,7 +712,7 @@ const bollinger = () => {
     const bollingerChart = new BasicChart({
         selector: '#bollinger',
         data: bollingerChartData,
-        isResize: 'Y',
+        isResize: true,
         min: min(bollingerChartData, (d: any) => { return d.low; }),
         max: max(bollingerChartData, (d: any) => { return d.high; }),
         axes: [
@@ -769,7 +769,7 @@ const violin = () => {
         const violinChart = new BasicChart({
             selector: '#violin',
             data: data,
-            isResize: 'Y',
+            isResize: true,
             min: 0,
             max: 10,
             axes: [
@@ -818,7 +818,7 @@ const stackedBar = () => {
             margin: {
                 left: 65
             },
-            isResize: 'Y',
+            isResize: true,
             axes: [
                 {
                     field: 'State',
@@ -864,7 +864,7 @@ const groupedBar = () => {
             margin: {
                 left: 65
             },
-            isResize: 'Y',
+            isResize: true,
             axes: [
                 {
                     field: 'State',
@@ -931,7 +931,7 @@ const pieChart = () => {
         },
         min: 0,
         max: max(pieData, (d: any) => d.value),
-        isResize: 'Y',
+        isResize: true,
         axes: [
 
         ],
@@ -964,7 +964,7 @@ const donutChart = () => {
         },
         min: 0,
         max: max(pieData, (d: any) => d.value),
-        isResize: 'Y',
+        isResize: true,
         axes: [
 
         ],
@@ -995,7 +995,7 @@ const areaChart = () => {
                 right: 50
             },
             calcField: 'close',
-            isResize: 'Y',
+            isResize: true,
             axes: [
                 {
                     field: 'date',
@@ -1045,7 +1045,7 @@ const canvasScatter = (id: string) => {
             top: 10, right: 10, bottom: 30, left: 40
         },
         calcField: 'y',
-        isResize: 'Y',
+        isResize: true,
         axes: [
             {
                 field: 'x',
@@ -1082,7 +1082,7 @@ const gaugeChart = () => {
         margin: {
             top: 10, right: 0, bottom: 30, left: 0
         },
-        isResize: 'Y',
+        isResize: true,
         axes: [],
         series: [
             basicGaugeSereis

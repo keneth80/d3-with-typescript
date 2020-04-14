@@ -597,7 +597,7 @@ export class ChartBase<T = any> implements IChart {
     protected addEventListner() {
         this.svg.on('click', this.chartCanvasClick);
         this.subscription = new Subscription();
-        if (this.config.isResize && this.config.isResize === 'Y') {
+        if (this.config.isResize && this.config.isResize === true) {
             const resizeEvent = fromEvent(window, 'resize').pipe(debounceTime(500));
             this.subscription.add(
                 resizeEvent.subscribe(this.resizeEventHandler)

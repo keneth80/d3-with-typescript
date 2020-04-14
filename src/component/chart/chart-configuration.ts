@@ -93,7 +93,7 @@ export interface ChartConfiguration<T = any> {
 
     title?: ChartTitle; // chart title
 
-    isResize?: string; // 'Y' or 'N'
+    isResize?: boolean; // default: true
 
     legend?: ChartLegend; // legend display
 
