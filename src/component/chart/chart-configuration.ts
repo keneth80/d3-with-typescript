@@ -84,6 +84,7 @@ export interface ChartLegend {
 
 export interface ChartTooltip {
     tooltipTextParser: any;
+    eventType?: string; // click or mouseover
 }
 
 export interface ChartConfiguration<T = any> {

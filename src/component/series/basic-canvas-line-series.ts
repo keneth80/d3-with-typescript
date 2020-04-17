@@ -157,19 +157,19 @@ export class BasicCanvasLineSeries extends SeriesBase {
             padding = x.bandwidth() / 2;
         }
 
-        const space: number = (radius + lineStroke) * 2;
+        const space: number = (radius + lineStroke) * 4;
 
         const chartData = !this.dataFilter ? lineData : lineData.filter((item: any) => this.dataFilter(item));
 
         this.canvas
             .attr('width', geometry.width + space)
             .attr('height', geometry.height + space)
-            .style('transform', `translate(${(this.chartBase.chartMargin.left - space / 2)}px, ${(this.chartBase.chartMargin.top - space / 2)}px)`);
+            .style('transform', `translate(${(this.chartBase.chartMargin.left - space / 4)}px, ${(this.chartBase.chartMargin.top - space / 2)}px)`);
 
         this.pointerCanvas
             .attr('width', geometry.width + space)
             .attr('height', geometry.height + space)
-            .style('transform', `translate(${(this.chartBase.chartMargin.left - space / 2)}px, ${(this.chartBase.chartMargin.top - space / 2)}px)`);
+            .style('transform', `translate(${(this.chartBase.chartMargin.left - space / 4)}px, ${(this.chartBase.chartMargin.top - space / 2)}px)`);
 
         const context = (this.canvas.node() as any).getContext('2d');
             context.clearRect(0, 0, geometry.width + space, geometry.height + space);
@@ -178,11 +178,11 @@ export class BasicCanvasLineSeries extends SeriesBase {
         this.line = line()
             .defined(data => data[this.yField])
             .x((data: any, i) => {
-                const xposition = x(data[this.xField]) + padding + space / 2;
+                const xposition = x(data[this.xField]) + padding + space / 4;
                 return xposition; 
             }) // set the x values for the line generator
             .y((data: any) => {
-                const yposition = y(data[this.yField]) + space / 2;
+                const yposition = y(data[this.yField]) + space / 4;
                 return yposition; 
             })
             .context(context); // set the y values for the line generator
@@ -210,8 +210,8 @@ export class BasicCanvasLineSeries extends SeriesBase {
             let colorIndex = 0;
             const colorData = {};
             chartData.forEach((point: any, i: number) => {
-                const drawX = x(point[this.xField]) + space / 2;
-                const drawY = y(point[this.yField]) + space / 2;
+                const drawX = x(point[this.xField]) + space / 4;
+                const drawY = y(point[this.yField]) + space / 4;
                 this.drawPoint(drawX, drawY, radius, context);
 
                 // mouse over click event를 위한 데이터 인덱싱.

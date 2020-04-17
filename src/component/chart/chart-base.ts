@@ -149,6 +149,8 @@ export class ChartBase<T = any> implements IChart {
         width: 0, height: 0
     };
 
+    private legendRowCount: number = 1;
+
     private legendPadding: number = 5;
 
     private currentLegend: string = null;
@@ -198,6 +200,10 @@ export class ChartBase<T = any> implements IChart {
 
     get functions(): Array<IFunctions> {
         return this.functions;
+    }
+
+    get clipPathSelector(): any {
+        return this.clipPath;
     }
 
     getColorBySeriesIndex(index: number): string {
@@ -277,12 +283,18 @@ export class ChartBase<T = any> implements IChart {
     }
 
     showTooltip(): Selection<BaseType, any, HTMLElement, any> {
+        this.seriesList.forEach((series: ISeries) => {
+            series.unSelectItem();
+        });
         this.tooltipGroup.style('display', null);
         this.drawTooltip();
         return this.tooltipGroup;
     }
 
     hideTooltip(): Selection<BaseType, any, HTMLElement, any> {
+        this.seriesList.forEach((series: ISeries) => {
+            series.unSelectItem();
+        });
         this.tooltipGroup.style('display', 'none');
         return this.tooltipGroup;
     }
@@ -451,7 +463,7 @@ export class ChartBase<T = any> implements IChart {
             this.legendContainerSize.height = 
                 this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ? 
                 this.height : 
-                this.legendPadding * 2 + titleTextHeight;
+                (this.legendPadding * 2 + titleTextHeight) * this.legendRowCount;
             
             this.width = this.width - (this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ? this.legendContainerSize.width : 0);
             this.height = this.height - (this.legendPlacement === Placement.TOP || this.legendPlacement === Placement.BOTTOM ? this.legendContainerSize.height : 0);
@@ -607,6 +619,7 @@ export class ChartBase<T = any> implements IChart {
 
     protected chartCanvasClick = () => {
         this.chartClickSubject.next();
+        this.hideTooltip();
     }
 
     protected updateTitle() {
@@ -1059,6 +1072,47 @@ export class ChartBase<T = any> implements IChart {
                 });
             }
         }
+
+        // TODO: width 체크
+        const legendBox = (this.legendGroup.node() as any).getBoundingClientRect();
+        console.log('width : ', this.width, ' / legendBox : ', legendBox.width, ',', legendBox.height);
+    }
+
+    protected legendBreak (text: any, width: number) {
+        text.each((d: any, index: number, node: any) => {
+            
+            const text = select(node[index]);
+            let line = [];
+            // const words = text.text().split(/\s+/).reverse();
+            const words = text.text().split('').reverse();
+            let word = null;
+            let lineNumber = 0;
+            const lineHeight = 1.1; // ems
+            const x = text.attr('x') || 0;
+            const y = text.attr('y') || 0;
+            const dy = parseFloat(text.attr('dy') || '0');
+            let tspan = text.text(null)
+                            .append('tspan')
+                            .attr('x', x)
+                            .attr('y', y)
+                            .attr('dy', dy + 'em');
+            while (word = words.pop()) {
+                line.push(word);
+                tspan.text(line.join(''));
+                if (tspan.node().getComputedTextLength() > width) {
+                    line.pop();
+                    tspan.text(line.join(''));
+                    line = [word];
+                    // line.length = 0;
+                    // line.concat([word]);
+                    tspan = text.append('tspan')
+                                .attr('x', x)
+                                .attr('y', y)
+                                .attr('dy', ++lineNumber * lineHeight + dy + 'em')
+                                .text(word);
+                }
+            }
+        });
     }
 
     protected setupBrush(scale: any) {
@@ -1285,7 +1339,11 @@ export class ChartBase<T = any> implements IChart {
             currnetAxis = axisBottom(axis);
         }
 
+        // TODO: update 시 같은 설정정보로 다시 그려야함.
+
         this.axisGroups[orient].transition().duration(1000).call(currnetAxis);
+
+        // this.axisGroups[orient].transition().duration(1000).call(currnetAxis);
 
         this.updateSeries();
     }

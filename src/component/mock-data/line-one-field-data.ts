@@ -53,5 +53,27 @@ export const lineData = [
     {time: "2019-08-29 10:52:21.849657", member: "TEST_CLEAN_C5", value: 8},
     {time: "2019-08-29 10:52:31.707055", member: "TEST_CLEAN_C4", value: 11},
     {time: "2019-08-29 10:52:41.857112", member: "TEST_CLEAN_C5", value: 8},
-    {time: "2019-08-29 10:52:51.716448", member: "TEST_CLEAN_C4", value: 11}
+    {time: "2019-08-29 10:52:51.716448", member: "TEST_CLEAN_C4", value: 11},
+
+    {time: "2019-08-29 10:48:31.610913", member: "TEST_CLEAN_C6", value: 5},
+    {time: "2019-08-29 10:48:41.768096", member: "TEST_CLEAN_C7", value: 4},
+    {time: "2019-08-29 10:48:51.619555", member: "TEST_CLEAN_C6", value: 10},
+    {time: "2019-08-29 10:49:01.776912", member: "TEST_CLEAN_C7", value: 1},
+    {time: "2019-08-29 10:49:11.628565", member: "TEST_CLEAN_C6", value: 2},
+    {time: "2019-08-29 10:49:21.784795", member: "TEST_CLEAN_C7", value: 4},
+    {time: "2019-08-29 10:49:31.63427", member: "TEST_CLEAN_C6", value: 5},
+    {time: "2019-08-29 10:49:41.793274", member: "TEST_CLEAN_C7", value: 7},
+    {time: "2019-08-29 10:49:51.64253", member: "TEST_CLEAN_C6", value: 1},
+    {time: "2019-08-29 10:50:01.799721", member: "TEST_CLEAN_C7", value: 3},
+
+    {time: "2019-08-29 10:48:31.610913", member: "TEST_CLEAN_C8", value: 5},
+    {time: "2019-08-29 10:48:41.768096", member: "TEST_CLEAN_C9", value: 4},
+    {time: "2019-08-29 10:48:51.619555", member: "TEST_CLEAN_C8", value: 10},
+    {time: "2019-08-29 10:49:01.776912", member: "TEST_CLEAN_C9", value: 1},
+    {time: "2019-08-29 10:49:11.628565", member: "TEST_CLEAN_C8", value: 2},
+    {time: "2019-08-29 10:49:21.784795", member: "TEST_CLEAN_C9", value: 4},
+    {time: "2019-08-29 10:49:31.63427", member: "TEST_CLEAN_C8", value: 5},
+    {time: "2019-08-29 10:49:41.793274", member: "TEST_CLEAN_C9", value: 7},
+    {time: "2019-08-29 10:49:51.64253", member: "TEST_CLEAN_C8", value: 0},
+    {time: "2019-08-29 10:50:01.799721", member: "TEST_CLEAN_C9", value: 3}
 ];

@@ -58,6 +58,10 @@ export class SeriesBase implements ISeries {
 
     }
 
+    unSelectItem() {
+        
+    }
+
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
         mainGroup: Selection<BaseType, any, HTMLElement, any>, index: number) {
 

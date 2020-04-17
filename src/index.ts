@@ -353,6 +353,7 @@ const lineChart = () => {
                 tickFormat: '%H:%M %m-%d',
                 tickSize: 5,
                 isGridLine: true,
+                isZoom: true,
                 title: {
                     content: 'Date',
                     align: Align.CENTER
