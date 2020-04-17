@@ -288,7 +288,6 @@ const lineChart = () => {
                 radius: 3
             },
             filter,
-            animation: true,
             shape: Shape.LINE
         });
 
@@ -366,6 +365,7 @@ const lineChart = () => {
                 isGridLine: true,
                 tickSize: 5,
                 min: 0,
+                isRound: true,
                 title: {
                     content: 'Value',
                     align: Align.TOP

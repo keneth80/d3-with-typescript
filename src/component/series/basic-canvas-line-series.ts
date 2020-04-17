@@ -164,12 +164,12 @@ export class BasicCanvasLineSeries extends SeriesBase {
         this.canvas
             .attr('width', geometry.width + space)
             .attr('height', geometry.height + space)
-            .style('transform', `translate(${(this.chartBase.chartMargin.left - space / 4)}px, ${(this.chartBase.chartMargin.top - space / 2)}px)`);
+            .style('transform', `translate(${(this.chartBase.chartMargin.left - space / 4)}px, ${(this.chartBase.chartMargin.top - space / 4)}px)`);
 
         this.pointerCanvas
             .attr('width', geometry.width + space)
             .attr('height', geometry.height + space)
-            .style('transform', `translate(${(this.chartBase.chartMargin.left - space / 4)}px, ${(this.chartBase.chartMargin.top - space / 2)}px)`);
+            .style('transform', `translate(${(this.chartBase.chartMargin.left - space / 4)}px, ${(this.chartBase.chartMargin.top - space / 4)}px)`);
 
         const context = (this.canvas.node() as any).getContext('2d');
             context.clearRect(0, 0, geometry.width + space, geometry.height + space);
