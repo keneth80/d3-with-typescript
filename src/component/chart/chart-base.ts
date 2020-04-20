@@ -501,7 +501,7 @@ export class ChartBase<T = any> implements IChart {
             this.totalLegendWidth += (this.legendPadding * (this.seriesList.length - 1)) + ((this.legendItemSize.width + this.legendPadding) * this.seriesList.length);
 
             this.legendRowCount = Math.ceil(this.totalLegendWidth / this.width);
-            // console.log('legend width check : ', this.totalLegendWidth, this.width, this.legendRowCount, this.legendRowBreakCount, this.legendTextWidthList);
+            console.log('legend width check : ', this.totalLegendWidth, this.width, this.legendRowCount, this.legendRowBreakCount, this.legendTextWidthList);
 
             this.legendContainerSize.width = 
             this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ? 
@@ -601,11 +601,13 @@ export class ChartBase<T = any> implements IChart {
                     legendX = (this.isTitle && this.titlePlacement === Placement.LEFT ? this.titleContainerSize.width : 0);
                     translate = `translate(${x}, ${y})`;
                 } else if (this.legendPlacement === Placement.TOP) {
-                    legendX = this.legendRowCount > 1 ? this.legendPadding * 2 : this.totalLegendWidth - this.width + this.margin.left + this.margin.right;
+                    // legendX = this.legendRowCount > 1 ? this.legendPadding * 2 : this.totalLegendWidth - this.width + this.margin.left + this.margin.right;
+                    legendX = this.legendPadding * 2;
                     legendY = (this.isTitle && this.titlePlacement === Placement.TOP ? this.titleContainerSize.height : 0) + this.legendPadding * 2;
                     translate = `translate(${legendX}, ${legendY})`;
                 } else if (this.legendPlacement === Placement.BOTTOM) {
-                    legendX = this.legendRowCount > 1 ? this.legendPadding * 2 : this.totalLegendWidth - this.width + this.margin.left + this.margin.right;
+                    // legendX = this.legendRowCount > 1 ? this.legendPadding * 2 : this.totalLegendWidth - this.width + this.margin.left + this.margin.right;
+                    legendX = this.legendPadding * 2;
                     legendY = (this.margin.top + this.margin.bottom) + (this.axisTitleMargin.top + this.axisTitleMargin.bottom) + height;
                     if (this.isTitle && this.titlePlacement === Placement.TOP) {
                         legendY += this.titleContainerSize.height + this.legendPadding;
