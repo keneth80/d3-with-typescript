@@ -242,7 +242,8 @@ export class BasicCanvasLineSeries extends SeriesBase {
             this.pointerCanvas.data([colorIndex]);
 
             if (this.chartBase.series.length - 1 === index) {
-                // const move$ = fromEvent(this.pointerCanvas.node() as any, 'mousemove');
+                this.subscription.unsubscribe();
+                
                 this.subscription = this.move$
                 .pipe(
                     debounceTime(150)
@@ -256,9 +257,6 @@ export class BasicCanvasLineSeries extends SeriesBase {
                 this.pointerCanvas.on('mousemove', () => {
                     const mouseEvent = mouse(this.pointerCanvas.node() as any);
                     this.move$.next(mouseEvent);
-                    // this.drawTooltipPoint({
-                    //     width: geometry.width + space, height: geometry.height + space
-                    // }, radius);
                 });
 
                 this.pointerCanvas.on('click', () => {
