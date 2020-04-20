@@ -1,10 +1,12 @@
 import { Selection, BaseType, select, mouse } from 'd3-selection';
 import { line, curveMonotoneX } from 'd3-shape';
+import { fromEvent, Subject, of } from 'rxjs';
 
 import { Scale, ContainerSize } from '../chart/chart.interface';
 import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
 import { textBreak } from '../chart/util/d3-svg-util';
+import { debounceTime } from 'rxjs/operators';
 
 export class BasicCanvasLineSeriesModel {
     x: number;
@@ -71,6 +73,8 @@ export class BasicCanvasLineSeries extends SeriesBase {
     private parentElement: Selection<BaseType, any, HTMLElement, any>;
 
     private memoryCanvas: Selection<BaseType, any, HTMLElement, any>;
+
+    private move$: Subject<any> = new Subject();
 
     constructor(configuration: BasicCanvasLineSeriesConfiguration) {
         super(configuration);
@@ -238,16 +242,30 @@ export class BasicCanvasLineSeries extends SeriesBase {
             this.pointerCanvas.data([colorIndex]);
 
             if (this.chartBase.series.length - 1 === index) {
-                this.pointerCanvas.on('mousemove', () => {
+                // const move$ = fromEvent(this.pointerCanvas.node() as any, 'mousemove');
+                this.subscription = this.move$
+                .pipe(
+                    debounceTime(150)
+                )
+                .subscribe((value: any) => {
                     this.drawTooltipPoint({
                         width: geometry.width + space, height: geometry.height + space
-                    }, radius);
+                    }, radius, value);
+                });
+
+                this.pointerCanvas.on('mousemove', () => {
+                    const mouseEvent = mouse(this.pointerCanvas.node() as any);
+                    this.move$.next(mouseEvent);
+                    // this.drawTooltipPoint({
+                    //     width: geometry.width + space, height: geometry.height + space
+                    // }, radius);
                 });
 
                 this.pointerCanvas.on('click', () => {
+                    const mouseEvent = mouse(this.pointerCanvas.node() as any);
                     this.onClickItem({
                         width: geometry.width + space, height: geometry.height + space
-                    }, radius);
+                    }, radius, mouseEvent);
                 });
             }
         }
@@ -261,8 +279,12 @@ export class BasicCanvasLineSeries extends SeriesBase {
         this.canvas.style('opacity', !isHide ? null : 0);
     }
 
-    private onClickItem(geometry: ContainerSize, radius: number) {
-        const selectedItem: any = this.drawTooltipPoint(geometry, radius);
+    destroy() {
+        this.subscription.unsubscribe();
+    }
+
+    private onClickItem(geometry: ContainerSize, radius: number, mouseEvent: Array<number>) {
+        const selectedItem: any = this.drawTooltipPoint(geometry, radius, mouseEvent);
         if (selectedItem) {
             this.itemClickSubject.next({
                 data: selectedItem.data,
@@ -278,10 +300,7 @@ export class BasicCanvasLineSeries extends SeriesBase {
         }
     }
 
-    private drawTooltipPoint(geometry: ContainerSize, radius: number) {
-        const mouseEvent = mouse(this.pointerCanvas.node() as any);
-        const moveX = mouseEvent[0];
-        const moveY = mouseEvent[1];
+    private drawTooltipPoint(geometry: ContainerSize, radius: number, mouseEvent: Array<number>) {
         const pointerContext = (this.pointerCanvas.node() as any).getContext('2d');
         pointerContext.fillStyle = '#fff';
         pointerContext.lineWidth = this.strokeWidth;
@@ -293,7 +312,7 @@ export class BasicCanvasLineSeries extends SeriesBase {
             const canvasData: any = select(nodes[i]).data()[0];
             const cContext = canvasData.memoryCanvasContext;
             const colorData = canvasData.colorData;
-            const cData = cContext.getImageData(moveX, moveY, 1, 1).data;
+            const cData = cContext.getImageData(mouseEvent[0], mouseEvent[1], radius * 2, radius * 2).data;
             const cDataParse = cData.slice(0,3);
             const ckey = cDataParse.toString();
             selected = colorData[ckey];
@@ -321,6 +340,10 @@ export class BasicCanvasLineSeries extends SeriesBase {
                 
                 if (xPosition + textWidth > geometry.width) {
                     xPosition = xPosition - textWidth;
+                }
+
+                if (yPosition + textHeight > geometry.height) {
+                    yPosition = yPosition - textHeight - radius * 2;
                 }
     
                 this.tooltipGroup.attr('transform', `translate(${xPosition}, ${yPosition})`)

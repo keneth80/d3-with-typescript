@@ -343,6 +343,7 @@ export class ChartBase<T = any> implements IChart {
             this.svg.on('click', null);
             this.svg.selectAll('*').remove();
         }
+        this.seriesList.forEach((series: ISeries) => series.destroy());
         this.originDomains = null;
         this.originalData.length = 0;
         this.data.length = 0;
@@ -1075,7 +1076,7 @@ export class ChartBase<T = any> implements IChart {
 
         // TODO: width 체크
         const legendBox = (this.legendGroup.node() as any).getBoundingClientRect();
-        // console.log('width : ', this.width, ' / legendBox : ', legendBox.width, ',', legendBox.height);
+        console.log('width : ', this.width, ' / legendBox : ', legendBox.width, ',', legendBox.height);
     }
 
     protected legendBreak (text: any, width: number) {

@@ -1,5 +1,5 @@
 import { Selection, BaseType } from 'd3-selection';
-import { Subject, Observable } from 'rxjs';
+import { Subject, Observable, Subscription } from 'rxjs';
 
 import { ChartBase } from './chart-base';
 import { ISeries, SeriesConfiguration } from './series.interface';
@@ -15,6 +15,8 @@ export class SeriesBase implements ISeries {
     protected svg: Selection<BaseType, any, HTMLElement, any>;
 
     protected mainGroup: Selection<BaseType, any, HTMLElement, any>;
+
+    protected subscription: Subscription = new Subscription();
 
     protected itemClickSubject: Subject<{
         data: any,
@@ -59,7 +61,7 @@ export class SeriesBase implements ISeries {
     }
 
     unSelectItem() {
-        
+
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
@@ -69,6 +71,10 @@ export class SeriesBase implements ISeries {
 
     drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
 
+    }
+
+    destroy() {
+        this.subscription.unsubscribe();
     }
 
     drawProgress(
