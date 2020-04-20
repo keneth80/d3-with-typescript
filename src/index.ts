@@ -313,7 +313,7 @@ const lineChart = () => {
         //     bottom: 50
         // },
         title: {
-            placement: Placement.LEFT,
+            placement: Placement.TOP,
             content: 'SVG Line Chart',
             // style: {
             //     size: 16,

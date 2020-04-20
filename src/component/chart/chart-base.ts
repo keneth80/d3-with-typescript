@@ -469,6 +469,8 @@ export class ChartBase<T = any> implements IChart {
         if (this.isLegend) {
             const targetText = getMaxText(this.seriesList.map((series: ISeries) => series.displayName || series.selector));
             const targetTextWidth = getTextWidth(targetText, this.defaultLegendStyle.font.size, this.defaultLegendStyle.font.family);
+            // legend row 한개의 길이
+            const checkWidth = this.margin.left + this.margin.right + this.width - this.legendPadding * 4;
             
             this.legendTextWidthList = [];
             this.legendRowBreakCount = [];
@@ -480,17 +482,22 @@ export class ChartBase<T = any> implements IChart {
             }
             this.totalLegendWidth += this.legendPadding;
             
-            let compareWidth = 0;
-            this.seriesList.forEach((series: ISeries, index: number) => {
-                const currentTextWidth = ((this.isCheckBox ? this.checkBoxWidth : 0) + getTextWidth(series.displayName || series.selector, this.defaultLegendStyle.font.size, this.defaultLegendStyle.font.family));
-                this.legendTextWidthList.push(currentTextWidth + this.legendItemSize.width + this.legendPadding);
-                this.totalLegendWidth += currentTextWidth;
-                compareWidth += currentTextWidth;
-                if (compareWidth > this.width) {
-                    compareWidth = 0;
-                    this.legendRowBreakCount.push(index - (this.isAll ? 0 : 1));
+            let compareWidth = this.totalLegendWidth;
+            let pointWidth = 0;
+
+            for (let i = 0; i < this.seriesList.length; i++) {
+                const currentText = this.seriesList[i].displayName || this.seriesList[i].selector;
+                const currentTextWidth = ((this.isCheckBox ? this.checkBoxWidth : 0) + getTextWidth(currentText, this.defaultLegendStyle.font.size, this.defaultLegendStyle.font.family));
+                const currentItemWidth = currentTextWidth + this.legendItemSize.width + this.legendPadding;
+                this.legendTextWidthList.push(currentItemWidth);
+                this.totalLegendWidth += currentItemWidth;
+                compareWidth += currentItemWidth;
+                if (compareWidth > checkWidth) {
+                    compareWidth = currentItemWidth;
+                    this.legendRowBreakCount.push(i + (this.isAll ? 1 : 0));
                 }
-            });
+            }
+
             this.totalLegendWidth += (this.legendPadding * (this.seriesList.length - 1)) + ((this.legendItemSize.width + this.legendPadding) * this.seriesList.length);
 
             this.legendRowCount = Math.ceil(this.totalLegendWidth / this.width);
@@ -503,7 +510,7 @@ export class ChartBase<T = any> implements IChart {
             this.legendContainerSize.height = 
                 this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ? 
                 this.height : 
-                (this.legendPadding * 2 + titleTextHeight) * this.legendRowCount;
+                (this.legendPadding + titleTextHeight) * this.legendRowCount;
             
             this.width = this.width - (this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ? this.legendContainerSize.width : 0);
             this.height = this.height - (this.legendPlacement === Placement.TOP || this.legendPlacement === Placement.BOTTOM ? this.legendContainerSize.height : 0);
@@ -594,13 +601,11 @@ export class ChartBase<T = any> implements IChart {
                     legendX = (this.isTitle && this.titlePlacement === Placement.LEFT ? this.titleContainerSize.width : 0);
                     translate = `translate(${x}, ${y})`;
                 } else if (this.legendPlacement === Placement.TOP) {
-                    legendX = this.legendRowCount > 1 ? x : this.totalLegendWidth - this.width;
+                    legendX = this.legendRowCount > 1 ? this.legendPadding * 2 : this.totalLegendWidth - this.width + this.margin.left + this.margin.right;
                     legendY = (this.isTitle && this.titlePlacement === Placement.TOP ? this.titleContainerSize.height : 0) + this.legendPadding * 2;
                     translate = `translate(${legendX}, ${legendY})`;
-                    // translate = `translate(${this.margin.left}, ${this.titleContainerSize.height + this.legendPadding})`;
                 } else if (this.legendPlacement === Placement.BOTTOM) {
-                    // x = this.margin.left;
-                    legendX = this.legendRowCount > 1 ? x : this.totalLegendWidth - this.width;
+                    legendX = this.legendRowCount > 1 ? this.legendPadding * 2 : this.totalLegendWidth - this.width + this.margin.left + this.margin.right;
                     legendY = (this.margin.top + this.margin.bottom) + (this.axisTitleMargin.top + this.axisTitleMargin.bottom) + height;
                     if (this.isTitle && this.titlePlacement === Placement.TOP) {
                         legendY += this.titleContainerSize.height + this.legendPadding;
