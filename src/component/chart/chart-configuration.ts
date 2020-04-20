@@ -25,7 +25,8 @@ export enum Align {
 export enum Shape {
     LINE = 'line',
     RECT = 'rect',
-    CIRCLE = 'circle'
+    CIRCLE = 'circle',
+    NONE = 'none'
 }
 
 export interface AxisTitle {

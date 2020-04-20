@@ -159,7 +159,19 @@ export class ChartBase<T = any> implements IChart {
 
     private isCheckBox: boolean = true;
 
+    private checkBoxWidth: number = 15;
+
+    private legendItemTextHeight: number = 15;
+
     private isAll: boolean = true;
+
+    private allWidth: number = 30;
+
+    private totalLegendWidth: number = 0;
+
+    private legendRowBreakCount: Array<number> = [];
+
+    private legendTextWidthList: Array<number> = [];
     // ===================== Legend configuration end ===================== //
 
     constructor(
@@ -455,12 +467,39 @@ export class ChartBase<T = any> implements IChart {
         }
 
         if (this.isLegend) {
-            const padding = 5;
             const targetText = getMaxText(this.seriesList.map((series: ISeries) => series.displayName || series.selector));
             const targetTextWidth = getTextWidth(targetText, this.defaultLegendStyle.font.size, this.defaultLegendStyle.font.family);
-            // const targetTextHeight = 15;
+            
+            this.legendTextWidthList = [];
+            this.legendRowBreakCount = [];
+            this.totalLegendWidth = 0;
 
-            this.legendContainerSize.width = this.legendPadding * 2 + this.legendItemSize.width + padding + Math.round(targetTextWidth) + (this.isCheckBox ? 15 : 0);
+            if (this.isAll) {
+                this.totalLegendWidth = this.allWidth - (this.isCheckBox ? 0 : 10);
+                this.legendTextWidthList.push(this.totalLegendWidth);
+            }
+            this.totalLegendWidth += this.legendPadding;
+            
+            let compareWidth = 0;
+            this.seriesList.forEach((series: ISeries, index: number) => {
+                const currentTextWidth = ((this.isCheckBox ? this.checkBoxWidth : 0) + getTextWidth(series.displayName || series.selector, this.defaultLegendStyle.font.size, this.defaultLegendStyle.font.family));
+                this.legendTextWidthList.push(currentTextWidth + this.legendItemSize.width + this.legendPadding);
+                this.totalLegendWidth += currentTextWidth;
+                compareWidth += currentTextWidth;
+                if (compareWidth > this.width) {
+                    compareWidth = 0;
+                    this.legendRowBreakCount.push(index - (this.isAll ? 0 : 1));
+                }
+            });
+            this.totalLegendWidth += (this.legendPadding * (this.seriesList.length - 1)) + ((this.legendItemSize.width + this.legendPadding) * this.seriesList.length);
+
+            this.legendRowCount = Math.ceil(this.totalLegendWidth / this.width);
+            // console.log('legend width check : ', this.totalLegendWidth, this.width, this.legendRowCount, this.legendRowBreakCount, this.legendTextWidthList);
+
+            this.legendContainerSize.width = 
+            this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ? 
+                this.legendPadding * 2 + this.legendItemSize.width + this.legendPadding + Math.round(targetTextWidth) + (this.isCheckBox ? this.checkBoxWidth : 0) : 
+                (this.legendRowCount > 1 ? this.width : this.totalLegendWidth);
             this.legendContainerSize.height = 
                 this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ? 
                 this.height : 
@@ -544,25 +583,29 @@ export class ChartBase<T = any> implements IChart {
             if (!this.legendGroup) {
                 this.legendGroup = this.svg.append('g').attr('class', 'legend-group');
             }
-            let x = 0;
+            let legendX = 0;
+            let legendY = 0;
             this.legendGroup.attr('transform', () => {
                 let translate = 'translate(0, 0)';
                 if (this.legendPlacement === Placement.RIGHT) {
-                    x = (this.margin.left + this.margin.right + this.axisTitleMargin.left + this.axisTitleMargin.right + width);
+                    legendX = (this.margin.left + this.margin.right + this.axisTitleMargin.left + this.axisTitleMargin.right + width);
                     translate = `translate(${x}, ${y})`;
                 } else if (this.legendPlacement === Placement.LEFT) {
-                    x = (this.isTitle && this.titlePlacement === Placement.RIGHT ? this.titleContainerSize.width : 0);
+                    legendX = (this.isTitle && this.titlePlacement === Placement.LEFT ? this.titleContainerSize.width : 0);
                     translate = `translate(${x}, ${y})`;
                 } else if (this.legendPlacement === Placement.TOP) {
-                    translate = `translate(0, ${this.titleContainerSize.height + this.legendPadding})`;
+                    legendX = this.legendRowCount > 1 ? x : this.totalLegendWidth - this.width;
+                    legendY = (this.isTitle && this.titlePlacement === Placement.TOP ? this.titleContainerSize.height : 0) + this.legendPadding * 2;
+                    translate = `translate(${legendX}, ${legendY})`;
                     // translate = `translate(${this.margin.left}, ${this.titleContainerSize.height + this.legendPadding})`;
-                } else {
+                } else if (this.legendPlacement === Placement.BOTTOM) {
                     // x = this.margin.left;
-                    let y = (this.margin.top + this.margin.bottom) + (this.axisTitleMargin.top + this.axisTitleMargin.bottom) + height;
+                    legendX = this.legendRowCount > 1 ? x : this.totalLegendWidth - this.width;
+                    legendY = (this.margin.top + this.margin.bottom) + (this.axisTitleMargin.top + this.axisTitleMargin.bottom) + height;
                     if (this.isTitle && this.titlePlacement === Placement.TOP) {
-                        y += this.titleContainerSize.height;
+                        legendY += this.titleContainerSize.height + this.legendPadding;
                     }
-                    translate = `translate(${x}, ${y})`;
+                    translate = `translate(${legendX}, ${legendY})`;
                 }
                 return translate;
             });
@@ -924,15 +967,19 @@ export class ChartBase<T = any> implements IChart {
         if (!this.isLegend) {
             return;
         }
-        const checkboxPadding = this.isCheckBox ? 15 : 0;
+
+        const checkboxPadding = this.isCheckBox ? this.legendItemSize.width + this.legendPadding : 0;
         let addTitleWidth = 0;
         if (this.isTitle && this.titlePlacement === Placement.LEFT) {
             addTitleWidth = this.titleContainerSize.width;
         }
         let addAllWidth = 0;
         if (this.isAll) {
-            addAllWidth = 20;
+            addAllWidth = this.allWidth;
         }
+
+        let currentRow = 0;
+        let currentX = 0;
 
         const keys: Array<LegendItem> = this.seriesList.map((series: ISeries) => {
             const label: string = series.displayName ? series.displayName : series.selector;
@@ -944,6 +991,15 @@ export class ChartBase<T = any> implements IChart {
                 isHide: false
             }
         });
+
+        if (this.isAll) {
+            keys.unshift({
+                label: 'All',
+                selected: true,
+                isHide: false,
+                shape: Shape.NONE
+            });
+        }
         
         const legendItemGroup = this.legendGroup.selectAll('.legend-item-group')
             .data(keys)
@@ -955,67 +1011,63 @@ export class ChartBase<T = any> implements IChart {
                 },
                 (exit) => exit.remove()
             )
+            .attr('id', (d: LegendItem) => {
+                return d.label === 'All' ? 'legend-all-group' : null;
+            })
             .attr('transform', (d: any, index: number) => {
-                const x = this.legendPlacement === Placement.LEFT ? this.legendPadding : 0;
-                return this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ? 
-                    `translate(${x + addTitleWidth}, ${index * 20 + addAllWidth})` : 'translate(0, 0)';
+                let x = 0;
+                let y = this.legendPadding;
+                if (this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT) {
+                    if (this.legendPlacement === Placement.LEFT) {
+                        x = this.legendPadding;
+                    }
+                    x = x + addTitleWidth;
+                    y = index * 20 + addAllWidth;
+                }
+                if (this.legendPlacement === Placement.TOP || this.legendPlacement === Placement.BOTTOM) {
+                    if (index > 0) {
+                        currentX += this.legendTextWidthList[index - 1] + this.legendPadding;
+                    }
+
+                    if (this.legendRowBreakCount.indexOf(index) > -1) {
+                        currentRow = this.legendRowBreakCount.indexOf(index) + 1;
+                        currentX = 0;
+                    }
+                    
+                    x = currentX;
+                    y = (this.legendItemTextHeight + this.legendPadding) * currentRow;
+                }
+                return `translate(${x}, ${y})`;
             });
 
-        if (this.isAll) {
-            const allGroup = this.legendGroup.selectAll('.legend-all-group')
-                .data([
-                    <LegendItem>{
-                        label: 'All',
-                        selected: true,
-                        isHide: false
-                    }
-                ])
-                .join(
-                    (enter) => enter.append('g').attr('class', 'legend-all-group'),
-                    (update) => update,
-                    (exit) => exit.remove()
-                );
-
-            allGroup.selectAll('.legend-all-label')
-                .data((d: LegendItem) => [d])
-                .join(
-                    (enter) => enter.append('text').attr('class', 'legend-all-label'),
-                    (update) => update,
-                    (exit) => exit.remove()
-                )
-                .style('font-size', this.defaultLegendStyle.font.size)
-                .attr('dy', '.35em')
-                .attr('transform', 'translate(15, 5)')
-                .text((d: LegendItem) => d.label)
-                .on('click', this.onLegendAllLabelItemClick);
-            
-            drawSvgCheckBox(allGroup, this.onLegendAllCheckBoxItemClick);
-        }
-        
         if (this.isCheckBox) {
             legendItemGroup.each((d: LegendItem, index: number, nodeList: any) => {
-                drawSvgCheckBox(select(nodeList[index]), this.onLegendCheckBoxItemClick);
+                drawSvgCheckBox(select(nodeList[index]), this.onLegendCheckBoxClick);
             });
         }
-        
+
         const legendLabelGroup: Selection<BaseType, any, BaseType, any> = legendItemGroup.selectAll('.legend-label-group')
             .data((d: any) =>[d])
             .join(
-                (enter) => enter.append('g').attr('class', 'legend-label-group').on('click', this.onLegendItemClick),
+                (enter) => enter.append('g').attr('class', 'legend-label-group'),
                 (update) => update,
                 (exit) => exit.remove()
             )
-            .attr('transform', `translate(${checkboxPadding}, 0)`);
+            .attr('id', (d: LegendItem) => {
+                return d.label === 'All' ? 'legend-all-label' : null;
+            })
+            .attr('transform', `translate(${checkboxPadding}, 0)`)
+            .on('click', this.onLegendLabelItemClick);
 
         legendLabelGroup.each((d: LegendItem, i: number, nodeList: any) => {
             if (d.shape === Shape.LINE) {
                 drawLegendColorItemByLine(select(nodeList[i]), this.legendItemSize, keys, this.colors);
             } else if (d.shape === Shape.CIRCLE) {
                 drawLegendColorItemByCircle(select(nodeList[i]), this.legendItemSize, keys, this.colors);
-            } else {
+            } else if (d.shape === Shape.RECT) {
                 drawLegendColorItemByRect(select(nodeList[i]), this.legendItemSize, keys, this.colors);
             }
-        })
+        });
       
         legendLabelGroup.selectAll('.legend-label')
             .data((d: LegendItem) => [d])
@@ -1024,59 +1076,14 @@ export class ChartBase<T = any> implements IChart {
                 (update) => update,
                 (exit) => exit.remove()
             )
+            .style('font-family', this.defaultLegendStyle.font.family)
             .style('font-size', this.defaultLegendStyle.font.size)
             .attr('dy', '.35em')
-            .attr('transform', (d: any, index: number) => {
-                return `translate(${(this.legendPadding + this.legendItemSize.width)}, 5)`;
+            .attr('transform', (d: LegendItem, index: number) => {
+                const x = (d.shape === Shape.NONE ? 0 : this.legendPadding + this.legendItemSize.width);
+                return `translate(${x}, 5)`;
             })
             .text((d: LegendItem) => { return d.label; });
-
-        
-        if (this.legendPlacement === Placement.TOP || this.legendPlacement === Placement.BOTTOM) {
-            let currentX = (this.isAll ? 35 + this.legendPadding : this.legendPadding);
-            let lastLabelWidth = 0;
-            const xpositions = [currentX];
-
-            legendLabelGroup.selectAll('.legend-label').each((d: LegendItem, i: number, node: any) => {
-                const index = keys.findIndex((key: LegendItem) => d.label === key.label);
-                // const textWidth = Math.round(getTextWidth(d.label, this.defaultLegendStyle.font.size, this.defaultLegendStyle.font.family));
-                const textWidth = getTextWidthByComputedTextLength(node[i]);
-                const legendItemWidth = this.legendItemSize.width + this.legendPadding * 2 + textWidth + (this.isCheckBox === true ? checkboxPadding : 0);
-                currentX += legendItemWidth;
-                xpositions.push(currentX);
-            });
-
-            legendItemGroup.attr('transform', (d: LegendItem) => {
-                const index = keys.findIndex((key: LegendItem) => d.label === key.label);
-                const x = xpositions[index];
-                return `translate(${x}, ${this.legendPadding})`;
-            });
-
-            if (this.isAll) {
-                this.legendGroup.selectAll('.legend-all-group').attr('transform', (d: LegendItem) => {
-                    return `translate(${this.legendPadding}, ${this.legendPadding})`;
-                });
-            }
-
-            const legendGroupX = this.svgWidth - (this.legendGroup.node() as any).getBoundingClientRect().width - (this.margin.right + this.legendPadding);
-            const legendGroupTranslate = getTransformByArray(this.legendGroup.attr('transform'));
-
-            // TODO: legend align
-            this.legendGroup.attr('transform', () => {
-                return `translate(${legendGroupX}, ${legendGroupTranslate[1]})`;
-            });
-        } else {
-            if (this.isAll) {
-                this.legendGroup.selectAll('.legend-all-group').attr('transform', (d: LegendItem) => {
-                    const allGroupX = (this.legendPlacement === Placement.LEFT ? this.legendPadding : 0) + addTitleWidth
-                    return `translate(${allGroupX}, 0)`;
-                });
-            }
-        }
-
-        // TODO: width 체크
-        const legendBox = (this.legendGroup.node() as any).getBoundingClientRect();
-        console.log('width : ', this.width, ' / legendBox : ', legendBox.width, ',', legendBox.height);
     }
 
     protected legendBreak (text: any, width: number) {
@@ -1419,7 +1426,98 @@ export class ChartBase<T = any> implements IChart {
         this.idleTimeout = null; 
     }
 
-    private onLegendAllLabelItemClick = (d: LegendItem, index: number, nodeList: any) => {
+    private onLegendCheckBoxClick = (d: LegendItem, index: number, nodeList: any) => {
+        if (d.label === 'All') {
+            this.onLegendAllCheckBoxItemClick(d, index, nodeList)
+        } else {
+            this.onLegendCheckBoxItemClick(d, index, nodeList);
+        }
+    }
+
+    private onLegendAllCheckBoxItemClick(d: LegendItem, index: number, nodeList: any) {
+        this.hideTooltip();
+        this.currentLegend = null;
+        d.isHide = !d.isHide;
+        this.seriesList.forEach((series: ISeries) => {
+            series.hide((series.displayName ? series.displayName : series.selector), d.isHide);
+        });
+        this.legendGroup.selectAll('.legend-label-group').filter((item: LegendItem) => item.label !== 'All').each((item: LegendItem, i: number, node: any) => {
+            item.isHide = d.isHide;
+        });
+
+        this.legendGroup.selectAll('.legend-item-group').filter((item: LegendItem) => item.label !== 'All').selectAll('.checkbox-mark').each((item: any, i: number, node: any) => {
+            item.checked = !d.isHide;
+            select(node[i]).style('opacity', item.checked? 1 : 0)
+        });
+    }
+
+    private onLegendCheckBoxItemClick(d: LegendItem, index: number, nodeList: any) {
+        this.hideTooltip();
+        d.isHide = !d.isHide;
+        const target: ISeries = this.seriesList.find((series: ISeries) => (series.displayName ? series.displayName : series.selector) === d.label);
+        if (target) {
+            target.hide(d.label, d.isHide);
+            if (!d.isHide && !d.selected) {
+                target.select(d.label, d.selected);
+            }
+
+            if (this.isAll) {
+                let isCheckedAll = (this.legendGroup.selectAll('#legend-all-group').selectAll('.checkbox-mark').data()[0] as any).checked;
+                
+                let checkCount = 0;
+                let uncheckCount = 0;
+                let allCount = 0;
+                this.legendGroup.selectAll('.legend-item-group').filter((item: LegendItem) => item.label !== 'All').selectAll('.checkbox-mark').each((item: any, i: number, node: any) => {
+                    if (item.checked) {
+                        checkCount++;
+                    } else {
+                        uncheckCount++;
+                    }
+                    allCount++;
+                });
+
+                if (isCheckedAll && uncheckCount > 0) {
+                    // all check 해제
+                    this.legendGroup.selectAll('#legend-all-group').selectAll('.checkbox-mark').each((item: any, i: number, node: any) => {
+                        item.checked = false;
+                        item.data.isHide = true;
+                        select(node[i]).style('opacity', item.checked? 1 : 0);
+                    });
+                } else {
+                    if (checkCount === allCount) {
+                        // all check 설정.
+                        this.legendGroup.selectAll('#legend-all-group').selectAll('.checkbox-mark').each((item: any, i: number, node: any) => {
+                            item.checked = true;
+                            item.data.isHide = false;
+                            select(node[i]).style('opacity', item.checked? 1 : 0);
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    private onLegendLabelItemClick = (d: LegendItem, index: number, nodeList: any) => {
+        if (d.label === 'All') {
+            this.onLegendAllLabelItemSelect(d, index, nodeList)
+        } else {
+            this.onLegendLabelItemSelect(d, index, nodeList);
+        }
+    }
+
+    private onLegendLabelItemSelect(d: LegendItem, index: number, nodeList: any) {
+        this.currentLegend = d.label;
+        d.selected = !d.selected;
+
+        select(nodeList[index]).style('opacity', d.selected === false ? 0.5 : null);
+
+        const target: ISeries = this.seriesList.find((series: ISeries) => (series.displayName ? series.displayName : series.selector) === d.label);
+        if (target) {
+            target.select(d.label, d.selected);
+        }
+    }
+
+    private onLegendAllLabelItemSelect = (d: LegendItem, index: number, nodeList: any) => {
         this.currentLegend = null;
         d.selected = !d.selected;
         
@@ -1433,80 +1531,5 @@ export class ChartBase<T = any> implements IChart {
         this.seriesList.forEach((series: ISeries) => {
             series.select((series.displayName ? series.displayName : series.selector), d.selected);
         });
-    }
-
-    private onLegendAllCheckBoxItemClick = (d: LegendItem, index: number, nodeList: any) => {
-        this.hideTooltip();
-        this.currentLegend = null;
-        d.isHide = !d.isHide;
-        this.seriesList.forEach((series: ISeries) => {
-            series.hide((series.displayName ? series.displayName : series.selector), d.isHide);
-        });
-        this.legendGroup.selectAll('.legend-label-group').each((item: LegendItem, i: number, node: any) => {
-            item.isHide = d.isHide;
-        });
-
-        this.legendGroup.selectAll('.legend-item-group').selectAll('.checkbox-mark').each((item: any, i: number, node: any) => {
-            item.checked = !d.isHide;
-            select(node[i]).style('opacity', item.checked? 1 : 0)
-        });
-    }
-
-    private onLegendCheckBoxItemClick = (d: LegendItem, index: number, nodeList: any) => {
-        this.hideTooltip();
-        d.isHide = !d.isHide;
-        const target: ISeries = this.seriesList.find((series: ISeries) => (series.displayName ? series.displayName : series.selector) === d.label);
-        if (target) {
-            target.hide(d.label, d.isHide);
-            if (!d.isHide && !d.selected) {
-                target.select(d.label, d.selected);
-            }
-
-            if (this.isAll) {
-                let isCheckedAll = (this.legendGroup.selectAll('.legend-all-group').selectAll('.checkbox-mark').data()[0] as any).checked;
-                
-                let checkCount = 0;
-                let uncheckCount = 0;
-                let allCount = 0;
-                this.legendGroup.selectAll('.legend-item-group').selectAll('.checkbox-mark').each((item: any, i: number, node: any) => {
-                    if (item.checked) {
-                        checkCount++;
-                    } else {
-                        uncheckCount++;
-                    }
-                    allCount++;
-                });
-
-                if (isCheckedAll && uncheckCount > 0) {
-                    // all check 해제
-                    this.legendGroup.selectAll('.legend-all-group').selectAll('.checkbox-mark').each((item: any, i: number, node: any) => {
-                        item.checked = false;
-                        item.data.isHide = true;
-                        select(node[i]).style('opacity', item.checked? 1 : 0);
-                    });
-                } else {
-                    if (checkCount === allCount) {
-                        // all check 설정.
-                        this.legendGroup.selectAll('.legend-all-group').selectAll('.checkbox-mark').each((item: any, i: number, node: any) => {
-                            item.checked = true;
-                            item.data.isHide = false;
-                            select(node[i]).style('opacity', item.checked? 1 : 0);
-                        });
-                    }
-                }
-            }
-        }
-    }
-
-    private onLegendItemClick = (d: LegendItem, index: number, nodeList: any) => {
-        this.currentLegend = d.label;
-        d.selected = !d.selected;
-
-        select(nodeList[index]).style('opacity', d.selected === false ? 0.5 : null);
-
-        const target: ISeries = this.seriesList.find((series: ISeries) => (series.displayName ? series.displayName : series.selector) === d.label);
-        if (target) {
-            target.select(d.label, d.selected);
-        }
     }
 }
