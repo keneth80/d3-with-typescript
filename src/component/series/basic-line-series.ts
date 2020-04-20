@@ -9,7 +9,7 @@ import { Subject, Observable } from 'rxjs';
 import { Scale, ContainerSize } from '../chart/chart.interface';
 import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
-import { textBreak, isIE } from '../chart/util/d3-svg-util';
+import { textBreak, isIE, getTextWidth } from '../chart/util/d3-svg-util';
 
 export interface BasicLineSeriesConfiguration extends SeriesConfiguration {
     dotSelector?: string;
@@ -56,6 +56,8 @@ export class BasicLineSeries extends SeriesBase {
     private currentSelector: any;
 
     private defaultRadius: number = 4;
+
+    private isHide: boolean = false;
 
     constructor(configuration: BasicLineSeriesConfiguration) {
         super(configuration);
@@ -189,19 +191,30 @@ export class BasicLineSeries extends SeriesBase {
                 if (!this.chartBase.tooltip.eventType || this.chartBase.tooltip.eventType === 'click') {
                     dots
                     .on('click', (d: any, i, nodeList: any) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        if (this.isHide) {
+                            return;
+                        }
+
                         if (this.currentSelector) {
                             this.currentSelector.attr('r', radius);
                         }
                         this.setChartTooltip(d, geometry, radius);
                         this.currentSelector = select(nodeList[i]);
                         this.currentSelector.attr('r', radius * 1.5);
-                        
-                        event.preventDefault();
-                        event.stopPropagation();
                     });
                 } else {
                     dots
                     .on('mouseover', (d: any, i, nodeList: any) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        if (this.isHide) {
+                            return;
+                        }
+
                         select(nodeList[i]).attr('r', radius * 1.5);
                             // .style('fill', () => colorDarker(color, 2)); // point
 
@@ -209,6 +222,13 @@ export class BasicLineSeries extends SeriesBase {
                         select(nodeList[i]).classed('tooltip', true);
                     })
                     .on('mouseout', (d: any, i, nodeList: any) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        if (this.isHide) {
+                            return;
+                        }
+
                         select(nodeList[i])
                             .attr('r', radius) // point
                             // .style('stroke', null)
@@ -230,12 +250,24 @@ export class BasicLineSeries extends SeriesBase {
     }
 
     hide(displayName: string, isHide: boolean) {
+        this.isHide = isHide;
         this.mainGroup.selectAll(`.${this.selector}`).style('opacity', !isHide ? null : 0);
+        
+        // TODO: 좌표를 바꿀지 뎁스를 뒤로 보낼지 나중에 고민해볼 것.
+        if (this.isHide) {
+            this.mainGroup.lower();
+        } else {
+            this.mainGroup.raise();
+        }
+
         if (this.config.dot) {
-            this.dotGroup.lower();
+            if (this.isHide) {
+                this.dotGroup.lower();
+            } else {
+                this.dotGroup.raise();
+            }
             this.dotGroup.selectAll(`.${this.dotClass}`).style('opacity', !isHide ? null : 0);
         }
-        this.mainGroup.lower();
     }
 
     unSelectItem() {
@@ -249,15 +281,18 @@ export class BasicLineSeries extends SeriesBase {
     private setChartTooltip(d: any, geometry: ContainerSize, radius: number) {
         this.tooltipGroup = this.chartBase.showTooltip();
     
-        const textElement: any = this.tooltipGroup.select('text').attr('dy', '0em').text(
+        const textElement: any = this.tooltipGroup.select('text').attr('dy', '.1em').text(
             this.chartBase.tooltip.tooltipTextParser(d)
         );
 
         textBreak(textElement, '\n');
 
-        const parseTextNode = textElement.node().getBoundingClientRect();
+        // const parseTextNode = textElement.node().getBoundingClientRect();
+        const parseTextNode = textElement.node().getBBox();
 
-        const textWidth = parseTextNode.width + 5;
+        // console.log('check : ', getTextWidth('Canvas Line Chart', 16, 'Arial, Helvetica, sans-serif'), getTextWidth('Canvas Line Chart', 16, select('body').style('font-family')));
+
+        const textWidth = parseTextNode.width + 7;
         const textHeight = parseTextNode.height + 5;
         
         const padding = radius * 2 + 5;

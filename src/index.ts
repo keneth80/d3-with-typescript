@@ -135,35 +135,35 @@ const examples = [
     }
 ]
 
-const example = () => {
-    new BasicChart({
-        selector: '#example',
-        data: examples,
-        isResize: true,
-        axes: [
-            {
-                field: 'salesperson',
-                type: 'string',
-                placement: Placement.BOTTOM,
-            },
-            {
-                field: 'assets',
-                type: 'number',
-                placement: Placement.LEFT,
-                min: 0
-            }
-        ],
-        series: [
-            new ExampleSeries({
-                selector: 'examples',
-                xField: 'salesperson',
-                yField: 'assets'
-            })
-        ]
-    }).draw();
-};
+// const example = () => {
+//     new BasicChart({
+//         selector: '#example',
+//         data: examples,
+//         isResize: true,
+//         axes: [
+//             {
+//                 field: 'salesperson',
+//                 type: 'string',
+//                 placement: Placement.BOTTOM,
+//             },
+//             {
+//                 field: 'assets',
+//                 type: 'number',
+//                 placement: Placement.LEFT,
+//                 min: 0
+//             }
+//         ],
+//         series: [
+//             new ExampleSeries({
+//                 selector: 'examples',
+//                 xField: 'salesperson',
+//                 yField: 'assets'
+//             })
+//         ]
+//     }).draw();
+// };
 
-example();
+// example();
 
 const canvasLineChart = () => {
     const fields = lineData.map((item: any) => item.member);
@@ -1095,9 +1095,9 @@ canvasLineChart();
 
 lineChart();
 
-topologyExcute();
+// topologyExcute();
 
-excute();
+// excute();
 
 // boxplot();
 

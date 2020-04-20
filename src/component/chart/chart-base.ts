@@ -734,6 +734,12 @@ export class ChartBase<T = any> implements IChart {
             } else if (scale.type === ScaleType.STRING) {
                 bandWidth = scale.scale.bandwidth();
             }
+            
+            if (scale.visible) {
+                this.axisGroups[scale.orient].call(
+                    orientedScale
+                );
+            }
 
             this.axisGroups[scale.orient].selectAll('text')
                 .style('font-size', this.defaultAxisLabelStyle.font.size + 'px')
@@ -741,12 +747,6 @@ export class ChartBase<T = any> implements IChart {
                 // .style('font-weight', 100)
                 // .style('stroke-width', 0.5)
                 // .style('stroke', this.defaultAxisLabelStyle.font.color);
-            
-            if (scale.visible) {
-                this.axisGroups[scale.orient].call(
-                    orientedScale
-                );
-            }
 
             if (scale.isGridLine) {
                 const targetScale = getAxisByPlacement(scale.orient, scale.scale);
@@ -1075,7 +1075,7 @@ export class ChartBase<T = any> implements IChart {
 
         // TODO: width 체크
         const legendBox = (this.legendGroup.node() as any).getBoundingClientRect();
-        console.log('width : ', this.width, ' / legendBox : ', legendBox.width, ',', legendBox.height);
+        // console.log('width : ', this.width, ' / legendBox : ', legendBox.width, ',', legendBox.height);
     }
 
     protected legendBreak (text: any, width: number) {
@@ -1167,7 +1167,7 @@ export class ChartBase<T = any> implements IChart {
             }
             return;
         }
-
+        this.clearOption();
         // 기준이되는 axis가 완료된 후에 나머지를 그린다.
         this.updateAxis()
             .then(() => {
@@ -1298,30 +1298,31 @@ export class ChartBase<T = any> implements IChart {
 
     protected updateBrushHandler(orient: string = 'bottom', brush: any) {
         const extent = event.selection;
-        const axis: any = this.scales.find((scale: Scale) => scale.orient === orient).scale;
+        const axis: any = this.scales.find((scale: Scale) => scale.orient === orient);
+        const currentScale: any = axis.scale;
 
         if (!extent) {
             if (!this.idleTimeout) return this.idleTimeout = setTimeout(this.idled, 350);
             if (this.originDomains[orient]) {
-                axis.domain([this.originDomains[orient][0], this.originDomains[orient][1]]);
+                currentScale.domain([this.originDomains[orient][0], this.originDomains[orient][1]]);
             }
         } else {
             if (!this.originDomains[orient]) {
-                this.originDomains[orient] = axis.domain();
+                this.originDomains[orient] = currentScale.domain();
             }
 
             let domainStart = 0;
             let domainEnd = 0;
 
             if (orient === Placement.TOP || orient === Placement.BOTTOM) {
-                domainStart = axis.invert(extent[0]);
-                domainEnd = axis.invert(extent[1]);
+                domainStart = currentScale.invert(extent[0]);
+                domainEnd = currentScale.invert(extent[1]);
             } else { // left, right 는 아래에서 위로 정렬이기 때문.
-                domainStart = axis.invert(extent[1]);
-                domainEnd = axis.invert(extent[0]);
+                domainStart = currentScale.invert(extent[1]);
+                domainEnd = currentScale.invert(extent[0]);
             }
 
-            axis.domain([ domainStart, domainEnd ]);
+            currentScale.domain([ domainStart, domainEnd ]);
             this.axisGroups[orient].select('.brush' + orient).call(
                 brush.move, null
             );
@@ -1330,18 +1331,59 @@ export class ChartBase<T = any> implements IChart {
         let currnetAxis: any = null;
 
         if (orient === Placement.LEFT) {
-            currnetAxis = axisLeft(axis);
+            currnetAxis = axisLeft(currentScale);
         } else if (orient === Placement.RIGHT) {
-            currnetAxis = axisRight(axis);
+            currnetAxis = axisRight(currentScale);
         } else if (orient === Placement.TOP) {
-            currnetAxis = axisTop(axis);
+            currnetAxis = axisTop(currentScale);
         } else {
-            currnetAxis = axisBottom(axis);
+            currnetAxis = axisBottom(currentScale);
         }
 
-        // TODO: update 시 같은 설정정보로 다시 그려야함.
+        if (axis.type === ScaleType.NUMBER) {
+            if (axis.tickFormat) {
+                currnetAxis.ticks(null, axis.tickFormat);
+            }
+        } else if (axis.type === ScaleType.TIME) {
+            if (axis.tickFormat) {
+                currnetAxis.tickFormat(timeFormat(axis.tickFormat));
+            }
+        }
 
-        this.axisGroups[orient].transition().duration(1000).call(currnetAxis);
+        if (axis.tickSize) {
+            currnetAxis.ticks(axis.tickSize);
+        }
+
+        this.axisGroups[orient].call(currnetAxis);
+
+        this.axisGroups[axis.orient].selectAll('text')
+            .style('font-size', this.defaultAxisLabelStyle.font.size + 'px')
+            .style('font-family', this.defaultAxisLabelStyle.font.family);
+            // .style('font-weight', 100)
+            // .style('stroke-width', 0.5)
+            // .style('stroke', this.defaultAxisLabelStyle.font.color);
+
+        if (axis.isGridLine) {
+            const targetScale = getAxisByPlacement(axis.orient, axis.scale);
+            if (axis.tickSize) {
+                targetScale.ticks(axis.tickSize);
+            }
+            const tickFmt: any = ' ';
+            if (axis.orient === Placement.RIGHT || axis.orient === Placement.LEFT) {
+                targetScale.tickSize(-this.width).tickFormat(tickFmt);
+            } else {
+                targetScale.tickSize(-this.height).tickFormat(tickFmt);
+            }
+
+            this.gridLineGroups[axis.orient]
+                .style('stroke', '#ccc')
+                .style('stroke-opacity', 0.3)
+                .style('shape-rendering', 'crispEdges');
+
+            this.gridLineGroups[axis.orient].call(
+                targetScale
+            );
+        }
 
         // this.axisGroups[orient].transition().duration(1000).call(currnetAxis);
 
@@ -1368,6 +1410,10 @@ export class ChartBase<T = any> implements IChart {
         this.isResize = false;
     }
 
+    private clearOption() {
+        this.hideTooltip();
+    }
+
     private idled = () => { 
         this.idleTimeout = null; 
     }
@@ -1389,6 +1435,7 @@ export class ChartBase<T = any> implements IChart {
     }
 
     private onLegendAllCheckBoxItemClick = (d: LegendItem, index: number, nodeList: any) => {
+        this.hideTooltip();
         this.currentLegend = null;
         d.isHide = !d.isHide;
         this.seriesList.forEach((series: ISeries) => {
@@ -1405,6 +1452,7 @@ export class ChartBase<T = any> implements IChart {
     }
 
     private onLegendCheckBoxItemClick = (d: LegendItem, index: number, nodeList: any) => {
+        this.hideTooltip();
         d.isHide = !d.isHide;
         const target: ISeries = this.seriesList.find((series: ISeries) => (series.displayName ? series.displayName : series.selector) === d.label);
         if (target) {
