@@ -203,7 +203,7 @@ export class BasicLineSeries extends SeriesBase {
                         }
                         this.setChartTooltip(d, geometry, radius);
                         this.currentSelector = select(nodeList[i]);
-                        this.currentSelector.attr('r', radius * 1.5);
+                        this.currentSelector.attr('r', radius * 1.7);
                     });
                 } else {
                     dots
@@ -215,7 +215,7 @@ export class BasicLineSeries extends SeriesBase {
                             return;
                         }
 
-                        select(nodeList[i]).attr('r', radius * 1.5);
+                        select(nodeList[i]).attr('r', radius * 1.7);
                             // .style('fill', () => colorDarker(color, 2)); // point
 
                         this.setChartTooltip(d, geometry, radius);
