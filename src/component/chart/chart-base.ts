@@ -362,6 +362,7 @@ export class ChartBase<T = any> implements IChart {
     }
 
     updateSeries() {
+        // TODO: delay 적용할 것 
         try {
             if (this.seriesList && this.seriesList.length) {
                 this.seriesList.map((series: ISeries, index: number) => {
