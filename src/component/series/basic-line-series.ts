@@ -6,8 +6,6 @@ import { easeLinear, easeCircle } from 'd3-ease';
 
 import { Subject, Observable } from 'rxjs';
 
-import crossFilter2 from 'crossfilter2';
-
 import { Scale, ContainerSize } from '../chart/chart.interface';
 import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
@@ -65,7 +63,7 @@ export class BasicLineSeries extends SeriesBase {
 
     private isHide: boolean = false;
 
-    private crossFilterDimension: any = null;
+    private crossFilterDimension: any = undefined;
 
     constructor(configuration: BasicLineSeriesConfiguration) {
         super(configuration);
@@ -140,7 +138,7 @@ export class BasicLineSeries extends SeriesBase {
         }
 
         if (this.config.crossFilter) {
-            this.crossFilterDimension = crossFilter2(chartData).dimension((item: any) => item[this.config.crossFilter.filerField]);
+            this.crossFilterDimension = this.chartBase.crossFilter(chartData).dimension((item: any) => item[this.config.crossFilter.filerField]);
         } else {
             if (this.crossFilterDimension) {
                 this.crossFilterDimension.dispose();

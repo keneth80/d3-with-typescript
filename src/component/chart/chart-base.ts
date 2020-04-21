@@ -12,6 +12,8 @@ import { brushX, brushY } from 'd3-brush';
 import { fromEvent, Subscription, Subject, of, Observable, Observer } from 'rxjs';
 import { debounceTime, delay } from 'rxjs/operators';
 
+import crossFilter2 from 'crossfilter2';
+
 import { IChart, Scale, ContainerSize, LegendItem } from './chart.interface';
 import { ChartConfiguration, Axis, Margin, Placement, ChartTitle, ScaleType, Align, AxisTitle, ChartTooltip, Shape } from './chart-configuration';
 import { ISeries } from './series.interface';
@@ -216,6 +218,10 @@ export class ChartBase<T = any> implements IChart {
 
     get clipPathSelector(): any {
         return this.clipPath;
+    }
+
+    get crossFilter(): any{
+        return crossFilter2;
     }
 
     getColorBySeriesIndex(index: number): string {

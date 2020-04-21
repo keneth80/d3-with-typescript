@@ -1,7 +1,6 @@
 import { Selection, BaseType, select, mouse } from 'd3-selection';
 import { line, curveMonotoneX } from 'd3-shape';
 import { fromEvent, Subject, of } from 'rxjs';
-import crossFilter2 from 'crossfilter2';
 
 import { Scale, ContainerSize } from '../chart/chart.interface';
 import { SeriesBase } from '../chart/series-base';
@@ -171,7 +170,7 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
         const space: number = (radius + lineStroke) * 4;
 
         if (this.config.crossFilter) {
-            this.crossFilterDimension = crossFilter2(chartData).dimension((item: T) => item[this.config.crossFilter.filerField]);
+            this.crossFilterDimension = this.chartBase.crossFilter(chartData).dimension((item: T) => item[this.config.crossFilter.filerField]);
         } else {
             if (this.crossFilterDimension) {
                 this.crossFilterDimension.dispose();
