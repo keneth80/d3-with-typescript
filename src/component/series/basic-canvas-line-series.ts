@@ -1,6 +1,7 @@
 import { Selection, BaseType, select, mouse } from 'd3-selection';
 import { line, curveMonotoneX } from 'd3-shape';
 import { fromEvent, Subject, of } from 'rxjs';
+import crossFilter2 from 'crossfilter2';
 
 import { Scale, ContainerSize } from '../chart/chart.interface';
 import { SeriesBase } from '../chart/series-base';
@@ -46,10 +47,14 @@ export interface BasicCanvasLineSeriesConfiguration extends SeriesConfiguration 
         // fill?: string;
     },
     filter?: any;
+    crossFilter?: {
+        filerField: string;
+        filterValue: string;
+    };
     // animation?: boolean;
 }
 
-export class BasicCanvasLineSeries extends SeriesBase {
+export class BasicCanvasLineSeries<T = any> extends SeriesBase {
     protected canvas: Selection<BaseType, any, HTMLElement, any>;
 
     protected pointerCanvas: Selection<BaseType, any, HTMLElement, any>;
@@ -75,6 +80,8 @@ export class BasicCanvasLineSeries extends SeriesBase {
     private memoryCanvas: Selection<BaseType, any, HTMLElement, any>;
 
     private move$: Subject<any> = new Subject();
+
+    private crossFilterDimension: any = undefined;
 
     constructor(configuration: BasicCanvasLineSeriesConfiguration) {
         super(configuration);
@@ -140,7 +147,7 @@ export class BasicCanvasLineSeries extends SeriesBase {
         }
     }
 
-    drawSeries(lineData: Array<any>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
+    drawSeries(chartData: Array<T>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
         const xScale: Scale = scales.find((scale: Scale) => scale.field === this.xField);
         const yScale: Scale = scales.find((scale: Scale) => scale.field === this.yField);
         const x: any = xScale.scale;
@@ -148,7 +155,7 @@ export class BasicCanvasLineSeries extends SeriesBase {
 
         const radius = this.config.dot ? (this.config.dot.radius || 4) : 0;
 
-        const lineStroke = (this.config.style && this.config.style.strokeWidth) || 2;
+        const lineStroke = (this.config.style && this.config.style.strokeWidth) || 1;
 
         const xmin = xScale.min;
         const xmax = xScale.max;
@@ -163,7 +170,17 @@ export class BasicCanvasLineSeries extends SeriesBase {
 
         const space: number = (radius + lineStroke) * 4;
 
-        const chartData = !this.dataFilter ? lineData : lineData.filter((item: any) => this.dataFilter(item));
+        if (this.config.crossFilter) {
+            this.crossFilterDimension = crossFilter2(chartData).dimension((item: T) => item[this.config.crossFilter.filerField]);
+        } else {
+            if (this.crossFilterDimension) {
+                this.crossFilterDimension.dispose();
+            }
+            this.crossFilterDimension = undefined;
+        }
+
+        const lineData = this.crossFilterDimension ? this.crossFilterDimension.filter(this.config.crossFilter.filterValue).top(Infinity) : 
+        !this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item));
 
         this.canvas
             .attr('width', geometry.width + space)
@@ -181,7 +198,7 @@ export class BasicCanvasLineSeries extends SeriesBase {
 
         this.line = line()
             .defined(data => data[this.yField])
-            .x((data: any, i) => {
+            .x((data: any) => {
                 const xposition = x(data[this.xField]) + padding + space / 4;
                 return xposition; 
             }) // set the x values for the line generator
@@ -195,7 +212,7 @@ export class BasicCanvasLineSeries extends SeriesBase {
             this.line.curve(curveMonotoneX); // apply smoothing to the line
         }
 
-        this.line(chartData);
+        this.line(lineData);
         context.fillStyle = 'white';
         // context.fillStyle = color;
         context.lineWidth = lineStroke;
@@ -213,7 +230,7 @@ export class BasicCanvasLineSeries extends SeriesBase {
             const prevIndex = this.pointerCanvas.data()[0] || 0;
             let colorIndex = 0;
             const colorData = {};
-            chartData.forEach((point: any, i: number) => {
+            lineData.forEach((point: T, i: number) => {
                 const drawX = x(point[this.xField]) + space / 4;
                 const drawY = y(point[this.yField]) + space / 4;
                 this.drawPoint(drawX, drawY, radius, context);
@@ -233,6 +250,7 @@ export class BasicCanvasLineSeries extends SeriesBase {
                 );
             });
 
+            // POINT: element 에 data 반영.
             this.canvas.data([{
                 colorData,
                 memoryCanvasContext: memoryCanvasContext
@@ -243,7 +261,7 @@ export class BasicCanvasLineSeries extends SeriesBase {
 
             if (this.chartBase.series.length - 1 === index) {
                 this.subscription.unsubscribe();
-                
+
                 this.subscription = this.move$
                 .pipe(
                     debounceTime(150)
@@ -326,7 +344,8 @@ export class BasicCanvasLineSeries extends SeriesBase {
     
                 textBreak(textElement, '\n');
     
-                const parseTextNode = textElement.node().getBoundingClientRect();
+                // const parseTextNode = textElement.node().getBoundingClientRect();
+                const parseTextNode = textElement.node().getBBox();
     
                 const textWidth = parseTextNode.width + 5;
                 const textHeight = parseTextNode.height + 5;

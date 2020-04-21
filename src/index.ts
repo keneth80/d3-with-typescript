@@ -287,7 +287,11 @@ const lineChart = () => {
             dot: {
                 radius: 3
             },
-            filter,
+            crossFilter: {
+                filerField: 'member',
+                filterValue: member
+            },
+            // filter,
             shape: Shape.LINE
         });
 
@@ -329,7 +333,8 @@ const lineChart = () => {
         tooltip: {
             tooltipTextParser: (d: any) => {
                 return `${d.member} \n Date: ${parseTime(d.date)} \n Value: ${d.value}`
-            }
+            },
+            eventType: 'mouseover'
         },
         data: lineData.map((item: any) => {
             const newDate = new Date();

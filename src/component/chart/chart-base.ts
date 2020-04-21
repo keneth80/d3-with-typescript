@@ -501,7 +501,6 @@ export class ChartBase<T = any> implements IChart {
             this.totalLegendWidth += (this.legendPadding * (this.seriesList.length - 1)) + ((this.legendItemSize.width + this.legendPadding) * this.seriesList.length);
 
             this.legendRowCount = Math.ceil(this.totalLegendWidth / this.width);
-            console.log('legend width check : ', this.totalLegendWidth, this.width, this.legendRowCount, this.legendRowBreakCount, this.legendTextWidthList);
 
             this.legendContainerSize.width = 
             this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ? 
@@ -1067,12 +1066,13 @@ export class ChartBase<T = any> implements IChart {
             .on('click', this.onLegendLabelItemClick);
 
         legendLabelGroup.each((d: LegendItem, i: number, nodeList: any) => {
+            const distictKeys = this.isAll ? keys.filter((key: LegendItem) => key.label !== 'All') : keys;
             if (d.shape === Shape.LINE) {
-                drawLegendColorItemByLine(select(nodeList[i]), this.legendItemSize, keys, this.colors);
+                drawLegendColorItemByLine(select(nodeList[i]), this.legendItemSize, distictKeys, this.colors);
             } else if (d.shape === Shape.CIRCLE) {
-                drawLegendColorItemByCircle(select(nodeList[i]), this.legendItemSize, keys, this.colors);
+                drawLegendColorItemByCircle(select(nodeList[i]), this.legendItemSize, distictKeys, this.colors);
             } else if (d.shape === Shape.RECT) {
-                drawLegendColorItemByRect(select(nodeList[i]), this.legendItemSize, keys, this.colors);
+                drawLegendColorItemByRect(select(nodeList[i]), this.legendItemSize, distictKeys, this.colors);
             }
         });
       

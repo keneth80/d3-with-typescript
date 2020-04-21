@@ -6,6 +6,8 @@ import { easeLinear, easeCircle } from 'd3-ease';
 
 import { Subject, Observable } from 'rxjs';
 
+import crossFilter2 from 'crossfilter2';
+
 import { Scale, ContainerSize } from '../chart/chart.interface';
 import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
@@ -25,6 +27,10 @@ export interface BasicLineSeriesConfiguration extends SeriesConfiguration {
         // fill?: string;
     },
     filter?: any;
+    crossFilter?: {
+        filerField: string;
+        filterValue: string;
+    };
     animation?: boolean;
 }
 
@@ -58,6 +64,8 @@ export class BasicLineSeries extends SeriesBase {
     private defaultRadius: number = 4;
 
     private isHide: boolean = false;
+
+    private crossFilterDimension: any = null;
 
     constructor(configuration: BasicLineSeriesConfiguration) {
         super(configuration);
@@ -106,6 +114,7 @@ export class BasicLineSeries extends SeriesBase {
     }
 
     drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
+        
         const x: any = scales.find((scale: Scale) => scale.field === this.xField).scale;
         const y: any = scales.find((scale: Scale) => scale.field === this.yField).scale;
 
@@ -130,7 +139,19 @@ export class BasicLineSeries extends SeriesBase {
             this.line.curve(curveMonotoneX); // apply smoothing to the line
         }
 
-        const lineData = !this.dataFilter ? chartData : chartData.filter((item: any) => this.dataFilter(item));
+        if (this.config.crossFilter) {
+            this.crossFilterDimension = crossFilter2(chartData).dimension((item: any) => item[this.config.crossFilter.filerField]);
+        } else {
+            if (this.crossFilterDimension) {
+                this.crossFilterDimension.dispose();
+            }
+            this.crossFilterDimension = undefined;
+        }
+
+        const lineData = this.crossFilterDimension ? this.crossFilterDimension.filter(this.config.crossFilter.filterValue).top(Infinity) : 
+        !this.dataFilter ? chartData : chartData.filter((item: any) => this.dataFilter(item));
+
+        // const lineData = !this.dataFilter ? chartData : chartData.filter((item: any) => this.dataFilter(item));
 
         const lineSeries = this.mainGroup.selectAll(`.${this.selector}`)
             .data([lineData])
