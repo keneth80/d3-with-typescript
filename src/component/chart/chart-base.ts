@@ -1,7 +1,6 @@
 import './chart.css';
 
 import { min, max, extent } from 'd3-array';
-import { timeSecond } from 'd3-time';
 import { timeFormat } from 'd3-time-format';
 import { scaleBand, scaleLinear, scaleTime, scalePoint, scaleOrdinal, ScaleOrdinal } from 'd3-scale';
 import { schemeCategory10 } from 'd3-scale-chromatic';
@@ -9,10 +8,10 @@ import { select, Selection, BaseType, event } from 'd3-selection';
 import { axisBottom, axisLeft, axisTop, axisRight } from 'd3-axis';
 import { brushX, brushY } from 'd3-brush';
 
-import { fromEvent, Subscription, Subject, of, Observable, Observer } from 'rxjs';
-import { debounceTime, delay } from 'rxjs/operators';
+import { fromEvent, Subscription, Subject, of, Observable, Observer, from, timer } from 'rxjs';
+import { debounceTime, delay, switchMap, map, concatMap, mapTo } from 'rxjs/operators';
 
-import crossFilter2 from 'crossfilter2';
+import crossfilter from 'crossfilter2';
 
 import { IChart, Scale, ContainerSize, LegendItem } from './chart.interface';
 import { ChartConfiguration, Axis, Margin, Placement, ChartTitle, ScaleType, Align, AxisTitle, ChartTooltip, Shape } from './chart-configuration';
@@ -221,7 +220,7 @@ export class ChartBase<T = any> implements IChart {
     }
 
     get crossFilter(): any{
-        return crossFilter2;
+        return crossfilter;
     }
 
     getColorBySeriesIndex(index: number): string {
@@ -368,13 +367,52 @@ export class ChartBase<T = any> implements IChart {
     }
 
     updateSeries() {
-        // TODO: delay 적용할 것 
+        // TODO: delay 적용할 것
         try {
             if (this.seriesList && this.seriesList.length) {
-                this.seriesList.map((series: ISeries, index: number) => {
-                    series.chartBase = this;
-                    series.setSvgElement(this.svg, this.seriesGroup, index);
-                    series.drawSeries(this.data, this.scales, {width: this.width, height: this.height}, index, this.colors[index]);
+                if (!this.config.displayDelay) {
+                    this.seriesList.map((series: ISeries, index: number) => {
+                        series.chartBase = this;
+                        series.setSvgElement(this.svg, this.seriesGroup, index);
+                        series.drawSeries(this.data, this.scales, {width: this.width, height: this.height}, index, this.colors[index]);
+                    });
+
+                    return;
+                }
+                
+                const arrayAsObservable = of(null).pipe(
+                    delay(this.config.displayDelay.delayTime),
+                    switchMap(_ => this.getObjectWithArrayInPromise(this.seriesList)),
+                    map((val: any) => {
+                        return (val.data);
+                    }),
+                    switchMap(val => from(val))
+                );
+        
+                const eachElementAsObservable = arrayAsObservable.pipe(
+                    concatMap(value => timer(this.config.displayDelay.delayTime).pipe(mapTo(value))), // Not working : we want to wait 500ms for each value
+                    map(val => {
+                        return val;
+                    })
+                );
+            
+                eachElementAsObservable.subscribe(index => {
+                    const currentIndex = parseInt(index + '');
+                    // console.log('series display : ', currentIndex);
+                    
+                    this.seriesList[currentIndex].chartBase = this;
+                    this.seriesList[currentIndex].setSvgElement(this.svg, this.seriesGroup, currentIndex);
+                    this.seriesList[currentIndex].drawSeries(this.data, this.scales, {width: this.width, height: this.height}, currentIndex, this.colors[currentIndex]);
+                },
+                error => {
+                    if (console && console.log) {
+                        console.log(error);
+                    }
+                },
+                () => {
+                    if (console && console.log) {
+                        console.log('complete series display');
+                    }
                 });
             }
         } catch(error) {
@@ -382,6 +420,15 @@ export class ChartBase<T = any> implements IChart {
                 console.log(error);
             }
         }
+    }
+
+    getObjectWithArrayInPromise(list: Array<ISeries>) {
+		const data = list.map((series: ISeries, index: number) => index);
+        return new Promise(resolve => {
+            setTimeout(() => resolve({
+                data
+            }), 20);
+        });
     }
 
     updateAxisForZoom(
@@ -1193,11 +1240,12 @@ export class ChartBase<T = any> implements IChart {
         // 기준이되는 axis가 완료된 후에 나머지를 그린다.
         this.updateAxis()
             .then(() => {
-                this.updateSeries();
+                // this.updateSeries();
                 this.updateLegend();
                 // POINT: 해당 기능이 series에 의존함으로 series를 먼저 그린뒤에 function을 설정 하도록 한다.
                 this.updateFunctions();
                 this.updateTitle();
+                this.updateSeries();
             });
     }
 

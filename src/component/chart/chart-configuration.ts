@@ -116,4 +116,8 @@ export interface ChartConfiguration<T = any> {
     calcField?: string; // for only min max configration
 
     colors?: Array<string>; // custom color (default: d3.schemeCategory10, size: 10)
+
+    displayDelay?: {
+        delayTime: number;
+    }
 }

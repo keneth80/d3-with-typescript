@@ -377,6 +377,9 @@ const lineChart = () => {
                 },
             }
         ],
+        displayDelay: {
+            delayTime: 500
+        },
         series
     }).draw();
 }
