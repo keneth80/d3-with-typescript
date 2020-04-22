@@ -278,7 +278,7 @@ export class ChartBase<T = any> implements IChart {
             this.isTitle = false;
         }
 
-        if (configuration.legend) {
+        if (configuration.hasOwnProperty('legend')) {
             this.isLegend = true;
             this.legendPlacement = configuration.legend.placement;
             this.isCheckBox = configuration.legend.isCheckBox === false ? configuration.legend.isCheckBox : true;
@@ -367,7 +367,6 @@ export class ChartBase<T = any> implements IChart {
     }
 
     updateSeries() {
-        // TODO: delay 적용할 것
         try {
             if (this.seriesList && this.seriesList.length) {
                 if (!this.config.displayDelay) {
@@ -382,7 +381,7 @@ export class ChartBase<T = any> implements IChart {
                 
                 const arrayAsObservable = of(null).pipe(
                     delay(this.config.displayDelay.delayTime),
-                    switchMap(_ => this.getObjectWithArrayInPromise(this.seriesList)),
+                    switchMap(() => this.getObjectWithArrayInPromise(this.seriesList)),
                     map((val: any) => {
                         return (val.data);
                     }),
