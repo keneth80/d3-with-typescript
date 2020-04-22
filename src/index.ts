@@ -1103,26 +1103,26 @@ canvasLineChart();
 
 lineChart();
 
-// topologyExcute();
+topologyExcute();
 
-// excute();
+excute();
 
-// boxplot();
+boxplot();
 
-// bollinger();
+bollinger();
 
-// violin();
+violin();
 
-// stackedBar();
+stackedBar();
 
-// groupedBar();
+groupedBar();
 
-// pieChart();
+pieChart();
 
-// donutChart();
+donutChart();
 
-// areaChart();
+areaChart();
 
-// canvasScatter('#scatter');
+canvasScatter('#scatter');
 
-// gaugeChart();
+gaugeChart();

@@ -290,7 +290,7 @@ export class BasicLineSeries extends SeriesBase {
     }
 
     unSelectItem() {
-        const radius = (this.config.dot.radius || this.defaultRadius);
+        const radius = (this.config.dot && this.config.dot.radius || this.defaultRadius);
         if (this.currentSelector) {
             this.currentSelector.attr('r', radius);
             this.currentSelector = null;
