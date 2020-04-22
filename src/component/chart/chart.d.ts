@@ -1,7 +1,8 @@
 import { Selection, BaseType } from 'd3-selection';
+import { ChartConfiguration } from './chart-configuration';
 
 declare interface IChart {
-    bootstrap() :void;
+    bootstrap(configaration: ChartConfiguration) :void;
 
     draw(): void;
 
@@ -13,7 +14,9 @@ declare interface IChart {
 }
 
 declare class ChartBase<T = any> implements IChart {
-    bootstrap() :void;
+    constructor(configaration: ChartConfiguration);
+
+    bootstrap(configaration: ChartConfiguration) :void;
 
     draw(): void;
 
