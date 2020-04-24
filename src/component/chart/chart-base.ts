@@ -666,7 +666,6 @@ export class ChartBase<T = any> implements IChart {
                     }
                     translate = `translate(${legendX}, ${legendY})`;
                 }
-                console.log('translate : ', translate, this.legendPlacement, legendX);
                 return translate;
             });
         }
