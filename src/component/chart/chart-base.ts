@@ -647,11 +647,11 @@ export class ChartBase<T = any> implements IChart {
             this.legendGroup.attr('transform', () => {
                 let translate = 'translate(0, 0)';
                 if (this.legendPlacement === Placement.RIGHT) {
-                    legendX = (this.margin.left + this.margin.right + this.axisTitleMargin.left + this.axisTitleMargin.right + width);
-                    translate = `translate(${x}, ${y})`;
+                    legendX = width + (this.margin.left + this.margin.right + this.axisTitleMargin.left + this.axisTitleMargin.right);
+                    translate = `translate(${legendX}, ${legendY})`;
                 } else if (this.legendPlacement === Placement.LEFT) {
                     legendX = (this.isTitle && this.titlePlacement === Placement.LEFT ? this.titleContainerSize.width : 0);
-                    translate = `translate(${x}, ${y})`;
+                    translate = `translate(${legendX}, ${legendY})`;
                 } else if (this.legendPlacement === Placement.TOP) {
                     // legendX = this.legendRowCount > 1 ? this.legendPadding * 2 : this.totalLegendWidth - this.width + this.margin.left + this.margin.right;
                     legendX = this.legendPadding * 2;
@@ -666,6 +666,7 @@ export class ChartBase<T = any> implements IChart {
                     }
                     translate = `translate(${legendX}, ${legendY})`;
                 }
+                console.log('translate : ', translate, this.legendPlacement, legendX);
                 return translate;
             });
         }
