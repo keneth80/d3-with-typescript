@@ -296,6 +296,9 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
 
     destroy() {
         this.subscription.unsubscribe();
+        this.canvas.remove();
+        this.memoryCanvas.remove();
+        this.pointerCanvas.remove();
     }
 
     private onClickItem(geometry: ContainerSize, radius: number, mouseEvent: Array<number>) {
