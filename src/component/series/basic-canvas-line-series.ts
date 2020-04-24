@@ -70,7 +70,7 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
 
     private dataFilter: any;
 
-    private strokeWidth: number = 2;
+    private strokeWidth = 2;
 
     // private isAnimation: boolean = false;
 
@@ -326,7 +326,7 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
         const filterTargetCanvas = this.parentElement.selectAll('.drawing-canvas').filter((d: any, i: number, node: any) => parseInt(select(node[i]).style('opacity')) === 1);
         const nodes = filterTargetCanvas.nodes().reverse();
         let selected = null;
-        for (let i: number = 0; i < nodes.length; i++) {
+        for (let i = 0; i < nodes.length; i++) {
             const canvasData: any = select(nodes[i]).data()[0];
             const cContext = canvasData.memoryCanvasContext;
             const colorData = canvasData.colorData;
