@@ -230,7 +230,7 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
             let colorIndex = 0;
             const colorData = {};
             lineData.forEach((point: T, i: number) => {
-                const drawX = x(point[this.xField]) + space / 4;
+                const drawX = x(point[this.xField]) + padding + space / 4;
                 const drawY = y(point[this.yField]) + space / 4;
                 this.drawPoint(drawX, drawY, radius, context);
 
