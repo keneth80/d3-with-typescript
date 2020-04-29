@@ -255,6 +255,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
             this.subscription.unsubscribe();
 
+            // TODO: chart base 의 observable 로 수정
             this.subscription = this.move$
                 .pipe(
                     debounceTime(200)
@@ -283,6 +284,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                     // TODO: event를 시리즈에서 생성하는게 아니라 plugin 식으로 따로 빼서 고민해 볼것.
                 });
 
+            // TODO: plugin의 point canvas 에서 이벤트 발생.
             this.pointerCanvas
                 .on('mousemove', () => {
                     const mouseEvent = mouse(this.pointerCanvas.node() as any);
@@ -301,20 +303,20 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                         
                     this.move$.next(mouseEvent);
                 }).on('mouseleave', () => {
-                    this.pointerCanvas.style('opacity', 0);
                     isOut = true;
+                    this.pointerCanvas.style('opacity', 0);
                     this.chartBase.hideTooltip();
                 }).on('mouseout', () => {
-                    this.pointerCanvas.style('opacity', 0);
                     isOut = true;
+                    this.pointerCanvas.style('opacity', 0);
                     this.chartBase.hideTooltip();
                 }).on('mouseover', () => {
-                    this.pointerCanvas.style('opacity', 1);
                     isOut = false;
+                    this.pointerCanvas.style('opacity', 1);
                 }).on('click', () => {
+                    isClick = true;
                     const mouseEvent = mouse(this.pointerCanvas.node() as any);
                     this.move$.next(mouseEvent);
-                    isClick = true;
                 });
         }
     }
@@ -354,7 +356,9 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         this.tooltipGroup = this.chartBase.showTooltip();
     
         const textElement: any = this.tooltipGroup.select('text').attr('dy', '.1em').text(
-            this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser ? this.chartBase.tooltip.tooltipTextParser(d) : `${this.xField}: ${d[this.xField]} \n ${this.yField}: ${d[this.yField]}`
+            this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser ? 
+                this.chartBase.tooltip.tooltipTextParser(d) : 
+                `${this.xField}: ${d[this.xField]} \n ${this.yField}: ${d[this.yField]}`
         );
 
         textBreak(textElement, '\n');
