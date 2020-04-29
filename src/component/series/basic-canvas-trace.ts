@@ -262,7 +262,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                 .subscribe((value: any) => {
                     if (isOut) return;
 
-                    const selectedItem = this.indexing[value[0] + ';' + value[1]];
+                    const selectedItem = this.indexing[Math.round(value[0]) + ';' + Math.round(value[1])];
                     if (isClick && selectedItem) {
                         this.onClickItem(selectedItem, {
                             width: geometry.width, height: geometry.height
