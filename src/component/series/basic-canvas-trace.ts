@@ -365,8 +365,8 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         const textWidth = parseTextNode.width + 7;
         const textHeight = parseTextNode.height + 5;
         
-        let xPosition = mouseEvent[0] + this.chartBase.chartMargin.left + 5;
-        let yPosition = mouseEvent[1] + this.chartBase.chartMargin.top + 5;
+        let xPosition = mouseEvent[0] + this.chartBase.chartMargin.left + 10;
+        let yPosition = mouseEvent[1] + this.chartBase.chartMargin.top + 10;
         
         if (xPosition + textWidth > geometry.width) {
             xPosition = xPosition - textWidth;
