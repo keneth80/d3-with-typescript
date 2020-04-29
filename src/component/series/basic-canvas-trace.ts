@@ -104,10 +104,6 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
             if (configuration.style) {
                 this.strokeWidth = configuration.style.strokeWidth || this.strokeWidth;
             }
-
-            // if (configuration.hasOwnProperty('animation')) {
-            //     this.isAnimation = configuration.animation;
-            // }
         }
     }
 
@@ -184,7 +180,6 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
             this.indexing[position] = lineData[i];
         }
         console.timeEnd('traceindexing');
-        console.log('this.indexing : ', this.indexing);
 
         this.canvas
             .attr('width', geometry.width)
@@ -195,7 +190,8 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
             .attr('width', geometry.width)
             .attr('height', geometry.height);
         
-        this.pointerCanvas.style('transform', `translate(${(this.chartBase.chartMargin.left)}px, ${(this.chartBase.chartMargin.top)}px)`);
+        this.pointerCanvas
+            .style('transform', `translate(${(this.chartBase.chartMargin.left)}px, ${(this.chartBase.chartMargin.top)}px)`);
 
         this.pointerCanvas.selectAll('.mouse-line-vertical')
             .data([
@@ -260,67 +256,66 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
             this.subscription.unsubscribe();
 
             this.subscription = this.move$
-            .pipe(
-                debounceTime(200)
-            )
-            .subscribe((value: any) => {
-                if (isOut) return;
+                .pipe(
+                    debounceTime(200)
+                )
+                .subscribe((value: any) => {
+                    if (isOut) return;
 
-                const selectedItem = this.indexing[value[0] + ';' + value[1]];
-                if (isClick && selectedItem) {
-                    this.onClickItem(selectedItem, {
-                        width: geometry.width, height: geometry.height
-                    }, value);
-                    isClick = false;
-                    return;
-                }
+                    const selectedItem = this.indexing[value[0] + ';' + value[1]];
+                    if (isClick && selectedItem) {
+                        this.onClickItem(selectedItem, {
+                            width: geometry.width, height: geometry.height
+                        }, value);
+                        isClick = false;
+                        return;
+                    }
 
-                if (selectedItem) {
-                    this.setChartTooltip(selectedItem, {
-                        width: geometry.width, height: geometry.height
-                    }, value);
-                    return;
-                }
+                    if (selectedItem) {
+                        this.setChartTooltip(selectedItem, {
+                            width: geometry.width, height: geometry.height
+                        }, value);
+                        return;
+                    }
 
-                this.chartBase.hideTooltip();
+                    this.chartBase.hideTooltip();
 
-                // TODO: event를 시리즈에서 생성하는게 아니라 plugin 식으로 따로 빼서 고민해 볼것.
-            });
+                    // TODO: event를 시리즈에서 생성하는게 아니라 plugin 식으로 따로 빼서 고민해 볼것.
+                });
 
             this.pointerCanvas
-            .on('mousemove', () => {
-                const mouseEvent = mouse(this.pointerCanvas.node() as any);
+                .on('mousemove', () => {
+                    const mouseEvent = mouse(this.pointerCanvas.node() as any);
 
-                this.pointerCanvas.select('.mouse-line-vertical')
-                    .attr('d', () => {
-                        const d = 'M' + mouseEvent[0] + ',' + geometry.height + ' ' + mouseEvent[0] + ',' + 0;
-                        return d;
-                    });
+                    this.pointerCanvas.select('.mouse-line-vertical')
+                        .attr('d', () => {
+                            const d = 'M' + mouseEvent[0] + ',' + geometry.height + ' ' + mouseEvent[0] + ',' + 0;
+                            return d;
+                        });
 
-                this.pointerCanvas.select('.mouse-line-horizontal')
-                    .attr('d', () => {
-                        const d = 'M' + 0 + ',' + mouseEvent[1] + ' ' + geometry.width + ',' + mouseEvent[1];
-                        return d;
-                    });
-
-                console.log(this.pointerCanvas.select('.mouse-line-vertical'));
-                this.move$.next(mouseEvent);
-            }).on('mouseleave', () => {
-                this.pointerCanvas.style('opacity', 0);
-                isOut = true;
-                this.chartBase.hideTooltip();
-            }).on('mouseout', () => {
-                this.pointerCanvas.style('opacity', 0);
-                isOut = true;
-                this.chartBase.hideTooltip();
-            }).on('mouseover', () => {
-                this.pointerCanvas.style('opacity', 1);
-                isOut = false;
-            }).on('click', () => {
-                const mouseEvent = mouse(this.pointerCanvas.node() as any);
-                this.move$.next(mouseEvent);
-                isClick = true;
-            });
+                    this.pointerCanvas.select('.mouse-line-horizontal')
+                        .attr('d', () => {
+                            const d = 'M' + 0 + ',' + mouseEvent[1] + ' ' + geometry.width + ',' + mouseEvent[1];
+                            return d;
+                        });
+                        
+                    this.move$.next(mouseEvent);
+                }).on('mouseleave', () => {
+                    this.pointerCanvas.style('opacity', 0);
+                    isOut = true;
+                    this.chartBase.hideTooltip();
+                }).on('mouseout', () => {
+                    this.pointerCanvas.style('opacity', 0);
+                    isOut = true;
+                    this.chartBase.hideTooltip();
+                }).on('mouseover', () => {
+                    this.pointerCanvas.style('opacity', 1);
+                    isOut = false;
+                }).on('click', () => {
+                    const mouseEvent = mouse(this.pointerCanvas.node() as any);
+                    this.move$.next(mouseEvent);
+                    isClick = true;
+                });
         }
     }
 
