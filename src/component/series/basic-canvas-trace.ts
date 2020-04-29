@@ -37,9 +37,6 @@ export interface BasicCanvasTraceConfiguration extends SeriesConfiguration {
     xField: string;
     yField: string;
     isCurve?: boolean; // default : false
-    dot?: {
-        radius?: number
-    }
     style?: {
         strokeWidth?: number;
         // stroke?: string;
@@ -120,7 +117,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         this.svg = svg;
 
         this.svg
-            .style('z-index', 1)
+            .style('z-index', index + 2)
             .style('position', 'absolute');
 
         this.parentElement = select((this.svg.node() as HTMLElement).parentElement);
@@ -132,23 +129,21 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                     index
                 })
                 .attr('class', 'drawing-canvas')
-                .style('z-index', index + 3)
+                .style('z-index', index + 1)
                 .style('position', 'absolute');
-        }
-
-        if (!this.memoryCanvas) {
-            this.memoryCanvas = select(document.createElement('canvas'));
         }
 
         // pointer canvas는 단 한개만 존재한다. 이벤트를 받는 canvas 임.
         if (!this.parentElement.select('.pointer-canvas').node()) {
-            this.pointerCanvas = this.parentElement
-                .append('canvas')
+            this.pointerCanvas = this.svg
+                .append('g')
                 .attr('class', 'pointer-canvas')
-                .style('z-index', index + 4)
                 .style('position', 'absolute');
+            this.pointerCanvas.append('rect')
+                .attr('fill', 'none')
+                .style('pointer-events', 'all');
         } else {
-            this.pointerCanvas = this.parentElement.select('.pointer-canvas').style('z-index', index + 4);
+            this.pointerCanvas = this.svg.select('.pointer-canvas');
         }
     }
 
@@ -157,8 +152,6 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         const yScale: Scale = scales.find((scale: Scale) => scale.field === this.yField);
         const x: any = xScale.scale;
         const y: any = yScale.scale;
-
-        const radius = this.config.dot ? (this.config.dot.radius || 4) : 0;
 
         const lineStroke = (this.config.style && this.config.style.strokeWidth) || 1;
 
@@ -173,8 +166,6 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
             padding = x.bandwidth() / 2;
         }
 
-        const space: number = (radius + lineStroke) * 4;
-
         if (this.config.crossFilter) {
             this.crossFilterDimension = this.chartBase.crossFilter(chartData).dimension((item: T) => item[this.config.crossFilter.filerField]);
         } else {
@@ -187,35 +178,67 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         const lineData = this.crossFilterDimension ? this.crossFilterDimension.filter(this.config.crossFilter.filterValue).top(Infinity) : 
         !this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item));
 
+        console.time('traceindexing');
         for (let i = 0; i < lineData.length; i++) {
-            const position = Math.round(x(lineData[i][this.xField]) + padding + space / 4) + ';' + Math.round(y(lineData[i][this.yField]) + space / 4);
+            const position = Math.round(x(lineData[i][this.xField]) + padding) + ';' + Math.round(y(lineData[i][this.yField]));
             this.indexing[position] = lineData[i];
         }
-
+        console.timeEnd('traceindexing');
         console.log('this.indexing : ', this.indexing);
 
         this.canvas
-            .attr('width', geometry.width + space)
-            .attr('height', geometry.height + space)
-            .style('transform', `translate(${(this.chartBase.chartMargin.left - space / 4)}px, ${(this.chartBase.chartMargin.top - space / 4)}px)`);
+            .attr('width', geometry.width)
+            .attr('height', geometry.height)
+            .style('transform', `translate(${(this.chartBase.chartMargin.left)}px, ${(this.chartBase.chartMargin.top)}px)`);
 
-        this.pointerCanvas
-            .attr('width', geometry.width + space)
-            .attr('height', geometry.height + space)
-            .style('transform', `translate(${(this.chartBase.chartMargin.left - space / 4)}px, ${(this.chartBase.chartMargin.top - space / 4)}px)`);
+        this.pointerCanvas.select('rect')
+            .attr('width', geometry.width)
+            .attr('height', geometry.height);
+        
+        this.pointerCanvas.style('transform', `translate(${(this.chartBase.chartMargin.left)}px, ${(this.chartBase.chartMargin.top)}px)`);
+
+        this.pointerCanvas.selectAll('.mouse-line-vertical')
+            .data([
+                {
+                    width: 1,
+                    height: geometry.height
+                }
+            ])
+            .join(
+                (enter) => enter.append('path').attr('class', 'mouse-line-vertical'),
+                (update) => update,
+                (exit) => exit.remove()
+            )
+            .style('stroke', 'black')
+            .style('stroke-width', '1px');
+
+        this.pointerCanvas.selectAll('.mouse-line-horizontal')
+            .data([
+                {
+                    width: geometry.width,
+                    height: 1
+                }
+            ])
+            .join(
+                (enter) => enter.append('path').attr('class', 'mouse-line-horizontal'),
+                (update) => update,
+                (exit) => exit.remove()
+            )
+            .style('stroke', 'black')
+            .style('stroke-width', '1px');
 
         const context = (this.canvas.node() as any).getContext('2d');
-            context.clearRect(0, 0, geometry.width + space, geometry.height + space);
+            context.clearRect(0, 0, geometry.width, geometry.height);
             context.beginPath();
 
         this.line = line()
             .defined(data => data[this.yField])
             .x((data: any) => {
-                const xposition = x(data[this.xField]) + padding + space / 4;
+                const xposition = x(data[this.xField]) + padding;
                 return xposition; 
             }) // set the x values for the line generator
             .y((data: any) => {
-                const yposition = y(data[this.yField]) + space / 4;
+                const yposition = y(data[this.yField]);
                 return yposition; 
             })
             .context(context); // set the y values for the line generator
@@ -226,12 +249,14 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
         this.line(lineData);
         context.fillStyle = 'white';
-        // context.fillStyle = color;
         context.lineWidth = lineStroke;
         context.strokeStyle = color;
         context.stroke();
 
         if (this.chartBase.series.length - 1 === index) {
+            let isOut = true;
+            let isClick = false;
+
             this.subscription.unsubscribe();
 
             this.subscription = this.move$
@@ -239,72 +264,63 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                 debounceTime(200)
             )
             .subscribe((value: any) => {
-                console.log('move : ', value, this.indexing[value[0] + ';' + value[1]]);
-                // TODO: pointer에 대한 데이터를 찾아서 툴팁 보여주기.
+                if (isOut) return;
+
+                const selectedItem = this.indexing[value[0] + ';' + value[1]];
+                if (isClick && selectedItem) {
+                    this.onClickItem(selectedItem, {
+                        width: geometry.width, height: geometry.height
+                    }, value);
+                    isClick = false;
+                    return;
+                }
+
+                if (selectedItem) {
+                    this.setChartTooltip(selectedItem, {
+                        width: geometry.width, height: geometry.height
+                    }, value);
+                    return;
+                }
+
+                this.chartBase.hideTooltip();
+
+                // TODO: event를 시리즈에서 생성하는게 아니라 plugin 식으로 따로 빼서 고민해 볼것.
             });
 
-            let isOut = true;
-
-            const pointerContext = (this.pointerCanvas.node() as any).getContext('2d');
-            pointerContext.lineWidth = 1;
-            this.pointerCanvas.on('mousemove', () => {
+            this.pointerCanvas
+            .on('mousemove', () => {
                 const mouseEvent = mouse(this.pointerCanvas.node() as any);
 
-                pointerContext.clearRect(0, 0, geometry.width + space, geometry.height + space);
-                pointerContext.beginPath();
-                // y line
-                pointerContext.moveTo(mouseEvent[0], space / 4);
-                pointerContext.lineTo(mouseEvent[0], geometry.height);
-                pointerContext.stroke();
-                // x line
-                pointerContext.moveTo(space / 4, mouseEvent[1]);
-                pointerContext.lineTo(geometry.width, mouseEvent[1]);
-                pointerContext.stroke();
+                this.pointerCanvas.select('.mouse-line-vertical')
+                    .attr('d', () => {
+                        const d = 'M' + mouseEvent[0] + ',' + geometry.height + ' ' + mouseEvent[0] + ',' + 0;
+                        return d;
+                    });
+
+                this.pointerCanvas.select('.mouse-line-horizontal')
+                    .attr('d', () => {
+                        const d = 'M' + 0 + ',' + mouseEvent[1] + ' ' + geometry.width + ',' + mouseEvent[1];
+                        return d;
+                    });
+
+                console.log(this.pointerCanvas.select('.mouse-line-vertical'));
                 this.move$.next(mouseEvent);
-            }).on('mouseout', () => { // on mouse out hide line, circles and text
+            }).on('mouseleave', () => {
+                this.pointerCanvas.style('opacity', 0);
                 isOut = true;
-                pointerContext.clearRect(0, 0, geometry.width + space, geometry.height + space);
-            }).on('mouseover', function() { // on mouse in show line, circles and text
+                this.chartBase.hideTooltip();
+            }).on('mouseout', () => {
+                this.pointerCanvas.style('opacity', 0);
+                isOut = true;
+                this.chartBase.hideTooltip();
+            }).on('mouseover', () => {
+                this.pointerCanvas.style('opacity', 1);
                 isOut = false;
+            }).on('click', () => {
+                const mouseEvent = mouse(this.pointerCanvas.node() as any);
+                this.move$.next(mouseEvent);
+                isClick = true;
             });
-        }
-
-        if (this.config.dot) {
-            this.memoryCanvas
-                .attr('width', geometry.width + space)
-                .attr('height', geometry.height + space);
-
-            const memoryCanvasContext = (this.memoryCanvas.node() as any).getContext('2d');
-            memoryCanvasContext.clearRect(0, 0, geometry.width + space, geometry.height + space);
-
-            const prevIndex = this.pointerCanvas.data()[0] || 0;
-            let colorIndex = 0;
-            const colorData = {};
-            lineData.forEach((point: T, i: number) => {
-                const drawX = x(point[this.xField]) + padding + space / 4;
-                const drawY = y(point[this.yField]) + space / 4;
-                // mouse over click event를 위한 데이터 인덱싱.
-                colorIndex = prevIndex + i;
-                const memoryColor = this.getColor(colorIndex * 1000 + 1) + '';
-                colorData[memoryColor] = new BasicCanvasTraceModel(
-                    drawX, drawY, i, color, memoryColor, false, point
-                );
-            });
-
-            // POINT: element 에 data 반영.
-            this.canvas.data([{
-                colorData,
-                memoryCanvasContext: memoryCanvasContext
-            }]);
-
-            if (this.chartBase.series.length - 1 === index) {
-                this.pointerCanvas.on('click', () => {
-                    const mouseEvent = mouse(this.pointerCanvas.node() as any);
-                    this.onClickItem({
-                        width: geometry.width + space, height: geometry.height + space
-                    }, radius, mouseEvent);
-                });
-            }
         }
     }
 
@@ -323,84 +339,53 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         this.pointerCanvas.remove();
     }
 
-    private onClickItem(geometry: ContainerSize, radius: number, mouseEvent: Array<number>) {
-        const selectedItem: any = this.drawTooltipPoint(geometry, radius, mouseEvent);
+    private onClickItem(selectedItem: any, geometry: ContainerSize, mouseEvent: Array<number>) {
         if (selectedItem) {
             this.itemClickSubject.next({
                 data: selectedItem.data,
                 event: {
-                    offsetX: selectedItem.x + this.chartBase.chartMargin.left,
-                    offsetY: selectedItem.y + this.chartBase.chartMargin.top
+                    offsetX: mouseEvent[0] + this.chartBase.chartMargin.left,
+                    offsetY: mouseEvent[1] + this.chartBase.chartMargin.top
                 },
                 target: {
-                    width: radius,
-                    height: radius
+                    width: 1,
+                    height: 1
                 }
             });
         }
     }
 
-    private drawTooltipPoint(geometry: ContainerSize, radius: number, mouseEvent: Array<number>) {
-        const pointerContext = (this.pointerCanvas.node() as any).getContext('2d');
-        pointerContext.fillStyle = '#fff';
-        pointerContext.lineWidth = this.strokeWidth;
-        pointerContext.clearRect(0, 0, geometry.width, geometry.height);
-        const filterTargetCanvas = this.parentElement.selectAll('.drawing-canvas').filter((d: any, i: number, node: any) => parseInt(select(node[i]).style('opacity')) === 1);
-        const nodes = filterTargetCanvas.nodes().reverse();
-        let selected = null;
-        for (let i = 0; i < nodes.length; i++) {
-            const canvasData: any = select(nodes[i]).data()[0];
-            const cContext = canvasData.memoryCanvasContext;
-            const colorData = canvasData.colorData;
-            const cData = cContext.getImageData(mouseEvent[0], mouseEvent[1], radius * 2, radius * 2).data;
-            const cDataParse = cData.slice(0,3);
-            const ckey = cDataParse.toString();
-            selected = colorData[ckey];
-            if (selected) {
-                pointerContext.strokeStyle = selected.color;
-                this.drawPoint(selected.x, selected.y, radius * 2, pointerContext);
+    private setChartTooltip(d: any, geometry: ContainerSize, mouseEvent: Array<number>) {
+        this.tooltipGroup = this.chartBase.showTooltip();
     
-                this.tooltipGroup = this.chartBase.showTooltip();
-    
-                const textElement: any = this.tooltipGroup.select('text').attr('dy', '0em').text(
-                    this.chartBase.tooltip.tooltipTextParser(selected.data)
-                );
-    
-                textBreak(textElement, '\n');
-    
-                // const parseTextNode = textElement.node().getBoundingClientRect();
-                const parseTextNode = textElement.node().getBBox();
-    
-                const textWidth = parseTextNode.width + 5;
-                const textHeight = parseTextNode.height + 5;
-                
-                const padding = radius * 2;
-                let xPosition = selected.x + padding + this.chartBase.chartMargin.left;
-                
-                let yPosition = selected.y + padding + this.chartBase.chartMargin.top;
-                
-                if (xPosition + textWidth > geometry.width) {
-                    xPosition = xPosition - textWidth;
-                }
+        const textElement: any = this.tooltipGroup.select('text').attr('dy', '.1em').text(
+            this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser ? this.chartBase.tooltip.tooltipTextParser(d) : `${this.xField}: ${d[this.xField]} \n ${this.yField}: ${d[this.yField]}`
+        );
 
-                if (yPosition + textHeight > geometry.height) {
-                    yPosition = yPosition - textHeight - radius * 2;
-                }
-    
-                this.tooltipGroup.attr('transform', `translate(${xPosition}, ${yPosition})`)
-                    .selectAll('rect')
-                    .attr('width', textWidth)
-                    .attr('height', textHeight);
+        textBreak(textElement, '\n');
 
-                break;
-            }
+        // const parseTextNode = textElement.node().getBoundingClientRect();
+        const parseTextNode = textElement.node().getBBox();
+
+        const textWidth = parseTextNode.width + 7;
+        const textHeight = parseTextNode.height + 5;
+        
+        let xPosition = mouseEvent[0] + this.chartBase.chartMargin.left + 5;
+        let yPosition = mouseEvent[1] + this.chartBase.chartMargin.top + 5;
+        
+        if (xPosition + textWidth > geometry.width) {
+            xPosition = xPosition - textWidth;
         }
 
-        if (!selected) {
-            this.tooltipGroup = this.chartBase.hideTooltip();
+        if (yPosition + textHeight > geometry.height) {
+            yPosition = yPosition - textHeight;
         }
 
-        return selected;
+        this.tooltipGroup.attr('transform', `translate(${xPosition}, ${yPosition})`)
+            .selectAll('rect')
+            .attr('width', textWidth)
+            .attr('height', textHeight);
+
     }
 
     private drawPoint(cx: any, cy: any, r: number, context: any) {
