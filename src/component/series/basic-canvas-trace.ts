@@ -8,7 +8,7 @@ import { SeriesConfiguration } from '../chart/series.interface';
 import { textBreak } from '../chart/util/d3-svg-util';
 import { debounceTime } from 'rxjs/operators';
 
-export class BasicCanvasLineSeriesModel {
+export class BasicCanvasTraceModel {
     x: number;
     y: number;
     i: number; // save the index of the point as a property, this is useful
@@ -32,7 +32,7 @@ export class BasicCanvasLineSeriesModel {
     }
 }
 
-export interface BasicCanvasLineSeriesConfiguration extends SeriesConfiguration {
+export interface BasicCanvasTraceConfiguration extends SeriesConfiguration {
     dotSelector?: string;
     xField: string;
     yField: string;
@@ -53,7 +53,11 @@ export interface BasicCanvasLineSeriesConfiguration extends SeriesConfiguration 
     // animation?: boolean;
 }
 
-export class BasicCanvasLineSeries<T = any> extends SeriesBase {
+interface Indexing {
+    [position: string]: any;
+}
+
+export class BasicCanvasTrace<T = any> extends SeriesBase {
     protected canvas: Selection<BaseType, any, HTMLElement, any>;
 
     protected pointerCanvas: Selection<BaseType, any, HTMLElement, any>;
@@ -66,7 +70,7 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
 
     private yField: string;
 
-    private config: BasicCanvasLineSeriesConfiguration;
+    private config: BasicCanvasTraceConfiguration;
 
     private dataFilter: any;
 
@@ -82,7 +86,9 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
 
     private crossFilterDimension: any = undefined;
 
-    constructor(configuration: BasicCanvasLineSeriesConfiguration) {
+    private indexing: Indexing = {};
+
+    constructor(configuration: BasicCanvasTraceConfiguration) {
         super(configuration);
         this.config = configuration;
         if (configuration) {
@@ -181,6 +187,13 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
         const lineData = this.crossFilterDimension ? this.crossFilterDimension.filter(this.config.crossFilter.filterValue).top(Infinity) : 
         !this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item));
 
+        for (let i = 0; i < lineData.length; i++) {
+            const position = Math.round(x(lineData[i][this.xField]) + padding + space / 4) + ';' + Math.round(y(lineData[i][this.yField]) + space / 4);
+            this.indexing[position] = lineData[i];
+        }
+
+        console.log('this.indexing : ', this.indexing);
+
         this.canvas
             .attr('width', geometry.width + space)
             .attr('height', geometry.height + space)
@@ -218,6 +231,44 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
         context.strokeStyle = color;
         context.stroke();
 
+        if (this.chartBase.series.length - 1 === index) {
+            this.subscription.unsubscribe();
+
+            this.subscription = this.move$
+            .pipe(
+                debounceTime(200)
+            )
+            .subscribe((value: any) => {
+                console.log('move : ', value, this.indexing[value[0] + ';' + value[1]]);
+                // TODO: pointer에 대한 데이터를 찾아서 툴팁 보여주기.
+            });
+
+            let isOut = true;
+
+            const pointerContext = (this.pointerCanvas.node() as any).getContext('2d');
+            pointerContext.lineWidth = 1;
+            this.pointerCanvas.on('mousemove', () => {
+                const mouseEvent = mouse(this.pointerCanvas.node() as any);
+
+                pointerContext.clearRect(0, 0, geometry.width + space, geometry.height + space);
+                pointerContext.beginPath();
+                // y line
+                pointerContext.moveTo(mouseEvent[0], space / 4);
+                pointerContext.lineTo(mouseEvent[0], geometry.height);
+                pointerContext.stroke();
+                // x line
+                pointerContext.moveTo(space / 4, mouseEvent[1]);
+                pointerContext.lineTo(geometry.width, mouseEvent[1]);
+                pointerContext.stroke();
+                this.move$.next(mouseEvent);
+            }).on('mouseout', () => { // on mouse out hide line, circles and text
+                isOut = true;
+                pointerContext.clearRect(0, 0, geometry.width + space, geometry.height + space);
+            }).on('mouseover', function() { // on mouse in show line, circles and text
+                isOut = false;
+            });
+        }
+
         if (this.config.dot) {
             this.memoryCanvas
                 .attr('width', geometry.width + space)
@@ -232,19 +283,10 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
             lineData.forEach((point: T, i: number) => {
                 const drawX = x(point[this.xField]) + padding + space / 4;
                 const drawY = y(point[this.yField]) + space / 4;
-                this.drawPoint(drawX, drawY, radius, context);
-
                 // mouse over click event를 위한 데이터 인덱싱.
                 colorIndex = prevIndex + i;
                 const memoryColor = this.getColor(colorIndex * 1000 + 1) + '';
-
-                // Space out the colors a bit
-                memoryCanvasContext.fillStyle = 'rgb(' + memoryColor + ')';
-                memoryCanvasContext.beginPath();
-                memoryCanvasContext.arc(drawX, drawY, radius, 0, 2 * Math.PI);
-                memoryCanvasContext.fill();
-
-                colorData[memoryColor] = new BasicCanvasLineSeriesModel(
+                colorData[memoryColor] = new BasicCanvasTraceModel(
                     drawX, drawY, i, color, memoryColor, false, point
                 );
             });
@@ -255,27 +297,7 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
                 memoryCanvasContext: memoryCanvasContext
             }]);
 
-            // 머지한 데이터를 canvas에 저장한다.
-            // this.pointerCanvas.data([colorIndex]);
-
             if (this.chartBase.series.length - 1 === index) {
-                this.subscription.unsubscribe();
-
-                this.subscription = this.move$
-                .pipe(
-                    debounceTime(150)
-                )
-                .subscribe((value: any) => {
-                    this.drawTooltipPoint({
-                        width: geometry.width + space, height: geometry.height + space
-                    }, radius, value);
-                });
-
-                this.pointerCanvas.on('mousemove', () => {
-                    const mouseEvent = mouse(this.pointerCanvas.node() as any);
-                    this.move$.next(mouseEvent);
-                });
-
                 this.pointerCanvas.on('click', () => {
                     const mouseEvent = mouse(this.pointerCanvas.node() as any);
                     this.onClickItem({

@@ -1,8 +1,8 @@
 import { Selection, BaseType, select, mouse } from 'd3-selection';
 import { quadtree, Quadtree } from 'd3-quadtree';
-import { min, max } from 'd3-array';
-import { interval, timer } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { min, max, range } from 'd3-array';
+import { interval, timer, of, from } from 'rxjs';
+import { takeUntil, delay, switchMap, map, concatMap, mapTo } from 'rxjs/operators';
 
 import { Scale, ContainerSize } from '../chart/chart.interface';
 import { SeriesBase } from '../chart/series-base';
@@ -11,6 +11,7 @@ import { SeriesConfiguration } from '../chart/series.interface';
 export class BasicCanvasScatterPlotModel {
     x: number;
     y: number;
+    z: number;
     i: number; // save the index of the point as a property, this is useful
     selected: boolean;
     obj: any;
@@ -18,12 +19,13 @@ export class BasicCanvasScatterPlotModel {
     constructor(
         x: number,
         y: number,
+        z: number,
         i: number, // save the index of the point as a property, this is useful
         selected: boolean,
         obj: any
     ) {
         Object.assign(this, {
-            x, y, i, selected, obj
+            x, y, z, i, selected, obj
         });
     }
 }
@@ -86,7 +88,7 @@ export class BasicCanvasScatterPlot extends SeriesBase {
         }
     }
 
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
+    drawSeries(chartData: Array<BasicCanvasScatterPlotModel>, scales: Array<Scale>, geometry: ContainerSize) {
         const xScale: Scale = scales.find((scale: Scale) => scale.orient === 'bottom');
         const yScale: Scale = scales.find((scale: Scale) => scale.orient === 'left');
         const x: any = xScale.scale;
@@ -100,6 +102,8 @@ export class BasicCanvasScatterPlot extends SeriesBase {
         const pointRadius = 4;
 
         const tempIndex = {};
+
+        // TODO: cross filter 적용.
         const generateData: Array<any> = chartData
             .filter((d: BasicCanvasScatterPlotModel) => d.x >= xmin && d.x <= xmax && d.y >= ymin && d.y <= ymax)
             // .filter((d: BasicCanvasScatterPlotModel) => {
@@ -235,17 +239,40 @@ export class BasicCanvasScatterPlot extends SeriesBase {
                 .attr('height', svgHeight - 2)
                 .lower();
                            
-            const shareCount = 5;
-            const source = interval(500);
-            const timer$ = timer((shareCount + 1) * 500);
-            const example = source.pipe(takeUntil(timer$));
-            example.subscribe(val => {
-                for (let j = val * (totalCount / shareCount); j < (val + 1) * (totalCount / shareCount); j++ ) {
+            const shareCount = Math.ceil(totalCount / 100000);
+            // const source = interval(1000);
+            // const timer$ = timer((shareCount + 1) * 1000);
+            // const example = source.pipe(takeUntil(timer$));
+
+            const arrayAsObservable = of(null).pipe(
+                switchMap(() => this.getObjectWithArrayInPromise(range(shareCount))),
+                map((val: any) => {
+                    return (val.data);
+                }),
+                switchMap(val => from(val))
+            );
+    
+            const eachElementAsObservable = arrayAsObservable.pipe(
+                concatMap(value => timer(500).pipe(mapTo(value))), // Not working : we want to wait 500ms for each value
+                map(val => {
+                    return val;
+                })
+            );
+            // context.beginPath();
+            eachElementAsObservable.subscribe(val => {
+                const currentIndex = parseInt(val + '');
+                const start = Math.round(currentIndex * (totalCount / shareCount));
+                const end = (currentIndex + 1) * (totalCount / shareCount) > totalCount ? totalCount : Math.round((currentIndex + 1) * (totalCount / shareCount));
+                // console.log('count : ', totalCount, shareCount, currentIndex, start, end);
+                console.time('pointdraw');
+                
+                for (let j = start; j < end; j++ ) {
                     this.drawPoint(chartData[j], pointRadius, x, y, context);
                 }
+                console.timeEnd('pointdraw');
                 this.drawProgress(
                     totalCount, 
-                    (val + 1) * (totalCount / shareCount), 
+                    (currentIndex + 1) * (totalCount / shareCount), 
                     {
                         width: svgWidth, 
                         height: svgHeight, 
@@ -258,6 +285,7 @@ export class BasicCanvasScatterPlot extends SeriesBase {
                 if (!this.prevCanvas) {
                     this.prevCanvas = context.getImageData(0, 0, geometry.width, geometry.height);
                 }
+                context.closePath();
                 progressSvg.remove();
             });
         } else {
@@ -269,6 +297,15 @@ export class BasicCanvasScatterPlot extends SeriesBase {
                 this.prevCanvas = context.getImageData(0, 0, geometry.width, geometry.height);
             }
         }
+    }
+
+    getObjectWithArrayInPromise(list: Array<any>) {
+		const data = list.map((item: any, index: number) => index);
+        return new Promise(resolve => {
+            setTimeout(() => resolve({
+                data
+            }), 20);
+        });
     }
 
     selection(
@@ -299,6 +336,7 @@ export class BasicCanvasScatterPlot extends SeriesBase {
                     new BasicCanvasScatterPlotModel(
                         selectedPoint[0], 
                         selectedPoint[1], 
+                        0,
                         0, 
                         true,
                         {}
@@ -363,10 +401,13 @@ export class BasicCanvasScatterPlot extends SeriesBase {
         // this.dotCheck[cx.toFixed(2) + '.' + cy.toFixed(2)] = 1;
 
         context.beginPath();
+        
         context.arc(cx, cy, r, 0, 2 * Math.PI);
-        context.closePath();
+
+        // context.closePath();
         context.fill();
         context.stroke();
+        
     }
 
     euclideanDistance(x1: number, y1: number, x2: number, y2: number) {

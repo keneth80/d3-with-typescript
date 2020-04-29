@@ -1291,7 +1291,11 @@ export class ChartBase<T = any> implements IChart {
                 }
             } else if (axis.type === ScaleType.TIME) {
                 scale = scaleTime().range(range);
-                scale.domain(extent(this.data, (item: T) => item[axis.field]));
+                if (axis.hasOwnProperty('min') && axis.hasOwnProperty('max')) {
+                    scale.domain([new Date(axis.min), new Date(axis.max)]);
+                } else {
+                    scale.domain(extent(this.data, (item: T) => item[axis.field]));
+                }
             } else {
                 scale = scaleLinear().range(range);
                 
@@ -1302,6 +1306,7 @@ export class ChartBase<T = any> implements IChart {
 
                 if (!axis.hasOwnProperty('min')) {
                     axis.min = min(this.data.map((item: T) => parseFloat(item[axis.field])));
+                    axis.min += Math.round(axis.min * 0.05);
                 }
 
                 // if (!axis.max) {

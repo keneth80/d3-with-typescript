@@ -30,11 +30,12 @@ import { BasicZoomSelection } from './component/functions/basic-zoom-selection';
 import { topologyData, topologyData2 } from './component/mock-data/topology-data';
 import { BasicTopology, TopologyGroupElement, TopologyData } from './component/series/basic-topology';
 
-import { Placement, Align, Shape } from './component/chart/chart-configuration';
+import { Placement, Align, Shape, ScaleType } from './component/chart/chart-configuration';
 
 import { lineData } from './component/mock-data/line-one-field-data';
 import { BasicCanvasLineSeries } from './component/series/basic-canvas-line-series';
 import { ExampleSeries } from './component/series/example-series';
+import { BasicCanvasTrace, BasicCanvasTraceModel } from './component/series/basic-canvas-trace';
 
 class SalesModel {
     salesperson: string;
@@ -166,105 +167,92 @@ const examples = [
 // example();
 
 const canvasLineChart = () => {
-    const fields = lineData.map((item: any) => item.member);
-    const members = Array.from(new Set(fields));
-    const series = [];
-    
-    members.map((member: string) => {
-        const filter = (d: any) => {
-            return d.member === member;
-        };
-        const currnetLineSeries = new BasicCanvasLineSeries({
-            selector: 'basic-canvas-line-' + member,
-            // animation: true,
-            displayName: member,
-            shape: Shape.LINE,
-            dotSelector: 'basic-line-' + member + '-dot',
-            yField: 'value',
-            xField: 'date',
-            isCurve: false,
-            dot: {
-                radius: 3
-            },
-            filter
-        });
+    const randomX = randomNormal(0, 9);
+    const randomY = randomNormal(0, 9);
+    let xmin = 0;
+    let xmax = 0;
+    let ymin = 0;
+    let ymax = 0;
+    const numberPoints = 2000000;
+    console.time('timedataparse');
+    const startDt = new Date().getTime();
 
-        series.push(
-            currnetLineSeries
+    let endDt = 0;
+    const data = range(numberPoints).map((d: number, i: number) => {
+        const x = startDt + (1000 * i);
+        const y = parseFloat(randomX().toFixed(2));
+        if (xmin > x) {
+            xmin = x;
+        }
+        if (xmax < x) {
+            xmax = x;
+        }
+        if (ymin > y) {
+            ymin = y;
+        }
+        if (ymax < y) {
+            ymax = y;
+        }
+
+        endDt = x;
+        return new BasicCanvasTraceModel(
+            x,
+            y,
+            i,
+            '#ff0000',
+            '#ff0000',
+            false,
+            {}
         );
+    });
+    console.timeEnd('timedataparse');
 
-        currnetLineSeries.$currentItem.subscribe((item: any) => {
-            console.log('select : ', item);
-            let x = item.event.offsetX;
-            let y = item.event.offsetY;
-            select('#canvaslinechart').select('.event-pointer').attr('transform', `translate(${x}, ${y})`);
-        });
+    console.time('timechartdraw');
+    const canvasLineSeries = new BasicCanvasLineSeries({
+        selector: 'canvas-line',
+        xField: 'x',
+        yField: 'y'
     });
 
-    const parseTime = timeFormat('%H:%M:%S %m-%d');
-    let basicChart: BasicChart = new BasicChart({
+    const canvasTrace = new BasicCanvasTrace({
+        selector: 'canvas-trace',
+        xField: 'x',
+        yField: 'y'
+    });
+
+    // console.log('min : ', xmin, ymin);
+    // console.log('max : ', ymax, ymax);
+    const scatterChart = new BasicChart<BasicCanvasTraceModel>({
         selector: '#canvaslinechart',
-        // margin: {
-        //     top: 10,
-        //     left: 40,
-        //     right: 20,
-        //     bottom: 30
-        // },
-        title: {
-            placement: Placement.TOP,
-            content: 'Canvas Line Chart'
-        },
-        legend: {
-            placement: Placement.TOP,
-            isCheckBox: true,
-            isAll: true
-        },
-        tooltip: {
-            tooltipTextParser: (d: any) => {
-                return `${d.member} \n Date: ${parseTime(d.date)} \n Value: ${d.value}`
-            }
-        },
-        data: lineData.map((item: any) => {
-            const newDate = new Date();
-            newDate.setFullYear(item.time.substring(0,4));
-            newDate.setMonth(parseInt(item.time.substring(5,7)) - 1);
-            newDate.setDate(item.time.substring(8,10));
-            newDate.setHours(item.time.substring(11,13));
-            newDate.setMinutes(item.time.substring(14,16));
-            newDate.setSeconds(item.time.substring(17,19));
-            newDate.setMilliseconds(item.time.substring(20,22));
-            item.date = newDate;
-            return item;
-        }),
+        data,
+        calcField: 'y',
         isResize: true,
         axes: [
             {
-                field: 'date',
-                type: 'time',
-                placement: Placement.BOTTOM,
-                tickFormat: '%H:%M %m-%d',
-                tickSize: 5,
-                isGridLine: true,
-                title: {
-                    content: 'Date',
-                    align: Align.CENTER
-                },
+                field: 'x',
+                type: ScaleType.TIME,
+                placement: 'bottom',
+                tickFormat: '%m-%d %H:%M',
+                min: startDt,
+                max: endDt
             },
             {
-                field: 'value',
+                field: 'y',
                 type: 'number',
-                placement: Placement.LEFT,
-                isGridLine: true,
-                tickSize: 5,
-                min: 0,
-                title: {
-                    content: 'Value',
-                    align: Align.TOP
-                },
+                placement: 'left',
+                min: ymin,
+                max: ymax
             }
         ],
-        series
+        series: [
+            // canvasLineSeries,
+            // canvasTrace,
+            canvasTrace
+        ],
+        functions: [
+        ]
     }).draw();
+    console.timeEnd('timechartdraw');
 }
 
 const lineChart = () => {
@@ -1031,23 +1019,61 @@ const areaChart = () => {
 const canvasScatter = (id: string) => {
     const randomX = randomNormal(0, 9);
     const randomY = randomNormal(0, 9);
-    const numberPoints = 300000;
+    let xmin = 0;
+    let xmax = 0;
+    let ymin = 0;
+    let ymax = 0;
+    const numberPoints = 200000;
+    console.time('dataparse');
     const data = range(numberPoints).map((d: number) => {
+        const x = parseFloat(randomX().toFixed(2));
+        const y = parseFloat(randomX().toFixed(2));
+        const z = parseFloat(randomX().toFixed(2));
+        if (xmin > x) {
+            xmin = x;
+        }
+        if (xmax < x) {
+            xmax = x;
+        }
+        if (ymin > y) {
+            ymin = y;
+        }
+        if (ymax < y) {
+            ymax = y;
+        }
         return new BasicCanvasScatterPlotModel(
-            +randomX().toFixed(2),
-            +randomY().toFixed(2),
+            x,
+            y,
+            z,
             d,
             false,
             {}
         );
     });
-    
+    console.timeEnd('dataparse');
+
+    console.time('chartdraw');
+    const canvasLineSeries = new BasicCanvasLineSeries({
+        selector: 'canvas-line',
+        xField: 'x',
+        yField: 'y'
+    });
+
     const scatterPlot = new BasicCanvasScatterPlot({
         selector: 'scatter',
         xField: 'x',
         yField: 'y'
     });
-    const scatterChart = new BasicChart({
+
+    const canvasTrace = new BasicCanvasTrace({
+        selector: 'canvas-trace',
+        xField: 'x',
+        yField: 'y'
+    });
+
+    // console.log('min : ', xmin, ymin);
+    // console.log('max : ', ymax, ymax);
+    const scatterChart = new BasicChart<BasicCanvasScatterPlotModel>({
         selector: id,
         data,
         margin: {
@@ -1059,20 +1085,27 @@ const canvasScatter = (id: string) => {
             {
                 field: 'x',
                 type: 'number',
-                placement: 'bottom'
+                placement: 'bottom',
+                min: xmin,
+                max: xmax
             },
             {
                 field: 'y',
                 type: 'number',
-                placement: 'left'
+                placement: 'left',
+                min: ymin,
+                max: ymax
             }
         ],
         series: [
+            // canvasLineSeries,
+            // canvasTrace,
             scatterPlot
         ],
         functions: [
         ]
     }).draw();
+    console.timeEnd('chartdraw');
 }
 
 const gaugeChart = () => {
@@ -1101,28 +1134,28 @@ const gaugeChart = () => {
 
 canvasLineChart();
 
-lineChart();
+// lineChart();
 
-topologyExcute();
+// topologyExcute();
 
-excute();
+// excute();
 
-boxplot();
+// boxplot();
 
-bollinger();
+// bollinger();
 
-violin();
+// violin();
 
-stackedBar();
+// stackedBar();
 
-groupedBar();
+// groupedBar();
 
-pieChart();
+// pieChart();
 
-donutChart();
+// donutChart();
 
-areaChart();
+// areaChart();
 
 canvasScatter('#scatter');
 
-gaugeChart();
+// gaugeChart();
