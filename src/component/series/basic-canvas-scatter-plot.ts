@@ -1,12 +1,13 @@
 import { Selection, BaseType, select, mouse } from 'd3-selection';
 import { quadtree, Quadtree } from 'd3-quadtree';
 import { min, max, range } from 'd3-array';
-import { interval, timer, of, from } from 'rxjs';
-import { takeUntil, delay, switchMap, map, concatMap, mapTo } from 'rxjs/operators';
+import { timer, of, from, Observable, Observer } from 'rxjs';
+import { switchMap, map, concatMap, mapTo, delay } from 'rxjs/operators';
 
 import { Scale, ContainerSize } from '../chart/chart.interface';
 import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
+import { ChartBase, delayExcute } from '../chart';
 
 export class BasicCanvasScatterPlotModel {
     x: number;
@@ -33,9 +34,12 @@ export class BasicCanvasScatterPlotModel {
 export interface BasicCanvasScatterPlotConfiguration extends SeriesConfiguration {
     xField: string;
     yField: string;
+    pointer?: {
+        radius: number
+    }
 }
 
-export class BasicCanvasScatterPlot extends SeriesBase {
+export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
     protected canvas: Selection<BaseType, any, HTMLElement, any>;
 
     protected pointerCanvas: Selection<BaseType, any, HTMLElement, any>;
@@ -48,11 +52,25 @@ export class BasicCanvasScatterPlot extends SeriesBase {
 
     private prevCanvas: any = null;
 
+    private bufferCanvas: any = null;
+
     private isRestore: boolean = false;
 
     private isZoom: boolean = false;
 
-    private dotCheck: any = {};
+    private xMinValue: number = NaN;
+
+    private xMaxValue: number = NaN;
+
+    private yMinValue: number = NaN;
+
+    private yMaxValue: number = NaN;
+
+    private pointerRadius = 4;
+
+    private originData: Array<[number, number]> = [];
+
+    private originQuadTree: Quadtree<Array<any>> = undefined;
 
     constructor(configuration: BasicCanvasScatterPlotConfiguration) {
         super(configuration);
@@ -62,6 +80,10 @@ export class BasicCanvasScatterPlot extends SeriesBase {
 
         if (configuration.yField) {
             this.yField = configuration.yField;
+        }
+
+        if (configuration.pointer) {
+            this.pointerRadius = configuration.pointer.radius;
         }
     }
 
@@ -88,51 +110,36 @@ export class BasicCanvasScatterPlot extends SeriesBase {
         }
     }
 
-    drawSeries(chartData: Array<BasicCanvasScatterPlotModel>, scales: Array<Scale>, geometry: ContainerSize) {
-        const xScale: Scale = scales.find((scale: Scale) => scale.orient === 'bottom');
-        const yScale: Scale = scales.find((scale: Scale) => scale.orient === 'left');
+    drawSeries(chartData: Array<T>, scales: Array<Scale>, geometry: ContainerSize) {
+        this.originQuadTree = undefined;
+        this.setContainerPosition(geometry, this.chartBase);
+
+        const xScale: Scale = scales.find((scale: Scale) => scale.field === this.xField);
+        const yScale: Scale = scales.find((scale: Scale) => scale.field === this.yField);
         const x: any = xScale.scale;
         const y: any = yScale.scale;
+
+        // 최초 setup why? min max를 비교해서 full scan 시에는 filtering 하지 않게 하기 위함.
+        if (!this.xMinValue) {
+            this.xMaxValue = xScale.min;
+        }
+        
+        if (!this.xMaxValue) {
+            this.xMaxValue = xScale.max;
+        }
+
+        if (!this.yMinValue) {
+            this.yMaxValue = yScale.min;
+        }
+
+        if (!this.yMaxValue) {
+            this.yMaxValue = yScale.max;
+        }
         
         const xmin = xScale.min;
         const xmax = xScale.max;
         const ymin = yScale.min;
         const ymax = yScale.max;
-
-        const pointRadius = 4;
-
-        const tempIndex = {};
-
-        // TODO: cross filter 적용.
-        const generateData: Array<any> = chartData
-            .filter((d: BasicCanvasScatterPlotModel) => d.x >= xmin && d.x <= xmax && d.y >= ymin && d.y <= ymax)
-            // .filter((d: BasicCanvasScatterPlotModel) => {
-            //     // scale로 변환하여 pointRadius / 2 만큼의 가중치를 주고 position 별로 unique하게 관리한다.
-            //     if (tempIndex[x(d.x).toFixed(0), y(d.y).toFixed(0)])
-            //     return tempIndex[x(d.x).toFixed(0), y(d.y).toFixed(0)]
-            // })
-            .map((d: BasicCanvasScatterPlotModel, i: number) => {
-                // TODO: data 별로 indexing 해서 loop 돌면서 덮어버리고 최종 겹치지 않는 dot에 대해서만 출력하도록 한다.
-                this.indexing[d.x + ',' + d.y] = i;
-                // tempIndex[d.x.toFixed(1) + ',' + d.y.toFixed(1)] = d;
-                return [d.x, d.y];
-            });
-
-        // console.log('size : ', generateData.length, Object.keys(tempIndex).length);
-
-        const quadTreeObj: any = quadtree()
-            .extent([[-1, -1], [geometry.width + 1, geometry.height + 1]])
-            .addAll(generateData);
-
-        this.canvas
-            .attr('width', geometry.width - 1)
-            .attr('height', geometry.height - 1)
-            .style('transform', `translate(${(this.chartBase.chartMargin.left + 1)}px, ${(this.chartBase.chartMargin.top + 1)}px)`);
-
-        this.pointerCanvas
-            .attr('width', geometry.width - 1)
-            .attr('height', geometry.height - 1)
-            .style('transform', `translate(${(this.chartBase.chartMargin.left + 1)}px, ${(this.chartBase.chartMargin.top + 1)}px)`);
 
         const pointerContext = (this.pointerCanvas.node() as any).getContext('2d');
 
@@ -141,7 +148,45 @@ export class BasicCanvasScatterPlot extends SeriesBase {
             context.fillStyle = 'steelblue';
             context.strokeWidth = 1;
             context.strokeStyle = 'white';
-    
+
+        console.time('filterdata');
+        let initialize = false;
+        if (!this.originData.length) {
+            initialize = true;
+        }
+
+        let generateData = [];
+        if (this.isRestore) {
+            generateData = this.originData;
+        } else {
+            const filterData = this.xMaxValue === xmax && this.yMaxValue === ymax ? chartData : chartData
+                .filter((d: T) => d[this.xField] >= xmin && d[this.xField] <= xmax && d[this.yField] >= ymin && d[this.yField] <= ymax)
+                .map((d: T, i: number) => {
+                    const xposition = Math.round(x(d[this.xField]));
+                    const yposition = Math.round(y(d[this.yField]));
+                    this.indexing[xposition + ';' + yposition] = d;
+                    if (initialize) {
+                        this.originData.push([xposition, yposition]);
+                    }
+                    return [xposition, yposition];
+                });
+            generateData = filterData;
+        }
+        
+        // const generateData: Array<[number, number]> = !this.isRestore ? (this.xMaxValue === xmax && this.yMaxValue === ymax ? chartData : chartData
+        //     .filter((d: T) => d[this.xField] >= xmin && d[this.xField] <= xmax && d[this.yField] >= ymin && d[this.yField] <= ymax))
+        //     .map((d: T, i: number) => {
+        //         const xposition = Math.round(x(d[this.xField]));
+        //         const yposition = Math.round(y(d[this.yField]));
+        //         this.indexing[xposition + ';' + yposition] = d;
+        //         if (initialize) {
+        //             this.originData.push([xposition, yposition]);
+        //         }
+        //         return [xposition, yposition];
+        //     }) : this.originData;
+        console.timeEnd('filterdata');
+        console.log('data size : ', generateData.length);
+        
         let isMouseDown = false;
         let isMouseMove = false;
         let startX = 0;
@@ -176,14 +221,15 @@ export class BasicCanvasScatterPlot extends SeriesBase {
             isMouseMove = false;
 
             const mouseEvent = mouse(this.pointerCanvas.node() as any);
-            endX = mouseEvent[0];
-            endY = mouseEvent[1];
+            endX = Math.round(mouseEvent[0]);
+            endY = Math.round(mouseEvent[1]);
+
             pointerContext.clearRect(0, 0, geometry.width, geometry.height);
-            if (Math.abs(startX - endX) > pointRadius * 2 && Math.abs(startY - endY) > pointRadius * 2) {
-                const xStartValue = +x.invert(startX).toFixed(2);
-                const yStartValue = +y.invert(startY).toFixed(2);
-                const xEndValue = +x.invert(endX).toFixed(2);
-                const yEndValue = +y.invert(endY).toFixed(2);
+            if (Math.abs(startX - endX) > this.pointerRadius * 2 && Math.abs(startY - endY) > this.pointerRadius * 2) {
+                const xStartValue = +x.invert(startX).toFixed(0);
+                const yStartValue = +y.invert(startY).toFixed(0);
+                const xEndValue = +x.invert(endX).toFixed(0);
+                const yEndValue = +y.invert(endY).toFixed(0);
 
                 if (startX < endX && startY < endY) {
                     this.isZoom = true;
@@ -201,105 +247,142 @@ export class BasicCanvasScatterPlot extends SeriesBase {
                     ]);
                 } else {
                     this.isRestore = true;
-                    this.chartBase.updateAxisForZoom([]);
-                }
-                
-            } else {
-                this.selection(
-                    x, 
-                    y,
-                    generateData, 
-                    quadTreeObj, 
-                    pointerContext, 
-                    {
-                        x: endX, y: endY, 
-                        width: geometry.width, height: geometry.height, 
-                        pointRadius
+                    delayExcute(50, () => {
+                        this.chartBase.updateAxisForZoom([]);
                     });
+                }
+            } else {
+                const selected = this.search(this.originQuadTree, endX - this.pointerRadius, endY - this.pointerRadius, endX + this.pointerRadius, endY + this.pointerRadius);
+                
+                if (selected.length) {
+                    const selectX = Math.round(selected[selected.length - 1][0]);
+                    const selectY = Math.round(selected[selected.length - 1][1]);
+                    const selectedItem = this.indexing[selectX + ';' + selectY];
+
+                    if (selectedItem) {
+                        this.itemClickSubject.next(selectedItem);
+                        pointerContext.fillStyle = 'red';
+                        pointerContext.strokeStyle = 'white';
+                        this.drawCircle([selectX, selectY], this.pointerRadius, pointerContext);
+                    }
+                }
             }
         });
 
-        if (this.isRestore && this.prevCanvas) {
-            context.putImageData(this.prevCanvas, 0, 0);
+        if (this.isRestore && this.bufferCanvas) {
+            console.time('restoreputimage');
+            context.drawImage(this.bufferCanvas, 0, 0);
+            // context.putImageData(this.prevCanvas, 0, 0);
             this.isRestore = false;
-            return;
+            console.timeEnd('restoreputimage');
+        } else {
+            // 갯수를 끊어 그리기
+            const totalCount = generateData.length;
+            if (!this.isZoom && totalCount >= 100000) {
+                const svgWidth = parseInt(this.svg.style('width'));
+                const svgHeight = parseInt(this.svg.style('height'));
+                const progressSvg = select((this.svg.node() as HTMLElement).parentElement)
+                    .append('svg')
+                    .style('z-index', 4)
+                    .style('position', 'absolute')
+                    .style('background-color', 'none')
+                    .attr('width', svgWidth - 2)
+                    .attr('height', svgHeight - 2)
+                    .lower();
+                            
+                const shareCount = Math.ceil(totalCount / 100000);
+
+                const arrayAsObservable = of(null).pipe(
+                    switchMap(() => this.getObjectWithArrayInPromise(range(shareCount))),
+                    map((val: any) => {
+                        return (val.data);
+                    }),
+                    switchMap(val => from(val))
+                );
+        
+                const eachElementAsObservable = arrayAsObservable.pipe(
+                    concatMap(value => timer(500).pipe(mapTo(value))), // Not working : we want to wait 500ms for each value
+                    map(val => {
+                        return val;
+                    })
+                );
+                
+                eachElementAsObservable.subscribe(val => {
+                    const currentIndex = parseInt(val + '');
+                    const start = Math.round(currentIndex * (totalCount / shareCount));
+                    const end = (currentIndex + 1) * (totalCount / shareCount) > totalCount ? totalCount : Math.round((currentIndex + 1) * (totalCount / shareCount));
+                    
+                    console.time('pointdraw');
+                    for (let j = start; j < end; j++ ) {
+                        // this.drawPoint(chartData[j], this.pointerRadius, x, y, context);
+                        this.drawCircle(generateData[j], this.pointerRadius, context);
+                    }
+                    console.timeEnd('pointdraw');
+
+                    this.drawProgress(
+                        totalCount, 
+                        (currentIndex + 1) * (totalCount / shareCount), 
+                        {
+                            width: svgWidth, 
+                            height: svgHeight, 
+                            target: progressSvg
+                        }
+                    );
+                }, (error) => {
+                    console.log('scatter plot Error', error);
+                }, () => {
+                    if (!this.bufferCanvas) {
+                        this.bufferCanvas = document.createElement('canvas');
+                        this.bufferCanvas.width = (this.canvas.node() as any).width;
+                        this.bufferCanvas.height = (this.canvas.node() as any).height;
+                        this.bufferCanvas.getContext('2d').drawImage(this.canvas.node(), 0, 0);
+                    }
+                    context.closePath();
+                    progressSvg.remove();
+                });
+            } else {
+                this.isZoom = false;
+                for (let i = 0; i < generateData.length; i++) {
+                    this.drawCircle(generateData[i], this.pointerRadius, context);
+                }
+
+                if (!this.bufferCanvas) {
+                    this.bufferCanvas = document.createElement('canvas');
+                    this.bufferCanvas.width = (this.canvas.node() as any).width;
+                    this.bufferCanvas.height = (this.canvas.node() as any).height;
+                    this.bufferCanvas.getContext('2d').drawImage(this.canvas.node(), 0, 0);
+                }
+            }
         }
 
-        // 갯수를 끊어 그리기
-        const totalCount = generateData.length;
-        if (!this.isZoom && totalCount >= 100000) {
-            const svgWidth = parseInt(this.svg.style('width'));
-            const svgHeight = parseInt(this.svg.style('height'));
-            const progressSvg = select((this.svg.node() as HTMLElement).parentElement)
-                .append('svg')
-                .style('z-index', 4)
-                .style('position', 'absolute')
-                .style('background-color', 'none')
-                .attr('width', svgWidth - 2)
-                .attr('height', svgHeight - 2)
-                .lower();
-                           
-            const shareCount = Math.ceil(totalCount / 100000);
-            // const source = interval(1000);
-            // const timer$ = timer((shareCount + 1) * 1000);
-            // const example = source.pipe(takeUntil(timer$));
-
-            const arrayAsObservable = of(null).pipe(
-                switchMap(() => this.getObjectWithArrayInPromise(range(shareCount))),
-                map((val: any) => {
-                    return (val.data);
-                }),
-                switchMap(val => from(val))
-            );
-    
-            const eachElementAsObservable = arrayAsObservable.pipe(
-                concatMap(value => timer(500).pipe(mapTo(value))), // Not working : we want to wait 500ms for each value
-                map(val => {
-                    return val;
-                })
-            );
-            // context.beginPath();
-            eachElementAsObservable.subscribe(val => {
-                const currentIndex = parseInt(val + '');
-                const start = Math.round(currentIndex * (totalCount / shareCount));
-                const end = (currentIndex + 1) * (totalCount / shareCount) > totalCount ? totalCount : Math.round((currentIndex + 1) * (totalCount / shareCount));
-                // console.log('count : ', totalCount, shareCount, currentIndex, start, end);
-                console.time('pointdraw');
-                
-                for (let j = start; j < end; j++ ) {
-                    this.drawPoint(chartData[j], pointRadius, x, y, context);
-                }
-                console.timeEnd('pointdraw');
-                this.drawProgress(
-                    totalCount, 
-                    (currentIndex + 1) * (totalCount / shareCount), 
-                    {
-                        width: svgWidth, 
-                        height: svgHeight, 
-                        target: progressSvg
-                    }
-                );
-            }, (error) => {
-                console.log('scatter plot Error', error);
-            }, () => {
-                if (!this.prevCanvas) {
-                    this.prevCanvas = context.getImageData(0, 0, geometry.width, geometry.height);
-                }
-                context.closePath();
-                progressSvg.remove();
+        if (!this.originQuadTree) {
+            delayExcute(50, () => {
+                this.originQuadTree = quadtree()
+                    .extent([[-1, -1], [geometry.width + 1, geometry.height + 1]])
+                    .addAll(generateData);
             });
-        } else {
-            this.isZoom = false;
-            chartData.forEach((point: BasicCanvasScatterPlotModel) => {
-                this.drawPoint(point, pointRadius, x, y, context);
-            });
-            if (!this.prevCanvas) {
-                this.prevCanvas = context.getImageData(0, 0, geometry.width, geometry.height);
-            }
         }
     }
 
-    getObjectWithArrayInPromise(list: Array<any>) {
+    destroy() {
+        this.subscription.unsubscribe();
+        this.canvas.remove();
+        this.pointerCanvas.remove();
+    }
+
+    private setContainerPosition(geometry: ContainerSize, chartBase: ChartBase) {
+        this.canvas
+            .attr('width', geometry.width - 1)
+            .attr('height', geometry.height - 1)
+            .style('transform', `translate(${(chartBase.chartMargin.left + 1)}px, ${(chartBase.chartMargin.top + 1)}px)`);
+
+        this.pointerCanvas
+            .attr('width', geometry.width - 1)
+            .attr('height', geometry.height - 1)
+            .style('transform', `translate(${(chartBase.chartMargin.left + 1)}px, ${(chartBase.chartMargin.top + 1)}px)`);
+    }
+
+    private getObjectWithArrayInPromise(list: Array<any>) {
 		const data = list.map((item: any, index: number) => index);
         return new Promise(resolve => {
             setTimeout(() => resolve({
@@ -308,49 +391,7 @@ export class BasicCanvasScatterPlot extends SeriesBase {
         });
     }
 
-    selection(
-        x: any, y: any, chartData: Array<any>,
-        quadTreeObj: Quadtree<[number, number]>, 
-        pointerContext: any, 
-        geometry: {width: number, height: number, x: number, y: number, pointRadius: number}
-    ) {
-        pointerContext.strokeStyle = 'white';
-        pointerContext.fillStyle = 'red';
-        const xClicked = +x.invert(geometry.x).toFixed(2);
-        const yClicked = +y.invert(geometry.y).toFixed(2);
-
-        const closest = quadTreeObj.find(xClicked, yClicked);
-        const dX = x(closest[0]);
-        const dY = y(closest[1]);
-
-        const distance = this.euclideanDistance(geometry.x, geometry.y, dX, dY);
-
-        pointerContext.clearRect(0, 0, geometry.width, geometry.height);
-        if(distance < geometry.pointRadius) {
-            const selectedPoint = closest;
-            const selectedIndex = this.indexing[selectedPoint[0] + ',' + selectedPoint[1]];
-            
-            if (selectedPoint) {
-                this.itemClickSubject.next(chartData[selectedIndex]);
-                this.drawPoint(
-                    new BasicCanvasScatterPlotModel(
-                        selectedPoint[0], 
-                        selectedPoint[1], 
-                        0,
-                        0, 
-                        true,
-                        {}
-                    ), 
-                    geometry.pointRadius, 
-                    x, 
-                    y, 
-                    pointerContext
-                );
-            }
-        }
-    }
-
-    drawZoomBox(
+    private drawZoomBox(
         pointerContext: any,
         startX: number, startY: number,
         endX: number, endY: number
@@ -359,58 +400,36 @@ export class BasicCanvasScatterPlot extends SeriesBase {
         pointerContext.fillStyle = 'rgba(5,222,255,0.5)';
         pointerContext.beginPath();
         pointerContext.rect(startX, startY, Math.abs(endX - startX), Math.abs(endY - startY));
-        pointerContext.closePath();
         pointerContext.fill();
         pointerContext.stroke();
     }
 
-    search(quadtree: any, x0: number, y0: number, x3: number, y3: number) {
+    private search(quadtree: Quadtree<Array<any>>, x0: number, y0: number, x3: number, y3: number) {
+        const temp = [];
         quadtree.visit((node: any, x1: number, y1: number, x2: number, y2: number) => {
             if (!node.length) {
                 do {
                     const d = node.data;
-                    d.scanned = true;
-                    d.selected = (d[0] >= x0) && (d[0] < x3) && (d[1] >= y0) && (d[1] < y3);
+                    const selected = (d[0] >= x0) && (d[0] < x3) && (d[1] >= y0) && (d[1] < y3);
+                    if (selected) {
+                        temp.push(d);
+                    }
                 } while (node = node.next);
             }
             return x1 >= x3 || y1 >= y3 || x2 < x0 || y2 < y0;
         });
+
+        return temp;
     }
 
-    nodes(quadtree: any) {
-        const nodes = [];
-        quadtree.visit((node: any, x1: number, y1: number, x2: number, y2: number) => {
-            nodes.push({x: x1, y: y1, width: x2 - x1, height: y2 - y1});
-        });
-        return nodes;
-    }
-
-    drawPoint(point: BasicCanvasScatterPlotModel, r: number, xScale: any, yScale: any, context: any) {
-        const cx = xScale(point.x);
-        const cy = yScale(point.y);
-
-        // cx, cy과 해당영역에 출력이 되는지? 좌표가 마이너스면 출력 안하는 로직을 넣어야 함.
-        if (cx < 0 || cy < 0) {
+    private drawCircle(point: [number, number], r: number, context: any) {
+        if (point[0] < 0 || point[1] < 0) {
             return;
         }
 
-        // if (this.dotCheck[cx.toFixed(2) + '.' + cy.toFixed(2)]) {
-        //     return;
-        // }
-
-        // this.dotCheck[cx.toFixed(2) + '.' + cy.toFixed(2)] = 1;
-
         context.beginPath();
-        
-        context.arc(cx, cy, r, 0, 2 * Math.PI);
-
-        // context.closePath();
+        context.arc(point[0], point[1], r, 0, 2 * Math.PI);
         context.fill();
         context.stroke();
-        
-    }
-
-    euclideanDistance(x1: number, y1: number, x2: number, y2: number) {
-        return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
     }
 }

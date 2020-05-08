@@ -1,5 +1,7 @@
 import { Selection, BaseType, select, mouse } from 'd3-selection';
 import { line, curveMonotoneX } from 'd3-shape';
+import { quadtree, Quadtree } from 'd3-quadtree';
+
 import { fromEvent, Subject, of } from 'rxjs';
 
 import { Scale, ContainerSize } from '../chart/chart.interface';
@@ -162,25 +164,36 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
             padding = x.bandwidth() / 2;
         }
 
+        if (this.crossFilterDimension) {
+            this.crossFilterDimension.dispose();
+        }
+
         if (this.config.crossFilter) {
             this.crossFilterDimension = this.chartBase.crossFilter(chartData).dimension((item: T) => item[this.config.crossFilter.filerField]);
         } else {
-            if (this.crossFilterDimension) {
-                this.crossFilterDimension.dispose();
-            }
             this.crossFilterDimension = undefined;
         }
 
+        // TODO: zoom in out 시 crossfilter 사용해서 filtering해야함.
         const lineData = this.crossFilterDimension ? this.crossFilterDimension.filter(this.config.crossFilter.filterValue).top(Infinity) : 
         !this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item));
 
         console.time('traceindexing');
-        for (let i = 0; i < lineData.length; i++) {
-            const position = Math.round(x(lineData[i][this.xField]) + padding) + ';' + Math.round(y(lineData[i][this.yField]));
-            this.indexing[position] = lineData[i];
-        }
+        const generateData: Array<[number, number]> = lineData
+            .map((d: BasicCanvasTraceModel, i: number) => {
+                const xposition = Math.round(x(d[this.xField])) + padding;
+                const yposition = Math.round(y(d[this.yField]));
+                // this.indexing[xposition + ',' + yposition] = i;
+                // data 별로 indexing 해서 loop 돌면서 덮어버리고 최종 겹치지 않는 dot에 대해서만 출력하도록 한다.
+                this.indexing[xposition + ';' + yposition] = d;
+                return [xposition, yposition];
+            });
         console.timeEnd('traceindexing');
 
+        const quadTreeObj: any = quadtree()
+            .extent([[0, 0], [geometry.width, geometry.height]])
+            .addAll(generateData);
+        
         this.canvas
             .attr('width', geometry.width)
             .attr('height', geometry.height)
@@ -227,15 +240,24 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
             context.clearRect(0, 0, geometry.width, geometry.height);
             context.beginPath();
 
+        // this.line = line()
+        //     .defined(data => data[this.yField])
+        //     .x((data: any) => {
+        //         const xposition = x(data[this.xField]) + padding;
+        //         return xposition; 
+        //     }) // set the x values for the line generator
+        //     .y((data: any) => {
+        //         const yposition = y(data[this.yField]);
+        //         return yposition; 
+        //     })
+        //     .context(context); // set the y values for the line generator
+
         this.line = line()
-            .defined(data => data[this.yField])
             .x((data: any) => {
-                const xposition = x(data[this.xField]) + padding;
-                return xposition; 
+                return data[0]; 
             }) // set the x values for the line generator
             .y((data: any) => {
-                const yposition = y(data[this.yField]);
-                return yposition; 
+                return data[1]; 
             })
             .context(context); // set the y values for the line generator
 
@@ -243,11 +265,15 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
             this.line.curve(curveMonotoneX); // apply smoothing to the line
         }
 
-        this.line(lineData);
+        console.time('tracerendering');
+
+        this.line(generateData);
         context.fillStyle = 'white';
         context.lineWidth = lineStroke;
         context.strokeStyle = color;
         context.stroke();
+
+        console.timeEnd('tracerendering')
 
         if (this.chartBase.series.length - 1 === index) {
             let isOut = true;
@@ -263,8 +289,11 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                 .subscribe((value: any) => {
                     if (isOut) return;
 
-                    const selectedItem = this.indexing[Math.round(value[0]) + ';' + Math.round(value[1])];
-                    if (isClick && selectedItem) {
+                    // http://plnkr.co/edit/AowXaSYsJM8NSH6IK5B7?p=preview&preview 참고
+                    const selected = this.search(quadTreeObj, Math.round(value[0]) - 3, Math.round(value[1]) - 3, Math.round(value[0]) + 3, Math.round(value[1]) + 3);
+                    
+                    if (isClick && selected.length) {
+                        const selectedItem = this.indexing[selected[selected.length - 1][0] + ';' + selected[selected.length - 1][1]];
                         this.onClickItem(selectedItem, {
                             width: geometry.width, height: geometry.height
                         }, value);
@@ -272,7 +301,8 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                         return;
                     }
 
-                    if (selectedItem) {
+                    if (selected.length) {
+                        const selectedItem = this.indexing[selected[selected.length - 1][0] + ';' + selected[selected.length - 1][1]];
                         this.setChartTooltip(selectedItem, {
                             width: geometry.width, height: geometry.height
                         }, value);
@@ -330,10 +360,32 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
     }
 
     destroy() {
+        if (this.crossFilterDimension) {
+            this.crossFilterDimension.dispose();
+        }
+        this.crossFilterDimension = undefined;
         this.subscription.unsubscribe();
         this.canvas.remove();
         this.memoryCanvas.remove();
         this.pointerCanvas.remove();
+    }
+
+    private search(quadtree: Quadtree<T>, x0: number, y0: number, x3: number, y3: number) {
+        const temp = [];
+        quadtree.visit((node: any, x1: number, y1: number, x2: number, y2: number) => {
+            if (!node.length) {
+                do {
+                    const d = node.data;
+                    const selected = (d[0] >= x0) && (d[0] < x3) && (d[1] >= y0) && (d[1] < y3);
+                    if (selected) {
+                        temp.push(d);
+                    }
+                } while (node = node.next);
+            }
+            return x1 >= x3 || y1 >= y3 || x2 < x0 || y2 < y0;
+        });
+
+        return temp;
     }
 
     private onClickItem(selectedItem: any, geometry: ContainerSize, mouseEvent: Array<number>) {

@@ -4,6 +4,8 @@ import { line } from 'd3-shape';
 import { Placement } from '../chart-configuration';
 import { axisTop, axisLeft, axisRight, axisBottom } from 'd3';
 import { LegendItem } from '../chart.interface';
+import { Observable, Observer } from 'rxjs';
+import { delay } from 'rxjs/operators';
 
 export const getTransformByArray = (transform: string = 'translate(0, 0)'): Array<string> => {
     const translateString = transform.substring(transform.indexOf('translate('), transform.indexOf(')') + 1);
@@ -370,4 +372,16 @@ export const drawLegendColorItemByLine = (
                 const index = keys.findIndex((key: LegendItem) => d.label === key.label);
                 return colors[index];
             });
+}
+
+export const delayExcute = (delayTime: number = 100, callback: any) => {
+    Observable.create((observ: Observer<boolean>) => {
+        observ.next(true);
+        observ.complete();
+    })
+    .pipe(
+        delay(delayTime)
+    ).subscribe(() => {
+        callback();
+    });
 }

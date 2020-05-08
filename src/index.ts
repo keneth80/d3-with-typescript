@@ -166,6 +166,86 @@ const examples = [
 
 // example();
 
+const canvasScatter = (id: string) => {
+    const randomX = randomNormal(0, 9);
+    const randomY = randomNormal(0, 9);
+    let xmin = 0;
+    let xmax = 0;
+    let ymin = 0;
+    let ymax = 0;
+    const numberPoints = 2000000;
+    console.time('dataparse');
+    const data = range(numberPoints).map((d: number) => {
+        const x = parseFloat(randomX().toFixed(2));
+        const y = parseFloat(randomX().toFixed(2));
+        const z = parseFloat(randomX().toFixed(2));
+        if (xmin > x) {
+            xmin = x;
+        }
+        if (xmax < x) {
+            xmax = x;
+        }
+        if (ymin > y) {
+            ymin = y;
+        }
+        if (ymax < y) {
+            ymax = y;
+        }
+        return new BasicCanvasScatterPlotModel(
+            x,
+            y,
+            z,
+            d,
+            false,
+            {}
+        );
+    });
+    console.timeEnd('dataparse');
+
+    console.time('chartdraw');
+    const scatterPlot = new BasicCanvasScatterPlot<BasicCanvasScatterPlotModel>({
+        selector: 'scatter',
+        xField: 'x',
+        yField: 'y'
+    });
+
+    // console.log('min : ', xmin, ymin);
+    // console.log('max : ', ymax, ymax);
+    const scatterChart = new BasicChart<BasicCanvasScatterPlotModel>({
+        selector: id,
+        data,
+        margin: {
+            top: 10, right: 10, bottom: 30, left: 40
+        },
+        calcField: 'y',
+        isResize: true,
+        axes: [
+            {
+                field: 'x',
+                type: 'number',
+                placement: 'bottom',
+                min: xmin,
+                max: xmax
+            },
+            {
+                field: 'y',
+                type: 'number',
+                placement: 'left',
+                min: ymin,
+                max: ymax
+            }
+        ],
+        series: [
+            // canvasLineSeries,
+            // canvasTrace,
+            scatterPlot
+        ],
+        functions: [
+        ]
+    }).draw();
+    console.timeEnd('chartdraw');
+}
+
 const canvasLineChart = () => {
     const randomX = randomNormal(0, 9);
     const randomY = randomNormal(0, 9);
@@ -180,7 +260,9 @@ const canvasLineChart = () => {
     let endDt = 0;
     const data = range(numberPoints).map((d: number, i: number) => {
         const x = startDt + (1000 * i);
-        const y = parseFloat(randomX().toFixed(2));
+        const y = parseFloat(randomY().toFixed(2));
+        // const y = i%10 === 0 ? parseFloat(randomX().toFixed(2)) : i;
+        // const y = i * 10;
         if (xmin > x) {
             xmin = x;
         }
@@ -208,12 +290,6 @@ const canvasLineChart = () => {
     console.timeEnd('timedataparse');
 
     console.time('timechartdraw');
-    const canvasLineSeries = new BasicCanvasLineSeries({
-        selector: 'canvas-line',
-        xField: 'x',
-        yField: 'y'
-    });
-
     const canvasTrace = new BasicCanvasTrace({
         selector: 'canvas-trace',
         xField: 'x',
@@ -1014,98 +1090,6 @@ const areaChart = () => {
     .catch((error: any) => {
         console.log('Error : ', error);
     });
-}
-
-const canvasScatter = (id: string) => {
-    const randomX = randomNormal(0, 9);
-    const randomY = randomNormal(0, 9);
-    let xmin = 0;
-    let xmax = 0;
-    let ymin = 0;
-    let ymax = 0;
-    const numberPoints = 200000;
-    console.time('dataparse');
-    const data = range(numberPoints).map((d: number) => {
-        const x = parseFloat(randomX().toFixed(2));
-        const y = parseFloat(randomX().toFixed(2));
-        const z = parseFloat(randomX().toFixed(2));
-        if (xmin > x) {
-            xmin = x;
-        }
-        if (xmax < x) {
-            xmax = x;
-        }
-        if (ymin > y) {
-            ymin = y;
-        }
-        if (ymax < y) {
-            ymax = y;
-        }
-        return new BasicCanvasScatterPlotModel(
-            x,
-            y,
-            z,
-            d,
-            false,
-            {}
-        );
-    });
-    console.timeEnd('dataparse');
-
-    console.time('chartdraw');
-    const canvasLineSeries = new BasicCanvasLineSeries({
-        selector: 'canvas-line',
-        xField: 'x',
-        yField: 'y'
-    });
-
-    const scatterPlot = new BasicCanvasScatterPlot({
-        selector: 'scatter',
-        xField: 'x',
-        yField: 'y'
-    });
-
-    const canvasTrace = new BasicCanvasTrace({
-        selector: 'canvas-trace',
-        xField: 'x',
-        yField: 'y'
-    });
-
-    // console.log('min : ', xmin, ymin);
-    // console.log('max : ', ymax, ymax);
-    const scatterChart = new BasicChart<BasicCanvasScatterPlotModel>({
-        selector: id,
-        data,
-        margin: {
-            top: 10, right: 10, bottom: 30, left: 40
-        },
-        calcField: 'y',
-        isResize: true,
-        axes: [
-            {
-                field: 'x',
-                type: 'number',
-                placement: 'bottom',
-                min: xmin,
-                max: xmax
-            },
-            {
-                field: 'y',
-                type: 'number',
-                placement: 'left',
-                min: ymin,
-                max: ymax
-            }
-        ],
-        series: [
-            // canvasLineSeries,
-            // canvasTrace,
-            scatterPlot
-        ],
-        functions: [
-        ]
-    }).draw();
-    console.timeEnd('chartdraw');
 }
 
 const gaugeChart = () => {

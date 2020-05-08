@@ -295,6 +295,10 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
     }
 
     destroy() {
+        if (this.crossFilterDimension) {
+            this.crossFilterDimension.dispose();
+        }
+        this.crossFilterDimension = undefined;
         this.subscription.unsubscribe();
         this.canvas.remove();
         this.memoryCanvas.remove();

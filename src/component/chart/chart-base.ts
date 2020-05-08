@@ -1299,6 +1299,7 @@ export class ChartBase<T = any> implements IChart {
             } else {
                 scale = scaleLinear().range(range);
                 
+                // TODO: crossfilter로 min, max 가져와보기
                 if (!axis.hasOwnProperty('max')) {
                     axis.max = max(this.data.map((item: T) => parseFloat(item[axis.field])));
                     axis.max += Math.round(axis.max * 0.05);
@@ -1479,6 +1480,7 @@ export class ChartBase<T = any> implements IChart {
                 .attr('x', 0)
                 .attr('y', 0);
 
+        // TODO: zoom in 상태에서 리사이즈시 로직 구현.
         this.updateDisplay();
 
         this.isResize = false;
