@@ -1,6 +1,11 @@
 import { ISeries } from './series.interface';
 import { IFunctions } from './functions.interface';
 
+export enum Direction {
+    BOTH = 'both',
+    HORIZONTAL = 'horizontal',
+    VERTICAL = 'vertical'
+}
 
 export enum Placement {
     TOP = 'top',

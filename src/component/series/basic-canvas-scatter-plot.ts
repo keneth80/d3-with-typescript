@@ -154,8 +154,12 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
             const filterData = this.xMaxValue === xmax && this.yMaxValue === ymax ? chartData : chartData
                 .filter((d: T) => d[this.xField] >= xmin && d[this.xField] <= xmax && d[this.yField] >= ymin && d[this.yField] <= ymax)
                 .map((d: T, i: number) => {
-                    const xposition = Math.round(x(d[this.xField]));
-                    const yposition = Math.round(y(d[this.yField]));
+                    // const xposition = Math.round(x(d[this.xField]));
+                    // const yposition = Math.round(y(d[this.yField]));
+                    const xposition = x(d[this.xField]).toFixed(2);
+                    const yposition = y(d[this.yField]).toFixed(2);
+                    // TODO: 건수에 따라 포인트를 세분화 할지를 결정한다. 깊게 파고 들어가면 포인트가 잡히지 않음.
+                    // POINT: selection을 위해 indexing을 한다.
                     this.indexing[xposition + ';' + yposition] = d;
                     if (initialize) {
                         this.originData.push([xposition, yposition]);
@@ -166,13 +170,13 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
         }
 
         console.timeEnd('filterdata');
-        console.log('data size : ', generateData.length), this.isRestore;
+        console.log('data size : ', generateData.length, this.isRestore);
 
         if (this.isRestore && this.bufferCanvas) {
             console.time('restoreputimage');
             context.drawImage(this.bufferCanvas, 0, 0);
             // context.putImageData(this.prevCanvas, 0, 0);
-            this.isRestore = false;
+            // this.isRestore = false;
             console.timeEnd('restoreputimage');
         } else {
             // 갯수를 끊어 그리기
@@ -289,8 +293,10 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
                 const selected = this.search(this.originQuadTree, endX - this.pointerRadius, endY - this.pointerRadius, endX + this.pointerRadius, endY + this.pointerRadius);
             
                 if (selected.length) {
-                    const selectX = Math.round(selected[selected.length - 1][0]);
-                    const selectY = Math.round(selected[selected.length - 1][1]);
+                    // const selectX = Math.round(selected[selected.length - 1][0]);
+                    // const selectY = Math.round(selected[selected.length - 1][1]);
+                    const selectX = selected[selected.length - 1][0].toFixed(2);
+                    const selectY = selected[selected.length - 1][1].toFixed(2);
                     const selectedItem = this.indexing[selectX + ';' + selectY];
 
                     if (selectedItem) {
@@ -305,12 +311,13 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
                 startX = event.position[0];
                 startY = event.position[1];
             } else if (event.type === 'zoomin') {
+                this.isRestore = false;
                 endX = event.position[0];
                 endY = event.position[1];
-                const xStartValue = +x.invert(startX).toFixed(0);
-                const yStartValue = +y.invert(startY).toFixed(0);
-                const xEndValue = +x.invert(endX).toFixed(0);
-                const yEndValue = +y.invert(endY).toFixed(0);
+                const xStartValue = +x.invert(startX).toFixed(2);
+                const yStartValue = +y.invert(startY).toFixed(2);
+                const xEndValue = +x.invert(endX).toFixed(2);
+                const yEndValue = +y.invert(endY).toFixed(2);
                 this.chartBase.updateAxisForZoom([
                     {
                         field: this.xField,
@@ -324,6 +331,7 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
                     }
                 ]);
             } else if (event.type === 'zoomout') {
+                console.log('zoomout');
                 this.isRestore = true;
                 delayExcute(50, () => {
                     this.chartBase.updateAxisForZoom([]);

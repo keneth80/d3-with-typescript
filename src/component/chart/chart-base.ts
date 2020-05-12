@@ -26,7 +26,10 @@ export class ChartBase<T = any> implements IChart {
     mouseEventSubject: Subject<{
         type: string,
         position: [number, number],
-        target: Selection<BaseType, any, HTMLElement, any>
+        target: Selection<BaseType, any, HTMLElement, any>,
+        zoom?: {
+            direction: string
+        }
     }> = new Subject();
 
     protected data: Array<T> = [];

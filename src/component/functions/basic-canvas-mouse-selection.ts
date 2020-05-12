@@ -4,11 +4,11 @@ import { min, max } from 'd3-array';
 
 import { Scale, ContainerSize } from '../chart/chart.interface';
 import { FunctionsBase } from '../chart/functions-base';
-import { ChartBase, delayExcute } from '../chart';
+import { ChartBase, delayExcute, Direction } from '../chart';
 
 export interface BasicCanvasMouseSelectionConfiguration {
-    xField: string;
-    yField: string;
+    xField?: string;
+    yField?: string;
     isZoom?: boolean;
     isMouseMove?: boolean;
     direction?: string;
@@ -35,6 +35,8 @@ export class BasicCanvasMouseSelection extends FunctionsBase {
 
     private yMaxValue: number = NaN;
 
+    private direction: string = Direction.BOTH;
+
     constructor(configuration: BasicCanvasMouseSelectionConfiguration) {
         super();
         if (configuration) {
@@ -52,6 +54,10 @@ export class BasicCanvasMouseSelection extends FunctionsBase {
 
             if (configuration.hasOwnProperty('isMouseMove')) {
                 this.isMouseMove = configuration.isMouseMove;
+            }
+
+            if (configuration.hasOwnProperty('direction')) {
+                this.direction = configuration.direction;
             }
         }
     }
@@ -129,10 +135,38 @@ export class BasicCanvasMouseSelection extends FunctionsBase {
 
                 isMouseMove = true;
                 pointerContext.clearRect(0, 0, geometry.width, geometry.height);
+                const start = {
+                    x: 0, y: 0
+                };
+                const end = {
+                    x: 0, y: 0
+                };
+
+                if (this.direction === Direction.HORIZONTAL) {
+                    start.x = min([startX, moveX]);
+                    start.y = 0;
+
+                    end.x = max([startX, moveX]);
+                    end.y = geometry.height;
+                } else if (this.direction === Direction.VERTICAL) {
+                    start.x = 0;
+                    start.y = min([startY, moveY]);
+
+                    end.x = geometry.width;
+                    end.y = max([startY, moveY]);
+                } else {
+                    start.x = min([startX, moveX]);
+                    start.y = min([startY, moveY]);
+
+                    end.x = max([startX, moveX]);
+                    end.y = max([startY, moveY]);
+                }
+                
+                
                 this.drawZoomBox(
                     pointerContext,
-                    min([startX, moveX]), min([startY, moveY]),
-                    max([startX, moveX]), max([startY, moveY])
+                    start,
+                    end
                 );
             }
 
@@ -157,42 +191,52 @@ export class BasicCanvasMouseSelection extends FunctionsBase {
             pointerContext.clearRect(0, 0, geometry.width, geometry.height);
 
             if (this.isZoom && Math.abs(startX - endX) > 4 && Math.abs(startY - endY) > 4) {
-                // const xStartValue = +x.invert(startX).toFixed(0);
-                // const yStartValue = +y.invert(startY).toFixed(0);
-                // const xEndValue = +x.invert(endX).toFixed(0);
-                // const yEndValue = +y.invert(endY).toFixed(0);
+                const xStartValue = +x.invert(startX).toFixed(0);
+                const yStartValue = y.invert(startY).toFixed(0);
+                const xEndValue = +x.invert(endX).toFixed(0);
+                const yEndValue = +y.invert(endY).toFixed(0);
+
+                console.log('zoom in : ', xStartValue, yStartValue,', ', xEndValue, yEndValue);
 
                 if (startX < endX && startY < endY) {
-                    // this.chartBase.updateAxisForZoom([
-                    //     {
-                    //         field: this.xField,
-                    //         min: xStartValue,
-                    //         max: xEndValue
-                    //     },
-                    //     {
-                    //         field: this.yField,
-                    //         min: yEndValue,
-                    //         max: yStartValue
-                    //     }
-                    // ]);
+                    
                     this.chartBase.mouseEventSubject.next({
                         type: 'zoomin',
                         position: mouseEvent,
-                        target: this.pointerCanvas
+                        target: this.pointerCanvas,
+                        zoom: {
+                            direction: this.direction
+                        }
                     });
+                    // TODO: 버그 두번째 줌부터 마이너스가 아닌 플러스로 넘어감.
+                    // delayExcute(50, () => {
+                    //     this.chartBase.updateAxisForZoom([
+                    //         {
+                    //             field: this.xField,
+                    //             min: xStartValue,
+                    //             max: xEndValue
+                    //         },
+                    //         {
+                    //             field: this.yField,
+                    //             min: yEndValue,
+                    //             max: yStartValue
+                    //         }
+                    //     ]);
+                    // });
                 } else {
-                    console.log('restore');
                     if (this.xMaxValue === xmax && this.yMaxValue === ymax) {
                         return;
                     }
-                    // delayExcute(50, () => {
-                    //     this.chartBase.updateAxisForZoom([]);
-                    // });
+                    
                     this.chartBase.mouseEventSubject.next({
                         type: 'zoomout',
                         position: mouseEvent,
                         target: this.pointerCanvas
                     });
+
+                    // delayExcute(50, () => {
+                    //     this.chartBase.updateAxisForZoom([]);
+                    // });
                 }
             } else {
                 this.chartBase.mouseEventSubject.next({
@@ -211,13 +255,13 @@ export class BasicCanvasMouseSelection extends FunctionsBase {
 
     private drawZoomBox(
         pointerContext: any,
-        startX: number, startY: number,
-        endX: number, endY: number
+        start: {x: number, y: number},
+        end: {x: number, y: number}
     ) {
         pointerContext.strokeStyle = 'blue';
         pointerContext.fillStyle = 'rgba(5,222,255,0.5)';
         pointerContext.beginPath();
-        pointerContext.rect(startX, startY, Math.abs(endX - startX), Math.abs(endY - startY));
+        pointerContext.rect(start.x, start.y, Math.abs(end.x - start.x), Math.abs(end.y - start.y));
         pointerContext.fill();
         pointerContext.stroke();
     }
