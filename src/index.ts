@@ -36,6 +36,7 @@ import { lineData } from './component/mock-data/line-one-field-data';
 import { BasicCanvasLineSeries } from './component/series/basic-canvas-line-series';
 import { ExampleSeries } from './component/series/example-series';
 import { BasicCanvasTrace, BasicCanvasTraceModel } from './component/series/basic-canvas-trace';
+import { BasicCanvasMouseSelection } from './component/functions/basic-canvas-mouse-selection';
 
 class SalesModel {
     salesperson: string;
@@ -173,7 +174,7 @@ const canvasScatter = (id: string) => {
     let xmax = 0;
     let ymin = 0;
     let ymax = 0;
-    const numberPoints = 2000000;
+    const numberPoints = 1000000;
     console.time('dataparse');
     const data = range(numberPoints).map((d: number) => {
         const x = parseFloat(randomX().toFixed(2));
@@ -241,6 +242,10 @@ const canvasScatter = (id: string) => {
             scatterPlot
         ],
         functions: [
+            new BasicCanvasMouseSelection({
+                xField: 'x',
+                yField: 'y'
+            })
         ]
     }).draw();
     console.timeEnd('chartdraw');

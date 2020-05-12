@@ -1,7 +1,7 @@
 import { Selection, BaseType, select, mouse } from 'd3-selection';
 import { quadtree, Quadtree } from 'd3-quadtree';
 import { min, max, range } from 'd3-array';
-import { timer, of, from, Observable, Observer } from 'rxjs';
+import { timer, of, from, Observable, Observer, Subscription } from 'rxjs';
 import { switchMap, map, concatMap, mapTo, delay } from 'rxjs/operators';
 
 import { Scale, ContainerSize } from '../chart/chart.interface';
@@ -42,8 +42,6 @@ export interface BasicCanvasScatterPlotConfiguration extends SeriesConfiguration
 export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
     protected canvas: Selection<BaseType, any, HTMLElement, any>;
 
-    protected pointerCanvas: Selection<BaseType, any, HTMLElement, any>;
-
     private indexing: any = {};
 
     private xField: string = 'x';
@@ -72,6 +70,8 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
 
     private originQuadTree: Quadtree<Array<any>> = undefined;
 
+    private mouseSubscription: Subscription;
+
     constructor(configuration: BasicCanvasScatterPlotConfiguration) {
         super(configuration);
         if (configuration.xField) {
@@ -98,14 +98,6 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
                 .append('canvas')
                 .attr('class', 'drawing-canvas')
                 .style('z-index', 2)
-                .style('position', 'absolute');
-        }
-
-        if (!this.pointerCanvas) {
-            this.pointerCanvas = select((this.svg.node() as HTMLElement).parentElement)
-                .append('canvas')
-                .attr('class', 'pointer-canvas')
-                .style('z-index', 3)
                 .style('position', 'absolute');
         }
     }
@@ -141,7 +133,7 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
         const ymin = yScale.min;
         const ymax = yScale.max;
 
-        const pointerContext = (this.pointerCanvas.node() as any).getContext('2d');
+        // const pointerContext = (this.pointerCanvas.node() as any).getContext('2d');
 
         const context = (this.canvas.node() as any).getContext('2d');
             context.clearRect(0, 0, geometry.width, geometry.height);
@@ -172,102 +164,9 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
                 });
             generateData = filterData;
         }
-        
-        // const generateData: Array<[number, number]> = !this.isRestore ? (this.xMaxValue === xmax && this.yMaxValue === ymax ? chartData : chartData
-        //     .filter((d: T) => d[this.xField] >= xmin && d[this.xField] <= xmax && d[this.yField] >= ymin && d[this.yField] <= ymax))
-        //     .map((d: T, i: number) => {
-        //         const xposition = Math.round(x(d[this.xField]));
-        //         const yposition = Math.round(y(d[this.yField]));
-        //         this.indexing[xposition + ';' + yposition] = d;
-        //         if (initialize) {
-        //             this.originData.push([xposition, yposition]);
-        //         }
-        //         return [xposition, yposition];
-        //     }) : this.originData;
+
         console.timeEnd('filterdata');
-        console.log('data size : ', generateData.length);
-        
-        let isMouseDown = false;
-        let isMouseMove = false;
-        let startX = 0;
-        let startY = 0;
-        let endX = 0;
-        let endY = 0;
-
-        this.pointerCanvas.on('mousedown', () => {
-            const mouseEvent = mouse(this.pointerCanvas.node() as any);
-            startX = mouseEvent[0];
-            startY = mouseEvent[1];
-            isMouseDown = true;
-        });
-
-        this.pointerCanvas.on('mousemove', () => {
-            if (isMouseDown) {
-                isMouseMove = true;
-                const mouseEvent = mouse(this.pointerCanvas.node() as any);
-                const moveX = mouseEvent[0];
-                const moveY = mouseEvent[1];
-                pointerContext.clearRect(0, 0, geometry.width, geometry.height);
-                this.drawZoomBox(
-                    pointerContext,
-                    min([startX, moveX]), min([startY, moveY]),
-                    max([startX, moveX]), max([startY, moveY])
-                );
-            }
-        });
-
-        this.pointerCanvas.on('mouseup', () => {
-            isMouseDown = false;
-            isMouseMove = false;
-
-            const mouseEvent = mouse(this.pointerCanvas.node() as any);
-            endX = Math.round(mouseEvent[0]);
-            endY = Math.round(mouseEvent[1]);
-
-            pointerContext.clearRect(0, 0, geometry.width, geometry.height);
-            if (Math.abs(startX - endX) > this.pointerRadius * 2 && Math.abs(startY - endY) > this.pointerRadius * 2) {
-                const xStartValue = +x.invert(startX).toFixed(0);
-                const yStartValue = +y.invert(startY).toFixed(0);
-                const xEndValue = +x.invert(endX).toFixed(0);
-                const yEndValue = +y.invert(endY).toFixed(0);
-
-                if (startX < endX && startY < endY) {
-                    this.isZoom = true;
-                    this.chartBase.updateAxisForZoom([
-                        {
-                            field: this.xField,
-                            min: xStartValue,
-                            max: xEndValue
-                        },
-                        {
-                            field: this.yField,
-                            min: yEndValue,
-                            max: yStartValue
-                        }
-                    ]);
-                } else {
-                    this.isRestore = true;
-                    delayExcute(50, () => {
-                        this.chartBase.updateAxisForZoom([]);
-                    });
-                }
-            } else {
-                const selected = this.search(this.originQuadTree, endX - this.pointerRadius, endY - this.pointerRadius, endX + this.pointerRadius, endY + this.pointerRadius);
-                
-                if (selected.length) {
-                    const selectX = Math.round(selected[selected.length - 1][0]);
-                    const selectY = Math.round(selected[selected.length - 1][1]);
-                    const selectedItem = this.indexing[selectX + ';' + selectY];
-
-                    if (selectedItem) {
-                        this.itemClickSubject.next(selectedItem);
-                        pointerContext.fillStyle = 'red';
-                        pointerContext.strokeStyle = 'white';
-                        this.drawCircle([selectX, selectY], this.pointerRadius, pointerContext);
-                    }
-                }
-            }
-        });
+        console.log('data size : ', generateData.length), this.isRestore;
 
         if (this.isRestore && this.bufferCanvas) {
             console.time('restoreputimage');
@@ -290,7 +189,7 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
                     .attr('height', svgHeight - 2)
                     .lower();
                             
-                const shareCount = Math.ceil(totalCount / 100000);
+                const shareCount = Math.ceil(totalCount / 20000);
 
                 const arrayAsObservable = of(null).pipe(
                     switchMap(() => this.getObjectWithArrayInPromise(range(shareCount))),
@@ -301,7 +200,7 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
                 );
         
                 const eachElementAsObservable = arrayAsObservable.pipe(
-                    concatMap(value => timer(500).pipe(mapTo(value))), // Not working : we want to wait 500ms for each value
+                    concatMap(value => timer(400).pipe(mapTo(value))), // Not working : we want to wait 500ms for each value
                     map(val => {
                         return val;
                     })
@@ -335,6 +234,7 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
                         this.bufferCanvas = document.createElement('canvas');
                         this.bufferCanvas.width = (this.canvas.node() as any).width;
                         this.bufferCanvas.height = (this.canvas.node() as any).height;
+                        this.bufferCanvas.setAttribute('style', 'opacity: 0.5;');
                         this.bufferCanvas.getContext('2d').drawImage(this.canvas.node(), 0, 0);
                     }
                     context.closePath();
@@ -362,21 +262,80 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
                     .addAll(generateData);
             });
         }
+        this.subscription.unsubscribe();
+        this.subscription = new Subscription();
+        delayExcute(100, () => {
+            this.addMouseEvent(x, y);
+        });
     }
 
     destroy() {
         this.subscription.unsubscribe();
         this.canvas.remove();
-        this.pointerCanvas.remove();
+    }
+
+    private addMouseEvent(x: any, y: any) {
+        let startX = 0;
+        let startY = 0;
+        let endX = 0;
+        let endY = 0;
+        this.subscription.add(this.chartBase.mouseEvent$.subscribe((event: {type: string, position: [number, number], target: Selection<BaseType, any, HTMLElement, any>}) => {
+            if (event.type === 'mousemove') {
+
+            } else if (event.type === 'mouseup') {
+                endX = event.position[0];
+                endY = event.position[1];
+
+                const selected = this.search(this.originQuadTree, endX - this.pointerRadius, endY - this.pointerRadius, endX + this.pointerRadius, endY + this.pointerRadius);
+            
+                if (selected.length) {
+                    const selectX = Math.round(selected[selected.length - 1][0]);
+                    const selectY = Math.round(selected[selected.length - 1][1]);
+                    const selectedItem = this.indexing[selectX + ';' + selectY];
+
+                    if (selectedItem) {
+                        this.itemClickSubject.next(selectedItem);
+                        const pointerContext = (event.target.node() as any).getContext('2d');
+                        pointerContext.fillStyle = 'red';
+                        pointerContext.strokeStyle = 'white';
+                        this.drawCircle([selectX, selectY], this.pointerRadius, pointerContext);
+                    }
+                }
+            } else if (event.type === 'mousedown') {
+                startX = event.position[0];
+                startY = event.position[1];
+            } else if (event.type === 'zoomin') {
+                endX = event.position[0];
+                endY = event.position[1];
+                const xStartValue = +x.invert(startX).toFixed(0);
+                const yStartValue = +y.invert(startY).toFixed(0);
+                const xEndValue = +x.invert(endX).toFixed(0);
+                const yEndValue = +y.invert(endY).toFixed(0);
+                this.chartBase.updateAxisForZoom([
+                    {
+                        field: this.xField,
+                        min: xStartValue,
+                        max: xEndValue
+                    },
+                    {
+                        field: this.yField,
+                        min: yEndValue,
+                        max: yStartValue
+                    }
+                ]);
+            } else if (event.type === 'zoomout') {
+                this.isRestore = true;
+                delayExcute(50, () => {
+                    this.chartBase.updateAxisForZoom([]);
+                });
+            } else {
+
+            }
+        }));
     }
 
     private setContainerPosition(geometry: ContainerSize, chartBase: ChartBase) {
         this.canvas
-            .attr('width', geometry.width - 1)
-            .attr('height', geometry.height - 1)
-            .style('transform', `translate(${(chartBase.chartMargin.left + 1)}px, ${(chartBase.chartMargin.top + 1)}px)`);
-
-        this.pointerCanvas
             .attr('width', geometry.width - 1)
             .attr('height', geometry.height - 1)
             .style('transform', `translate(${(chartBase.chartMargin.left + 1)}px, ${(chartBase.chartMargin.top + 1)}px)`);

@@ -1,5 +1,5 @@
 import { Selection, BaseType } from 'd3-selection';
-import { Subject, Observable } from 'rxjs';
+import { Subject, Observable, Subscription } from 'rxjs';
 
 import { ChartBase } from './chart-base';
 import { Scale, ContainerSize } from '../chart/chart.interface';
@@ -11,6 +11,8 @@ export class FunctionsBase implements IFunctions {
     protected mainGroup: Selection<BaseType, any, HTMLElement, any>;
 
     protected itemClickSubject: Subject<any> = new Subject();
+
+    protected subscription: Subscription = new Subscription();
 
     private chart: ChartBase;
 
@@ -35,5 +37,9 @@ export class FunctionsBase implements IFunctions {
 
     drawFunctions(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
 
+    }
+
+    destroy() {
+        this.subscription.unsubscribe();
     }
 }

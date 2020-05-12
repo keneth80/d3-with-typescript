@@ -1,6 +1,7 @@
 import { ISeries } from './series.interface';
 import { IFunctions } from './functions.interface';
 
+
 export enum Placement {
     TOP = 'top',
     BOTTOM = 'bottom',
@@ -11,7 +12,8 @@ export enum Placement {
 export enum ScaleType {
     NUMBER = 'number',
     TIME = 'time',
-    STRING = 'string'
+    STRING = 'string',
+    POINT = 'point'
 }
 
 export enum Align {

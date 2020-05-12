@@ -11,7 +11,7 @@ import { brushX, brushY } from 'd3-brush';
 import { fromEvent, Subscription, Subject, of, Observable, Observer, from, timer } from 'rxjs';
 import { debounceTime, delay, switchMap, map, concatMap, mapTo } from 'rxjs/operators';
 
-import crossfilter from 'crossfilter2';
+import crossfilter, { Crossfilter } from 'crossfilter2';
 
 import { IChart, Scale, ContainerSize, LegendItem } from './chart.interface';
 import { ChartConfiguration, Axis, Margin, Placement, ChartTitle, ScaleType, Align, AxisTitle, ChartTooltip, Shape } from './chart-configuration';
@@ -21,7 +21,13 @@ import { IFunctions } from './functions.interface';
 
 
 export class ChartBase<T = any> implements IChart {
-    public isResize: boolean = false;
+    isResize: boolean = false;
+
+    mouseEventSubject: Subject<{
+        type: string,
+        position: [number, number],
+        target: Selection<BaseType, any, HTMLElement, any>
+    }> = new Subject();
 
     protected data: Array<T> = [];
 
@@ -54,6 +60,8 @@ export class ChartBase<T = any> implements IChart {
     protected subscription: Subscription;
 
     protected chartClickSubject: Subject<any> = new Subject();
+
+    protected updateSeriesSubject: Subject<any> = new Subject();
 
     protected tooltipGroup: Selection<BaseType, any, HTMLElement, any>;
 
@@ -175,6 +183,10 @@ export class ChartBase<T = any> implements IChart {
     private legendTextWidthList: Array<number> = [];
     // ===================== Legend configuration end ===================== //
 
+    // ===================== current min max start ===================== //
+    private currentScale: Array<{field:string, min: number, max: number}> = [];
+    // ===================== current min max start ===================== //
+
     constructor(
         configuration: ChartConfiguration
     ) {
@@ -221,6 +233,14 @@ export class ChartBase<T = any> implements IChart {
 
     get crossFilter(): any{
         return crossfilter;
+    }
+
+    get updateSeries$(): Observable<any> {
+        return this.updateSeriesSubject.asObservable();
+    }
+
+    get mouseEvent$(): Observable<any> {
+        return this.mouseEventSubject.asObservable();
     }
 
     getColorBySeriesIndex(index: number): string {
@@ -361,6 +381,7 @@ export class ChartBase<T = any> implements IChart {
             this.svg.selectAll('*').remove();
         }
         this.seriesList.forEach((series: ISeries) => series.destroy());
+        this.functionList.forEach((functions: IFunctions) => functions.destroy());
         this.originDomains = null;
         this.originalData.length = 0;
         this.data.length = 0;
@@ -368,6 +389,7 @@ export class ChartBase<T = any> implements IChart {
 
     updateSeries() {
         try {
+            // TODO: subject next 로 변경할 것
             if (this.seriesList && this.seriesList.length) {
                 if (!this.config.displayDelay) {
                     this.seriesList.map((series: ISeries, index: number) => {
@@ -1257,8 +1279,13 @@ export class ChartBase<T = any> implements IChart {
         axes: Array<Axis> = [],
         width: number = 0,
         height: number = 0,
-        reScaleAxes: Array<any> = []
+        reScaleAxes?: Array<any>
     ): Array<Scale> {
+        // zoom out 했을 경우에 초기화.
+        if (reScaleAxes && !reScaleAxes.length) {
+            this.currentScale.length = 0;
+        }
+
         const returnAxes: Array<Scale> = [];
         axes.map((axis: Axis) => {
             let range = <any>[];
@@ -1280,7 +1307,7 @@ export class ChartBase<T = any> implements IChart {
                         this.data.map((item: T) => item[axis.field])
                     );
                 }
-            } else if (axis.type === 'point') {
+            } else if (axis.type === ScaleType.POINT) {
                 scale = scalePoint().range(range).padding(axis.padding ? +axis.padding : 0.1);
                 if (axis.domain) {
                     scale.domain(axis.domain);
@@ -1291,63 +1318,78 @@ export class ChartBase<T = any> implements IChart {
                 }
             } else if (axis.type === ScaleType.TIME) {
                 scale = scaleTime().range(range);
-                if (axis.hasOwnProperty('min') && axis.hasOwnProperty('max')) {
-                    scale.domain([new Date(axis.min), new Date(axis.max)]);
+
+                // POINT: zoom 시 현재 scale을 유지하기 위함.
+                if (this.currentScale.length) {
+                    const tempScale = this.currentScale.find((scale: any) => scale.field === axis.field);
+                    minValue = tempScale ? +tempScale.min.toFixed(0) : 0;
+                    maxValue = tempScale ? +tempScale.max.toFixed(0) : 0;
+
+                    scale.domain([new Date(minValue), new Date(maxValue)]);
                 } else {
-                    scale.domain(extent(this.data, (item: T) => item[axis.field]));
+                    if (axis.hasOwnProperty('min') && axis.hasOwnProperty('max')) {
+                        scale.domain([new Date(axis.min), new Date(axis.max)]);
+                    } else {
+                        scale.domain(extent(this.data, (item: T) => item[axis.field]));
+                    }
                 }
-            } else {
+            } else { // ScaleType.NUMBER => numeric type
                 scale = scaleLinear().range(range);
-                
-                // TODO: crossfilter로 min, max 가져와보기
-                if (!axis.hasOwnProperty('max')) {
-                    axis.max = max(this.data.map((item: T) => parseFloat(item[axis.field])));
-                    axis.max += Math.round(axis.max * 0.05);
+
+                // POINT: zoom 시 현재 scale을 유지하기 위함.
+                if (this.currentScale.length) {
+                    const tempScale = this.currentScale.find((scale: any) => scale.field === axis.field);
+                    minValue = tempScale ? +tempScale.min.toFixed(0) : 0;
+                    maxValue = tempScale ? +tempScale.max.toFixed(0) : 0;
+                } else {
+                    if (!axis.hasOwnProperty('max')) {
+                        axis.max = max(this.data.map((item: T) => parseFloat(item[axis.field])));
+                        axis.max += Math.round(axis.max * 0.05);
+                    }
+    
+                    if (!axis.hasOwnProperty('min')) {
+                        axis.min = min(this.data.map((item: T) => parseFloat(item[axis.field])));
+                        axis.min += Math.round(axis.min * 0.05);
+                    }
+    
+                    minValue = axis.min;
+                    maxValue = axis.max;
                 }
-
-                if (!axis.hasOwnProperty('min')) {
-                    axis.min = min(this.data.map((item: T) => parseFloat(item[axis.field])));
-                    axis.min += Math.round(axis.min * 0.05);
-                }
-
-                // if (!axis.max) {
-                //     axis.max = max(this.data.map((item: T) => parseFloat(item[axis.field])));
-                // }
-
-                // if (!axis.min) {
-                //     axis.min = min(this.data.map((item: T) => parseFloat(item[axis.field])));
-                // }
-
-                minValue = axis.min;
-                maxValue = axis.max;
 
                 if (axis.domain) {
+                    console.log('domain is!', axis.domain);
                     scale.domain(axis.domain);
                 } else {
-                    if (reScaleAxes.length) {
-                        const reScale = reScaleAxes.find((d: any) => d.field === axis.field);
-                        minValue = +reScale.min.toFixed(2);
-                        maxValue = +reScale.max.toFixed(2);
+                    // POINT: zoom 시 적용될 scale
+                    if (reScaleAxes && reScaleAxes.length) {
+                        this.currentScale = [...reScaleAxes];
+                        const reScale = this.currentScale.find((d: any) => d.field === axis.field);
+                        minValue = +reScale.min.toFixed(0);
+                        maxValue = +reScale.max.toFixed(0);
+                        console.log('zoom scale3 : ', minValue, maxValue);
+                        scale.domain(
+                            [minValue, maxValue]
+                        );
 
                         if (axis.isRound === true) {
-                            scale.domain(
-                                [minValue, maxValue]
-                            ).nice();
-                        } else {
-                            scale.domain(
-                                [minValue, maxValue]
-                            );
+                            scale.nice();
                         }
                     } else {
+                        
+                        // POINT: zoom 시 현재 scale을 유지하기 위함.
+                        if (this.currentScale.length) {
+                            const reScale = this.currentScale.find((d: any) => d.field === axis.field);
+                            minValue = +reScale.min.toFixed(0);
+                            maxValue = +reScale.max.toFixed(0);
+                        }
+
                         // TODO : index string domain 지정.
+                        scale.domain(
+                            [minValue, maxValue]
+                        );
+
                         if (axis.isRound === true) {
-                            scale.domain(
-                                [minValue, maxValue]
-                            ).nice();
-                        } else {
-                            scale.domain(
-                                [minValue, maxValue]
-                            );
+                            scale.nice();
                         }
                     }
                 }

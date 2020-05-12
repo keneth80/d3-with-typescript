@@ -8,4 +8,6 @@ export interface IFunctions<T = any> {
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, mainGroup: Selection<BaseType, any, HTMLElement, any>, index: number): void;
 
     drawFunctions(data: Array<T>, scales: Array<Scale>, geometry: ContainerSize): void;
+
+    destroy(): void;
 }
