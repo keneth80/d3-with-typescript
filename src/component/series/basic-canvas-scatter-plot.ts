@@ -35,14 +35,18 @@ export interface BasicCanvasScatterPlotConfiguration extends SeriesConfiguration
     xField: string;
     yField: string;
     pointer?: {
-        radius: number
+        radius: number,
+        stroke?: {
+            color: string,
+            strokeWidth: number
+        }
     }
 }
 
 export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
     protected canvas: Selection<BaseType, any, HTMLElement, any>;
 
-    private indexing: any = {};
+    // private indexing: any = {};
 
     private xField: string = 'x';
 
@@ -66,6 +70,10 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
 
     private pointerRadius = 4;
 
+    private strokeWidth: number = 1;
+
+    private strokeColor: string = '#fff';
+
     private originData: Array<[number, number]> = [];
 
     private originQuadTree: Quadtree<Array<any>> = undefined;
@@ -84,6 +92,10 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
 
         if (configuration.pointer) {
             this.pointerRadius = configuration.pointer.radius;
+            if (configuration.pointer.stroke) {
+                this.strokeWidth = configuration.pointer.stroke.strokeWidth;
+                this.strokeColor = configuration.pointer.stroke.color;
+            }
         }
     }
 
@@ -138,8 +150,8 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
         const context = (this.canvas.node() as any).getContext('2d');
             context.clearRect(0, 0, geometry.width, geometry.height);
             context.fillStyle = 'steelblue';
-            context.strokeWidth = 1;
-            context.strokeStyle = 'white';
+            context.strokeWidth = this.strokeWidth;
+            context.strokeStyle = this.strokeColor;
 
         console.time('filterdata');
         let initialize = false;
@@ -154,13 +166,11 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
             const filterData = this.xMaxValue === xmax && this.yMaxValue === ymax ? chartData : chartData
                 .filter((d: T) => d[this.xField] >= xmin && d[this.xField] <= xmax && d[this.yField] >= ymin && d[this.yField] <= ymax)
                 .map((d: T, i: number) => {
-                    // const xposition = Math.round(x(d[this.xField]));
-                    // const yposition = Math.round(y(d[this.yField]));
-                    const xposition = x(d[this.xField]).toFixed(2);
-                    const yposition = y(d[this.yField]).toFixed(2);
+                    const xposition = x(d[this.xField]);
+                    const yposition = y(d[this.yField]);
                     // TODO: 건수에 따라 포인트를 세분화 할지를 결정한다. 깊게 파고 들어가면 포인트가 잡히지 않음.
                     // POINT: selection을 위해 indexing을 한다.
-                    this.indexing[xposition + ';' + yposition] = d;
+                    // this.indexing[xposition + ';' + yposition] = d;
                     if (initialize) {
                         this.originData.push([xposition, yposition]);
                     }
@@ -293,11 +303,12 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
                 const selected = this.search(this.originQuadTree, endX - this.pointerRadius, endY - this.pointerRadius, endX + this.pointerRadius, endY + this.pointerRadius);
             
                 if (selected.length) {
+                    
+                    const selectedItem = selected[0];
+                    const selectX = selectedItem[0];
+                    const selectY = selectedItem[1];
                     // const selectX = Math.round(selected[selected.length - 1][0]);
                     // const selectY = Math.round(selected[selected.length - 1][1]);
-                    const selectX = selected[selected.length - 1][0].toFixed(2);
-                    const selectY = selected[selected.length - 1][1].toFixed(2);
-                    const selectedItem = this.indexing[selectX + ';' + selectY];
 
                     if (selectedItem) {
                         this.itemClickSubject.next(selectedItem);
@@ -314,10 +325,12 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
                 this.isRestore = false;
                 endX = event.position[0];
                 endY = event.position[1];
-                const xStartValue = +x.invert(startX).toFixed(2);
-                const yStartValue = +y.invert(startY).toFixed(2);
-                const xEndValue = +x.invert(endX).toFixed(2);
-                const yEndValue = +y.invert(endY).toFixed(2);
+
+                // TODO: zoom 스케일이 깊어질 수록 정확도가 떨어짐.
+                const xStartValue = x.invert(startX);
+                const yStartValue = y.invert(startY);
+                const xEndValue = x.invert(endX);
+                const yEndValue = y.invert(endY);
                 this.chartBase.updateAxisForZoom([
                     {
                         field: this.xField,
@@ -397,6 +410,6 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
         context.beginPath();
         context.arc(point[0], point[1], r, 0, 2 * Math.PI);
         context.fill();
-        context.stroke();
+        // context.stroke();
     }
 }

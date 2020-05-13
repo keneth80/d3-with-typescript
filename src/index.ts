@@ -174,7 +174,7 @@ const canvasScatter = (id: string) => {
     let xmax = 0;
     let ymin = 0;
     let ymax = 0;
-    const numberPoints = 110000;
+    const numberPoints = 1100000;
     console.time('dataparse');
     const data = range(numberPoints).map((d: number) => {
         const x = parseFloat(randomX().toFixed(2));

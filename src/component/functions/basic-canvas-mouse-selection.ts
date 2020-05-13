@@ -185,16 +185,16 @@ export class BasicCanvasMouseSelection extends FunctionsBase {
             isMouseDown = false;
             isMouseMove = false;
 
-            endX = Math.round(mouseEvent[0]);
-            endY = Math.round(mouseEvent[1]);
+            endX = mouseEvent[0];
+            endY = mouseEvent[1];
 
             pointerContext.clearRect(0, 0, geometry.width, geometry.height);
 
             if (this.isZoom && Math.abs(startX - endX) > 4 && Math.abs(startY - endY) > 4) {
-                const xStartValue = +x.invert(startX).toFixed(0);
-                const yStartValue = y.invert(startY).toFixed(0);
-                const xEndValue = +x.invert(endX).toFixed(0);
-                const yEndValue = +y.invert(endY).toFixed(0);
+                const xStartValue = +x.invert(startX).toFixed(2);
+                const yStartValue = y.invert(startY).toFixed(2);
+                const xEndValue = +x.invert(endX).toFixed(2);
+                const yEndValue = +y.invert(endY).toFixed(2);
 
                 console.log('zoom in : ', xStartValue, yStartValue,', ', xEndValue, yEndValue);
 
