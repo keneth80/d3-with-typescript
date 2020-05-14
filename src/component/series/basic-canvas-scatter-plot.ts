@@ -344,7 +344,6 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
                     }
                 ]);
             } else if (event.type === 'zoomout') {
-                console.log('zoomout');
                 this.isRestore = true;
                 delayExcute(50, () => {
                     this.chartBase.updateAxisForZoom([]);

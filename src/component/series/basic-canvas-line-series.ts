@@ -1,5 +1,6 @@
 import { Selection, BaseType, select, mouse } from 'd3-selection';
 import { line, curveMonotoneX } from 'd3-shape';
+import { hsl } from 'd3-color';
 import { fromEvent, Subject, of } from 'rxjs';
 
 import { Scale, ContainerSize } from '../chart/chart.interface';
@@ -211,12 +212,33 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
             this.line.curve(curveMonotoneX); // apply smoothing to the line
         }
 
+        const strokeStyle = hsl(color);
+
         this.line(lineData);
         context.fillStyle = 'white';
         // context.fillStyle = color;
         context.lineWidth = lineStroke;
-        context.strokeStyle = color;
+        context.strokeStyle = strokeStyle;
         context.stroke();
+
+        // const templine = line()
+        // .defined(data => data[this.yField])
+        // .x((data: any) => {
+        //     const xposition = x(data[this.xField]) + padding;
+        //     return xposition; 
+        // }) // set the x values for the line generator
+        // .y((data: any) => {
+        //     const yposition = y(data[this.yField]);
+        //     return yposition; 
+        // })
+        // .context(context); // set the y values for the line generator
+        // templine(lineData);
+        // strokeStyle.opacity = 0.5;
+        // context.fillStyle = 'white';
+        // // context.fillStyle = color;
+        // context.lineWidth = lineStroke;
+        // context.strokeStyle = strokeStyle;
+        // context.stroke();
 
         if (this.config.dot) {
             this.memoryCanvas

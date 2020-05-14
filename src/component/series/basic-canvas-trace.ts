@@ -7,7 +7,7 @@ import { fromEvent, Subject, of } from 'rxjs';
 import { Scale, ContainerSize } from '../chart/chart.interface';
 import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
-import { textBreak } from '../chart/util/d3-svg-util';
+import { textBreak, delayExcute } from '../chart/util/d3-svg-util';
 import { debounceTime } from 'rxjs/operators';
 
 export class BasicCanvasTraceModel {
@@ -85,7 +85,9 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
     private crossFilterDimension: any = undefined;
 
-    private indexing: Indexing = {};
+    // private indexing: Indexing = {};
+
+    private originQuadTree: Quadtree<Array<any>> = undefined;
 
     constructor(configuration: BasicCanvasTraceConfiguration) {
         super(configuration);
@@ -179,20 +181,20 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         !this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item));
 
         console.time('traceindexing');
-        const generateData: Array<[number, number]> = lineData
+        const generateData: Array<any> = lineData
             .map((d: BasicCanvasTraceModel, i: number) => {
-                const xposition = Math.round(x(d[this.xField])) + padding;
-                const yposition = Math.round(y(d[this.yField]));
+                const xposition = x(d[this.xField]) + padding;
+                const yposition = y(d[this.yField]);
                 // this.indexing[xposition + ',' + yposition] = i;
                 // data 별로 indexing 해서 loop 돌면서 덮어버리고 최종 겹치지 않는 dot에 대해서만 출력하도록 한다.
-                this.indexing[xposition + ';' + yposition] = d;
-                return [xposition, yposition];
+                // this.indexing[xposition + ';' + yposition] = d;
+                return [xposition, yposition, d];
             });
         console.timeEnd('traceindexing');
 
-        const quadTreeObj: any = quadtree()
-            .extent([[0, 0], [geometry.width, geometry.height]])
-            .addAll(generateData);
+        // const quadTreeObj: any = quadtree()
+        //     .extent([[0, 0], [geometry.width, geometry.height]])
+        //     .addAll(generateData);
         
         this.canvas
             .attr('width', geometry.width)
@@ -290,10 +292,11 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                     if (isOut) return;
 
                     // http://plnkr.co/edit/AowXaSYsJM8NSH6IK5B7?p=preview&preview 참고
-                    const selected = this.search(quadTreeObj, Math.round(value[0]) - 3, Math.round(value[1]) - 3, Math.round(value[0]) + 3, Math.round(value[1]) + 3);
-                    
+                    const selected = this.search(this.originQuadTree, Math.round(value[0]) - 3, Math.round(value[1]) - 3, Math.round(value[0]) + 3, Math.round(value[1]) + 3);
+                    console.log('selected : ', selected);
                     if (isClick && selected.length) {
-                        const selectedItem = this.indexing[selected[selected.length - 1][0] + ';' + selected[selected.length - 1][1]];
+                        // const selectedItem = this.indexing[selected[selected.length - 1][0] + ';' + selected[selected.length - 1][1]];
+                        const selectedItem = selected[0];
                         this.onClickItem(selectedItem, {
                             width: geometry.width, height: geometry.height
                         }, value);
@@ -302,7 +305,8 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                     }
 
                     if (selected.length) {
-                        const selectedItem = this.indexing[selected[selected.length - 1][0] + ';' + selected[selected.length - 1][1]];
+                        // const selectedItem = this.indexing[selected[selected.length - 1][0] + ';' + selected[selected.length - 1][1]];
+                        const selectedItem = selected[0];
                         this.setChartTooltip(selectedItem, {
                             width: geometry.width, height: geometry.height
                         }, value);
@@ -349,6 +353,14 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                     this.move$.next(mouseEvent);
                 });
         }
+
+        if (!this.originQuadTree) {
+            delayExcute(50, () => {
+                this.originQuadTree = quadtree()
+                    .extent([[0, 0], [geometry.width, geometry.height]])
+                    .addAll(generateData);
+            });
+        }
     }
 
     select(displayName: string, isSelected: boolean) {
@@ -370,7 +382,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         this.pointerCanvas.remove();
     }
 
-    private search(quadtree: Quadtree<T>, x0: number, y0: number, x3: number, y3: number) {
+    private search(quadtree: Quadtree<Array<any>>, x0: number, y0: number, x3: number, y3: number) {
         const temp = [];
         quadtree.visit((node: any, x1: number, y1: number, x2: number, y2: number) => {
             if (!node.length) {
@@ -410,7 +422,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         const textElement: any = this.tooltipGroup.select('text').attr('dy', '.1em').text(
             this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser ? 
                 this.chartBase.tooltip.tooltipTextParser(d) : 
-                `${this.xField}: ${d[this.xField]} \n ${this.yField}: ${d[this.yField]}`
+                `${this.xField}: ${d[2][this.xField]} \n ${this.yField}: ${d[2][this.yField]}`
         );
 
         textBreak(textElement, '\n');

@@ -252,6 +252,123 @@ const canvasScatter = (id: string) => {
 }
 
 const canvasLineChart = () => {
+    const fields = lineData.map((item: any) => item.member);
+    const members = Array.from(new Set(fields));
+    const series = [];
+    
+    members.map((member: string) => {
+        const filter = (d: any) => {
+            return d.member === member;
+        };
+        const currnetLineSeries = new BasicCanvasLineSeries({
+            selector: 'basic-line-' + member,
+            // animation: true,
+            displayName: member,
+            dotSelector: 'basic-line-' + member + '-dot',
+            yField: 'value',
+            xField: 'date',
+            isCurve: false,
+            dot: {
+                radius: 3
+            },
+            crossFilter: {
+                filerField: 'member',
+                filterValue: member
+            },
+            // filter,
+            shape: Shape.LINE
+        });
+
+        series.push(
+            currnetLineSeries
+        );
+
+        currnetLineSeries.$currentItem.subscribe((item: any) => {
+            console.log('select : ', item.event);
+            let x = item.event.offsetX;
+            let y = item.event.offsetY;
+            select('#canvaslinechart').select('.event-pointer').attr('transform', `translate(${x}, ${y})`);
+        });
+    });
+
+    const parseTime = timeFormat('%H:%M:%S %m-%d');
+    let basicChart: BasicChart = new BasicChart({
+        selector: '#canvaslinechart',
+        // margin: {
+        //     top: 60,
+        //     left: 40,
+        //     right: 20,
+        //     bottom: 50
+        // },
+        title: {
+            placement: Placement.TOP,
+            content: 'Canvas Line Chart',
+            // style: {
+            //     size: 16,
+            //     color: '#ff0000',
+            //     font: 'monospace'
+            // }
+        },
+        legend: {
+            placement: Placement.TOP,
+            isCheckBox: true,
+            isAll: true
+        },
+        tooltip: {
+            tooltipTextParser: (d: any) => {
+                return `${d.member} \n Date: ${parseTime(d.date)} \n Value: ${d.value}`
+            },
+            eventType: 'mouseover'
+        },
+        data: lineData.map((item: any) => {
+            const newDate = new Date();
+            newDate.setFullYear(item.time.substring(0,4));
+            newDate.setMonth(parseInt(item.time.substring(5,7)) - 1);
+            newDate.setDate(item.time.substring(8,10));
+            newDate.setHours(item.time.substring(11,13));
+            newDate.setMinutes(item.time.substring(14,16));
+            newDate.setSeconds(item.time.substring(17,19));
+            newDate.setMilliseconds(item.time.substring(20,22));
+            item.date = newDate;
+            return item;
+        }),
+        isResize: true,
+        axes: [
+            {
+                field: 'date',
+                type: 'time',
+                placement: Placement.BOTTOM,
+                tickFormat: '%H:%M %m-%d',
+                tickSize: 5,
+                isGridLine: true,
+                isZoom: true,
+                title: {
+                    content: 'Date',
+                    align: Align.CENTER
+                },
+            },
+            {
+                field: 'value',
+                type: 'number',
+                placement: Placement.LEFT,
+                isGridLine: true,
+                tickSize: 5,
+                min: 0,
+                isRound: true,
+                title: {
+                    content: 'Value',
+                    align: Align.TOP
+                },
+            }
+        ],
+        displayDelay: {
+            delayTime: 500
+        },
+        series
+    }).draw();
+}
+
+const canvasTraceChart = () => {
     const randomX = randomNormal(0, 9);
     const randomY = randomNormal(0, 9);
     let xmin = 0;
@@ -304,7 +421,7 @@ const canvasLineChart = () => {
     // console.log('min : ', xmin, ymin);
     // console.log('max : ', ymax, ymax);
     const scatterChart = new BasicChart<BasicCanvasTraceModel>({
-        selector: '#canvaslinechart',
+        selector: '#canvastracechart',
         data,
         calcField: 'y',
         isResize: true,
@@ -315,7 +432,8 @@ const canvasLineChart = () => {
                 placement: 'bottom',
                 tickFormat: '%m-%d %H:%M',
                 min: startDt,
-                max: endDt
+                max: endDt,
+                tickSize: 4
             },
             {
                 field: 'y',
@@ -1122,6 +1240,8 @@ const gaugeChart = () => {
 }
 
 canvasLineChart();
+
+canvasTraceChart();
 
 // lineChart();
 
