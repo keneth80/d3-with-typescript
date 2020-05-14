@@ -74,7 +74,7 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
 
     private strokeColor: string = '#fff';
 
-    private originData: Array<[number, number]> = [];
+    private originData: Array<Array<number>> = [];
 
     private originQuadTree: Quadtree<Array<any>> = undefined;
 
@@ -172,9 +172,9 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
                     // POINT: selection을 위해 indexing을 한다.
                     // this.indexing[xposition + ';' + yposition] = d;
                     if (initialize) {
-                        this.originData.push([xposition, yposition]);
+                        this.originData.push([xposition, yposition, d]);
                     }
-                    return [xposition, yposition];
+                    return [xposition, yposition, d];
                 });
             generateData = filterData;
         }
@@ -276,6 +276,7 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
                     .addAll(generateData);
             });
         }
+        
         this.subscription.unsubscribe();
         this.subscription = new Subscription();
         delayExcute(100, () => {

@@ -293,28 +293,24 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
                     // http://plnkr.co/edit/AowXaSYsJM8NSH6IK5B7?p=preview&preview 참고
                     const selected = this.search(this.originQuadTree, Math.round(value[0]) - 3, Math.round(value[1]) - 3, Math.round(value[0]) + 3, Math.round(value[1]) + 3);
-                    console.log('selected : ', selected);
-                    if (isClick && selected.length) {
-                        // const selectedItem = this.indexing[selected[selected.length - 1][0] + ';' + selected[selected.length - 1][1]];
-                        const selectedItem = selected[0];
-                        this.onClickItem(selectedItem, {
-                            width: geometry.width, height: geometry.height
-                        }, value);
-                        isClick = false;
-                        return;
-                    }
-
+                    
                     if (selected.length) {
-                        // const selectedItem = this.indexing[selected[selected.length - 1][0] + ';' + selected[selected.length - 1][1]];
-                        const selectedItem = selected[0];
-                        this.setChartTooltip(selectedItem, {
-                            width: geometry.width, height: geometry.height
-                        }, value);
-                        return;
+                        const selectedItem = selected[selected.length - 1];
+                        if (isClick) {
+                            this.onClickItem(selectedItem, {
+                                width: geometry.width, height: geometry.height
+                            }, value);
+                            isClick = false;
+                        } else {
+                            const selectedItem = selected[selected.length - 1];
+                            this.setChartTooltip(selectedItem, {
+                                width: geometry.width, height: geometry.height
+                            }, value);
+                        }
+                    } else {
+                        this.chartBase.hideTooltip();
                     }
-
-                    this.chartBase.hideTooltip();
-
+                    
                     // TODO: event를 시리즈에서 생성하는게 아니라 plugin 식으로 따로 빼서 고민해 볼것.
                 });
 
@@ -403,7 +399,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
     private onClickItem(selectedItem: any, geometry: ContainerSize, mouseEvent: Array<number>) {
         if (selectedItem) {
             this.itemClickSubject.next({
-                data: selectedItem.data,
+                data: selectedItem[2],
                 event: {
                     offsetX: mouseEvent[0] + this.chartBase.chartMargin.left,
                     offsetY: mouseEvent[1] + this.chartBase.chartMargin.top

@@ -418,6 +418,10 @@ const canvasTraceChart = () => {
         yField: 'y'
     });
 
+    canvasTrace.$currentItem.subscribe((item: any) => {
+        console.log('item : ', item);
+    })
+
     // console.log('min : ', xmin, ymin);
     // console.log('max : ', ymax, ymax);
     const scatterChart = new BasicChart<BasicCanvasTraceModel>({
@@ -433,7 +437,7 @@ const canvasTraceChart = () => {
                 tickFormat: '%m-%d %H:%M',
                 min: startDt,
                 max: endDt,
-                tickSize: 4
+                tickSize: 3
             },
             {
                 field: 'y',
