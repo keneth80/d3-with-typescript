@@ -456,6 +456,99 @@ const canvasTraceChart = () => {
         ]
     }).draw();
     console.timeEnd('timechartdraw');
+
+    select('#refresh').on('click', () => {
+        console.log('click');
+        canvasTrace.testRefresh();
+    });
+}
+
+const svgTraceChart = () => {
+    const randomX = randomNormal(0, 9);
+    const randomY = randomNormal(0, 9);
+    let xmin = 0;
+    let xmax = 0;
+    let ymin = 0;
+    let ymax = 0;
+    const numberPoints = 10000;
+    console.time('svgtimedataparse');
+    const startDt = new Date().getTime();
+
+    let endDt = 0;
+    const data = range(numberPoints).map((d: number, i: number) => {
+        const x = startDt + (1000 * i);
+        const y = parseFloat(randomY().toFixed(2));
+        // const y = i%10 === 0 ? parseFloat(randomX().toFixed(2)) : i;
+        // const y = i * 10;
+        if (xmin > x) {
+            xmin = x;
+        }
+        if (xmax < x) {
+            xmax = x;
+        }
+        if (ymin > y) {
+            ymin = y;
+        }
+        if (ymax < y) {
+            ymax = y;
+        }
+
+        endDt = x;
+        return new BasicCanvasTraceModel(
+            x,
+            y,
+            i,
+            '#ff0000',
+            '#ff0000',
+            false,
+            {}
+        );
+    });
+    console.timeEnd('svgtimedataparse');
+
+    console.time('svgtimechartdraw');
+    const svgTrace = new BasicLineSeries({
+        selector: 'svg-trace',
+        xField: 'x',
+        yField: 'y'
+    });
+
+    svgTrace.$currentItem.subscribe((item: any) => {
+        console.log('item : ', item);
+    })
+
+    // console.log('min : ', xmin, ymin);
+    // console.log('max : ', ymax, ymax);
+    const scatterChart = new BasicChart<BasicCanvasTraceModel>({
+        selector: '#svgtrace',
+        data,
+        calcField: 'y',
+        isResize: true,
+        axes: [
+            {
+                field: 'x',
+                type: ScaleType.TIME,
+                placement: 'bottom',
+                tickFormat: '%m-%d %H:%M',
+                min: startDt,
+                max: endDt,
+                tickSize: 3
+            },
+            {
+                field: 'y',
+                type: 'number',
+                placement: 'left',
+                min: ymin,
+                max: ymax
+            }
+        ],
+        series: [
+            svgTrace
+        ],
+        functions: [
+        ]
+    }).draw();
+    console.timeEnd('svgtimechartdraw');
 }
 
 const lineChart = () => {
@@ -1246,6 +1339,8 @@ const gaugeChart = () => {
 canvasLineChart();
 
 canvasTraceChart();
+
+// svgTraceChart();
 
 // lineChart();
 

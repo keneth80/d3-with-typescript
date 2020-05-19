@@ -89,6 +89,11 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
     private originQuadTree: Quadtree<Array<any>> = undefined;
 
+    // test
+    private generateData: Array<any> = [];
+
+    private geometry: ContainerSize = null;
+
     constructor(configuration: BasicCanvasTraceConfiguration) {
         super(configuration);
         this.config = configuration;
@@ -190,6 +195,8 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                 // this.indexing[xposition + ';' + yposition] = d;
                 return [xposition, yposition, d];
             });
+        this.generateData = generateData;
+        this.geometry = geometry;
         console.timeEnd('traceindexing');
 
         // const quadTreeObj: any = quadtree()
@@ -273,6 +280,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         context.fillStyle = 'white';
         context.lineWidth = lineStroke;
         context.strokeStyle = color;
+        context.save();
         context.stroke();
 
         console.timeEnd('tracerendering')
@@ -376,6 +384,19 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         this.canvas.remove();
         this.memoryCanvas.remove();
         this.pointerCanvas.remove();
+    }
+
+    testRefresh() {
+        const context = (this.canvas.node() as any).getContext('2d');
+            context.clearRect(0, 0, this.geometry.width, this.geometry.height);
+            context.beginPath();
+        
+        setTimeout(() => {
+            console.time('refreshtracerendering');
+            this.line(this.generateData);
+            context.stroke();
+            console.timeEnd('refreshtracerendering');
+        }, 100);
     }
 
     private search(quadtree: Quadtree<Array<any>>, x0: number, y0: number, x3: number, y3: number) {
