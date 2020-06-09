@@ -1319,27 +1319,19 @@ export class ChartBase<T = any> implements IChart {
                         this.data.map((item: T) => item[axis.field])
                     );
                 }
-            } else if (axis.type === ScaleType.TIME) {
-                scale = scaleTime().range(range);
-
-                // POINT: zoom 시 현재 scale을 유지하기 위함.
-                if (this.currentScale.length) {
-                    const tempScale = this.currentScale.find((scale: any) => scale.field === axis.field);
-                    minValue = tempScale ? +tempScale.min.toFixed(0) : 0;
-                    maxValue = tempScale ? +tempScale.max.toFixed(0) : 0;
-
-                    scale.domain([new Date(minValue), new Date(maxValue)]);
+            } else { 
+                if (axis.type === ScaleType.TIME) {
+                    // TODO: interval option 추가
+                    // 참고 http://jsfiddle.net/sarathsaleem/8tmLrb9t/7/
+                    scale = scaleTime().range(range);
                 } else {
-                    if (axis.hasOwnProperty('min') && axis.hasOwnProperty('max')) {
-                        scale.domain([new Date(axis.min), new Date(axis.max)]);
-                    } else {
-                        scale.domain(extent(this.data, (item: T) => item[axis.field]));
-                    }
+                    // ScaleType.NUMBER => numeric type
+                    // TODO: interval option 추가 (interval 일 경우에는 argument가 3개: start, end, step)
+                    scale = scaleLinear().range(range);
                 }
-            } else { // ScaleType.NUMBER => numeric type
-                scale = scaleLinear().range(range);
-
+                
                 // POINT: zoom 시 현재 scale을 유지하기 위함.
+                // min max setup
                 if (this.currentScale.length) {
                     const tempScale = this.currentScale.find((scale: any) => scale.field === axis.field);
                     minValue = tempScale ? +tempScale.min.toFixed(0) : 0;
@@ -1352,13 +1344,14 @@ export class ChartBase<T = any> implements IChart {
     
                     if (!axis.hasOwnProperty('min')) {
                         axis.min = min(this.data.map((item: T) => parseFloat(item[axis.field])));
-                        axis.min += Math.round(axis.min * 0.05);
+                        axis.min -= Math.round(axis.min * 0.05);
                     }
     
                     minValue = axis.min;
                     maxValue = axis.max;
                 }
 
+                // axis domain label setup
                 if (axis.domain) {
                     console.log('domain is!', axis.domain);
                     scale.domain(axis.domain);
@@ -1369,23 +1362,16 @@ export class ChartBase<T = any> implements IChart {
                         const reScale = this.currentScale.find((d: any) => d.field === axis.field);
                         minValue = +reScale.min.toFixed(0);
                         maxValue = +reScale.max.toFixed(0);
-                        console.log('zoom scale3 : ', minValue, maxValue);
-                        scale.domain(
-                            [minValue, maxValue]
-                        );
-
-                        if (axis.isRound === true) {
-                            scale.nice();
-                        }
                     } else {
-                        
                         // POINT: zoom 시 현재 scale을 유지하기 위함.
                         if (this.currentScale.length) {
                             const reScale = this.currentScale.find((d: any) => d.field === axis.field);
                             minValue = +reScale.min.toFixed(0);
                             maxValue = +reScale.max.toFixed(0);
                         }
+                    }
 
+                    if (axis.type === ScaleType.NUMBER) {
                         // TODO : index string domain 지정.
                         scale.domain(
                             [minValue, maxValue]
@@ -1394,6 +1380,8 @@ export class ChartBase<T = any> implements IChart {
                         if (axis.isRound === true) {
                             scale.nice();
                         }
+                    } else {
+                        scale.domain([new Date(minValue), new Date(maxValue)]);
                     }
                 }
             }
@@ -1510,6 +1498,7 @@ export class ChartBase<T = any> implements IChart {
         this.updateSeries();
     }
 
+    // TODO: 해상도에 최적화중입니다. 팝업 표시 추가.
     protected resizeEventHandler = () => {
         
         if (!this.svg) return;
@@ -1539,6 +1528,7 @@ export class ChartBase<T = any> implements IChart {
         this.idleTimeout = null; 
     }
 
+    // 범례 아이템 체크박스 클릭 이벤트
     private onLegendCheckBoxClick = (d: LegendItem, index: number, nodeList: any) => {
         if (d.label === 'All') {
             this.onLegendAllCheckBoxItemClick(d, index, nodeList)
@@ -1547,6 +1537,7 @@ export class ChartBase<T = any> implements IChart {
         }
     }
 
+    // 범례 전체 선택 체크박스 클릭 이벤트
     private onLegendAllCheckBoxItemClick(d: LegendItem, index: number, nodeList: any) {
         this.hideTooltip();
         this.currentLegend = null;
@@ -1564,6 +1555,7 @@ export class ChartBase<T = any> implements IChart {
         });
     }
 
+    // 범례 체크박스 클릭 이벤트
     private onLegendCheckBoxItemClick(d: LegendItem, index: number, nodeList: any) {
         this.hideTooltip();
         d.isHide = !d.isHide;
@@ -1610,6 +1602,7 @@ export class ChartBase<T = any> implements IChart {
         }
     }
 
+    // 범례 라벨 아이템 클릭 이벤트
     private onLegendLabelItemClick = (d: LegendItem, index: number, nodeList: any) => {
         if (d.label === 'All') {
             this.onLegendAllLabelItemSelect(d, index, nodeList)
@@ -1618,6 +1611,7 @@ export class ChartBase<T = any> implements IChart {
         }
     }
 
+    // 범례 라벨 아이템 선택 효과
     private onLegendLabelItemSelect(d: LegendItem, index: number, nodeList: any) {
         this.currentLegend = d.label;
         d.selected = !d.selected;
@@ -1630,6 +1624,7 @@ export class ChartBase<T = any> implements IChart {
         }
     }
 
+    // 범례 전체선택 라벨 효과
     private onLegendAllLabelItemSelect = (d: LegendItem, index: number, nodeList: any) => {
         this.currentLegend = null;
         d.selected = !d.selected;

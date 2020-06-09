@@ -37,6 +37,7 @@ import { BasicCanvasLineSeries } from './component/series/basic-canvas-line-seri
 import { ExampleSeries } from './component/series/example-series';
 import { BasicCanvasTrace, BasicCanvasTraceModel } from './component/series/basic-canvas-trace';
 import { BasicCanvasMouseSelection } from './component/functions/basic-canvas-mouse-selection';
+import { BasicCanvasWebglLineSeriesModel, BasicCanvasWebgLineSeries } from './component/series/basic-canvas-webgl-line-series';
 
 class SalesModel {
     salesperson: string;
@@ -167,6 +168,222 @@ const examples = [
 
 // example();
 
+const webglTraceChart = () => {
+    const randomX = randomNormal(0, 9);
+    const randomY = randomNormal(0, 9);
+    let xmin = 0;
+    let xmax = 0;
+    let ymin = 0;
+    let ymax = 0;
+
+    const numberPoints = 1000000; // 1000000
+
+    const startDt = new Date().getTime();
+    let endDt = 0;
+    const term = 1000;
+    const data = range(numberPoints).map((d: number, i: number) => {
+        const x = startDt + (term * i);
+        const y = parseFloat(randomY().toFixed(2));
+        // const y = i%10 === 0 ? parseFloat(randomX().toFixed(2)) : i;
+        // const y = i * 10;
+        if (xmin > x) {
+            xmin = x;
+        }
+        if (xmax < x) {
+            xmax = x;
+        }
+        if (ymin > y) {
+            ymin = y;
+        }
+        if (ymax < y) {
+            ymax = y;
+        }
+
+        endDt = x;
+        return new BasicCanvasWebglLineSeriesModel(
+            x,
+            y,
+            i,
+            '#ff0000',
+            '#ff0000',
+            false,
+            {}
+        );
+    });
+
+    const webglTrace = new BasicCanvasWebgLineSeries({
+        selector: 'webgl-trace',
+        xField: 'x',
+        yField: 'y',
+        dot: {
+            radius: 8
+        }
+    });
+
+    const webglLineChart = new BasicChart<BasicCanvasTraceModel>({
+        selector: '#webgllinechart',
+        data,
+        calcField: 'y',
+        isResize: true,
+        axes: [
+            {
+                field: 'x',
+                type: ScaleType.TIME,
+                placement: 'bottom',
+                tickFormat: '%m-%d %H:%M:%S',
+                min: startDt - term * (numberPoints * 0.005),
+                max: endDt + term * (numberPoints * 0.005),
+                tickSize: 3
+            },
+            {
+                field: 'y',
+                type: 'number',
+                placement: 'left',
+                min: ymin - (ymax * 0.1),
+                max: ymax + (ymax * 0.1)
+            }
+        ],
+        series: [
+            webglTrace
+        ],
+        functions: [
+            new BasicCanvasMouseSelection({
+                xField: 'x',
+                yField: 'y'
+            })
+        ]
+    }).draw();
+}
+
+const canvasTraceChart = () => {
+    const randomX = randomNormal(0, 9);
+    const randomY = randomNormal(0, 9);
+    let xmin = 0;
+    let xmax = 0;
+    let ymin = 0;
+    let ymax = 0;
+    const numberPoints = 1000000;
+    console.time('timedataparse');
+    const startDt = new Date().getTime();
+
+    let endDt = 0;
+    const data = range(numberPoints).map((d: number, i: number) => {
+        const x = startDt + (1000 * i);
+        const y = parseFloat(randomY().toFixed(2));
+        // const y = i%10 === 0 ? parseFloat(randomX().toFixed(2)) : i;
+        // const y = i * 10;
+        if (xmin > x) {
+            xmin = x;
+        }
+        if (xmax < x) {
+            xmax = x;
+        }
+        if (ymin > y) {
+            ymin = y;
+        }
+        if (ymax < y) {
+            ymax = y;
+        }
+
+        endDt = x;
+        return new BasicCanvasTraceModel(
+            x,
+            y,
+            i,
+            '#ff0000',
+            '#ff0000',
+            false,
+            {}
+        );
+    });
+    console.timeEnd('timedataparse');
+
+    console.time('timechartdraw');
+    const canvasTrace = new BasicCanvasTrace({
+        selector: 'canvas-trace',
+        xField: 'x',
+        yField: 'y'
+    });
+
+    canvasTrace.$currentItem.subscribe((item: any) => {
+        console.log('item : ', item);
+    })
+
+    // console.log('min : ', xmin, ymin);
+    // console.log('max : ', ymax, ymax);
+    const scatterChart = new BasicChart<BasicCanvasTraceModel>({
+        selector: '#canvastracechart',
+        data,
+        calcField: 'y',
+        isResize: true,
+        axes: [
+            {
+                field: 'x',
+                type: ScaleType.TIME,
+                placement: 'bottom',
+                tickFormat: '%m-%d %H:%M',
+                min: startDt,
+                max: endDt,
+                tickSize: 3
+            },
+            {
+                field: 'y',
+                type: 'number',
+                placement: 'left',
+                min: ymin,
+                max: ymax
+            }
+        ],
+        series: [
+            // canvasLineSeries,
+            // canvasTrace,
+            canvasTrace
+        ],
+        functions: [
+        ]
+    }).draw();
+    console.timeEnd('timechartdraw');
+
+    select('#refresh').on('click', () => {
+        console.log('click');
+        canvasTrace.testRefresh();
+    });
+
+    // new BasicChart<BasicCanvasTraceModel>({
+    //     selector: '#scatter',
+    //     data,
+    //     calcField: 'y',
+    //     isResize: true,
+    //     axes: [
+    //         {
+    //             field: 'x',
+    //             type: ScaleType.TIME,
+    //             placement: 'bottom',
+    //             tickFormat: '%m-%d %H:%M',
+    //             min: startDt,
+    //             max: endDt,
+    //             tickSize: 3
+    //         },
+    //         {
+    //             field: 'y',
+    //             type: 'number',
+    //             placement: 'left',
+    //             min: ymin,
+    //             max: ymax
+    //         }
+    //     ],
+    //     series: [
+    //         new BasicCanvasTrace({
+    //             selector: 'canvas-trace',
+    //             xField: 'x',
+    //             yField: 'y'
+    //         })
+    //     ],
+    //     functions: [
+    //     ]
+    // }).draw();
+}
+
 const canvasScatter = (id: string) => {
     const randomX = randomNormal(0, 9);
     const randomY = randomNormal(0, 9);
@@ -174,7 +391,7 @@ const canvasScatter = (id: string) => {
     let xmax = 0;
     let ymin = 0;
     let ymax = 0;
-    const numberPoints = 1100000;
+    const numberPoints = 110000;
     console.time('dataparse');
     const data = range(numberPoints).map((d: number) => {
         const x = parseFloat(randomX().toFixed(2));
@@ -366,101 +583,6 @@ const canvasLineChart = () => {
         },
         series
     }).draw();
-}
-
-const canvasTraceChart = () => {
-    const randomX = randomNormal(0, 9);
-    const randomY = randomNormal(0, 9);
-    let xmin = 0;
-    let xmax = 0;
-    let ymin = 0;
-    let ymax = 0;
-    const numberPoints = 2000000;
-    console.time('timedataparse');
-    const startDt = new Date().getTime();
-
-    let endDt = 0;
-    const data = range(numberPoints).map((d: number, i: number) => {
-        const x = startDt + (1000 * i);
-        const y = parseFloat(randomY().toFixed(2));
-        // const y = i%10 === 0 ? parseFloat(randomX().toFixed(2)) : i;
-        // const y = i * 10;
-        if (xmin > x) {
-            xmin = x;
-        }
-        if (xmax < x) {
-            xmax = x;
-        }
-        if (ymin > y) {
-            ymin = y;
-        }
-        if (ymax < y) {
-            ymax = y;
-        }
-
-        endDt = x;
-        return new BasicCanvasTraceModel(
-            x,
-            y,
-            i,
-            '#ff0000',
-            '#ff0000',
-            false,
-            {}
-        );
-    });
-    console.timeEnd('timedataparse');
-
-    console.time('timechartdraw');
-    const canvasTrace = new BasicCanvasTrace({
-        selector: 'canvas-trace',
-        xField: 'x',
-        yField: 'y'
-    });
-
-    canvasTrace.$currentItem.subscribe((item: any) => {
-        console.log('item : ', item);
-    })
-
-    // console.log('min : ', xmin, ymin);
-    // console.log('max : ', ymax, ymax);
-    const scatterChart = new BasicChart<BasicCanvasTraceModel>({
-        selector: '#canvastracechart',
-        data,
-        calcField: 'y',
-        isResize: true,
-        axes: [
-            {
-                field: 'x',
-                type: ScaleType.TIME,
-                placement: 'bottom',
-                tickFormat: '%m-%d %H:%M',
-                min: startDt,
-                max: endDt,
-                tickSize: 3
-            },
-            {
-                field: 'y',
-                type: 'number',
-                placement: 'left',
-                min: ymin,
-                max: ymax
-            }
-        ],
-        series: [
-            // canvasLineSeries,
-            // canvasTrace,
-            canvasTrace
-        ],
-        functions: [
-        ]
-    }).draw();
-    console.timeEnd('timechartdraw');
-
-    select('#refresh').on('click', () => {
-        console.log('click');
-        canvasTrace.testRefresh();
-    });
 }
 
 const svgTraceChart = () => {
@@ -1336,9 +1458,13 @@ const gaugeChart = () => {
     }).draw();
 }
 
-canvasLineChart();
+webglTraceChart();
 
-canvasTraceChart();
+// canvasLineChart();
+
+// canvasTraceChart();
+
+// canvasScatter('#scatter');
 
 // svgTraceChart();
 
@@ -1363,7 +1489,5 @@ canvasTraceChart();
 // donutChart();
 
 // areaChart();
-
-canvasScatter('#scatter');
 
 // gaugeChart();

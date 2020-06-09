@@ -8,7 +8,8 @@
             <svg id="example"></svg>
         </div> -->
         <div class="result">
-            <svg id="scatter"></svg>
+            <svg id="webgllinechart">
+            </svg>
         </div>
         <div class="result">
             <!-- <div>
@@ -21,6 +22,9 @@
             </svg>
         </div>
         <div class="result">
+            <svg id="scatter"></svg>
+        </div>
+        <div class="result">
             <svg id="canvaslinechart">
                 <g class="event-pointer" transform="translate(100, 100)" style="opacity: 0;">
                     <rect width="20" height="20"></rect>
@@ -28,8 +32,8 @@
             </svg>
         </div>
         <div class="result">
-                <svg id="svgtrace"></svg>
-            </div>
+            <svg id="svgtrace"></svg>
+        </div>
         <div class="result">
             <svg id="linechart">
                 <g class="event-pointer" transform="translate(100, 100)" style="opacity: 0;">
@@ -74,5 +78,33 @@
         <div class="result">
             <svg id="gauge"></svg>
         </div>
+        <script id="2d-vertex-shader" type="x-shader/x-vertex">
+            attribute vec2 a_position;
+            
+            uniform vec2 u_resolution;
+            uniform mat3 u_matrix;
+            
+            varying vec2 v_texCoord;
+            
+            void main() {
+            
+               gl_Position = vec4(u_matrix * vec3(a_position, 1), 1);
+               v_texCoord = a_position;
+            }
+        </script>
+        <!-- fragment shader -->
+        <script id="2d-fragment-shader" type="x-shader/x-fragment">
+            precision mediump float;
+            
+            // our texture
+            uniform sampler2D u_image;
+            
+            // the texCoords passed in from the vertex shader.
+            varying vec2 v_texCoord;
+            
+            void main() {
+               gl_FragColor = texture2D(u_image, v_texCoord);
+            }
+        </script>
     </body>
 </html>

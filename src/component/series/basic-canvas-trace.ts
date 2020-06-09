@@ -180,28 +180,6 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         } else {
             this.crossFilterDimension = undefined;
         }
-
-        // TODO: zoom in out 시 crossfilter 사용해서 filtering해야함.
-        const lineData = this.crossFilterDimension ? this.crossFilterDimension.filter(this.config.crossFilter.filterValue).top(Infinity) : 
-        !this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item));
-
-        console.time('traceindexing');
-        const generateData: Array<any> = lineData
-            .map((d: BasicCanvasTraceModel, i: number) => {
-                const xposition = x(d[this.xField]) + padding;
-                const yposition = y(d[this.yField]);
-                // this.indexing[xposition + ',' + yposition] = i;
-                // data 별로 indexing 해서 loop 돌면서 덮어버리고 최종 겹치지 않는 dot에 대해서만 출력하도록 한다.
-                // this.indexing[xposition + ';' + yposition] = d;
-                return [xposition, yposition, d];
-            });
-        this.generateData = generateData;
-        this.geometry = geometry;
-        console.timeEnd('traceindexing');
-
-        // const quadTreeObj: any = quadtree()
-        //     .extent([[0, 0], [geometry.width, geometry.height]])
-        //     .addAll(generateData);
         
         this.canvas
             .attr('width', geometry.width)
@@ -246,8 +224,29 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
             .style('stroke-width', '1px');
 
         const context = (this.canvas.node() as any).getContext('2d');
-            context.clearRect(0, 0, geometry.width, geometry.height);
-            context.beginPath();
+        // context.clearRect(0, 0, geometry.width, geometry.height);
+        context.beginPath();
+        context.fillStyle = color;
+        context.strokeStyle = '#000';
+
+        // TODO: zoom in out 시 crossfilter 사용해서 filtering해야함.
+        const lineData = this.crossFilterDimension ? this.crossFilterDimension.filter(this.config.crossFilter.filterValue).top(Infinity) : 
+        !this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item));
+
+        console.time('traceindexing');
+        const generateData: Array<any> = lineData
+            .map((d: BasicCanvasTraceModel, i: number) => {
+                const xposition = x(d[this.xField]) + padding;
+                const yposition = y(d[this.yField]);
+                
+                // POINT: data 만들면서 포인트 찍는다.
+                context.fillRect(xposition - 3, yposition - 3, 6, 6);
+
+                return [xposition, yposition, d];
+            });
+        this.generateData = generateData;
+        this.geometry = geometry;
+        console.timeEnd('traceindexing');
 
         // this.line = line()
         //     .defined(data => data[this.yField])
@@ -365,6 +364,10 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                     .addAll(generateData);
             });
         }
+
+        (this.canvas.node() as any).addEventListener('DOMNodeRemoved', () => {
+            console.log('remove canvas');
+        })
     }
 
     select(displayName: string, isSelected: boolean) {

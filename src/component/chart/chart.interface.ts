@@ -1,6 +1,12 @@
 import { Selection, BaseType } from 'd3-selection';
 import { ChartConfiguration, AxisTitle } from './chart-configuration';
 
+export interface ChartMouseEvent {
+    type: string;
+    position: [number, number];
+    target: Selection<BaseType, any, HTMLElement, any>
+}
+
 export interface ISeriesConfiguration {
     selector?: string;
     xField: string;
