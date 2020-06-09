@@ -11,7 +11,10 @@ export interface BasicCanvasMouseSelectionConfiguration {
     xField?: string;
     yField?: string;
     isZoom?: boolean;
-    isMouseMove?: boolean;
+    event?: {
+        move: boolean
+    };
+    isMove?: boolean;
     direction?: string;
 }
 
@@ -53,8 +56,8 @@ export class BasicCanvasMouseSelection extends FunctionsBase {
                 this.isZoom = configuration.isZoom;
             }
 
-            if (configuration.hasOwnProperty('isMouseMove')) {
-                this.isMouseMove = configuration.isMouseMove;
+            if (configuration.hasOwnProperty('event')) {
+                this.isMouseMove = configuration.event.move;
             }
 
             if (configuration.hasOwnProperty('direction')) {
@@ -71,7 +74,7 @@ export class BasicCanvasMouseSelection extends FunctionsBase {
             this.pointerCanvas = select((this.svg.node() as HTMLElement).parentElement)
                 .append('canvas')
                 .attr('class', 'pointer-canvas')
-                .style('z-index', 3)
+                .style('z-index', 99)
                 .style('position', 'absolute');
         }
     }
@@ -86,6 +89,7 @@ export class BasicCanvasMouseSelection extends FunctionsBase {
 
         let isMouseDown = false;
         let isMouseMove = false;
+
         let startX = 0;
         let startY = 0;
         let endX = 0;
@@ -114,7 +118,22 @@ export class BasicCanvasMouseSelection extends FunctionsBase {
         const ymax = yScale.max;
 
         const pointerContext = (this.pointerCanvas.node() as any).getContext('2d');
-
+        
+        if (this.isMouseMove) {
+            this.pointerCanvas.on('mousemove', () => {
+                const mouseEvent = mouse(this.pointerCanvas.node() as any);
+                
+                const moveX = mouseEvent[0];
+                const moveY = mouseEvent[1];
+    
+                this.chartBase.mouseEventSubject.next({
+                    type: 'mousemove',
+                    position: mouseEvent,
+                    target: this.pointerCanvas
+                });
+            });
+        }
+        
         this.pointerCanvas.call(
             drag()
             .on('start', () => {

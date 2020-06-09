@@ -249,7 +249,10 @@ const webglTraceChart = () => {
         functions: [
             new BasicCanvasMouseSelection({
                 xField: 'x',
-                yField: 'y'
+                yField: 'y',
+                event: {
+                    move: true
+                }
             })
         ]
     }).draw();

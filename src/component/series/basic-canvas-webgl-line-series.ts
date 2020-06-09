@@ -123,8 +123,9 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
                   index: number) {
         this.svg = svg;
 
+        // TODO: SVG 캔버스가 pointer 캔버스 바로 뒤에 와야함.
         this.svg
-            .style('z-index', 1)
+            .style('z-index', index + 2)
             .style('position', 'absolute');
 
         this.parentElement = select((this.svg.node() as HTMLElement).parentElement);
@@ -136,7 +137,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
                     index
                 })
                 .attr('class', 'drawing-canvas')
-                .style('z-index', index + 2)
+                .style('z-index', index + 1)
                 .style('position', 'absolute');
         }
     }
@@ -187,12 +188,20 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
             this.webGLStart(lineData, {min: xmin, max: xmax}, {min:ymin, max: ymax}, geometry);
         }
         
-        this.subscription.unsubscribe();
-        this.subscription = new Subscription();
-        this.addMouseEvent(x, y);
+        // mouse event listen
+        this.addMouseEvent(x, y, geometry);
 
+        // quadtree setup: data indexing by position
         if (!this.originQuadTree) {
             delayExcute(200, () => {
+                this.generateData = lineData
+                .map((d: BasicCanvasWebglLineSeriesModel) => {
+                    const xposition = x(d[this.xField]) + padding;
+                    const yposition = y(d[this.yField]);
+                    
+                    return [xposition, yposition, d];
+                });
+
                 this.originQuadTree = quadtree()
                     .extent([[0, 0], [geometry.width, geometry.height]])
                     .addAll(this.generateData);
@@ -631,51 +640,87 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         });
     }
 
-    private addMouseEvent(x: any, y: any) {
+    private addMouseEvent(x: any, y: any, geometry: ContainerSize) {
+        this.subscription.unsubscribe();
+        this.subscription = new Subscription();
+
+        const radius = this.config.dot ? (this.config.dot.radius || 4) : 0 / 2;
         let startX = 0;
         let startY = 0;
         let endX = 0;
         let endY = 0;
+
         this.subscription.add(
             this.chartBase.mouseEvent$.subscribe((event: ChartMouseEvent) => {
-            if (event.type === 'mousemove') {
-
-            } else if (event.type === 'mouseup') {
-                
-                endX = event.position[0];
-                endY = event.position[1];
-
-            } else if (event.type === 'mousedown') {
-                startX = event.position[0];
-                startY = event.position[1];
-            } else if (event.type === 'zoomin') {
-                endX = event.position[0];
-                endY = event.position[1];
-
-                const xStartValue = x.invert(startX).getTime();
-                const yStartValue = y.invert(startY);
-                const xEndValue = x.invert(endX).getTime();
-                const yEndValue = y.invert(endY);
-                this.chartBase.updateAxisForZoom([
-                    {
-                        field: this.xField,
-                        min: xStartValue,
-                        max: xEndValue
-                    },
-                    {
-                        field: this.yField,
-                        min: yEndValue,
-                        max: yStartValue
+                if (event.type === 'mousemove') {
+                    this.move$.next(event.position);
+                } else if (event.type === 'mouseup') {
+                    endX = event.position[0];
+                    endY = event.position[1];
+                    
+                    const selected = this.search(this.originQuadTree, Math.round(endX) - radius, Math.round(endY) - radius, Math.round(endX) + radius, Math.round(endY) + radius);
+                    console.log('selected : ', selected);
+                    if (selected.length) {
+                        const selectedItem = selected[selected.length - 1];
+                        this.onClickItem(selectedItem, {
+                            width: geometry.width, height: geometry.height
+                        }, [endX, endY]);
+                    } else {
+                        this.chartBase.hideTooltip();
                     }
-                ]);
-            } else if (event.type === 'zoomout') {
-                this.isRestore = true;
-                delayExcute(50, () => {
-                    this.chartBase.updateAxisForZoom([]);
-                });
-            } else {
 
-            }
-        }));
+                } else if (event.type === 'mousedown') {
+                    startX = event.position[0];
+                    startY = event.position[1];
+                } else if (event.type === 'zoomin') {
+                    endX = event.position[0];
+                    endY = event.position[1];
+
+                    const xStartValue = x.invert(startX).getTime();
+                    const yStartValue = y.invert(startY);
+                    const xEndValue = x.invert(endX).getTime();
+                    const yEndValue = y.invert(endY);
+                    this.chartBase.updateAxisForZoom([
+                        {
+                            field: this.xField,
+                            min: xStartValue,
+                            max: xEndValue
+                        },
+                        {
+                            field: this.yField,
+                            min: yEndValue,
+                            max: yStartValue
+                        }
+                    ]);
+                } else if (event.type === 'zoomout') {
+                    this.isRestore = true;
+                    delayExcute(50, () => {
+                        this.chartBase.updateAxisForZoom([]);
+                    });
+                } else {
+
+                }
+            })
+        );
+
+        this.subscription.add(
+            this.move$
+            .pipe(
+                debounceTime(200)
+            )
+            .subscribe((value: any) => {
+                // http://plnkr.co/edit/AowXaSYsJM8NSH6IK5B7?p=preview&preview 참고
+                const selected = this.search(this.originQuadTree, Math.round(value[0]) - radius, Math.round(value[1]) - radius, Math.round(value[0]) + radius, Math.round(value[1]) + radius);
+                
+                if (selected.length) {
+                    const selectedItem = selected[selected.length - 1];
+                    this.setChartTooltip(selectedItem, {
+                        width: geometry.width, height: geometry.height
+                    }, value);
+                } else {
+                    this.chartBase.hideTooltip();
+                }
+            })
+        )
     }
 }
