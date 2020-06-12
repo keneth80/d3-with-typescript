@@ -2,7 +2,7 @@ import { Selection, BaseType, select, mouse } from 'd3-selection';
 import { Quadtree } from 'd3';
 import { quadtree } from 'd3-quadtree';
 import { line, curveMonotoneX } from 'd3-shape';
-import { hsl } from 'd3-color';
+import { hsl, color } from 'd3-color';
 import { randomNormal } from 'd3-random';
 import { scaleLinear } from 'd3-scale';
 import { fromEvent, Subject, of, Subscription } from 'rxjs';
@@ -12,8 +12,8 @@ import { Scale, ContainerSize, ChartMouseEvent } from '../chart/chart.interface'
 import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
 import { textBreak } from '../chart/util/d3-svg-util';
-import { ChartBase, delayExcute } from '../chart';
-import { createProgramFromSources, createProgramFromScripts } from '../chart/util/webgl-util';
+import { ChartBase, delayExcute, Placement } from '../chart';
+import { createProgramFromSources, createProgramFromScripts, hexToRgb } from '../chart/util/webgl-util';
 
 export class BasicCanvasWebglLineSeriesModel {
     x: number;
@@ -45,12 +45,12 @@ export interface BasicCanvasWebglLineSeriesConfiguration extends SeriesConfigura
     yField: string;
     isCurve?: boolean; // default : false
     dot?: {
-        radius?: number
+        radius?: number;
     }
     style?: {
         strokeWidth?: number;
-        // stroke?: string;
-        // fill?: string;
+        strokeColor?: string;
+        fill?: string;
     },
     filter?: any;
     crossFilter?: {
@@ -65,6 +65,8 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
 
     private tooltipGroup: Selection<BaseType, any, HTMLElement, any>;
 
+    private selectionCanvas: Selection<BaseType, any, HTMLElement, any>;
+
     private xField: string;
 
     private yField: string;
@@ -74,6 +76,8 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
     private dataFilter: any;
 
     private strokeWidth = 2;
+
+    private strokeColor;
 
     // private isAnimation: boolean = false;
 
@@ -91,10 +95,17 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
 
     private isRestore = false;
 
+    private seriesColor: string = '';
+
     // ================= webgl 관련 변수 ================ //
     private gl: any;
 
     private shaderProgram: any;
+
+    // ================= zoom 관련 변수 ================ //
+    private currentScales: Array<Scale>;
+
+    private isMouseLeave: boolean = false;
 
     constructor(configuration: BasicCanvasWebglLineSeriesConfiguration) {
         super(configuration);
@@ -114,6 +125,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
 
             if (configuration.style) {
                 this.strokeWidth = configuration.style.strokeWidth || this.strokeWidth;
+                this.strokeColor = configuration.style.strokeColor || null;
             }
         }
     }
@@ -140,11 +152,24 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
                 .style('z-index', index + 1)
                 .style('position', 'absolute');
         }
+
+        if (!select((this.svg.node() as HTMLElement).parentElement).select('.selection-canvas').node()) {
+            this.selectionCanvas = select((this.svg.node() as HTMLElement).parentElement)
+                .append('canvas')
+                .attr('class', 'selection-canvas')
+                .style('z-index', index + 9)
+                .style('position', 'absolute');
+        } else {
+            this.selectionCanvas = select((this.svg.node() as HTMLElement).parentElement).select('.selection-canvas');
+        }
     }
 
     drawSeries(chartData: Array<T>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
-        const xScale: Scale = scales.find((scale: Scale) => scale.field === this.xField);
-        const yScale: Scale = scales.find((scale: Scale) => scale.field === this.yField);
+        this.seriesColor = color;
+        this.currentScales = scales;
+        const xScale: Scale = this.currentScales.find((scale: Scale) => scale.field === this.xField);
+        const yScale: Scale = this.currentScales.find((scale: Scale) => scale.orient === Placement.LEFT);
+        // const yScale: Scale = scales.find((scale: Scale) => scale.field === this.yField);
         const x: any = xScale.scale;
         const y: any = yScale.scale;
 
@@ -181,32 +206,43 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
             .attr('width', geometry.width)
             .attr('height', geometry.height)
             .style('transform', `translate(${(this.chartBase.chartMargin.left + 1)}px, ${(this.chartBase.chartMargin.top)}px)`);
+
+        this.selectionCanvas
+            .attr('width', geometry.width)
+            .attr('height', geometry.height)
+            .style('transform', `translate(${(this.chartBase.chartMargin.left + 1)}px, ${(this.chartBase.chartMargin.top)}px)`);
         if (this.isRestore) {
             this.isRestore = false;
             this.execRestore(this.originalChartImage, geometry.width, geometry.height);
         } else {
-            this.webGLStart(lineData, {min: xmin, max: xmax}, {min:ymin, max: ymax}, geometry);
+            this.webGLStart(lineData, {min: xmin, max: xmax}, {min:ymin, max: ymax}, geometry, this.strokeColor || color);
         }
         
         // mouse event listen
-        this.addMouseEvent(x, y, geometry);
+        this.addPluginEventListner(x, y, geometry);
 
         // quadtree setup: data indexing by position
-        if (!this.originQuadTree) {
-            delayExcute(200, () => {
-                this.generateData = lineData
-                .map((d: BasicCanvasWebglLineSeriesModel) => {
-                    const xposition = x(d[this.xField]) + padding;
-                    const yposition = y(d[this.yField]);
-                    
-                    return [xposition, yposition, d];
-                });
+        // if (!this.originQuadTree) {
+            
+        // }
 
-                this.originQuadTree = quadtree()
-                    .extent([[0, 0], [geometry.width, geometry.height]])
-                    .addAll(this.generateData);
-            });
+        if (this.originQuadTree) {
+            this.originQuadTree = undefined;
         }
+
+        delayExcute(200, () => {
+            this.generateData = lineData
+            .map((d: BasicCanvasWebglLineSeriesModel) => {
+                const xposition = x(d[this.xField]) + padding;
+                const yposition = y(d[this.yField]);
+                
+                return [xposition, yposition, d];
+            });
+
+            this.originQuadTree = quadtree()
+                .extent([[0, 0], [geometry.width, geometry.height]])
+                .addAll(this.generateData);
+        });
     }
 
     select(displayName: string, isSelected: boolean) {
@@ -264,13 +300,15 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         }
     }
 
-    private setChartTooltip(d: any, geometry: ContainerSize, mouseEvent: Array<number>) {
+    // TODO: tooltip에 시리즈 아이디를 부여하여 시리즈 마다 tooltip을 컨트롤 할 수 있도록 한다.
+    // multi tooltip도 구현해야 하기 때문에 이방법이 가장 좋음.
+    private setChartTooltip(seriesData: T, geometry: ContainerSize, mouseEvent: Array<number>) {
         this.tooltipGroup = this.chartBase.showTooltip();
     
         const textElement: any = this.tooltipGroup.select('text').attr('dy', '.1em').text(
             this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser ? 
-                this.chartBase.tooltip.tooltipTextParser(d) : 
-                `${this.xField}: ${d[2][this.xField]} \n ${this.yField}: ${d[2][this.yField]}`
+                this.chartBase.tooltip.tooltipTextParser(seriesData) : 
+                `${this.xField}: ${seriesData[2][this.xField]} \n ${this.yField}: ${seriesData[2][this.yField]}`
         );
 
         textBreak(textElement, '\n');
@@ -299,7 +337,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
 
     }
 
-    private webGLStart(chartData: Array<T>, xAxis: {min: number, max: number}, yAxis: {min: number, max: number}, geometry: ContainerSize) {
+    private webGLStart(chartData: Array<T>, xAxis: {min: number, max: number}, yAxis: {min: number, max: number}, geometry: ContainerSize, color: string) {
         // data 만들기
         const xScale = scaleLinear().domain([xAxis.min, xAxis.max]).range([-1, 1]); // [-0.99, 0.99]
 
@@ -333,7 +371,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         const vertexBuffer = this.initBuffers(vertices, 3, endCount);
 
         // 쉐이더 초기화
-        this.initShaders('0.0, 0.0, 1.0, 1.0');
+        this.initShaders(color);
 
         // 화면 지우기
         this.gl.clearColor(0,  0,  0,  0); // rgba
@@ -341,10 +379,10 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         // 깊이버퍼 활성화
         this.gl.enable(this.gl.DEPTH_TEST);
 
-        console.time('webgldraw');
+        console.time('webgldraw-' + this.selector);
         // 화면 그리기
         this.drawScene(vertexBuffer, endCount, canvas as HTMLCanvasElement);
-        console.timeEnd('webgldraw');
+        console.timeEnd('webgldraw-' + this.selector);
     }
 
     private initGL(canvas: HTMLCanvasElement) {
@@ -366,7 +404,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         }
     }
 
-    private initShaders(color: string = '0.0,  1.0,  0.0,  1.0') {
+    private initShaders(color: string) {
         const radius = this.config.dot ? (this.config.dot.radius || 6) : 0;
         
         // Vertex shader source code
@@ -387,26 +425,29 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         // Compile the vertex shader
         this.gl.compileShader(vertShader);
 
-        const colors = [
-            1.0,  1.0,  1.0,  1.0,    // 흰색
-            1.0,  0.0,  0.0,  1.0,    // 빨간색
-            0.0,  1.0,  0.0,  1.0,    // 녹색
-            0.0,  0.0,  1.0,  1.0     // 파란색
-        ];
+        // const colors = [
+        //     1.0,  1.0,  1.0,  1.0,    // 흰색
+        //     1.0,  0.0,  0.0,  1.0,    // 빨간색
+        //     0.0,  1.0,  0.0,  1.0,    // 녹색
+        //     0.0,  0.0,  1.0,  1.0     // 파란색
+        // ];
 
+        const tempColor = hexToRgb(color);
+        const colorStr = `${(tempColor[0] / 255).toFixed(1)}, ${(tempColor[1] / 255).toFixed(1)}, ${(tempColor[2] / 255).toFixed(1)}, 0.8`
         const fragCode =
         `
         precision mediump float;
         uniform bool antialiased;
         void main(void) {
+
             float dist = distance( gl_PointCoord, vec2(0.5) );
             if (!antialiased) {
                 if (dist > 0.5)
                    discard;
-                   gl_FragColor = vec4(${color});
+                   gl_FragColor = vec4(${colorStr});
             } else {
                 float alpha = 1.0 - smoothstep(0.45,0.5,dist);
-                gl_FragColor = vec4(${color});
+                gl_FragColor = vec4(${colorStr});
             }
         }`;
 
@@ -480,16 +521,6 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
             gl_FragColor = texture2D(u_image, v_texCoord);
         }
         `;
-        // 화면 지우기
-        this.gl.clearColor(0,  0,  0,  0); // rgba
-
-        // 화면 지우기
-        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-
-        // Enable depth testing
-        this.gl.enable(this.gl.DEPTH_TEST);
-
-        this.gl.depthFunc(this.gl.LEQUAL);
 
         const canvas: HTMLCanvasElement = this.canvas.node() as HTMLCanvasElement;
 
@@ -554,21 +585,6 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
 
         // Draw the rectangle.
         gl.drawArrays(gl.TRIANGLES, 0, 6);
-    }
-
-    private setRectangle(gl: any, x: number, y: number, width: number, height: number) {
-        const x1 = x;
-        const x2 = x + width;
-        const y1 = y;
-        const y2 = y + height;
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-           x1, y1,
-           x2, y1,
-           x1, y2,
-           x1, y2,
-           x2, y1,
-           x2, y2,
-        ]), gl.STATIC_DRAW);
     }
 
     private initBuffers(vertices: Array<number> = [], itemSize: number, numItems: number): any {
@@ -640,7 +656,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         });
     }
 
-    private addMouseEvent(x: any, y: any, geometry: ContainerSize) {
+    private addPluginEventListner(x: any, y: any, geometry: ContainerSize) {
         this.subscription.unsubscribe();
         this.subscription = new Subscription();
 
@@ -650,18 +666,78 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         let endX = 0;
         let endY = 0;
 
+        let isDragStart = false;
+
+        const selectionContext = (this.selectionCanvas.node() as any).getContext('2d');
+
+        this.subscription.add(
+            this.chartBase.zoomEvent$.subscribe((event: ChartMouseEvent) => {
+                if (event.type === 'dragstart') {
+                    this.pointerClear(selectionContext, geometry, this.chartBase);
+                    isDragStart = true;
+                    this.move$.next(event.position);
+                } else if (event.type === 'zoomin') {
+                    endX = event.position[0];
+                    endY = event.position[1];
+
+                    const xStartValue = x.invert(startX).getTime();
+                    const yStartValue = y.invert(startY);
+                    const xEndValue = x.invert(endX).getTime();
+                    const yEndValue = y.invert(endY);
+
+                    const xScale: Scale = this.currentScales.find((scale: Scale) => scale.field === this.xField);
+                    const yScale: Scale = this.currentScales.find((scale: Scale) => scale.orient === Placement.LEFT);
+                    
+                    isDragStart = false;
+                    this.viewClear();
+
+                    // delayExcute(10, () => {
+                    //     this.chartBase.updateAxisForZoom([
+                    //         {
+                    //             field: xScale.field,
+                    //             min: xStartValue,
+                    //             max: xEndValue
+                    //         },
+                    //         {
+                    //             field: yScale.field,
+                    //             min: yEndValue,
+                    //             max: yStartValue
+                    //         }
+                    //     ]);
+                    // });
+                } else if (event.type === 'zoomout') {
+                    this.isRestore = true;
+                    isDragStart = false;
+                    this.viewClear();
+                    // delayExcute(50, () => {
+                    //     this.chartBase.updateAxisForZoom([]);
+                    // });
+                } else {
+
+                }
+            })
+        );
+
         this.subscription.add(
             this.chartBase.mouseEvent$.subscribe((event: ChartMouseEvent) => {
+                this.pointerClear(selectionContext, geometry, this.chartBase);
+                if (!this.originQuadTree) {
+                    return;
+                }
+                this.isMouseLeave = false;
                 if (event.type === 'mousemove') {
                     this.move$.next(event.position);
+                } else if (event.type === 'mouseleave') {
+                    this.isMouseLeave = true;
                 } else if (event.type === 'mouseup') {
                     endX = event.position[0];
                     endY = event.position[1];
                     
                     const selected = this.search(this.originQuadTree, Math.round(endX) - radius, Math.round(endY) - radius, Math.round(endX) + radius, Math.round(endY) + radius);
-                    console.log('selected : ', selected);
+                    
                     if (selected.length) {
-                        const selectedItem = selected[selected.length - 1];
+                        // const selectedItem = selected[selected.length - 1];
+                        const selectedItem = selected[0];
                         this.onClickItem(selectedItem, {
                             width: geometry.width, height: geometry.height
                         }, [endX, endY]);
@@ -672,55 +748,82 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
                 } else if (event.type === 'mousedown') {
                     startX = event.position[0];
                     startY = event.position[1];
-                } else if (event.type === 'zoomin') {
-                    endX = event.position[0];
-                    endY = event.position[1];
-
-                    const xStartValue = x.invert(startX).getTime();
-                    const yStartValue = y.invert(startY);
-                    const xEndValue = x.invert(endX).getTime();
-                    const yEndValue = y.invert(endY);
-                    this.chartBase.updateAxisForZoom([
-                        {
-                            field: this.xField,
-                            min: xStartValue,
-                            max: xEndValue
-                        },
-                        {
-                            field: this.yField,
-                            min: yEndValue,
-                            max: yStartValue
-                        }
-                    ]);
-                } else if (event.type === 'zoomout') {
-                    this.isRestore = true;
-                    delayExcute(50, () => {
-                        this.chartBase.updateAxisForZoom([]);
-                    });
                 } else {
 
                 }
             })
         );
-
+        
         this.subscription.add(
             this.move$
             .pipe(
-                debounceTime(200)
+                debounceTime(300)
             )
             .subscribe((value: any) => {
+                if (isDragStart) {
+                    return;
+                }
+                
                 // http://plnkr.co/edit/AowXaSYsJM8NSH6IK5B7?p=preview&preview 참고
                 const selected = this.search(this.originQuadTree, Math.round(value[0]) - radius, Math.round(value[1]) - radius, Math.round(value[0]) + radius, Math.round(value[1]) + radius);
                 
-                if (selected.length) {
-                    const selectedItem = selected[selected.length - 1];
-                    this.setChartTooltip(selectedItem, {
-                        width: geometry.width, height: geometry.height
-                    }, value);
-                } else {
-                    this.chartBase.hideTooltip();
-                }
+                delayExcute(10, () => {
+                    if (selected.length) {
+                        const selectedItem = selected[selected.length - 1];
+                        this.drawTooltipPoint(geometry, selectedItem, {radius: radius / 2 + 1, strokeColor: this.seriesColor, strokeWidth: this.strokeWidth});
+                        this.setChartTooltip(selectedItem, {
+                            width: geometry.width, height: geometry.height
+                        }, value);
+                    }
+                });
             })
         )
+    }
+
+    private pointerClear(context: any, geometry: ContainerSize, chartBase: ChartBase) {
+        context.clearRect(0, 0, geometry.width, geometry.height);
+        chartBase.hideTooltip();
+    }
+
+    private drawTooltipPoint(
+        geometry: ContainerSize, 
+        selectedItem: Array<[number, number, any]>, 
+        style:{radius: number, strokeColor: string, strokeWidth: number}
+    ) {
+        const context = (this.selectionCanvas.node() as any).getContext('2d');
+        context.fillStyle = style.strokeColor;
+        context.lineWidth = style.strokeWidth;
+        context.clearRect(0, 0, geometry.width, geometry.height);
+        context.strokeStyle = '#000000';
+        this.drawPoint(context, {cx: selectedItem[0], cy:selectedItem[1], r: style.radius});
+    }
+
+    private drawPoint(
+        context: any, 
+        pointer: {cx: any, cy: any, r: number}
+    ) {
+        // cx, cy과 해당영역에 출력이 되는지? 좌표가 마이너스면 출력 안하는 로직을 넣어야 함.
+        if (pointer.cx < 0 || pointer.cy < 0) {
+            return;
+        }
+        
+        context.beginPath();
+        context.arc(pointer.cx, pointer.cy, pointer.r, 0, 2 * Math.PI);
+        context.closePath();
+        context.fill();
+        context.stroke();
+    }
+
+    private viewClear() {
+        // 화면 지우기
+        this.gl.clearColor(0,  0,  0,  0); // rgba
+
+        // 화면 지우기
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+
+        // Enable depth testing
+        this.gl.enable(this.gl.DEPTH_TEST);
+
+        this.gl.depthFunc(this.gl.LEQUAL);
     }
 }

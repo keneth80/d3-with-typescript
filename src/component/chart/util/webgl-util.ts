@@ -3,6 +3,14 @@ const defaultShaderType = [
     'FRAGMENT_SHADER',
 ];
 
+export const hexToRgb = (hex: any) =>
+hex.replace(/^#?([a-f\d])([a-f\d])([a-f\d])$/i, (m: number, r: number, g: number, b: number) => '#' + r + r + g + g + b + b)
+    .substring(1).match(/.{2}/g)
+    .map((x: string) => parseInt(x, 16));
+
+export const rgbToHex = (r: number, g: number, b: number) => '#' + [r, g, b]
+    .map(x => x.toString(16).padStart(2, '0')).join('');
+
 export const createProgramFromScripts = (gl, shaderScriptIds, opt_attribs, opt_locations, opt_errorCallback) => {
     const shaders = [];
     for (let ii = 0; ii < shaderScriptIds.length; ++ii) {

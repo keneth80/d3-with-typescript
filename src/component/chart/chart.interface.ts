@@ -49,5 +49,9 @@ export interface IChart {
 
     hideTooltip(): Selection<BaseType, any, HTMLElement, any>;
 
+    showTooltipBySeriesSelector(selector: string): Selection<BaseType, any, HTMLElement, any>;
+
+    hideTooltipBySeriesSelector(selector: string): Selection<BaseType, any, HTMLElement, any>;
+
     destroy(): void;
 }

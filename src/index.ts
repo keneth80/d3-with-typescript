@@ -36,8 +36,9 @@ import { lineData } from './component/mock-data/line-one-field-data';
 import { BasicCanvasLineSeries } from './component/series/basic-canvas-line-series';
 import { ExampleSeries } from './component/series/example-series';
 import { BasicCanvasTrace, BasicCanvasTraceModel } from './component/series/basic-canvas-trace';
-import { BasicCanvasMouseSelection } from './component/functions/basic-canvas-mouse-selection';
+import { BasicCanvasMouseZoomHandler } from './component/functions/basic-canvas-mouse-zoom-handler';
 import { BasicCanvasWebglLineSeriesModel, BasicCanvasWebgLineSeries } from './component/series/basic-canvas-webgl-line-series';
+import { BasicCanvasMouseHandler } from './component/functions';
 
 class SalesModel {
     salesperson: string;
@@ -181,9 +182,10 @@ const webglTraceChart = () => {
     const startDt = new Date().getTime();
     let endDt = 0;
     const term = 1000;
-    const data = range(numberPoints).map((d: number, i: number) => {
-        const x = startDt + (term * i);
+    const data = range(numberPoints).map((d: number, index: number) => {
+        const x = startDt + (term * index);
         const y = parseFloat(randomY().toFixed(2));
+        const i = index%numberPoints / 3 === 0 ? 0 : parseFloat(randomY().toFixed(2));
         // const y = i%10 === 0 ? parseFloat(randomX().toFixed(2)) : i;
         // const y = i * 10;
         if (xmin > x) {
@@ -216,8 +218,28 @@ const webglTraceChart = () => {
         xField: 'x',
         yField: 'y',
         dot: {
-            radius: 8
+            radius: 6
         }
+    });
+
+    webglTrace.$currentItem.subscribe((item: any) => {
+        console.log('select : ', item);
+    });
+
+    const webglTrace2 = new BasicCanvasWebgLineSeries({
+        selector: 'webgl-trace2',
+        xField: 'x',
+        yField: 'i',
+        dot: {
+            radius: 6
+        },
+        style: {
+            strokeColor: '#ff0303'
+        }
+    });
+
+    webglTrace2.$currentItem.subscribe((item: any) => {
+        console.log('select2 : ', item);
     });
 
     const webglLineChart = new BasicChart<BasicCanvasTraceModel>({
@@ -225,6 +247,9 @@ const webglTraceChart = () => {
         data,
         calcField: 'y',
         isResize: true,
+        displayDelay: {
+            delayTime: 100
+        },
         axes: [
             {
                 field: 'x',
@@ -244,15 +269,16 @@ const webglTraceChart = () => {
             }
         ],
         series: [
-            webglTrace
+            webglTrace,
+            webglTrace2
         ],
         functions: [
-            new BasicCanvasMouseSelection({
-                xField: 'x',
-                yField: 'y',
-                event: {
-                    move: true
-                }
+            new BasicCanvasMouseZoomHandler({
+                xDirection: 'bottom',
+                yDirection: 'left'
+            }),
+            new BasicCanvasMouseHandler({
+                isMoveEvent: true
             })
         ]
     }).draw();
@@ -462,9 +488,9 @@ const canvasScatter = (id: string) => {
             scatterPlot
         ],
         functions: [
-            new BasicCanvasMouseSelection({
-                xField: 'x',
-                yField: 'y'
+            new BasicCanvasMouseZoomHandler({
+                xDirection: 'bottom',
+                yDirection: 'left'
             })
         ]
     }).draw();

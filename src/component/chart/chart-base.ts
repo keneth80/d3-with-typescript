@@ -16,14 +16,21 @@ import crossfilter, { Crossfilter } from 'crossfilter2';
 import { IChart, Scale, ContainerSize, LegendItem } from './chart.interface';
 import { ChartConfiguration, Axis, Margin, Placement, ChartTitle, ScaleType, Align, AxisTitle, ChartTooltip, Shape } from './chart-configuration';
 import { ISeries } from './series.interface';
-import { guid, textWrapping, getTextWidth, getMaxText, drawSvgCheckBox, getAxisByPlacement, getTransformByArray, getTextWidthByComputedTextLength, drawLegendColorItemByRect, drawLegendColorItemByCircle, drawLegendColorItemByLine } from './util/d3-svg-util';
+import { guid, textWrapping, getTextWidth, getMaxText, drawSvgCheckBox, getAxisByPlacement, getTransformByArray, getTextWidthByComputedTextLength, drawLegendColorItemByRect, drawLegendColorItemByCircle, drawLegendColorItemByLine, delayExcute } from './util/d3-svg-util';
 import { IFunctions } from './functions.interface';
 
 
+// TODO: 모든 참조되는 함수들은 subject로 바꾼다.
 export class ChartBase<T = any> implements IChart {
     isResize: boolean = false;
 
     mouseEventSubject: Subject<{
+        type: string,
+        position: [number, number],
+        target: Selection<BaseType, any, HTMLElement, any>
+    }> = new Subject();
+
+    zoomEventSubject: Subject<{
         type: string,
         position: [number, number],
         target: Selection<BaseType, any, HTMLElement, any>,
@@ -108,6 +115,8 @@ export class ChartBase<T = any> implements IChart {
 
     private isTooltip: boolean = false;
 
+    private isTooltipMultiple: boolean = false;
+
     private clipPath: Selection<BaseType, any, HTMLElement, any>;
 
     private originDomains: any = {};
@@ -190,6 +199,13 @@ export class ChartBase<T = any> implements IChart {
     private currentScale: Array<{field:string, min: number, max: number}> = [];
     // ===================== current min max start ===================== //
 
+    // multi tooltip 및 series 별 tooltip을 구분할 수 있는 저장소.
+    private tooltipItems: Array<{selector: string}> = [];
+
+    private eachElementAsObservableSubscription: Subscription = new Subscription();
+
+    private reScale$: Subject<Array<any>> = new Subject();
+
     constructor(
         configuration: ChartConfiguration
     ) {
@@ -244,6 +260,10 @@ export class ChartBase<T = any> implements IChart {
 
     get mouseEvent$(): Observable<any> {
         return this.mouseEventSubject.asObservable();
+    }
+
+    get zoomEvent$(): Observable<any> {
+        return this.zoomEventSubject.asObservable();
     }
 
     getColorBySeriesIndex(index: number): string {
@@ -308,6 +328,10 @@ export class ChartBase<T = any> implements IChart {
             this.isAll = configuration.legend.isAll === false ? configuration.legend.isAll : true;
         }
 
+        if (configuration.hasOwnProperty('tooltip')) {
+            this.isTooltipMultiple = configuration.tooltip.isMultiple === true ? true : false;
+        }
+
         this.maskId = guid();
 
         this.setRootSize();
@@ -345,7 +369,76 @@ export class ChartBase<T = any> implements IChart {
         }
 
         this.isTooltip = true;
+        this.tooltipGroup.selectAll('.tooltip-background')
+            .data(['background'])
+            .join(
+                (enter) => enter.append('rect').attr('class', '.tooltip-background'),
+                (update) => update,
+                (exit) => exit.remove()
+            )
+            .attr('rx', 3)
+            .attr('ry', 3)
+            .attr('x', 0)
+            .attr('y', 0)
+            .attr('width', 60)
+            .attr('height', 20)
+            .attr('fill', '#111')
+            .style('fill-opacity', 0.6);
 
+        this.tooltipGroup.selectAll('.tooltip-text')
+            .data(['text'])
+            .join(
+                (enter) => enter.append('text').attr('class', '.tooltip-text'),
+                (update) => update,
+                (exit) => exit.remove()
+            )
+            .attr('x', 5)
+            .attr('dy', '1.2em')
+            .style('text-anchor', 'start')
+            .style('fill', '#fff')
+            .attr('font-size', '14px')
+            .attr('font-weight', '100');
+    }
+
+    showTooltipBySeriesSelector(selector: string): Selection<BaseType, any, HTMLElement, any> {
+        const series: ISeries = this.seriesList.find((item: ISeries) => item.selector === selector);
+        if (series) {
+            this.tooltipItems.push({
+                selector
+            });
+            series.unSelectItem();
+            delayExcute(100, () => {
+                this.tooltipGroup.select('#' + selector).style('display', null);
+                this.drawTooltipBySeriesSelector(selector);
+            });
+        }
+        return this.tooltipGroup;
+    }
+
+    hideTooltipBySeriesSelector(selector: string): Selection<BaseType, any, HTMLElement, any> {
+        const targetIndex = this.seriesList.findIndex((item: ISeries) => item.selector === selector);
+        if (targetIndex > -1) {
+            const delIndex = this.tooltipItems.findIndex((item: any) => item.selector === selector);
+            if (delIndex > -1) {
+                this.tooltipItems.slice(delIndex, 1);
+            }
+            const series: ISeries = this.seriesList[targetIndex];
+            series.unSelectItem();
+        }
+        
+        delayExcute(100, () => {
+            if (!this.tooltipItems.length) {
+                this.tooltipGroup.select('#' + selector).style('display', 'none');
+            }
+            // TODO: 지우거나 this.tooltipItems로 다시 그리거나 할 것.
+
+        });
+        return this.tooltipGroup;
+    }
+
+    drawTooltipBySeriesSelector(selector: string) {
+        // TODO: tooltip을 시리즈 별로 생성한다.
+        // select item을 큐에 저장하고 약간의 딜레이 타임을 줘서 툴팁을 생성하는 로직을 고민해볼 것.
         this.tooltipGroup.selectAll('.tooltip-background')
             .data(['background'])
             .join(
@@ -391,6 +484,7 @@ export class ChartBase<T = any> implements IChart {
     }
 
     updateSeries() {
+        console.log('updateSeries');
         try {
             // TODO: subject next 로 변경할 것
             if (this.seriesList && this.seriesList.length) {
@@ -402,6 +496,16 @@ export class ChartBase<T = any> implements IChart {
                     });
 
                     return;
+                } else {
+                    if (this.currentScale.length) {
+                        this.seriesList.map((series: ISeries, index: number) => {
+                            series.chartBase = this;
+                            series.setSvgElement(this.svg, this.seriesGroup, index);
+                            series.drawSeries(this.data, this.scales, {width: this.width, height: this.height}, index, this.colors[index]);
+                        });
+
+                        return;
+                    }
                 }
                 
                 const arrayAsObservable = of(null).pipe(
@@ -419,25 +523,28 @@ export class ChartBase<T = any> implements IChart {
                         return val;
                     })
                 );
+
+                this.eachElementAsObservableSubscription.unsubscribe();
+                this.eachElementAsObservableSubscription = new Subscription();
             
-                eachElementAsObservable.subscribe(index => {
-                    const currentIndex = parseInt(index + '');
-                    // console.log('series display : ', currentIndex);
-                    
-                    this.seriesList[currentIndex].chartBase = this;
-                    this.seriesList[currentIndex].setSvgElement(this.svg, this.seriesGroup, currentIndex);
-                    this.seriesList[currentIndex].drawSeries(this.data, this.scales, {width: this.width, height: this.height}, currentIndex, this.colors[currentIndex]);
-                },
-                error => {
-                    if (console && console.log) {
-                        console.log(error);
-                    }
-                },
-                () => {
-                    if (console && console.log) {
-                        console.log('complete series display');
-                    }
-                });
+                this.eachElementAsObservableSubscription.add(
+                    eachElementAsObservable.subscribe(index => {
+                        const currentIndex = parseInt(index + '');
+                        this.seriesList[currentIndex].chartBase = this;
+                        this.seriesList[currentIndex].setSvgElement(this.svg, this.seriesGroup, currentIndex);
+                        this.seriesList[currentIndex].drawSeries(this.data, this.scales, {width: this.width, height: this.height}, currentIndex, this.colors[currentIndex]);
+                    },
+                    error => {
+                        if (console && console.log) {
+                            console.log(error);
+                        }
+                    },
+                    () => {
+                        if (console && console.log) {
+                            console.log('complete series display');
+                        }
+                    })
+                );
             }
         } catch(error) {
             if (console && console.log) {
@@ -458,11 +565,13 @@ export class ChartBase<T = any> implements IChart {
     updateAxisForZoom(
         reScale: Array<any>
     ) {
-        this.scales = this.setupScale(this.config.axes, this.width, this.height, reScale);
+        // this.scales = this.setupScale(this.config.axes, this.width, this.height, reScale);
 
-        this.updateRescaleAxis(false);
+        // this.updateRescaleAxis(false);
         
-        this.updateSeries();
+        // this.updateSeries();
+
+        this.reScale$.next(reScale);
     }
 
     updateRescaleAxis(isZoom: boolean = true) {
@@ -743,6 +852,21 @@ export class ChartBase<T = any> implements IChart {
                 resizeEvent.subscribe(this.resizeEventHandler)
             );
         }
+
+        // reScale에 따른 update series 함수 정의 (제일 마지막에 호출하는 함수만 실행한다.)
+        this.subscription.add(
+            this.reScale$
+            .pipe(
+                debounceTime(100)
+            )
+            .subscribe((reScale: Array<any>) => {
+                this.scales = this.setupScale(this.config.axes, this.width, this.height, reScale);
+
+                this.updateRescaleAxis(false);
+                
+                this.updateSeries();
+            })
+        )
     }
 
     protected chartCanvasClick = () => {
@@ -1030,9 +1154,7 @@ export class ChartBase<T = any> implements IChart {
                 if (this.margin[orient] < maxTextWidth[orient] + padding) {
                     this.margin[orient] = maxTextWidth[orient] + padding;
                     isAxisUpdate = true;
-                    // console.log('axis is high ==> ', this.margin);
                 }
-                // console.log('margin check : ', isAxisUpdate, this.config.selector, orient, this.margin[orient], maxTextWidth[orient] + padding);
             });
         }
 
@@ -1264,7 +1386,7 @@ export class ChartBase<T = any> implements IChart {
         // 기준이되는 axis가 완료된 후에 나머지를 그린다.
         this.updateAxis()
             .then(() => {
-                // this.updateSeries();
+                console.log('updateAxis.then');
                 this.updateLegend();
                 // POINT: 해당 기능이 series에 의존함으로 series를 먼저 그린뒤에 function을 설정 하도록 한다.
                 this.updateFunctions();
@@ -1514,7 +1636,6 @@ export class ChartBase<T = any> implements IChart {
                 .attr('x', 0)
                 .attr('y', 0);
 
-        // TODO: zoom in 상태에서 리사이즈시 로직 구현.
         this.updateDisplay();
 
         this.isResize = false;
