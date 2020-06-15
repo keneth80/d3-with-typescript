@@ -387,7 +387,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         const vertexBuffer = this.initBuffers(vertices, 3, endCount);
 
         // 쉐이더 초기화
-        this.initShaders(color);
+        this.initShaders(color, geometry, vertices);
 
         // 화면 지우기
         this.gl.clearColor(0,  0,  0,  0); // rgba
@@ -397,7 +397,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
 
         console.time('webgldraw-' + this.selector);
         // 화면 그리기
-        this.drawScene(vertexBuffer, endCount, canvas as HTMLCanvasElement);
+        this.drawScene(vertexBuffer, endCount, canvas as HTMLCanvasElement, vertices);
         console.timeEnd('webgldraw-' + this.selector);
     }
 
@@ -420,17 +420,19 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         }
     }
 
-    private initShaders(color: string) {
+    private initShaders(color: string, geometry: ContainerSize, vertices: Array<[number, number]>) {
         const radius = this.config.dot ? (this.config.dot.radius || 6) : 0;
         
         // Vertex shader source code
         const vertCodeSquare =
         `
         attribute vec3 coordinates;
+
         void main(void) {
             gl_Position = vec4(coordinates, 1.0);
             gl_PointSize = ${radius}.0;
-        }`;
+        }
+        `;
 
         // Create a vertex shader object
         const vertShader = this.gl.createShader(this.gl.VERTEX_SHADER);
@@ -454,12 +456,12 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         `
         precision mediump float;
         void main(void) {
-            float r = 0.0, delta = 0.0, alpha = 1.0;
-            vec2 cxy = 2.0 * gl_PointCoord - 1.0;
-            r = dot(cxy, cxy);
-            if (r > 1.0) {
-                discard;
-            }
+            // float r = 0.0, delta = 0.0, alpha = 1.0;
+            // vec2 cxy = 2.0 * gl_PointCoord - 1.0;
+            // r = dot(cxy, cxy);
+            // if (r > 1.0) {
+            //     discard;
+            // }
             gl_FragColor = vec4(${colorStr});
         }`;
 
@@ -631,7 +633,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         return vertexBuffer;
     }
 
-    private drawScene(buffer: any, dataSize: number, canvas: HTMLCanvasElement) {
+    private drawScene(buffer: any, dataSize: number, canvas: HTMLCanvasElement, vertices: any) {
         // 창을 설정
         this.gl.viewport(0, 0, canvas.clientWidth, canvas.clientHeight);
 
@@ -644,9 +646,12 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         // Get the attribute location
         const coord = this.gl.getAttribLocation(this.shaderProgram, 'coordinates');
 
+        const positions = this.gl.getAttribLocation(this.shaderProgram, 'positions');
+
+        console.log('coord : ', coord, positions);
+
         // Point an attribute to the currently bound VBO
         this.gl.vertexAttribPointer(coord, buffer.itemSize, this.gl.FLOAT, false, 0, 0);
-        // this.gl.vertexAttribPointer(this.shaderProgram.vertexPositionAttribute, buffer.itemSize, this.gl.FLOAT, false, 0, 0);
 
         // Enable the attribute
         this.gl.enableVertexAttribArray(coord);
@@ -805,10 +810,11 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         style:{radius: number, strokeColor: string, strokeWidth: number}
     ) {
         const context = (this.selectionCanvas.node() as any).getContext('2d');
+        context.clearRect(0, 0, geometry.width, geometry.height);
         context.fillStyle = style.strokeColor;
         context.lineWidth = style.strokeWidth;
-        context.clearRect(0, 0, geometry.width, geometry.height);
         context.strokeStyle = '#000000';
+        
         this.drawPoint(context, {cx: selectedItem[0], cy:selectedItem[1], r: style.radius});
     }
 
@@ -822,7 +828,8 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         }
         
         context.beginPath();
-        context.arc(pointer.cx, pointer.cy, pointer.r, 0, 2 * Math.PI);
+        context.strokeRect(pointer.cx - pointer.r, pointer.cy - pointer.r, pointer.r * 2, pointer.r * 2);
+        // context.arc(pointer.cx, pointer.cy, pointer.r, 0, 2 * Math.PI);
         context.closePath();
         context.fill();
         context.stroke();
