@@ -136,14 +136,14 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
         }
 
         // pointer canvas는 단 한개만 존재한다. 이벤트를 받는 canvas 임.
-        if (!this.parentElement.select('.pointer-canvas').node()) {
+        if (!this.parentElement.select('.' + this.chartBase.POINTER_CANVAS).node()) {
             this.pointerCanvas = this.parentElement
                 .append('canvas')
-                .attr('class', 'pointer-canvas')
+                .attr('class', this.chartBase.POINTER_CANVAS)
                 .style('z-index', index + 4)
                 .style('position', 'absolute');
         } else {
-            this.pointerCanvas = this.parentElement.select('.pointer-canvas').style('z-index', index + 4);
+            this.pointerCanvas = this.parentElement.select('.' + this.chartBase.POINTER_CANVAS).style('z-index', index + 4);
         }
     }
 
@@ -170,17 +170,19 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
 
         const space: number = (radius + lineStroke) * 4;
 
-        if (this.config.crossFilter) {
-            this.crossFilterDimension = this.chartBase.crossFilter(chartData).dimension((item: T) => item[this.config.crossFilter.filerField]);
-        } else {
-            if (this.crossFilterDimension) {
-                this.crossFilterDimension.dispose();
-            }
-            this.crossFilterDimension = undefined;
-        }
+        // if (this.config.crossFilter) {
+        //     this.crossFilterDimension = this.chartBase.crossFilter(chartData).dimension((item: T) => item[this.config.crossFilter.filerField]);
+        // } else {
+        //     if (this.crossFilterDimension) {
+        //         this.crossFilterDimension.dispose();
+        //     }
+        //     this.crossFilterDimension = undefined;
+        // }
 
-        const lineData = this.crossFilterDimension ? this.crossFilterDimension.filter(this.config.crossFilter.filterValue).top(Infinity) : 
-        !this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item));
+        // const lineData = this.crossFilterDimension ? this.crossFilterDimension.filter(this.config.crossFilter.filterValue).top(Infinity) : 
+        // !this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item));
+
+        const lineData = !this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item));
 
         this.canvas
             .attr('width', geometry.width + space)
@@ -216,29 +218,9 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
 
         this.line(lineData);
         context.fillStyle = 'white';
-        // context.fillStyle = color;
         context.lineWidth = lineStroke;
         context.strokeStyle = strokeStyle;
         context.stroke();
-
-        // const templine = line()
-        // .defined(data => data[this.yField])
-        // .x((data: any) => {
-        //     const xposition = x(data[this.xField]) + padding;
-        //     return xposition; 
-        // }) // set the x values for the line generator
-        // .y((data: any) => {
-        //     const yposition = y(data[this.yField]);
-        //     return yposition; 
-        // })
-        // .context(context); // set the y values for the line generator
-        // templine(lineData);
-        // strokeStyle.opacity = 0.5;
-        // context.fillStyle = 'white';
-        // // context.fillStyle = color;
-        // context.lineWidth = lineStroke;
-        // context.strokeStyle = strokeStyle;
-        // context.stroke();
 
         if (this.config.dot) {
             this.memoryCanvas

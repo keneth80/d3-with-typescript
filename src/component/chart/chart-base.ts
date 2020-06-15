@@ -11,7 +11,7 @@ import { brushX, brushY } from 'd3-brush';
 import { fromEvent, Subscription, Subject, of, Observable, Observer, from, timer } from 'rxjs';
 import { debounceTime, delay, switchMap, map, concatMap, mapTo } from 'rxjs/operators';
 
-import crossfilter, { Crossfilter } from 'crossfilter2';
+// import crossfilter, { Crossfilter } from 'crossfilter2';
 
 import { IChart, Scale, ContainerSize, LegendItem } from './chart.interface';
 import { ChartConfiguration, Axis, Margin, Placement, ChartTitle, ScaleType, Align, AxisTitle, ChartTooltip, Shape } from './chart-configuration';
@@ -22,6 +22,12 @@ import { IFunctions } from './functions.interface';
 
 // TODO: 모든 참조되는 함수들은 subject로 바꾼다.
 export class ChartBase<T = any> implements IChart {
+    POINTER_CANVAS = 'pointer-canvas';
+
+    ZOOM_CANVAS = 'zoom-canvas';
+
+    SELECTION_CANVAS = 'selection-canvas';
+
     isResize: boolean = false;
 
     mouseEventSubject: Subject<{
@@ -39,6 +45,8 @@ export class ChartBase<T = any> implements IChart {
         }
     }> = new Subject();
 
+    isTooltipDisplay = false;
+
     protected data: Array<T> = [];
 
     protected svgWidth: number = 0;
@@ -51,7 +59,7 @@ export class ChartBase<T = any> implements IChart {
 
     protected height: number;
 
-    protected originalData: any;
+    protected originalData: Array<any> = [];
 
     protected svg: Selection<BaseType, any, HTMLElement, any>;
 
@@ -202,6 +210,8 @@ export class ChartBase<T = any> implements IChart {
     // multi tooltip 및 series 별 tooltip을 구분할 수 있는 저장소.
     private tooltipItems: Array<{selector: string}> = [];
 
+    
+
     private eachElementAsObservableSubscription: Subscription = new Subscription();
 
     private reScale$: Subject<Array<any>> = new Subject();
@@ -250,9 +260,9 @@ export class ChartBase<T = any> implements IChart {
         return this.clipPath;
     }
 
-    get crossFilter(): any{
-        return crossfilter;
-    }
+    // get crossFilter(): any{
+    //     return crossfilter;
+    // }
 
     get updateSeries$(): Observable<any> {
         return this.updateSeriesSubject.asObservable();
@@ -347,6 +357,7 @@ export class ChartBase<T = any> implements IChart {
     }
 
     showTooltip(): Selection<BaseType, any, HTMLElement, any> {
+        this.isTooltipDisplay = true;
         this.seriesList.forEach((series: ISeries) => {
             series.unSelectItem();
         });
@@ -356,6 +367,7 @@ export class ChartBase<T = any> implements IChart {
     }
 
     hideTooltip(): Selection<BaseType, any, HTMLElement, any> {
+        this.isTooltipDisplay = false;
         this.seriesList.forEach((series: ISeries) => {
             series.unSelectItem();
         });
@@ -509,7 +521,7 @@ export class ChartBase<T = any> implements IChart {
                 }
                 
                 const arrayAsObservable = of(null).pipe(
-                    delay(this.config.displayDelay.delayTime),
+                    // delay(this.config.displayDelay.delayTime),
                     switchMap(() => this.getObjectWithArrayInPromise(this.seriesList)),
                     map((val: any) => {
                         return (val.data);
@@ -1396,7 +1408,7 @@ export class ChartBase<T = any> implements IChart {
     }
 
     protected setupData(data: Array<T>) {
-        this.originalData = [...data];
+        // this.originalData = [...data];
         return data;
     }
 

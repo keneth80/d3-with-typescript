@@ -139,16 +139,16 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         }
 
         // pointer canvas는 단 한개만 존재한다. 이벤트를 받는 canvas 임.
-        if (!this.parentElement.select('.pointer-canvas').node()) {
+        if (!this.parentElement.select('.' + this.chartBase.POINTER_CANVAS).node()) {
             this.pointerCanvas = this.svg
                 .append('g')
-                .attr('class', 'pointer-canvas')
+                .attr('class', this.chartBase.POINTER_CANVAS)
                 .style('position', 'absolute');
             this.pointerCanvas.append('rect')
                 .attr('fill', 'none')
                 .style('pointer-events', 'all');
         } else {
-            this.pointerCanvas = this.svg.select('.pointer-canvas');
+            this.pointerCanvas = this.svg.select('.' + this.chartBase.POINTER_CANVAS);
         }
     }
 
@@ -171,15 +171,15 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
             padding = x.bandwidth() / 2;
         }
 
-        if (this.crossFilterDimension) {
-            this.crossFilterDimension.dispose();
-        }
+        // if (this.crossFilterDimension) {
+        //     this.crossFilterDimension.dispose();
+        // }
 
-        if (this.config.crossFilter) {
-            this.crossFilterDimension = this.chartBase.crossFilter(chartData).dimension((item: T) => item[this.config.crossFilter.filerField]);
-        } else {
-            this.crossFilterDimension = undefined;
-        }
+        // if (this.config.crossFilter) {
+        //     this.crossFilterDimension = this.chartBase.crossFilter(chartData).dimension((item: T) => item[this.config.crossFilter.filerField]);
+        // } else {
+        //     this.crossFilterDimension = undefined;
+        // }
         
         this.canvas
             .attr('width', geometry.width)
@@ -230,8 +230,9 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         context.strokeStyle = '#000';
 
         // TODO: zoom in out 시 crossfilter 사용해서 filtering해야함.
-        const lineData = this.crossFilterDimension ? this.crossFilterDimension.filter(this.config.crossFilter.filterValue).top(Infinity) : 
-        !this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item));
+        const lineData: Array<any> = !this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item));
+        // const lineData = this.crossFilterDimension ? this.crossFilterDimension.filter(this.config.crossFilter.filterValue).top(Infinity) : 
+        // !this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item));
 
         console.time('traceindexing');
         const generateData: Array<any> = lineData
@@ -247,18 +248,6 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         this.generateData = generateData;
         this.geometry = geometry;
         console.timeEnd('traceindexing');
-
-        // this.line = line()
-        //     .defined(data => data[this.yField])
-        //     .x((data: any) => {
-        //         const xposition = x(data[this.xField]) + padding;
-        //         return xposition; 
-        //     }) // set the x values for the line generator
-        //     .y((data: any) => {
-        //         const yposition = y(data[this.yField]);
-        //         return yposition; 
-        //     })
-        //     .context(context); // set the y values for the line generator
 
         this.line = line()
             .x((data: any) => {

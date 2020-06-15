@@ -177,7 +177,7 @@ const webglTraceChart = () => {
     let ymin = 0;
     let ymax = 0;
 
-    const numberPoints = 1000000; // 1000000
+    const numberPoints = 500000; // 1000000
 
     const startDt = new Date().getTime();
     let endDt = 0;
@@ -264,8 +264,8 @@ const webglTraceChart = () => {
                 field: 'y',
                 type: 'number',
                 placement: 'left',
-                min: ymin - (ymax * 0.1),
-                max: ymax + (ymax * 0.1)
+                min: ymin - (ymax * 0.5),
+                max: ymax + (ymax * 0.5)
             }
         ],
         series: [

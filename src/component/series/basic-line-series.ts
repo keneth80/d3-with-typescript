@@ -137,17 +137,19 @@ export class BasicLineSeries extends SeriesBase {
             this.line.curve(curveMonotoneX); // apply smoothing to the line
         }
 
-        if (this.config.crossFilter) {
-            this.crossFilterDimension = this.chartBase.crossFilter(chartData).dimension((item: any) => item[this.config.crossFilter.filerField]);
-        } else {
-            if (this.crossFilterDimension) {
-                this.crossFilterDimension.dispose();
-            }
-            this.crossFilterDimension = undefined;
-        }
+        // if (this.config.crossFilter) {
+        //     this.crossFilterDimension = this.chartBase.crossFilter(chartData).dimension((item: any) => item[this.config.crossFilter.filerField]);
+        // } else {
+        //     if (this.crossFilterDimension) {
+        //         this.crossFilterDimension.dispose();
+        //     }
+        //     this.crossFilterDimension = undefined;
+        // }
 
-        const lineData = this.crossFilterDimension ? this.crossFilterDimension.filter(this.config.crossFilter.filterValue).top(Infinity) : 
-        !this.dataFilter ? chartData : chartData.filter((item: any) => this.dataFilter(item));
+        // const lineData = this.crossFilterDimension ? this.crossFilterDimension.filter(this.config.crossFilter.filterValue).top(Infinity) : 
+        // !this.dataFilter ? chartData : chartData.filter((item: any) => this.dataFilter(item));
+
+        const lineData = !this.dataFilter ? chartData : chartData.filter((item: any) => this.dataFilter(item));
 
         // const lineData = !this.dataFilter ? chartData : chartData.filter((item: any) => this.dataFilter(item));
 

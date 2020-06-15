@@ -71,14 +71,14 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
             this.zoomCanvas = select((this.svg.node() as HTMLElement).parentElement).select('.zoom-canvas');
         }
 
-        if (!select((this.svg.node() as HTMLElement).parentElement).select('.pointer-canvas').node()) {
+        if (!select((this.svg.node() as HTMLElement).parentElement).select('.' + this.chartBase.POINTER_CANVAS).node()) {
             this.pointerCanvas = select((this.svg.node() as HTMLElement).parentElement)
                 .append('canvas')
-                .attr('class', 'pointer-canvas')
+                .attr('class', this.chartBase.POINTER_CANVAS)
                 .style('z-index', index + 20)
                 .style('position', 'absolute');
         } else {
-            this.pointerCanvas = select((this.svg.node() as HTMLElement).parentElement).select('.pointer-canvas');
+            this.pointerCanvas = select((this.svg.node() as HTMLElement).parentElement).select('.' + this.chartBase.POINTER_CANVAS);
         }
     }
 
@@ -212,10 +212,10 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
                 zoomContext.clearRect(0, 0, geometry.width, geometry.height);
 
                 if (this.isZoom && Math.abs(startX - endX) > 4 && Math.abs(startY - endY) > 4) {
-                    const xStartValue = xScale.type === ScaleType.TIME ? new Date(x.invert(startX)).getTime() : +x.invert(startX).toFixed(2);
-                    const yStartValue = xScale.type === ScaleType.TIME ? new Date(y.invert(startY)).getTime() : +y.invert(startY).toFixed(2);
-                    const xEndValue = xScale.type === ScaleType.TIME ? new Date(x.invert(endX)).getTime() : +x.invert(endX).toFixed(2);
-                    const yEndValue = xScale.type === ScaleType.TIME ? new Date(y.invert(endY)).getTime() : +y.invert(endY).toFixed(2);
+                    const xStartValue = xScale.type === ScaleType.TIME ? x.invert(startX).getTime() : +x.invert(startX).toFixed(2);
+                    const yStartValue = xScale.type === ScaleType.TIME ? y.invert(startY) : +y.invert(startY).toFixed(2);
+                    const xEndValue = xScale.type === ScaleType.TIME ? x.invert(endX).getTime() : +x.invert(endX).toFixed(2);
+                    const yEndValue = xScale.type === ScaleType.TIME ? y.invert(endY) : +y.invert(endY).toFixed(2);
 
                     if (startX < endX && startY < endY) {
                         this.chartBase.zoomEventSubject.next({
@@ -245,6 +245,7 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
                         if (this.xMaxValue === xmax && this.yMaxValue === ymax) {
                             return;
                         }
+                        
                         this.chartBase.zoomEventSubject.next({
                             type: 'zoomout',
                             position: [endX, endY],
