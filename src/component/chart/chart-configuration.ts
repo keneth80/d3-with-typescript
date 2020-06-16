@@ -55,6 +55,7 @@ export interface Axis {
     visible?: boolean;
     isRound?: boolean; // nice() call 여부
     tickFormat?: any;
+    tickTextParser?: any;
     tickSize?: number;
     isGridLine?: boolean;
     isZoom?: boolean;

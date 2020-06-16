@@ -47,7 +47,6 @@ export class BasicCanvasMouseHandler extends FunctionsBase {
         if (this.isMoveEvent) {
             this.pointerCanvas.on('mousemove', () => {
                 const mouseEvent = mouse(this.pointerCanvas.node() as any);
-    
                 this.chartBase.mouseEventSubject.next({
                     type: 'mousemove',
                     position: mouseEvent,

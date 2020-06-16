@@ -89,8 +89,6 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
 
     private originQuadTree: Quadtree<Array<any>> = undefined;
 
-    private generateData: Array<any> = [];
-
     private originalChartImage: any = null;
 
     private isRestore = false;
@@ -149,7 +147,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
                     index
                 })
                 .attr('class', 'drawing-canvas')
-                .style('opacity', 0.6)
+                .style('opacity', 0.5)
                 .style('z-index', index + 1)
                 .style('position', 'absolute');
         }
@@ -203,7 +201,8 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         // const lineData = this.crossFilterDimension ? this.crossFilterDimension.filter(this.config.crossFilter.filterValue).top(Infinity) : 
         // !this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item));
 
-        const lineData: Array<any> = !this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item));
+        const lineData: Array<any> = (!this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item)))
+        .filter((d: T) => d[this.xField] >= (xmin - xmin * 0.01) && d[this.xField] <= (xmax + xmax * 0.01) && d[this.yField] >= ymin && d[this.yField] <= ymax);
 
         this.canvas
             .attr('width', geometry.width)
@@ -224,30 +223,18 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         // mouse event listen
         this.addPluginEventListner(x, y, geometry);
 
-        // quadtree setup: data indexing by position
-        // if (!this.originQuadTree) {
-            
-        // }
-
         if (this.originQuadTree) {
             this.originQuadTree = undefined;
         }
 
-        delayExcute(100, () => {
-            // this.generateData = lineData
-            // .map((d: BasicCanvasWebglLineSeriesModel) => {
-            //     const xposition = x(d[this.xField]) + padding;
-            //     const yposition = y(d[this.yField]);
-                
-            //     return [xposition, yposition, d];
-            // });
-
+        delayExcute(300, () => {
+            // quadtree setup: data indexing by position     
             this.originQuadTree = quadtree()
                 .extent([[0, 0], [geometry.width, geometry.height]])
                 .addAll(
                     lineData
                     .map<any>((d: BasicCanvasWebglLineSeriesModel) => {
-                        const xposition = x(d[this.xField]) + padding;
+                        const xposition = x(d[this.xField]);
                         const yposition = y(d[this.yField]);
                         
                         return [xposition, yposition, d];
@@ -370,10 +357,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
 
             vertices.push(xposition);
             vertices.push(yposition);
-            vertices.push(0);
-
-            // POINT: QuadTree 만들기 위한 데이터.
-            // this.generateData.push([xposition, yposition, chartData[i]]);    
+            vertices.push(0);   
         }
 
 
@@ -406,7 +390,9 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
             const radius = this.config.dot ? (this.config.dot.radius || 4) : 0;
             const lineStroke = (this.config.style && this.config.style.strokeWidth) || 1;
             const space: number = (radius + lineStroke) * 4;
-            this.gl = canvas.getContext('experimental-webgl', {preserveDrawingBuffer: true});
+            if (!this.gl) {
+                this.gl = canvas.getContext('experimental-webgl', {preserveDrawingBuffer: true});
+            }
             this.gl.viewportWidth = canvas.width;
             this.gl.viewportHeight = canvas.height;
         } catch (e) {
@@ -648,8 +634,6 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
 
         const positions = this.gl.getAttribLocation(this.shaderProgram, 'positions');
 
-        console.log('coord : ', coord, positions);
-
         // Point an attribute to the currently bound VBO
         this.gl.vertexAttribPointer(coord, buffer.itemSize, this.gl.FLOAT, false, 0, 0);
 
@@ -697,38 +681,15 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
                     endX = event.position[0];
                     endY = event.position[1];
 
-                    const xStartValue = x.invert(startX).getTime();
-                    const yStartValue = y.invert(startY);
-                    const xEndValue = x.invert(endX).getTime();
-                    const yEndValue = y.invert(endY);
-
-                    const xScale: Scale = this.currentScales.find((scale: Scale) => scale.field === this.xField);
+                    const xScale: Scale = this.currentScales.find((scale: Scale) => scale.orient === Placement.BOTTOM);
                     const yScale: Scale = this.currentScales.find((scale: Scale) => scale.orient === Placement.LEFT);
                     
                     isDragStart = false;
                     this.viewClear();
-
-                    // delayExcute(10, () => {
-                    //     this.chartBase.updateAxisForZoom([
-                    //         {
-                    //             field: xScale.field,
-                    //             min: xStartValue,
-                    //             max: xEndValue
-                    //         },
-                    //         {
-                    //             field: yScale.field,
-                    //             min: yEndValue,
-                    //             max: yStartValue
-                    //         }
-                    //     ]);
-                    // });
                 } else if (event.type === 'zoomout') {
                     this.isRestore = true;
                     isDragStart = false;
                     this.viewClear();
-                    // delayExcute(50, () => {
-                    //     this.chartBase.updateAxisForZoom([]);
-                    // });
                 } else {
 
                 }
@@ -784,8 +745,8 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
                 
                 // http://plnkr.co/edit/AowXaSYsJM8NSH6IK5B7?p=preview&preview 참고
                 const selected = this.search(this.originQuadTree, Math.round(value[0]) - radius, Math.round(value[1]) - radius, Math.round(value[0]) + radius, Math.round(value[1]) + radius);
-                
-                delayExcute(10, () => {
+                console.log('move : ', value, selected);
+                delayExcute(100, () => {
                     if (selected.length) {
                         // const selectedItem = selected[selected.length - 1];
                         const selectedItem = selected[0];

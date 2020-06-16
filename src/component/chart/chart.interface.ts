@@ -26,6 +26,7 @@ export interface Scale {
     min?: number;
     max?: number;
     title?: AxisTitle;
+    tickTextParser?: any;
 }
 
 export interface ContainerSize {

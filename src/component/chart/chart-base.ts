@@ -496,7 +496,6 @@ export class ChartBase<T = any> implements IChart {
     }
 
     updateSeries() {
-        console.log('updateSeries');
         try {
             // TODO: subject next 로 변경할 것
             if (this.seriesList && this.seriesList.length) {
@@ -577,12 +576,6 @@ export class ChartBase<T = any> implements IChart {
     updateAxisForZoom(
         reScale: Array<any>
     ) {
-        // this.scales = this.setupScale(this.config.axes, this.width, this.height, reScale);
-
-        // this.updateRescaleAxis(false);
-        
-        // this.updateSeries();
-
         this.reScale$.next(reScale);
     }
 
@@ -616,7 +609,7 @@ export class ChartBase<T = any> implements IChart {
             if (scale.visible) {
                 this.axisGroups[scale.orient].call(
                     orientedScale
-                );
+                ).selectAll('text').text((d: string) => scale.tickTextParser ? scale.tickTextParser(d) : d);
             }
 
             if (isZoom && scale.isZoom === true) {
@@ -875,6 +868,8 @@ export class ChartBase<T = any> implements IChart {
                 this.scales = this.setupScale(this.config.axes, this.width, this.height, reScale);
 
                 this.updateRescaleAxis(false);
+
+                this.updateFunctions();
                 
                 this.updateSeries();
             })
@@ -1007,7 +1002,10 @@ export class ChartBase<T = any> implements IChart {
 
             this.axisGroups[scale.orient].selectAll('text')
                 .style('font-size', this.defaultAxisLabelStyle.font.size + 'px')
-                .style('font-family', this.defaultAxisLabelStyle.font.family);
+                .style('font-family', this.defaultAxisLabelStyle.font.family)
+                .text((d: string) => {
+                    return scale.tickTextParser ? scale.tickTextParser(d) : d
+                });
                 // .style('font-weight', 100)
                 // .style('stroke-width', 0.5)
                 // .style('stroke', this.defaultAxisLabelStyle.font.color);
@@ -1398,7 +1396,6 @@ export class ChartBase<T = any> implements IChart {
         // 기준이되는 axis가 완료된 후에 나머지를 그린다.
         this.updateAxis()
             .then(() => {
-                console.log('updateAxis.then');
                 this.updateLegend();
                 // POINT: 해당 기능이 series에 의존함으로 series를 먼저 그린뒤에 function을 설정 하도록 한다.
                 this.updateFunctions();
@@ -1419,7 +1416,7 @@ export class ChartBase<T = any> implements IChart {
         reScaleAxes?: Array<any>
     ): Array<Scale> {
         // zoom out 했을 경우에 초기화.
-        if (reScaleAxes && !reScaleAxes.length) {
+        if (!reScaleAxes || (reScaleAxes && !reScaleAxes.length)) {
             this.currentScale.length = 0;
         }
 
@@ -1468,8 +1465,8 @@ export class ChartBase<T = any> implements IChart {
                 // min max setup
                 if (this.currentScale.length) {
                     const tempScale = this.currentScale.find((scale: any) => scale.field === axis.field);
-                    minValue = tempScale ? +tempScale.min.toFixed(0) : 0;
-                    maxValue = tempScale ? +tempScale.max.toFixed(0) : 0;
+                    minValue = tempScale ? tempScale.min : 0;
+                    maxValue = tempScale ? tempScale.max : 0;
                 } else {
                     if (!axis.hasOwnProperty('max')) {
                         axis.max = max(this.data.map((item: T) => parseFloat(item[axis.field])));
@@ -1487,21 +1484,20 @@ export class ChartBase<T = any> implements IChart {
 
                 // axis domain label setup
                 if (axis.domain) {
-                    console.log('domain is!', axis.domain);
                     scale.domain(axis.domain);
                 } else {
                     // POINT: zoom 시 적용될 scale
                     if (reScaleAxes && reScaleAxes.length) {
                         this.currentScale = [...reScaleAxes];
                         const reScale = this.currentScale.find((d: any) => d.field === axis.field);
-                        minValue = +reScale.min.toFixed(0);
-                        maxValue = +reScale.max.toFixed(0);
+                        minValue = reScale.min;
+                        maxValue = reScale.max;
                     } else {
                         // POINT: zoom 시 현재 scale을 유지하기 위함.
                         if (this.currentScale.length) {
                             const reScale = this.currentScale.find((d: any) => d.field === axis.field);
-                            minValue = +reScale.min.toFixed(0);
-                            maxValue = +reScale.max.toFixed(0);
+                            minValue = reScale.min;
+                            maxValue = reScale.max;
                         }
                     }
 
@@ -1527,6 +1523,7 @@ export class ChartBase<T = any> implements IChart {
                 type: axis.type,
                 visible: axis.visible === false ? false : true,
                 tickFormat: axis.tickFormat ? axis.tickFormat : undefined,
+                tickTextParser: axis.tickTextParser ? axis.tickTextParser : undefined,
                 tickSize: axis.tickSize ? axis.tickSize : undefined,
                 isGridLine: axis.isGridLine === true ? true : false,
                 isZoom: axis.isZoom === true ? true : false,
@@ -1598,9 +1595,12 @@ export class ChartBase<T = any> implements IChart {
 
         this.axisGroups[orient].call(currnetAxis);
 
-        this.axisGroups[axis.orient].selectAll('text')
+        this.axisGroups[orient].selectAll('text')
             .style('font-size', this.defaultAxisLabelStyle.font.size + 'px')
-            .style('font-family', this.defaultAxisLabelStyle.font.family);
+            .style('font-family', this.defaultAxisLabelStyle.font.family)
+            .text((d: string) => {
+                return axis.tickTextParser ? axis.tickTextParser(d) : d
+            });
             // .style('font-weight', 100)
             // .style('stroke-width', 0.5)
             // .style('stroke', this.defaultAxisLabelStyle.font.color);

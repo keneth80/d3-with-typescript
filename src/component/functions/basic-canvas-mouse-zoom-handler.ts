@@ -118,6 +118,13 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
         const ymax = yScale.max;
 
         const zoomContext = (this.zoomCanvas.node() as any).getContext('2d');
+
+        const start = {
+            x: 0, y: 0
+        };
+        const end = {
+            x: 0, y: 0
+        };
         
         this.pointerCanvas.call(
             drag()
@@ -139,13 +146,7 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
                 const moveY = mouseEvent[1];
 
                 zoomContext.clearRect(0, 0, geometry.width, geometry.height);
-                const start = {
-                    x: 0, y: 0
-                };
-                const end = {
-                    x: 0, y: 0
-                };
-
+                
                 if (this.direction === Direction.HORIZONTAL) {
                     start.x = min([startX, moveX]);
                     start.y = 0;
@@ -197,25 +198,20 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
             })
             .on('end', () => {
                 const mouseEvent = mouse(this.pointerCanvas.node() as any);
-
                 endX = mouseEvent[0];
                 endY = mouseEvent[1];
-
-                if (endX > geometry.width) {
-                    endX = geometry.width - 1;
-                }
-
-                if (endY > geometry.height) {
-                    endY = geometry.height - 1;
-                }
-
                 zoomContext.clearRect(0, 0, geometry.width, geometry.height);
 
                 if (this.isZoom && Math.abs(startX - endX) > 4 && Math.abs(startY - endY) > 4) {
-                    const xStartValue = xScale.type === ScaleType.TIME ? x.invert(startX).getTime() : +x.invert(startX).toFixed(2);
-                    const yStartValue = xScale.type === ScaleType.TIME ? y.invert(startY) : +y.invert(startY).toFixed(2);
-                    const xEndValue = xScale.type === ScaleType.TIME ? x.invert(endX).getTime() : +x.invert(endX).toFixed(2);
-                    const yEndValue = xScale.type === ScaleType.TIME ? y.invert(endY) : +y.invert(endY).toFixed(2);
+                    // const xStartValue = x.invert(start.x);
+                    // const yStartValue = y.invert(start.y);
+                    // const xEndValue = x.invert(end.x);
+                    // const yEndValue = y.invert(end.y);
+
+                    const xStartValue = xScale.type === ScaleType.TIME ? x.invert(start.x).getTime() : x.invert(start.x);
+                    const yStartValue = xScale.type === ScaleType.TIME ? y.invert(start.y) : y.invert(start.y);
+                    const xEndValue = xScale.type === ScaleType.TIME ? x.invert(end.x).getTime() : x.invert(end.x);
+                    const yEndValue = xScale.type === ScaleType.TIME ? y.invert(end.y) : y.invert(end.y);
 
                     if (startX < endX && startY < endY) {
                         this.chartBase.zoomEventSubject.next({
@@ -226,7 +222,7 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
                                 direction: this.direction
                             }
                         });
-                        // TODO: 버그 두번째 줌부터 마이너스가 아닌 플러스로 넘어감.
+                        
                         delayExcute(5, () => {
                             this.chartBase.updateAxisForZoom([
                                 {

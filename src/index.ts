@@ -39,6 +39,7 @@ import { BasicCanvasTrace, BasicCanvasTraceModel } from './component/series/basi
 import { BasicCanvasMouseZoomHandler } from './component/functions/basic-canvas-mouse-zoom-handler';
 import { BasicCanvasWebglLineSeriesModel, BasicCanvasWebgLineSeries } from './component/series/basic-canvas-webgl-line-series';
 import { BasicCanvasMouseHandler } from './component/functions';
+import { BasicSpecArea } from './component/options/basic-svg-spec-area';
 
 class SalesModel {
     salesperson: string;
@@ -185,6 +186,7 @@ const webglTraceChart = () => {
     const data = range(numberPoints).map((d: number, index: number) => {
         const x = startDt + (term * index);
         const y = parseFloat(randomY().toFixed(2));
+        // const i = index;
         const i = index%numberPoints / 3 === 0 ? 0 : parseFloat(randomY().toFixed(2));
         // const y = i%10 === 0 ? parseFloat(randomX().toFixed(2)) : i;
         // const y = i * 10;
@@ -226,6 +228,12 @@ const webglTraceChart = () => {
         console.log('select : ', item);
     });
 
+    const basicSpecArea = new BasicSpecArea({
+        selector: 'spec',
+        xField: '',
+        yField: ''
+    })
+
     const webglTrace2 = new BasicCanvasWebgLineSeries({
         selector: 'webgl-trace2',
         xField: 'x',
@@ -242,27 +250,31 @@ const webglTraceChart = () => {
         console.log('select2 : ', item);
     });
 
+    const dtFmt = timeFormat('%m-%d %H:%M:%S');
     const webglLineChart = new BasicChart<BasicCanvasTraceModel>({
         selector: '#webgllinechart',
         data,
         calcField: 'y',
         isResize: true,
-        displayDelay: {
-            delayTime: 100
-        },
+        // displayDelay: {
+        //     delayTime: 100
+        // },
         axes: [
             {
                 field: 'x',
-                type: ScaleType.TIME,
+                type: ScaleType.NUMBER,
                 placement: 'bottom',
-                tickFormat: '%m-%d %H:%M:%S',
+                // tickFormat: '%m-%d %H:%M:%S',
+                tickTextParser: (d: any) => dtFmt(new Date(d)),
                 min: startDt - term * (numberPoints * 0.005),
                 max: endDt + term * (numberPoints * 0.005),
-                tickSize: 3
+                // min: 0,
+                // max: numberPoints,
+                tickSize: 5
             },
             {
                 field: 'y',
-                type: 'number',
+                type: ScaleType.NUMBER,
                 placement: 'left',
                 min: ymin - (ymax * 0.5),
                 max: ymax + (ymax * 0.5)
@@ -270,6 +282,7 @@ const webglTraceChart = () => {
         ],
         series: [
             webglTrace,
+            basicSpecArea,
             webglTrace2
         ],
         functions: [
