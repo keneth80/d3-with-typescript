@@ -321,8 +321,8 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         const textWidth = parseTextNode.width + 7;
         const textHeight = parseTextNode.height + 5;
         
-        let xPosition = mouseEvent[0] + this.chartBase.chartMargin.left + 10;
-        let yPosition = mouseEvent[1] + this.chartBase.chartMargin.top + 10;
+        let xPosition = mouseEvent[0] + parseTextNode.width / 2;
+        let yPosition = mouseEvent[1] - parseTextNode.height;
         
         if (xPosition + textWidth > geometry.width) {
             xPosition = xPosition - textWidth;
@@ -745,7 +745,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
                 
                 // http://plnkr.co/edit/AowXaSYsJM8NSH6IK5B7?p=preview&preview 참고
                 const selected = this.search(this.originQuadTree, Math.round(value[0]) - radius, Math.round(value[1]) - radius, Math.round(value[0]) + radius, Math.round(value[1]) + radius);
-                console.log('move : ', value, selected);
+                
                 delayExcute(100, () => {
                     if (selected.length) {
                         // const selectedItem = selected[selected.length - 1];
