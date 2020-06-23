@@ -30,7 +30,7 @@ import { BasicZoomSelection } from './component/functions/basic-zoom-selection';
 import { topologyData, topologyData2 } from './component/mock-data/topology-data';
 import { BasicTopology, TopologyGroupElement, TopologyData } from './component/series/basic-topology';
 
-import { Placement, Align, Shape, ScaleType } from './component/chart/chart-configuration';
+import { Placement, Align, Shape, ScaleType, Direction } from './component/chart/chart-configuration';
 
 import { lineData } from './component/mock-data/line-one-field-data';
 import { BasicCanvasLineSeries } from './component/series/basic-canvas-line-series';
@@ -177,17 +177,17 @@ const webglTraceChart = () => {
     let xmax = 0;
     let ymin = 0;
     let ymax = 0;
-
+ 
     const numberPoints = 500000; // 1000000
 
     const startDt = new Date().getTime();
     let endDt = 0;
     const term = 1000;
-    const data = range(numberPoints).map((d: number, index: number) => {
-        const x = startDt + (term * index);
+    const data = range(numberPoints).map((d: number) => {
+        const x = startDt + (term * d);
         const y = parseFloat(randomY().toFixed(2));
         // const i = index;
-        const i = index%numberPoints / 3 === 0 ? 0 : parseFloat(randomY().toFixed(2));
+        const i = d%numberPoints / 3 === 0 ? 0 : parseFloat(randomY().toFixed(2));
         // const y = i%10 === 0 ? parseFloat(randomX().toFixed(2)) : i;
         // const y = i * 10;
         if (xmin > x) {
@@ -220,7 +220,7 @@ const webglTraceChart = () => {
         xField: 'x',
         yField: 'y',
         dot: {
-            radius: 6
+            radius: 4
         }
     });
 
@@ -232,14 +232,14 @@ const webglTraceChart = () => {
         selector: 'spec',
         xField: '',
         yField: ''
-    })
+    });
 
     const webglTrace2 = new BasicCanvasWebgLineSeries({
         selector: 'webgl-trace2',
         xField: 'x',
         yField: 'i',
         dot: {
-            radius: 6
+            radius: 4
         },
         style: {
             strokeColor: '#ff0303'
@@ -282,13 +282,14 @@ const webglTraceChart = () => {
         ],
         series: [
             webglTrace,
+            webglTrace2,
             basicSpecArea,
-            webglTrace2
         ],
         functions: [
             new BasicCanvasMouseZoomHandler({
                 xDirection: 'bottom',
-                yDirection: 'left'
+                yDirection: 'left',
+                direction: Direction.HORIZONTAL
             }),
             new BasicCanvasMouseHandler({
                 isMoveEvent: true
@@ -304,14 +305,17 @@ const canvasTraceChart = () => {
     let xmax = 0;
     let ymin = 0;
     let ymax = 0;
-    const numberPoints = 1000000;
-    console.time('timedataparse');
-    const startDt = new Date().getTime();
+ 
+    const numberPoints = 100; // 1000000
 
+    const startDt = new Date().getTime();
     let endDt = 0;
-    const data = range(numberPoints).map((d: number, i: number) => {
-        const x = startDt + (1000 * i);
+    const term = 1000;
+    const data = range(numberPoints).map((d: number) => {
+        const x = startDt + (term * d);
         const y = parseFloat(randomY().toFixed(2));
+        // const i = index;
+        const i = d%numberPoints / 3 === 0 ? 0 : parseFloat(randomY().toFixed(2));
         // const y = i%10 === 0 ? parseFloat(randomX().toFixed(2)) : i;
         // const y = i * 10;
         if (xmin > x) {
@@ -338,21 +342,28 @@ const canvasTraceChart = () => {
             {}
         );
     });
-    console.timeEnd('timedataparse');
 
     console.time('timechartdraw');
     const canvasTrace = new BasicCanvasTrace({
         selector: 'canvas-trace',
         xField: 'x',
-        yField: 'y'
+        yField: 'y',
+        dot: {
+            radius: 4
+        }
+    });
+
+    const basicSpecArea = new BasicSpecArea({
+        selector: 'spec',
+        xField: '',
+        yField: ''
     });
 
     canvasTrace.$currentItem.subscribe((item: any) => {
         console.log('item : ', item);
     })
 
-    // console.log('min : ', xmin, ymin);
-    // console.log('max : ', ymax, ymax);
+    const dtFmt = timeFormat('%m-%d %H:%M:%S');
     const scatterChart = new BasicChart<BasicCanvasTraceModel>({
         selector: '#canvastracechart',
         data,
@@ -361,35 +372,38 @@ const canvasTraceChart = () => {
         axes: [
             {
                 field: 'x',
-                type: ScaleType.TIME,
+                type: ScaleType.NUMBER,
                 placement: 'bottom',
-                tickFormat: '%m-%d %H:%M',
-                min: startDt,
-                max: endDt,
-                tickSize: 3
+                tickTextParser: (d: any) => dtFmt(new Date(d)),
+                min: startDt - term * (numberPoints * 0.005),
+                max: endDt + term * (numberPoints * 0.005),
+                tickSize: 5
             },
             {
                 field: 'y',
-                type: 'number',
+                type: ScaleType.NUMBER,
                 placement: 'left',
-                min: ymin,
-                max: ymax
+                min: ymin - (ymax * 0.5),
+                max: ymax + (ymax * 0.5)
             }
         ],
         series: [
             // canvasLineSeries,
             // canvasTrace,
-            canvasTrace
+            canvasTrace,
+            basicSpecArea
         ],
         functions: [
+            new BasicCanvasMouseZoomHandler({
+                xDirection: 'bottom',
+                yDirection: 'left'
+            }),
+            new BasicCanvasMouseHandler({
+                isMoveEvent: true
+            })
         ]
     }).draw();
     console.timeEnd('timechartdraw');
-
-    select('#refresh').on('click', () => {
-        console.log('click');
-        canvasTrace.testRefresh();
-    });
 
     // new BasicChart<BasicCanvasTraceModel>({
     //     selector: '#scatter',
@@ -1504,7 +1518,7 @@ webglTraceChart();
 
 // canvasLineChart();
 
-// canvasTraceChart();
+canvasTraceChart();
 
 // canvasScatter('#scatter');
 

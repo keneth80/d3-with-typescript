@@ -2,13 +2,15 @@ import { Selection, BaseType, select, mouse } from 'd3-selection';
 import { line, curveMonotoneX } from 'd3-shape';
 import { quadtree, Quadtree } from 'd3-quadtree';
 
-import { fromEvent, Subject, of } from 'rxjs';
+import { fromEvent, Subject, of, generate, Subscription } from 'rxjs';
 
-import { Scale, ContainerSize } from '../chart/chart.interface';
+import { Scale, ContainerSize, ChartMouseEvent } from '../chart/chart.interface';
 import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
 import { textBreak, delayExcute } from '../chart/util/d3-svg-util';
 import { debounceTime } from 'rxjs/operators';
+import { ChartBase, Placement } from '../chart';
+import { connectableObservableDescriptor } from 'rxjs/internal/observable/ConnectableObservable';
 
 export class BasicCanvasTraceModel {
     x: number;
@@ -44,11 +46,14 @@ export interface BasicCanvasTraceConfiguration extends SeriesConfiguration {
         // stroke?: string;
         // fill?: string;
     },
-    filter?: any;
-    crossFilter?: {
-        filerField: string;
-        filterValue: string;
+    dot?: {
+        radius?: number;
     };
+    filter?: any;
+    // crossFilter?: {
+    //     filerField: string;
+    //     filterValue: string;
+    // };
     // animation?: boolean;
 }
 
@@ -61,6 +66,8 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
     protected pointerCanvas: Selection<BaseType, any, HTMLElement, any>;
 
+    private selectionCanvas: Selection<BaseType, any, HTMLElement, any>;
+
     private tooltipGroup: Selection<BaseType, any, HTMLElement, any>;
 
     private line: any;
@@ -70,6 +77,8 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
     private yField: string;
 
     private config: BasicCanvasTraceConfiguration;
+
+    private seriesColor: string = '';
 
     private dataFilter: any;
 
@@ -83,16 +92,14 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
     private move$: Subject<any> = new Subject();
 
-    private crossFilterDimension: any = undefined;
-
-    // private indexing: Indexing = {};
-
     private originQuadTree: Quadtree<Array<any>> = undefined;
 
-    // test
-    private generateData: Array<any> = [];
+    // ================= zoom 관련 변수 ================ //
+    private currentScales: Array<Scale>;
 
-    private geometry: ContainerSize = null;
+    private isMouseLeave: boolean = false;
+
+    private isRestore = false;
 
     constructor(configuration: BasicCanvasTraceConfiguration) {
         super(configuration);
@@ -134,25 +141,26 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                     index
                 })
                 .attr('class', 'drawing-canvas')
+                .style('opacity', 0.6)
                 .style('z-index', index + 1)
                 .style('position', 'absolute');
         }
 
-        // pointer canvas는 단 한개만 존재한다. 이벤트를 받는 canvas 임.
-        if (!this.parentElement.select('.' + this.chartBase.POINTER_CANVAS).node()) {
-            this.pointerCanvas = this.svg
-                .append('g')
-                .attr('class', this.chartBase.POINTER_CANVAS)
+        if (!select((this.svg.node() as HTMLElement).parentElement).select('.selection-canvas').node()) {
+            this.selectionCanvas = select((this.svg.node() as HTMLElement).parentElement)
+                .append('canvas')
+                .attr('class', 'selection-canvas')
+                .style('z-index', index + 9)
                 .style('position', 'absolute');
-            this.pointerCanvas.append('rect')
-                .attr('fill', 'none')
-                .style('pointer-events', 'all');
         } else {
-            this.pointerCanvas = this.svg.select('.' + this.chartBase.POINTER_CANVAS);
+            this.selectionCanvas = select((this.svg.node() as HTMLElement).parentElement).select('.selection-canvas');
         }
     }
 
     drawSeries(chartData: Array<T>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
+        this.seriesColor = color;
+        this.currentScales = scales;
+        
         const xScale: Scale = scales.find((scale: Scale) => scale.field === this.xField);
         const yScale: Scale = scales.find((scale: Scale) => scale.field === this.yField);
         const x: any = xScale.scale;
@@ -170,58 +178,53 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         if (x.bandwidth) {
             padding = x.bandwidth() / 2;
         }
-
-        // if (this.crossFilterDimension) {
-        //     this.crossFilterDimension.dispose();
-        // }
-
-        // if (this.config.crossFilter) {
-        //     this.crossFilterDimension = this.chartBase.crossFilter(chartData).dimension((item: T) => item[this.config.crossFilter.filerField]);
-        // } else {
-        //     this.crossFilterDimension = undefined;
-        // }
         
         this.canvas
             .attr('width', geometry.width)
             .attr('height', geometry.height)
             .style('transform', `translate(${(this.chartBase.chartMargin.left)}px, ${(this.chartBase.chartMargin.top)}px)`);
 
-        this.pointerCanvas.select('rect')
+        this.selectionCanvas
             .attr('width', geometry.width)
-            .attr('height', geometry.height);
+            .attr('height', geometry.height)
+            .style('transform', `translate(${(this.chartBase.chartMargin.left + 1)}px, ${(this.chartBase.chartMargin.top)}px)`);
+
+        // this.pointerCanvas.select('rect')
+        //     .attr('width', geometry.width)
+        //     .attr('height', geometry.height);
         
-        this.pointerCanvas
-            .style('transform', `translate(${(this.chartBase.chartMargin.left)}px, ${(this.chartBase.chartMargin.top)}px)`);
+        // this.pointerCanvas
+        //     .style('transform', `translate(${(this.chartBase.chartMargin.left)}px, ${(this.chartBase.chartMargin.top)}px)`);
 
-        this.pointerCanvas.selectAll('.mouse-line-vertical')
-            .data([
-                {
-                    width: 1,
-                    height: geometry.height
-                }
-            ])
-            .join(
-                (enter) => enter.append('path').attr('class', 'mouse-line-vertical'),
-                (update) => update,
-                (exit) => exit.remove()
-            )
-            .style('stroke', 'black')
-            .style('stroke-width', '1px');
+        // this.pointerCanvas.selectAll('.mouse-line-vertical')
+        //     .data([
+        //         {
+        //             width: 1,
+        //             height: geometry.height
+        //         }
+        //     ])
+        //     .join(
+        //         (enter) => enter.append('path').attr('class', 'mouse-line-vertical'),
+        //         (update) => update,
+        //         (exit) => exit.remove()
+        //     )
+        //     .style('stroke', 'black')
+        //     .style('stroke-width', '1px');
 
-        this.pointerCanvas.selectAll('.mouse-line-horizontal')
-            .data([
-                {
-                    width: geometry.width,
-                    height: 1
-                }
-            ])
-            .join(
-                (enter) => enter.append('path').attr('class', 'mouse-line-horizontal'),
-                (update) => update,
-                (exit) => exit.remove()
-            )
-            .style('stroke', 'black')
-            .style('stroke-width', '1px');
+        // this.pointerCanvas.selectAll('.mouse-line-horizontal')
+        //     .data([
+        //         {
+        //             width: geometry.width,
+        //             height: 1
+        //         }
+        //     ])
+        //     .join(
+        //         (enter) => enter.append('path').attr('class', 'mouse-line-horizontal'),
+        //         (update) => update,
+        //         (exit) => exit.remove()
+        //     )
+        //     .style('stroke', 'black')
+        //     .style('stroke-width', '1px');
 
         const context = (this.canvas.node() as any).getContext('2d');
         // context.clearRect(0, 0, geometry.width, geometry.height);
@@ -230,7 +233,8 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         context.strokeStyle = '#000';
 
         // TODO: zoom in out 시 crossfilter 사용해서 filtering해야함.
-        const lineData: Array<any> = !this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item));
+        const lineData: Array<any> = (!this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item)))
+        .filter((d: T) => d[this.xField] >= (xmin - xmin * 0.01) && d[this.xField] <= (xmax + xmax * 0.01) && d[this.yField] >= ymin && d[this.yField] <= ymax);
         // const lineData = this.crossFilterDimension ? this.crossFilterDimension.filter(this.config.crossFilter.filterValue).top(Infinity) : 
         // !this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item));
 
@@ -241,12 +245,13 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                 const yposition = y(d[this.yField]);
                 
                 // POINT: data 만들면서 포인트 찍는다.
-                context.fillRect(xposition - 3, yposition - 3, 6, 6);
+                if (this.config.dot) {
+                    const rectSize = this.config.dot.radius / 2;
+                    context.fillRect(xposition - rectSize, yposition - rectSize, this.config.dot.radius, this.config.dot.radius);
+                }
 
                 return [xposition, yposition, d];
             });
-        this.generateData = generateData;
-        this.geometry = geometry;
         console.timeEnd('traceindexing');
 
         this.line = line()
@@ -271,88 +276,20 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         context.save();
         context.stroke();
 
-        console.timeEnd('tracerendering')
+        console.timeEnd('tracerendering');
 
-        if (this.chartBase.series.length - 1 === index) {
-            let isOut = true;
-            let isClick = false;
+        // mouse event listen
+        this.addPluginEventListner(x, y, geometry);
 
-            this.subscription.unsubscribe();
-
-            // TODO: chart base 의 observable 로 수정
-            this.subscription = this.move$
-                .pipe(
-                    debounceTime(200)
-                )
-                .subscribe((value: any) => {
-                    if (isOut) return;
-
-                    // http://plnkr.co/edit/AowXaSYsJM8NSH6IK5B7?p=preview&preview 참고
-                    const selected = this.search(this.originQuadTree, Math.round(value[0]) - 3, Math.round(value[1]) - 3, Math.round(value[0]) + 3, Math.round(value[1]) + 3);
-                    
-                    if (selected.length) {
-                        const selectedItem = selected[selected.length - 1];
-                        if (isClick) {
-                            this.onClickItem(selectedItem, {
-                                width: geometry.width, height: geometry.height
-                            }, value);
-                            isClick = false;
-                        } else {
-                            const selectedItem = selected[selected.length - 1];
-                            this.setChartTooltip(selectedItem, {
-                                width: geometry.width, height: geometry.height
-                            }, value);
-                        }
-                    } else {
-                        this.chartBase.hideTooltip();
-                    }
-                    
-                    // TODO: event를 시리즈에서 생성하는게 아니라 plugin 식으로 따로 빼서 고민해 볼것.
-                });
-
-            // TODO: plugin의 point canvas 에서 이벤트 발생.
-            this.pointerCanvas
-                .on('mousemove', () => {
-                    const mouseEvent = mouse(this.pointerCanvas.node() as any);
-
-                    this.pointerCanvas.select('.mouse-line-vertical')
-                        .attr('d', () => {
-                            const d = 'M' + mouseEvent[0] + ',' + geometry.height + ' ' + mouseEvent[0] + ',' + 0;
-                            return d;
-                        });
-
-                    this.pointerCanvas.select('.mouse-line-horizontal')
-                        .attr('d', () => {
-                            const d = 'M' + 0 + ',' + mouseEvent[1] + ' ' + geometry.width + ',' + mouseEvent[1];
-                            return d;
-                        });
-                        
-                    this.move$.next(mouseEvent);
-                }).on('mouseleave', () => {
-                    isOut = true;
-                    this.pointerCanvas.style('opacity', 0);
-                    this.chartBase.hideTooltip();
-                }).on('mouseout', () => {
-                    isOut = true;
-                    this.pointerCanvas.style('opacity', 0);
-                    this.chartBase.hideTooltip();
-                }).on('mouseover', () => {
-                    isOut = false;
-                    this.pointerCanvas.style('opacity', 1);
-                }).on('click', () => {
-                    isClick = true;
-                    const mouseEvent = mouse(this.pointerCanvas.node() as any);
-                    this.move$.next(mouseEvent);
-                });
+        if (this.originQuadTree) {
+            this.originQuadTree = undefined;
         }
 
-        if (!this.originQuadTree) {
-            delayExcute(50, () => {
-                this.originQuadTree = quadtree()
-                    .extent([[0, 0], [geometry.width, geometry.height]])
-                    .addAll(generateData);
-            });
-        }
+        delayExcute(300, () => {
+            this.originQuadTree = quadtree()
+                .extent([[0, 0], [geometry.width, geometry.height]])
+                .addAll(generateData);
+        });
 
         (this.canvas.node() as any).addEventListener('DOMNodeRemoved', () => {
             console.log('remove canvas');
@@ -368,27 +305,122 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
     }
 
     destroy() {
-        if (this.crossFilterDimension) {
-            this.crossFilterDimension.dispose();
-        }
-        this.crossFilterDimension = undefined;
+        // if (this.crossFilterDimension) {
+        //     this.crossFilterDimension.dispose();
+        // }
+        // this.crossFilterDimension = undefined;
         this.subscription.unsubscribe();
         this.canvas.remove();
         this.memoryCanvas.remove();
         this.pointerCanvas.remove();
     }
 
-    testRefresh() {
-        const context = (this.canvas.node() as any).getContext('2d');
-            context.clearRect(0, 0, this.geometry.width, this.geometry.height);
-            context.beginPath();
+    private addPluginEventListner(x: any, y: any, geometry: ContainerSize) {
+        this.subscription.unsubscribe();
+        this.subscription = new Subscription();
+
+        const radius = this.config.dot ? (this.config.dot.radius || 4) : 0 / 2;
+        let startX = 0;
+        let startY = 0;
+        let endX = 0;
+        let endY = 0;
+
+        let isDragStart = false;
+
+        const selectionContext = (this.selectionCanvas.node() as any).getContext('2d');
+
+        this.subscription.add(
+            this.chartBase.zoomEvent$.subscribe((event: ChartMouseEvent) => {
+                if (event.type === 'dragstart') {
+                    this.pointerClear(selectionContext, geometry, this.chartBase);
+                    isDragStart = true;
+                    this.move$.next(event.position);
+                } else if (event.type === 'zoomin') {
+                    endX = event.position[0];
+                    endY = event.position[1];
+
+                    const xScale: Scale = this.currentScales.find((scale: Scale) => scale.orient === Placement.BOTTOM);
+                    const yScale: Scale = this.currentScales.find((scale: Scale) => scale.orient === Placement.LEFT);
+                    
+                    isDragStart = false;
+                    this.viewClear(geometry);
+                } else if (event.type === 'zoomout') {
+                    this.isRestore = true;
+                    isDragStart = false;
+                    this.viewClear(geometry);
+                } else {
+
+                }
+            })
+        );
+
+        this.subscription.add(
+            this.chartBase.mouseEvent$.subscribe((event: ChartMouseEvent) => {
+                this.pointerClear(selectionContext, geometry, this.chartBase);
+                if (!this.originQuadTree) {
+                    return;
+                }
+                this.isMouseLeave = false;
+                if (event.type === 'mousemove') {
+                    this.move$.next(event.position);
+                } else if (event.type === 'mouseleave') {
+                    this.isMouseLeave = true;
+                    this.pointerClear(selectionContext, geometry, this.chartBase);
+                } else if (event.type === 'mouseup') {
+                    endX = event.position[0];
+                    endY = event.position[1];
+                    
+                    const selected = this.search(this.originQuadTree, endX - radius, endY - radius, endX + radius, endY + radius);
+                    
+                    if (selected.length) {
+                        // const selectedItem = selected[selected.length - 1];
+                        const selectedItem = selected[0];
+                        this.onClickItem(selectedItem, {
+                            width: geometry.width, height: geometry.height
+                        }, [endX, endY]);
+                    } else {
+                        this.chartBase.hideTooltip();
+                    }
+
+                } else if (event.type === 'mousedown') {
+                    startX = event.position[0];
+                    startY = event.position[1];
+                } else {
+
+                }
+            })
+        );
         
-        setTimeout(() => {
-            console.time('refreshtracerendering');
-            this.line(this.generateData);
-            context.stroke();
-            console.timeEnd('refreshtracerendering');
-        }, 100);
+        this.subscription.add(
+            this.move$
+            .pipe(
+                debounceTime(200)
+            )
+            .subscribe((value: any) => {
+                if (this.isMouseLeave || isDragStart) {
+                    return;
+                }
+                
+                // http://plnkr.co/edit/AowXaSYsJM8NSH6IK5B7?p=preview&preview 참고
+                const selected = this.search(this.originQuadTree, Math.round(value[0]) - radius, Math.round(value[1]) - radius, Math.round(value[0]) + radius, Math.round(value[1]) + radius);
+                
+                delayExcute(50, () => {
+                    if (selected.length && !this.chartBase.isTooltipDisplay) {
+                        const index = Math.floor(selected.length / 2);
+                        const selectedItem = selected[index];
+                        this.drawTooltipPoint(geometry, [selectedItem[0] - 1, selectedItem[1]], {radius: radius, strokeColor: this.seriesColor, strokeWidth: this.strokeWidth});
+                        this.setChartTooltip(selectedItem, {
+                            width: geometry.width, height: geometry.height
+                        }, value);
+                    }
+                });
+            })
+        )
+    }
+
+    private pointerClear(context: any, geometry: ContainerSize, chartBase: ChartBase) {
+        context.clearRect(0, 0, geometry.width, geometry.height);
+        chartBase.hideTooltip();
     }
 
     private search(quadtree: Quadtree<Array<any>>, x0: number, y0: number, x3: number, y3: number) {
@@ -460,20 +492,36 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
     }
 
-    private drawPoint(cx: any, cy: any, r: number, context: any) {
+    private drawTooltipPoint(
+        geometry: ContainerSize, 
+        position: Array<number>, 
+        style:{radius: number, strokeColor: string, strokeWidth: number}
+    ) {
+        const context = (this.selectionCanvas.node() as any).getContext('2d');
+        context.clearRect(0, 0, geometry.width, geometry.height);
+        context.fillStyle = this.seriesColor;
+        context.lineWidth = style.strokeWidth;
+        context.strokeStyle = '#000000';
+        // this.drawPoint(context, {cx: selectedItem[0], cy:selectedItem[1], r: style.radius});
         // cx, cy과 해당영역에 출력이 되는지? 좌표가 마이너스면 출력 안하는 로직을 넣어야 함.
+        const cx = position[0];
+        const cy = position[1];
         if (cx < 0 || cy < 0) {
             return;
         }
-
+        
         context.beginPath();
-        context.arc(cx, cy, r, 0, 2 * Math.PI);
+        context.fillRect(cx - style.radius, cy - style.radius, style.radius * 2, style.radius * 2);
+        // context.strokeRect(cx - style.radius, cy - style.radius, style.radius * 2, style.radius * 2);
+        // context.arc(pointer.cx, pointer.cy, pointer.r, 0, 2 * Math.PI);
         context.closePath();
         context.fill();
         context.stroke();
     }
 
-    private getColor(i: number) {
-        return (i % 256) + ',' + (Math.floor(i / 256) % 256) + ',' + (Math.floor(i / 65536) % 256);
+    private viewClear(geometry: ContainerSize) {
+        // 화면 지우기
+        const context = (this.canvas.node() as any).getContext('2d');
+        context.clearRect(0, 0, geometry.width, geometry.height);
     }
 }

@@ -350,6 +350,10 @@ export class ChartBase<T = any> implements IChart {
         this.addEventListner();
     }
 
+    getColorByIndex(index: number): string {
+        return this.colors[index];
+    }
+
     draw() {
         this.updateDisplay();
 
@@ -357,21 +361,25 @@ export class ChartBase<T = any> implements IChart {
     }
 
     showTooltip(): Selection<BaseType, any, HTMLElement, any> {
-        this.isTooltipDisplay = true;
-        this.seriesList.forEach((series: ISeries) => {
-            series.unSelectItem();
-        });
-        this.tooltipGroup.style('display', null);
-        this.drawTooltip();
+        if (!this.isTooltipDisplay) {
+            this.isTooltipDisplay = true;
+            this.seriesList.forEach((series: ISeries) => {
+                series.unSelectItem();
+            });
+            this.tooltipGroup.style('display', null);
+            this.drawTooltip();
+        }
         return this.tooltipGroup;
     }
 
     hideTooltip(): Selection<BaseType, any, HTMLElement, any> {
-        this.isTooltipDisplay = false;
-        this.seriesList.forEach((series: ISeries) => {
-            series.unSelectItem();
-        });
-        this.tooltipGroup.style('display', 'none');
+        if (this.isTooltipDisplay) {
+            this.isTooltipDisplay = false;
+            this.seriesList.forEach((series: ISeries) => {
+                series.unSelectItem();
+            });
+            this.tooltipGroup.style('display', 'none');
+        }
         return this.tooltipGroup;
     }
 
@@ -581,34 +589,12 @@ export class ChartBase<T = any> implements IChart {
 
     updateRescaleAxis(isZoom: boolean = true) {
         this.scales.map((scale: Scale) => {
-            let orientedScale: any = null;
-            if (scale.orient === Placement.RIGHT) {
-                orientedScale = axisRight(scale.scale);
-            } else if (scale.orient === Placement.LEFT) {
-                orientedScale = axisLeft(scale.scale);
-            } else if (scale.orient === Placement.TOP) {
-                orientedScale = axisTop(scale.scale);
-            } else {
-                orientedScale = axisBottom(scale.scale);
-            }
-
-            if (scale.type === ScaleType.NUMBER) {
-                if (scale.tickFormat) {
-                    orientedScale.ticks(null, scale.tickFormat);
-                }
-            } else if (scale.type === ScaleType.TIME) {
-                if (scale.tickFormat) {
-                    orientedScale.tickFormat(timeFormat(scale.tickFormat));
-                }
-            }
-
-            if (scale.tickSize) {
-                orientedScale.ticks(scale.tickSize);
-            }
+            const orientedAxis: any = this.axisSetupByScale(scale);
             
             if (scale.visible) {
+                // TODO: axis label list setup
                 this.axisGroups[scale.orient].call(
-                    orientedScale
+                    orientedAxis
                 ).selectAll('text').text((d: string) => scale.tickTextParser ? scale.tickTextParser(d) : d);
             }
 
@@ -616,6 +602,40 @@ export class ChartBase<T = any> implements IChart {
                 this.setupBrush(scale);
             }
         });
+    }
+
+    protected axisSetupByScale(scale: Scale) {
+        let orientedAxis: any = null;
+
+        if (scale.orient === Placement.RIGHT) {
+            orientedAxis = axisRight(scale.scale);
+        } else if (scale.orient === Placement.LEFT) {
+            orientedAxis = axisLeft(scale.scale);
+        } else if (scale.orient === Placement.TOP) {
+            orientedAxis = axisTop(scale.scale);
+        } else {
+            orientedAxis = axisBottom(scale.scale);
+        }
+
+        if (scale.type === ScaleType.NUMBER) {
+            if (scale.tickFormat) {
+                orientedAxis.ticks(null, scale.tickFormat);
+            }
+        } else if (scale.type === ScaleType.TIME) {
+            if (scale.tickFormat) {
+                orientedAxis.tickFormat(timeFormat(scale.tickFormat));
+            }
+
+            if (scale.tickSize) {
+                orientedAxis.ticks(scale.tickSize);
+            }
+        }
+
+        if (scale.tickSize) {
+            orientedAxis.ticks(scale.tickSize);
+        }
+
+        return orientedAxis;
     }
 
     protected updateFunctions() {
@@ -966,37 +986,16 @@ export class ChartBase<T = any> implements IChart {
         this.scales = this.setupScale(this.config.axes, this.width, this.height);
 
         this.scales.map((scale: Scale) => {
-            let orientedScale: any = null;
+            const orientedAxis: any = this.axisSetupByScale(scale);
             let bandWidth: number = -1;
-            if (scale.orient === Placement.RIGHT) {
-                orientedScale = axisRight(scale.scale);
-            } else if (scale.orient === Placement.LEFT) {
-                orientedScale = axisLeft(scale.scale);
-            } else if (scale.orient === Placement.TOP) {
-                orientedScale = axisTop(scale.scale);
-            } else {
-                orientedScale = axisBottom(scale.scale);
-            }
 
-            if (scale.type === ScaleType.NUMBER) {
-                if (scale.tickFormat) {
-                    orientedScale.ticks(null, scale.tickFormat);
-                    // orientedScale.tickFormat(timeFormat(scale.tickFormat));
-                }
-            } else if (scale.type === ScaleType.TIME) {
-                if (scale.tickFormat) {
-                    orientedScale.tickFormat(timeFormat(scale.tickFormat));
-                }
-                if (scale.tickSize) {
-                    orientedScale.ticks(scale.tickSize);
-                }
-            } else if (scale.type === ScaleType.STRING) {
+            if (scale.type === ScaleType.STRING) {
                 bandWidth = scale.scale.bandwidth();
             }
             
             if (scale.visible) {
                 this.axisGroups[scale.orient].call(
-                    orientedScale
+                    orientedAxis
                 );
             }
 

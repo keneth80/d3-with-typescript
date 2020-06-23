@@ -46,7 +46,7 @@ export interface BasicCanvasWebglLineSeriesConfiguration extends SeriesConfigura
     isCurve?: boolean; // default : false
     dot?: {
         radius?: number;
-    }
+    };
     style?: {
         strokeWidth?: number;
         strokeColor?: string;
@@ -79,6 +79,8 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
 
     private strokeColor;
 
+    private seriesIndex: number = 0;
+
     // private isAnimation: boolean = false;
 
     private parentElement: Selection<BaseType, any, HTMLElement, any>;
@@ -91,8 +93,6 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
 
     private originalChartImage: any = null;
 
-    private isRestore = false;
-
     private seriesColor: string = '';
 
     // ================= webgl 관련 변수 ================ //
@@ -101,9 +101,9 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
     private shaderProgram: any;
 
     // ================= zoom 관련 변수 ================ //
-    private currentScales: Array<Scale>;
-
     private isMouseLeave: boolean = false;
+
+    private isRestore = false;
 
     constructor(configuration: BasicCanvasWebglLineSeriesConfiguration) {
         super(configuration);
@@ -133,7 +133,6 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
                   index: number) {
         this.svg = svg;
 
-        // TODO: SVG 캔버스가 pointer 캔버스 바로 뒤에 와야함.
         this.svg
             .style('z-index', index + 2)
             .style('position', 'absolute');
@@ -147,7 +146,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
                     index
                 })
                 .attr('class', 'drawing-canvas')
-                .style('opacity', 0.5)
+                .style('opacity', 0.6)
                 .style('z-index', index + 1)
                 .style('position', 'absolute');
         }
@@ -164,10 +163,8 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
     }
 
     drawSeries(chartData: Array<T>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
-        this.seriesColor = color;
-        this.currentScales = scales;
-        const xScale: Scale = this.currentScales.find((scale: Scale) => scale.field === this.xField);
-        const yScale: Scale = this.currentScales.find((scale: Scale) => scale.orient === Placement.LEFT);
+        const xScale: Scale = scales.find((scale: Scale) => scale.field === this.xField);
+        const yScale: Scale = scales.find((scale: Scale) => scale.orient === Placement.LEFT);
         // const yScale: Scale = scales.find((scale: Scale) => scale.field === this.yField);
         const x: any = xScale.scale;
         const y: any = yScale.scale;
@@ -186,20 +183,6 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         if (x.bandwidth) {
             padding = x.bandwidth() / 2;
         }
-
-        const space: number = (radius + lineStroke) * 4;
-
-        // if (this.config.crossFilter) {
-        //     this.crossFilterDimension = this.chartBase.crossFilter(chartData).dimension((item: T) => item[this.config.crossFilter.filerField]);
-        // } else {
-        //     if (this.crossFilterDimension) {
-        //         this.crossFilterDimension.dispose();
-        //     }
-        //     this.crossFilterDimension = undefined;
-        // }
-
-        // const lineData = this.crossFilterDimension ? this.crossFilterDimension.filter(this.config.crossFilter.filterValue).top(Infinity) : 
-        // !this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item));
 
         const lineData: Array<any> = (!this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item)))
         .filter((d: T) => d[this.xField] >= (xmin - xmin * 0.01) && d[this.xField] <= (xmax + xmax * 0.01) && d[this.yField] >= ymin && d[this.yField] <= ymax);
@@ -221,7 +204,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         }
         
         // mouse event listen
-        this.addPluginEventListner(x, y, geometry);
+        this.addPluginEventListner(x, y, geometry, {radius: radius, strokeColor: color, strokeWidth: this.strokeWidth});
 
         if (this.originQuadTree) {
             this.originQuadTree = undefined;
@@ -260,10 +243,6 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         this.canvas.remove();
     }
 
-    testRefresh() {
-        
-    }
-
     private search(quadtree: Quadtree<Array<any>>, x0: number, y0: number, x3: number, y3: number) {
         const temp = [];
         quadtree.visit((node: any, x1: number, y1: number, x2: number, y2: number) => {
@@ -299,7 +278,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
     }
 
     // TODO: tooltip에 시리즈 아이디를 부여하여 시리즈 마다 tooltip을 컨트롤 할 수 있도록 한다.
-    // multi tooltip도 구현해야 하기 때문에 이방법이 가장 좋음.
+    // multi tooltip도 구현해야 하기 때문에 이방법이 가장 좋음. 현재 중복으로 발생해서 왔다갔다 함.
     private setChartTooltip(seriesData: T, geometry: ContainerSize, mouseEvent: Array<number>) {
         if (this.chartBase.isTooltipDisplay) {
             return;
@@ -389,7 +368,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
 		try {
             const radius = this.config.dot ? (this.config.dot.radius || 4) : 0;
             const lineStroke = (this.config.style && this.config.style.strokeWidth) || 1;
-            const space: number = (radius + lineStroke) * 4;
+
             if (!this.gl) {
                 this.gl = canvas.getContext('experimental-webgl', {preserveDrawingBuffer: true});
             }
@@ -437,7 +416,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         // ];
 
         const tempColor = hexToRgb(color);
-        const colorStr = `${(tempColor[0] / 255).toFixed(1)}, ${(tempColor[1] / 255).toFixed(1)}, ${(tempColor[2] / 255).toFixed(1)}, 1.0`
+        const colorStr = `${(tempColor[0] / 255).toFixed(1)}, ${(tempColor[1] / 255).toFixed(1)}, ${(tempColor[2] / 255).toFixed(1)}, 1.0`;
         const fragCode =
         `
         precision mediump float;
@@ -657,11 +636,10 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         });
     }
 
-    private addPluginEventListner(x: any, y: any, geometry: ContainerSize) {
+    private addPluginEventListner(x: any, y: any, geometry: ContainerSize, style: {radius: number, strokeColor: string, strokeWidth: number}) {
         this.subscription.unsubscribe();
         this.subscription = new Subscription();
 
-        const radius = this.config.dot ? (this.config.dot.radius || 4) : 0 / 2;
         let startX = 0;
         let startY = 0;
         let endX = 0;
@@ -680,9 +658,6 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
                 } else if (event.type === 'zoomin') {
                     endX = event.position[0];
                     endY = event.position[1];
-
-                    const xScale: Scale = this.currentScales.find((scale: Scale) => scale.orient === Placement.BOTTOM);
-                    const yScale: Scale = this.currentScales.find((scale: Scale) => scale.orient === Placement.LEFT);
                     
                     isDragStart = false;
                     this.viewClear();
@@ -712,7 +687,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
                     endX = event.position[0];
                     endY = event.position[1];
                     
-                    const selected = this.search(this.originQuadTree, Math.round(endX) - radius, Math.round(endY) - radius, Math.round(endX) + radius, Math.round(endY) + radius);
+                    const selected = this.search(this.originQuadTree, endX - style.radius, endY - style.radius, endX + style.radius, endY + style.radius);
                     
                     if (selected.length) {
                         // const selectedItem = selected[selected.length - 1];
@@ -736,7 +711,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         this.subscription.add(
             this.move$
             .pipe(
-                debounceTime(300)
+                debounceTime(100)
             )
             .subscribe((value: any) => {
                 if (this.isMouseLeave || isDragStart) {
@@ -744,13 +719,13 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
                 }
                 
                 // http://plnkr.co/edit/AowXaSYsJM8NSH6IK5B7?p=preview&preview 참고
-                const selected = this.search(this.originQuadTree, Math.round(value[0]) - radius, Math.round(value[1]) - radius, Math.round(value[0]) + radius, Math.round(value[1]) + radius);
+                const selected = this.search(this.originQuadTree, value[0] - style.radius, value[1] - style.radius, value[0] + style.radius, value[1] + style.radius);
                 
                 delayExcute(100, () => {
-                    if (selected.length) {
-                        // const selectedItem = selected[selected.length - 1];
-                        const selectedItem = selected[0];
-                        this.drawTooltipPoint(geometry, selectedItem, {radius: radius / 2 + 1, strokeColor: this.seriesColor, strokeWidth: this.strokeWidth});
+                    if (selected.length && !this.chartBase.isTooltipDisplay) {
+                        const index = Math.floor(selected.length / 2);
+                        const selectedItem = selected[index];
+                        this.drawTooltipPoint(geometry, selectedItem, {radius: style.radius / 2 + 1, strokeColor: style.strokeColor, strokeWidth: style.strokeWidth});
                         this.setChartTooltip(selectedItem, {
                             width: geometry.width, height: geometry.height
                         }, value);
@@ -760,6 +735,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         )
     }
 
+    // TODO: move 만큼 호출 되는데 마지막에 한번만 호출 되도록 수정한다.
     private pointerClear(context: any, geometry: ContainerSize, chartBase: ChartBase) {
         context.clearRect(0, 0, geometry.width, geometry.height);
         chartBase.hideTooltip();
@@ -775,21 +751,16 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         context.fillStyle = style.strokeColor;
         context.lineWidth = style.strokeWidth;
         context.strokeStyle = '#000000';
-        
-        this.drawPoint(context, {cx: selectedItem[0], cy:selectedItem[1], r: style.radius});
-    }
-
-    private drawPoint(
-        context: any, 
-        pointer: {cx: any, cy: any, r: number}
-    ) {
         // cx, cy과 해당영역에 출력이 되는지? 좌표가 마이너스면 출력 안하는 로직을 넣어야 함.
-        if (pointer.cx < 0 || pointer.cy < 0) {
+        const cx = parseInt(selectedItem[0] + '');
+        const cy = parseInt(selectedItem[1] + '');
+        if (cx < 0 || cy < 0) {
             return;
         }
-        
+        const rectSize = style.radius * 2.5;
         context.beginPath();
-        context.strokeRect(pointer.cx - pointer.r, pointer.cy - pointer.r, pointer.r * 2, pointer.r * 2);
+        context.fillRect(cx - rectSize / 2, cy - rectSize / 2, rectSize, rectSize);
+        // context.strokeRect(cx - style.radius - 0.5, cy - style.radius + 0.5, style.radius * 2, style.radius * 2);
         // context.arc(pointer.cx, pointer.cy, pointer.r, 0, 2 * Math.PI);
         context.closePath();
         context.fill();
