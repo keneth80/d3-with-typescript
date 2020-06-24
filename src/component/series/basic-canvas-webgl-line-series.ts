@@ -19,22 +19,16 @@ export class BasicCanvasWebglLineSeriesModel {
     x: number;
     y: number;
     i: number; // save the index of the point as a property, this is useful
-    selected: boolean;
-    color: string;
-    memoryColor: string;
     data: any;
 
     constructor(
         x: number,
         y: number,
         i: number, // save the index of the point as a property, this is useful
-        color: string,
-        memoryColor: string,
-        selected: boolean,
         data: any
     ) {
         Object.assign(this, {
-            x, y, i, selected, color, memoryColor, data
+            x, y, i, data
         });
     }
 }
@@ -53,10 +47,7 @@ export interface BasicCanvasWebglLineSeriesConfiguration extends SeriesConfigura
         fill?: string;
     },
     filter?: any;
-    crossFilter?: {
-        filerField: string;
-        filterValue: string;
-    };
+    seriesData?: Array<any>;
     // animation?: boolean;
 }
 
@@ -93,7 +84,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
 
     private originalChartImage: any = null;
 
-    private seriesColor: string = '';
+    private seriesData: Array<T>;
 
     // ================= webgl 관련 변수 ================ //
     private gl: any;
@@ -124,6 +115,10 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
             if (configuration.style) {
                 this.strokeWidth = configuration.style.strokeWidth || this.strokeWidth;
                 this.strokeColor = configuration.style.strokeColor || null;
+            }
+
+            if (configuration.seriesData) {
+                this.seriesData = configuration.seriesData;
             }
         }
     }
@@ -162,7 +157,8 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         }
     }
 
-    drawSeries(chartData: Array<T>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
+    drawSeries(chartBaseData: Array<T>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
+        const chartData = this.seriesData ? this.seriesData : chartBaseData;
         const xScale: Scale = scales.find((scale: Scale) => scale.field === this.xField);
         const yScale: Scale = scales.find((scale: Scale) => scale.orient === Placement.LEFT);
         // const yScale: Scale = scales.find((scale: Scale) => scale.field === this.yField);
@@ -172,6 +168,8 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         const radius = this.config.dot ? (this.config.dot.radius || 4) : 0;
 
         const lineStroke = (this.config.style && this.config.style.strokeWidth) || 1;
+
+        const lineColor = this.strokeColor ? this.strokeColor : color;
 
         const xmin = xScale.min;
         const xmax = xScale.max;
@@ -200,11 +198,11 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
             this.isRestore = false;
             this.execRestore(this.originalChartImage, geometry.width, geometry.height);
         } else {
-            this.webGLStart(lineData, {min: xmin, max: xmax}, {min:ymin, max: ymax}, geometry, this.strokeColor || color);
+            this.webGLStart(lineData, {min: xmin, max: xmax}, {min:ymin, max: ymax}, geometry, lineColor);
         }
         
         // mouse event listen
-        this.addPluginEventListner(x, y, geometry, {radius: radius, strokeColor: color, strokeWidth: this.strokeWidth});
+        this.addPluginEventListner(x, y, geometry, {radius: radius, strokeColor: lineColor, strokeWidth: this.strokeWidth});
 
         if (this.originQuadTree) {
             this.originQuadTree = undefined;

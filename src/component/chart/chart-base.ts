@@ -84,7 +84,7 @@ export class ChartBase<T = any> implements IChart {
     protected tooltipGroup: Selection<BaseType, any, HTMLElement, any>;
 
     protected margin: Margin = {
-        top: 10, left: 20, bottom: 30, right: 20
+        top: 25, left: 20, bottom: 30, right: 20
     }; // default margin
 
     protected defaultTitleStyle: any = {

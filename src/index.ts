@@ -28,6 +28,7 @@ import { BasicCanvasScatterPlotModel, BasicCanvasScatterPlot } from './component
 import { BasicGaugeSeries } from './component/series/basic-gauge-series';
 import { BasicZoomSelection } from './component/functions/basic-zoom-selection';
 import { topologyData, topologyData2 } from './component/mock-data/topology-data';
+import { tracePoints } from './component/mock-data/trace-data';
 import { BasicTopology, TopologyGroupElement, TopologyData } from './component/series/basic-topology';
 
 import { Placement, Align, Shape, ScaleType, Direction } from './component/chart/chart-configuration';
@@ -170,6 +171,71 @@ const examples = [
 
 // example();
 
+const dfdChartSample = () => {
+    const setSeriesColor = (data: any) => {
+        const seriesFaultType = data.referenceYn === 'Y' ? '' : data.segmentStatus;
+        // console.log('setSeriesColor : ', data.referenceYn, data.fdtaFaultYn, seriesFaultType, data.primeYn);
+        if (data.referenceYn === 'N' && data.fdtaFaultYn === 'Y' && seriesFaultType === 'F' && data.primeYn === 'N') { // selectedAlarm
+            // console.log('selectedAlarm');
+            return '#EA3010';
+        } else if (data.referenceYn === 'N' && data.fdtaFaultYn === 'N' && seriesFaultType === 'F' && data.primeYn === 'N') { //Fault
+            // console.log('Fault');
+            return '#f57416';
+        } else if (data.referenceYn === 'N' && data.fdtaFaultYn === 'N' && seriesFaultType === 'W' && data.primeYn === 'N') { // Warning
+            // console.log('Warning');
+            return '#f7ba00';
+        } else if (data.referenceYn === 'N' && data.fdtaFaultYn === 'N' && seriesFaultType === 'S' && data.primeYn === 'N') { // Safe
+            // console.log('Safe');
+            return '#0dac09';
+        } else if (data.referenceYn === 'Y' && data.fdtaFaultYn === 'Y' && seriesFaultType === '' && data.primeYn === 'N') { // referenceAlarm
+            // console.log('referenceAlarm');
+            return '#970f94';
+        } else if (data.referenceYn === 'Y' && data.fdtaFaultYn === 'N' && seriesFaultType === '' && data.primeYn === 'N') { // referenceNonAlarm
+            // console.log('referenceNonAlarm');
+            return '#3766c7';
+        } else if (data.referenceYn === 'Y' && data.fdtaFaultYn === 'N' && seriesFaultType === '' && data.primeYn === 'Y') { // primeReference
+            // console.log('primeReference');
+            return '#3766c7';
+        } else {
+            return '#EA3010';
+        }
+    }
+    const seriesList = [];
+    for (let i = 0; i < tracePoints.length; i++) {
+        const tempData = tracePoints[i];
+        const seriesData = tempData.data.rows.map((row: Array<any>, index: number) => {
+            const rowData: any = {};
+            for (let j = 0; j < tempData.data.columns.length; j++) {
+                const columnName = tempData.data.columns[j];
+                rowData[columnName] = row[j];
+            }
+            return new BasicCanvasWebglLineSeriesModel(
+                rowData['count_slot'],
+                rowData['VALUE'],
+                i,
+                rowData
+            )
+        });
+
+        const seriesColor = setSeriesColor(tempData);
+        const webglTrace = new BasicCanvasWebgLineSeries({
+            selector: 'webgl-trace' + i,
+            xField: 'x',
+            yField: 'y',
+            dot: {
+                radius: 4
+            },
+            style: {
+                strokeColor: seriesColor
+            },
+            seriesData
+        });
+        seriesList.push(webglTrace);
+    }
+    console.log('seriesList : ', seriesList); 
+    console.log('traceData : ', tracePoints);
+}
+
 const webglTraceChart = () => {
     const randomX = randomNormal(0, 9);
     const randomY = randomNormal(0, 9);
@@ -208,9 +274,6 @@ const webglTraceChart = () => {
             x,
             y,
             i,
-            '#ff0000',
-            '#ff0000',
-            false,
             {}
         );
     });
@@ -221,6 +284,9 @@ const webglTraceChart = () => {
         yField: 'y',
         dot: {
             radius: 4
+        },
+        style: {
+            strokeColor: '#0dac09'
         }
     });
 
@@ -242,7 +308,7 @@ const webglTraceChart = () => {
             radius: 4
         },
         style: {
-            strokeColor: '#ff0303'
+            strokeColor: '#EA3010'
         }
     });
 
@@ -1513,6 +1579,8 @@ const gaugeChart = () => {
         ]
     }).draw();
 }
+
+dfdChartSample();
 
 webglTraceChart();
 
