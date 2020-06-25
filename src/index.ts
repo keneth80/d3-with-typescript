@@ -36,6 +36,7 @@ import { Placement, Align, Shape, ScaleType, Direction } from './component/chart
 import { lineData } from './component/mock-data/line-one-field-data';
 import { BasicCanvasLineSeries } from './component/series/basic-canvas-line-series';
 import { ExampleSeries } from './component/series/example-series';
+import { BasicCanvasWebgLineSeriesOne } from './component/series/basic-canvas-webgl-line-series-one';
 import { BasicCanvasTrace, BasicCanvasTraceModel } from './component/series/basic-canvas-trace';
 import { BasicCanvasMouseZoomHandler } from './component/functions/basic-canvas-mouse-zoom-handler';
 import { BasicCanvasWebglLineSeriesModel, BasicCanvasWebgLineSeries } from './component/series/basic-canvas-webgl-line-series';
@@ -199,8 +200,24 @@ const dfdChartSample = () => {
         } else {
             return '#EA3010';
         }
-    }
+    };
+
     const seriesList = [];
+
+    const basicSpecArea = new BasicSpecArea({
+        selector: 'spec',
+        xField: '',
+        yField: ''
+    });
+
+    seriesList.push(basicSpecArea);
+
+    let xmin = 0;
+    let xmax = 0;
+    let ymin = Infinity;
+    let ymax = 0;
+
+    const alarmSeriesList = [];
     for (let i = 0; i < tracePoints.length; i++) {
         const tempData = tracePoints[i];
         const seriesData = tempData.data.rows.map((row: Array<any>, index: number) => {
@@ -209,16 +226,33 @@ const dfdChartSample = () => {
                 const columnName = tempData.data.columns[j];
                 rowData[columnName] = row[j];
             }
+
+            const x = rowData['count_slot'];
+            const y = rowData['VALUE'];
+
+            if (xmin > x) {
+                xmin = x;
+            }
+            if (xmax < x) {
+                xmax = x;
+            }
+            if (ymin > y) {
+                ymin = y;
+            }
+            if (ymax < y) {
+                ymax = y;
+            }
+
             return new BasicCanvasWebglLineSeriesModel(
-                rowData['count_slot'],
-                rowData['VALUE'],
+                x,
+                y,
                 i,
                 rowData
-            )
+            );
         });
 
         const seriesColor = setSeriesColor(tempData);
-        const webglTrace = new BasicCanvasWebgLineSeries({
+        const webglTrace = new BasicCanvasWebgLineSeriesOne({
             selector: 'webgl-trace' + i,
             xField: 'x',
             yField: 'y',
@@ -226,14 +260,56 @@ const dfdChartSample = () => {
                 radius: 4
             },
             style: {
-                strokeColor: seriesColor
+                strokeColor: seriesColor,
+                opacity: seriesColor === '#EA3010' ? 1 :  0.9
             },
             seriesData
         });
-        seriesList.push(webglTrace);
+        if (seriesColor === '#EA3010') {
+            alarmSeriesList.push(webglTrace);
+        } else {
+            seriesList.push(webglTrace);
+        }
     }
     console.log('seriesList : ', seriesList); 
     console.log('traceData : ', tracePoints);
+
+    const webglLineChart = new BasicChart<BasicCanvasTraceModel>({
+        selector: '#dfdchart',
+        data: [],
+        calcField: 'y',
+        isResize: true,
+        // displayDelay: {
+        //     delayTime: 100
+        // },
+        axes: [
+            {
+                field: 'x',
+                type: ScaleType.NUMBER,
+                placement: 'bottom',
+                min: xmin - (xmax * 0.01),
+                max: xmax + (xmax * 0.01)
+            },
+            {
+                field: 'y',
+                type: ScaleType.NUMBER,
+                placement: 'left',
+                min: ymin,
+                max: ymax
+            }
+        ],
+        series: seriesList.concat(alarmSeriesList).reverse(),
+        functions: [
+            new BasicCanvasMouseZoomHandler({
+                xDirection: 'bottom',
+                yDirection: 'left',
+                direction: Direction.HORIZONTAL
+            }),
+            new BasicCanvasMouseHandler({
+                isMoveEvent: true
+            })
+        ]
+    }).draw();
 }
 
 const webglTraceChart = () => {
@@ -402,9 +478,6 @@ const canvasTraceChart = () => {
             x,
             y,
             i,
-            '#ff0000',
-            '#ff0000',
-            false,
             {}
         );
     });
@@ -470,40 +543,6 @@ const canvasTraceChart = () => {
         ]
     }).draw();
     console.timeEnd('timechartdraw');
-
-    // new BasicChart<BasicCanvasTraceModel>({
-    //     selector: '#scatter',
-    //     data,
-    //     calcField: 'y',
-    //     isResize: true,
-    //     axes: [
-    //         {
-    //             field: 'x',
-    //             type: ScaleType.TIME,
-    //             placement: 'bottom',
-    //             tickFormat: '%m-%d %H:%M',
-    //             min: startDt,
-    //             max: endDt,
-    //             tickSize: 3
-    //         },
-    //         {
-    //             field: 'y',
-    //             type: 'number',
-    //             placement: 'left',
-    //             min: ymin,
-    //             max: ymax
-    //         }
-    //     ],
-    //     series: [
-    //         new BasicCanvasTrace({
-    //             selector: 'canvas-trace',
-    //             xField: 'x',
-    //             yField: 'y'
-    //         })
-    //     ],
-    //     functions: [
-    //     ]
-    // }).draw();
 }
 
 const canvasScatter = (id: string) => {
@@ -742,9 +781,6 @@ const svgTraceChart = () => {
             x,
             y,
             i,
-            '#ff0000',
-            '#ff0000',
-            false,
             {}
         );
     });
@@ -1582,11 +1618,11 @@ const gaugeChart = () => {
 
 dfdChartSample();
 
-webglTraceChart();
+// webglTraceChart();
 
 // canvasLineChart();
 
-canvasTraceChart();
+// canvasTraceChart();
 
 // canvasScatter('#scatter');
 

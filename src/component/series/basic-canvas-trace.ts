@@ -16,22 +16,16 @@ export class BasicCanvasTraceModel {
     x: number;
     y: number;
     i: number; // save the index of the point as a property, this is useful
-    selected: boolean;
-    color: string;
-    memoryColor: string;
     data: any;
 
     constructor(
         x: number,
         y: number,
         i: number, // save the index of the point as a property, this is useful
-        color: string,
-        memoryColor: string,
-        selected: boolean,
         data: any
     ) {
         Object.assign(this, {
-            x, y, i, selected, color, memoryColor, data
+            x, y, i, data
         });
     }
 }
@@ -50,10 +44,7 @@ export interface BasicCanvasTraceConfiguration extends SeriesConfiguration {
         radius?: number;
     };
     filter?: any;
-    // crossFilter?: {
-    //     filerField: string;
-    //     filterValue: string;
-    // };
+    seriesData?: Array<any>;
     // animation?: boolean;
 }
 
@@ -93,6 +84,8 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
     private move$: Subject<any> = new Subject();
 
     private originQuadTree: Quadtree<Array<any>> = undefined;
+
+    private seriesData: Array<T>;
 
     // ================= zoom 관련 변수 ================ //
     private currentScales: Array<Scale>;
@@ -157,7 +150,8 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         }
     }
 
-    drawSeries(chartData: Array<T>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
+    drawSeries(chartBaseData: Array<T>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
+        const chartData = this.seriesData ? this.seriesData : chartBaseData;
         this.seriesColor = color;
         this.currentScales = scales;
         
