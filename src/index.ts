@@ -28,7 +28,7 @@ import { BasicCanvasScatterPlotModel, BasicCanvasScatterPlot } from './component
 import { BasicGaugeSeries } from './component/series/basic-gauge-series';
 import { BasicZoomSelection } from './component/functions/basic-zoom-selection';
 import { topologyData, topologyData2 } from './component/mock-data/topology-data';
-import { tracePoints } from './component/mock-data/trace-data';
+import { tracePoints, stepInfo } from './component/mock-data/trace-data';
 import { BasicTopology, TopologyGroupElement, TopologyData } from './component/series/basic-topology';
 
 import { Placement, Align, Shape, ScaleType, Direction } from './component/chart/chart-configuration';
@@ -42,6 +42,8 @@ import { BasicCanvasMouseZoomHandler } from './component/functions/basic-canvas-
 import { BasicCanvasWebglLineSeriesModel, BasicCanvasWebgLineSeries } from './component/series/basic-canvas-webgl-line-series';
 import { BasicCanvasMouseHandler } from './component/functions';
 import { BasicSpecArea } from './component/options/basic-svg-spec-area';
+import { BasicStepArea } from './component/options/basic-svg-step-area';
+import { BasicStepLine } from './component/options/basic-svg-step-line';
 
 class SalesModel {
     salesperson: string;
@@ -202,6 +204,15 @@ const dfdChartSample = () => {
         }
     };
 
+    const stepData = stepInfo.map((step: any) => {
+        return {
+            start: step.startCountSlot,
+            end: step.startCountSlot + step.maxCount,
+            label: step.step,
+            data: step
+        }
+    });
+
     const seriesList = [];
 
     const basicSpecArea = new BasicSpecArea({
@@ -210,7 +221,23 @@ const dfdChartSample = () => {
         yField: ''
     });
 
+    const basicStepLine = new BasicStepLine({
+        selector: 'step-line',
+        xField: 'start',
+        data: stepData
+    });
+    
+    const basicStepArea = new BasicStepArea({
+        selector: 'step',
+        startField: 'start',
+        labelField: 'label',
+        endField: 'end',
+        data: stepData
+    });
+
     seriesList.push(basicSpecArea);
+    seriesList.push(basicStepArea);
+    seriesList.push(basicStepLine);
 
     let xmin = 0;
     let xmax = 0;
@@ -263,7 +290,7 @@ const dfdChartSample = () => {
                 strokeColor: seriesColor,
                 opacity: seriesColor === '#EA3010' ? 1 :  0.9
             },
-            seriesData
+            data: seriesData
         });
         if (seriesColor === '#EA3010') {
             alarmSeriesList.push(webglTrace);
@@ -273,7 +300,7 @@ const dfdChartSample = () => {
     }
     console.log('seriesList : ', seriesList); 
     console.log('traceData : ', tracePoints);
-
+    console.time('webgllinedraw');
     const webglLineChart = new BasicChart<BasicCanvasTraceModel>({
         selector: '#dfdchart',
         data: [],
@@ -310,6 +337,7 @@ const dfdChartSample = () => {
             })
         ]
     }).draw();
+    console.timeEnd('webgllinedraw');
 }
 
 const webglTraceChart = () => {

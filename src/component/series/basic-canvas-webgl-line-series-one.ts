@@ -48,7 +48,7 @@ export interface BasicCanvasWebglLineSeriesOneConfiguration extends SeriesConfig
         opacity?: number;
     },
     filter?: any;
-    seriesData?: Array<any>;
+    data?: Array<any>;
     // animation?: boolean;
 }
 
@@ -121,8 +121,8 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
                 this.strokeOpacity = configuration.style.opacity || 1;
             }
 
-            if (configuration.seriesData) {
-                this.seriesData = configuration.seriesData;
+            if (configuration.data) {
+                this.seriesData = configuration.data;
             }
         }
     }
@@ -135,7 +135,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         this.svg = svg;
 
         this.svg
-            .style('z-index', 2)
+            .style('z-index', 3)
             .style('position', 'absolute');
 
         this.parentElement = select((this.svg.node() as HTMLElement).parentElement);
@@ -148,7 +148,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
                 })
                 .attr('class', 'drawing-canvas')
                 .style('opacity', this.strokeOpacity)
-                .style('z-index', 3)
+                .style('z-index', 2)
                 .style('position', 'absolute');
         } else {
             this.canvas = this.parentElement.select('.drawing-canvas');
@@ -158,7 +158,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
             this.selectionCanvas = select((this.svg.node() as HTMLElement).parentElement)
                 .append('canvas')
                 .attr('class', 'selection-canvas')
-                .style('z-index', index + 9)
+                .style('z-index', 4)
                 .style('position', 'absolute');
         } else {
             this.selectionCanvas = select((this.svg.node() as HTMLElement).parentElement).select('.selection-canvas');
@@ -305,9 +305,10 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
 
         const textWidth = parseTextNode.width + 7;
         const textHeight = parseTextNode.height + 5;
+        const radius = this.config.dot ? (this.config.dot.radius || 4) : 0;
         
-        let xPosition = mouseEvent[0] + parseTextNode.width / 2;
-        let yPosition = mouseEvent[1] - parseTextNode.height;
+        let xPosition = mouseEvent[0] + this.chartBase.chartMargin.left + radius;
+        let yPosition = mouseEvent[1];
         
         if (xPosition + textWidth > geometry.width) {
             xPosition = xPosition - textWidth;
@@ -366,17 +367,14 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         // 깊이버퍼 활성화
         this.gl.enable(this.gl.DEPTH_TEST);
 
-        console.time('webgldraw-' + this.selector);
+        // console.time('webgldraw-' + this.selector);
         // 화면 그리기
         this.drawScene(vertexBuffer, endCount, canvas as HTMLCanvasElement, vertices);
-        console.timeEnd('webgldraw-' + this.selector);
+        // console.timeEnd('webgldraw-' + this.selector);
     }
 
     private initGL(canvas: HTMLCanvasElement) {
 		try {
-            const radius = this.config.dot ? (this.config.dot.radius || 4) : 0;
-            const lineStroke = (this.config.style && this.config.style.strokeWidth) || 1;
-
             if (!this.gl) {
                 this.gl = canvas.getContext('experimental-webgl', {antialias: true, preserveDrawingBuffer: true});
                 this.gl.imageSmoothingEnabled = false;
