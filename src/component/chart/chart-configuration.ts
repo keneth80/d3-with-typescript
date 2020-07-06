@@ -74,6 +74,16 @@ export interface Margin {
     right?: number;
 }
 
+export interface PlacementByElement {
+    top: any;
+
+    left: any;
+
+    bottom: any;
+
+    right: any;
+}
+
 export interface ChartTitle {
     placement: string; // top, bottom, left, right
     content: string; // title text

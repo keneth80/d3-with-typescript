@@ -167,6 +167,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
 
     drawSeries(chartBaseData: Array<T>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
         const chartData = this.seriesData ? this.seriesData : chartBaseData;
+        
         const xScale: Scale = scales.find((scale: Scale) => scale.field === this.xField);
         const yScale: Scale = scales.find((scale: Scale) => scale.orient === Placement.LEFT);
         // const yScale: Scale = scales.find((scale: Scale) => scale.field === this.yField);
@@ -202,12 +203,15 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
             .attr('width', geometry.width)
             .attr('height', geometry.height)
             .style('transform', `translate(${(this.chartBase.chartMargin.left + 1)}px, ${(this.chartBase.chartMargin.top)}px)`);
-        if (this.isRestore) {
-            this.isRestore = false;
-            this.execRestore(this.originalChartImage, geometry.width, geometry.height);
-        } else {
-            this.webGLStart(lineData, {min: xmin, max: xmax}, {min:ymin, max: ymax}, geometry, lineColor);
-        }
+            
+        // if (this.isRestore) {
+        //     this.isRestore = false;
+        //     this.execRestore(this.originalChartImage, geometry.width, geometry.height);
+        // } else {
+        //     this.webGLStart(lineData, {min: xmin, max: xmax}, {min:ymin, max: ymax}, geometry, lineColor);
+        // }
+
+        this.webGLStart(lineData, {min: xmin, max: xmax}, {min:ymin, max: ymax}, geometry, lineColor);
         
         // mouse event listen
         this.addPluginEventListner(x, y, geometry, {radius: radius, strokeColor: lineColor, strokeWidth: this.strokeWidth});
@@ -216,7 +220,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
             this.originQuadTree = undefined;
         }
 
-        delayExcute(300, () => {
+        delayExcute(300 + this.seriesIndex * 10, () => {
             // quadtree setup: data indexing by position     
             this.originQuadTree = quadtree()
                 .extent([[0, 0], [geometry.width, geometry.height]])
@@ -241,10 +245,9 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
     }
 
     destroy() {
-        if (this.crossFilterDimension) {
-            this.crossFilterDimension.dispose();
+        if (this.seriesData) {
+            this.seriesData.length = 0;
         }
-        this.crossFilterDimension = undefined;
         this.subscription.unsubscribe();
         this.canvas.remove();
     }
@@ -356,6 +359,9 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         if (this.seriesIndex === 0) {
             // 화면 지우기
             this.gl.clearColor(0,  0,  0,  0); // rgba
+
+            // 깊이버퍼 활성화
+            this.gl.enable(this.gl.DEPTH_TEST);
         }
 
         // 버퍼 초기화
@@ -363,9 +369,6 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
 
         // 쉐이더 초기화
         this.initShaders(color, geometry, vertices);
-
-        // 깊이버퍼 활성화
-        this.gl.enable(this.gl.DEPTH_TEST);
 
         // console.time('webgldraw-' + this.selector);
         // 화면 그리기
@@ -376,8 +379,24 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
     private initGL(canvas: HTMLCanvasElement) {
 		try {
             if (!this.gl) {
-                this.gl = canvas.getContext('experimental-webgl', {antialias: true, preserveDrawingBuffer: true});
-                this.gl.imageSmoothingEnabled = false;
+                this.gl = canvas.getContext('experimental-webgl', {
+                    alpha: true, // 캔버스에 알파 버퍼가 포함되어 있는지 를 나타내는 부울입니다.
+                    antialias: true, // 항별칭을 수행할지 여부를 나타내는 부울
+                    preserveDrawingBuffer: true, // 값이 true인 경우 버퍼가 지워지지 않으며 작성자가 지우거나 덮어쓸 때까지 해당 값을 보존합니다.
+                    powerPreference: 'high-performance',
+                    // depth: false, // 도면 버퍼에 최소 16비트의 깊이 버퍼가 있음을 나타내는 부울입니다.
+                    // /**
+                    //  * 웹GL 컨텍스트에 적합한 GPU 구성을 나타내는 사용자 에이전트에 대한 힌트입니다. 가능한 값은 다음과 같습니다.
+                    // "default": 사용자 에이전트가 가장 적합한 GPU 구성을 결정하도록 합니다. 기본 값입니다.
+                    // "high-performance": 전력 소비보다 렌더링 성능의 우선 순위를 지정합니다.
+                    // "low-power": 렌더링 성능보다 절전의 우선 순위를 지정합니다.
+                    //  */
+                    premultipliedAlpha: true, // 페이지 작성자가 드로잉 버퍼에 미리 곱한 알파가 있는 색상이 포함되어 있다고 가정한다는 것을 나타내는 부울입니다.
+                    stencil: true, // 도면 버퍼에 최소 8비트의 스텐실 버퍼가 있음을 나타내는 부울입니다.
+                    // desynchronized: true, // 이벤트 루프에서 캔버스 페인트 주기의 비동기화를 해제하여 사용자 에이전트가 대기 시간을 줄이도록 힌트하는 부울
+                    failIfMajorPerformanceCaveat: true // 시스템 성능이 낮거나 하드웨어 GPU를 사용할 수 없는 경우 컨텍스트가 생성될지 를 나타내는 부울수입니다.
+                });
+                this.gl.imageSmoothingEnabled = true;
             }
             this.gl.viewportWidth = canvas.width;
             this.gl.viewportHeight = canvas.height;
@@ -415,7 +434,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         // uniform mat4 u_p_matrix;
 
         // void main() {
-        //     u_linewidth = 1;
+        //     u_linewidth = 0.5;
         //     a_normal = 1;
         //     vec4 delta = vec4(a_normal * u_linewidth, 0, 0);
         //     vec4 pos = u_mv_matrix * vec4(coordinates, 0, 1);
@@ -623,10 +642,10 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
     }
 
     private drawScene(buffer: any, dataSize: number, canvas: HTMLCanvasElement, vertices: any) {
-        if (this.seriesIndex === 0) {
-            // 창을 설정
-            this.gl.viewport(0, 0, canvas.clientWidth, canvas.clientHeight);
+        // 창을 설정
+        this.gl.viewport(0, 0, canvas.clientWidth, canvas.clientHeight);
 
+        if (this.seriesIndex === 0) {
             // 화면 지우기
             this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
         }
@@ -637,13 +656,13 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         // Get the attribute location
         const coord = this.gl.getAttribLocation(this.shaderProgram, 'coordinates');
 
-        const positions = this.gl.getAttribLocation(this.shaderProgram, 'positions');
-
         // Point an attribute to the currently bound VBO
         this.gl.vertexAttribPointer(coord, buffer.itemSize, this.gl.FLOAT, false, 0, 0);
 
         // Enable the attribute
         this.gl.enableVertexAttribArray(coord);
+
+        this.gl.lineWidth(1/1000);
 
         // 선 그리기
         this.gl.drawArrays(this.gl.LINE_STRIP, 0, dataSize);
@@ -654,12 +673,19 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         // Bind vertex buffer object
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
 
-        delayExcute(500, () => {
-            if (!this.originalChartImage) {
-                this.originalChartImage = new Image();
-                this.originalChartImage.src = canvas.toDataURL('image/png');
-            }
-        });
+        // delayExcute(100 + this.seriesIndex * 10, () => {
+        //     if (!this.originalChartImage) {
+        //         // this.originalChartImage = new Image();
+        //         // this.originalChartImage.src = canvas.toDataURL('image/png');
+
+        //         canvas.toBlob((blob) => {
+        //             this.originalChartImage = new Image();
+        //             // this.originalChartImage.src = canvas.toDataURL('image/png');
+        //             this.originalChartImage.onload = () =>  URL.revokeObjectURL(this.originalChartImage.src);  // no longer need to read the blob so it's revoked
+        //             this.originalChartImage.src = URL.createObjectURL(blob);
+        //         });
+        //     }
+        // });
     }
 
     private addPluginEventListner(x: any, y: any, geometry: ContainerSize, style: {radius: number, strokeColor: string, strokeWidth: number}) {

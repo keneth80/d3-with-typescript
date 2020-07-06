@@ -6,7 +6,7 @@ import { randomUniform, randomNormal } from 'd3-random';
 import { scaleOrdinal } from 'd3-scale';
 import { timeParse, timeFormat } from 'd3-time-format';
 import { schemeCategory10 } from 'd3-scale-chromatic';
-import { csv } from 'd3-fetch';
+import { csv, json } from 'd3-fetch';
 
 import * as _ from 'lodash';
 
@@ -36,7 +36,7 @@ import { Placement, Align, Shape, ScaleType, Direction } from './component/chart
 import { lineData } from './component/mock-data/line-one-field-data';
 import { BasicCanvasLineSeries } from './component/series/basic-canvas-line-series';
 import { ExampleSeries } from './component/series/example-series';
-import { BasicCanvasWebgLineSeriesOne } from './component/series/basic-canvas-webgl-line-series-one';
+import { BasicCanvasWebgLineSeriesOne, BasicCanvasWebglLineSeriesOneConfiguration } from './component/series/basic-canvas-webgl-line-series-one';
 import { BasicCanvasTrace, BasicCanvasTraceModel } from './component/series/basic-canvas-trace';
 import { BasicCanvasMouseZoomHandler } from './component/functions/basic-canvas-mouse-zoom-handler';
 import { BasicCanvasWebglLineSeriesModel, BasicCanvasWebgLineSeries } from './component/series/basic-canvas-webgl-line-series';
@@ -210,15 +210,16 @@ const dfdChartSample = () => {
             end: step.startCountSlot + step.maxCount,
             label: step.step,
             data: step
-        }
+        };
     });
 
     const seriesList = [];
 
     const basicSpecArea = new BasicSpecArea({
         selector: 'spec',
-        xField: '',
-        yField: ''
+        startField: 'start',
+        endField: 'end',
+        data: [stepData[2]]
     });
 
     const basicStepLine = new BasicStepLine({
@@ -279,8 +280,9 @@ const dfdChartSample = () => {
         });
 
         const seriesColor = setSeriesColor(tempData);
-        const webglTrace = new BasicCanvasWebgLineSeriesOne({
-            selector: 'webgl-trace' + i,
+
+        const configuration: BasicCanvasWebglLineSeriesOneConfiguration = {
+            selector: (seriesColor === '#EA3010' ? 'webgl-trace-alarm' : 'webgl-trace')  + i,
             xField: 'x',
             yField: 'y',
             dot: {
@@ -288,14 +290,15 @@ const dfdChartSample = () => {
             },
             style: {
                 strokeColor: seriesColor,
-                opacity: seriesColor === '#EA3010' ? 1 :  0.9
+                // opacity: seriesColor === '#EA3010' ? 1 :  0.9
             },
             data: seriesData
-        });
+        }
+        
         if (seriesColor === '#EA3010') {
-            alarmSeriesList.push(webglTrace);
+            alarmSeriesList.push(new BasicCanvasWebgLineSeriesOne(configuration));
         } else {
-            seriesList.push(webglTrace);
+            seriesList.push(new BasicCanvasWebgLineSeriesOne(configuration));
         }
     }
     console.log('seriesList : ', seriesList); 
@@ -307,7 +310,7 @@ const dfdChartSample = () => {
         calcField: 'y',
         isResize: true,
         // displayDelay: {
-        //     delayTime: 100
+        //     delayTime: 10
         // },
         axes: [
             {
@@ -325,7 +328,7 @@ const dfdChartSample = () => {
                 max: ymax
             }
         ],
-        series: seriesList.concat(alarmSeriesList).reverse(),
+        series: seriesList.concat(alarmSeriesList),
         functions: [
             new BasicCanvasMouseZoomHandler({
                 xDirection: 'bottom',
@@ -338,6 +341,11 @@ const dfdChartSample = () => {
         ]
     }).draw();
     console.timeEnd('webgllinedraw');
+
+    json('./component/mock-data/dfd-page.json')
+    .then((data: any) => {
+        console.log('json data : ', data);
+    });
 }
 
 const webglTraceChart = () => {
@@ -398,12 +406,6 @@ const webglTraceChart = () => {
         console.log('select : ', item);
     });
 
-    const basicSpecArea = new BasicSpecArea({
-        selector: 'spec',
-        xField: '',
-        yField: ''
-    });
-
     const webglTrace2 = new BasicCanvasWebgLineSeries({
         selector: 'webgl-trace2',
         xField: 'x',
@@ -452,8 +454,7 @@ const webglTraceChart = () => {
         ],
         series: [
             webglTrace,
-            webglTrace2,
-            basicSpecArea,
+            webglTrace2
         ],
         functions: [
             new BasicCanvasMouseZoomHandler({
@@ -520,12 +521,6 @@ const canvasTraceChart = () => {
         }
     });
 
-    const basicSpecArea = new BasicSpecArea({
-        selector: 'spec',
-        xField: '',
-        yField: ''
-    });
-
     canvasTrace.$currentItem.subscribe((item: any) => {
         console.log('item : ', item);
     })
@@ -555,10 +550,7 @@ const canvasTraceChart = () => {
             }
         ],
         series: [
-            // canvasLineSeries,
-            // canvasTrace,
-            canvasTrace,
-            basicSpecArea
+            canvasTrace
         ],
         functions: [
             new BasicCanvasMouseZoomHandler({

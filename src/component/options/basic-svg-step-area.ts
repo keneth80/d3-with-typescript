@@ -113,10 +113,10 @@ export class BasicStepArea<T = any> extends SeriesBase {
 
         elementGroup
             .on('mouseover', (data: any) => {
-                console.log('mouseover : ', data);
+                // console.log('mouseover : ', data);
             })
             .on('mouseout', (data: any) => {
-                console.log('mouseout : ', data);
+                // console.log('mouseout : ', data);
             });
     }
 

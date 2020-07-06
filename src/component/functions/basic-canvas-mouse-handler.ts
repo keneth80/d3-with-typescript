@@ -14,7 +14,7 @@ export interface BasicCanvasMouseHandlerConfiguration {
 export class BasicCanvasMouseHandler extends FunctionsBase {
     protected pointerCanvas: Selection<BaseType, any, HTMLElement, any>;
 
-    private isMoveEvent: boolean = false;
+    private isMoveEvent = false;
 
     constructor(configuration: BasicCanvasMouseHandlerConfiguration) {
         super();

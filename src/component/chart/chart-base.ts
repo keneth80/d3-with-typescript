@@ -14,7 +14,7 @@ import { debounceTime, delay, switchMap, map, concatMap, mapTo } from 'rxjs/oper
 // import crossfilter, { Crossfilter } from 'crossfilter2';
 
 import { IChart, Scale, ContainerSize, LegendItem } from './chart.interface';
-import { ChartConfiguration, Axis, Margin, Placement, ChartTitle, ScaleType, Align, AxisTitle, ChartTooltip, Shape } from './chart-configuration';
+import { ChartConfiguration, Axis, Margin, Placement, ChartTitle, ScaleType, Align, AxisTitle, ChartTooltip, Shape, PlacementByElement } from './chart-configuration';
 import { ISeries } from './series.interface';
 import { guid, textWrapping, getTextWidth, getMaxText, drawSvgCheckBox, getAxisByPlacement, getTransformByArray, getTextWidthByComputedTextLength, drawLegendColorItemByRect, drawLegendColorItemByCircle, drawLegendColorItemByLine, delayExcute } from './util/d3-svg-util';
 import { IFunctions } from './functions.interface';
@@ -28,7 +28,7 @@ export class ChartBase<T = any> implements IChart {
 
     SELECTION_CANVAS = 'selection-canvas';
 
-    isResize: boolean = false;
+    isResize = false;
 
     mouseEventSubject: Subject<{
         type: string,
@@ -49,15 +49,15 @@ export class ChartBase<T = any> implements IChart {
 
     protected data: Array<T> = [];
 
-    protected svgWidth: number = 0;
+    protected svgWidth = 0;
 
-    protected svgHeight: number = 0;
+    protected svgHeight = 0;
 
     protected scales: Array<Scale> = [];
     
-    protected width: number;
+    protected width = Infinity;
 
-    protected height: number;
+    protected height = Infinity;
 
     protected originalData: Array<any> = [];
 
@@ -121,9 +121,9 @@ export class ChartBase<T = any> implements IChart {
 
     private config: ChartConfiguration;
 
-    private isTooltip: boolean = false;
+    private isTooltip = false;
 
-    private isTooltipMultiple: boolean = false;
+    private isTooltipMultiple = false;
 
     private clipPath: Selection<BaseType, any, HTMLElement, any>;
 
@@ -131,24 +131,24 @@ export class ChartBase<T = any> implements IChart {
 
     private idleTimeout: any;
 
-    private maskId: string;
+    private maskId = '';
 
     private colors: Array<string>;
 
-    private isCustomMargin: boolean = false;
+    private isCustomMargin = false;
 
     // ===================== axis configuration start ===================== //
-    private axisGroups: any = {
+    private axisGroups: PlacementByElement = {
         top: null, left: null, bottom: null, right: null
     };
 
-    private gridLineGroups: any = {
+    private gridLineGroups: PlacementByElement = {
         top: null, left: null, bottom: null, right: null
     };
 
-    private tickSize: number = 6;
+    private tickSize = 6;
 
-    private tickPadding: number = 2;
+    private tickPadding = 2;
 
     private axisTitleMargin: Margin = {
         top: 0, left: 0, bottom: 0, right: 0
@@ -156,19 +156,19 @@ export class ChartBase<T = any> implements IChart {
     // ===================== axis configuration end ===================== //
 
     // ===================== Title configuration start ===================== //
-    private isTitle: boolean = false;
+    private isTitle = false;
 
     private titleContainerSize: ContainerSize = {
         width: 0, height: 0
     };
 
-    private titlePlacement: string = Placement.TOP;
+    private titlePlacement = 'top';
     // ===================== Title configuration end ===================== //
 
     // ===================== Legend configuration start ===================== //
-    private isLegend: boolean = false;
+    private isLegend = false;
 
-    private legendPlacement: string = Placement.RIGHT;
+    private legendPlacement = 'right';
 
     private legendItemSize: ContainerSize = {
         width: 10, height: 10
@@ -178,25 +178,25 @@ export class ChartBase<T = any> implements IChart {
         width: 0, height: 0
     };
 
-    private legendRowCount: number = 1;
+    private legendRowCount = 1;
 
-    private legendPadding: number = 5;
+    private legendPadding = 5;
 
-    private currentLegend: string = null;
+    private currentLegend = null;
 
     private currentLegendNode: any = null;
 
-    private isCheckBox: boolean = true;
+    private isCheckBox = true;
 
-    private checkBoxWidth: number = 15;
+    private checkBoxWidth = 15;
 
-    private legendItemTextHeight: number = 15;
+    private legendItemTextHeight = 15;
 
-    private isAll: boolean = true;
+    private isAll = true;
 
-    private allWidth: number = 30;
+    private allWidth = 30;
 
-    private totalLegendWidth: number = 0;
+    private totalLegendWidth = 0;
 
     private legendRowBreakCount: Array<number> = [];
 
@@ -210,11 +210,10 @@ export class ChartBase<T = any> implements IChart {
     // multi tooltip 및 series 별 tooltip을 구분할 수 있는 저장소.
     private tooltipItems: Array<{selector: string}> = [];
 
-    
-
+    // series delay display observable
     private eachElementAsObservableSubscription: Subscription = new Subscription();
 
-    private reScale$: Subject<Array<any>> = new Subject();
+    private reScale$: Subject<Array<any>> = new Subject(); 
 
     constructor(
         configuration: ChartConfiguration
@@ -509,6 +508,7 @@ export class ChartBase<T = any> implements IChart {
             if (this.seriesList && this.seriesList.length) {
                 if (!this.config.displayDelay) {
                     this.seriesList.map((series: ISeries, index: number) => {
+                        // console.log('series1 : ', series.selector, index);
                         series.chartBase = this;
                         series.setSvgElement(this.svg, this.seriesGroup, index);
                         series.drawSeries(this.data, this.scales, {width: this.width, height: this.height}, index, this.colors[index]);
@@ -518,6 +518,7 @@ export class ChartBase<T = any> implements IChart {
                 } else {
                     if (this.currentScale.length) {
                         this.seriesList.map((series: ISeries, index: number) => {
+                            // console.log('series2 : ', series.selector, index);
                             series.chartBase = this;
                             series.setSvgElement(this.svg, this.seriesGroup, index);
                             series.drawSeries(this.data, this.scales, {width: this.width, height: this.height}, index, this.colors[index]);
@@ -527,6 +528,7 @@ export class ChartBase<T = any> implements IChart {
                     }
                 }
                 
+                // 시간차로 그리기.
                 const arrayAsObservable = of(null).pipe(
                     // delay(this.config.displayDelay.delayTime),
                     switchMap(() => this.getObjectWithArrayInPromise(this.seriesList)),
