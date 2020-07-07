@@ -81,8 +81,6 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
 
     private move$: Subject<any> = new Subject();
 
-    private crossFilterDimension: any = undefined;
-
     private originQuadTree: Quadtree<Array<any>> = undefined;
 
     private originalChartImage: any = null;
@@ -329,6 +327,46 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
     }
 
     private webGLStart(chartData: Array<T>, xAxis: {min: number, max: number}, yAxis: {min: number, max: number}, geometry: ContainerSize, color: string) {
+        const endCount = chartData.length;
+
+        // data generate
+        const vertices = this.makeVertices(chartData, xAxis, yAxis);
+
+		// 캔버스 얻어오기
+        const canvas: HTMLCanvasElement = this.canvas.node() as HTMLCanvasElement;
+
+        // 초기화
+        this.initGL(canvas as HTMLCanvasElement);
+
+        if (this.seriesIndex === 0) {
+            // 화면 지우기
+            this.gl.clearColor(0,  0,  0,  0); // rgba
+
+            // 깊이버퍼 활성화
+            this.gl.enable(this.gl.DEPTH_TEST);
+        }
+
+        // 버퍼 초기화
+        const lineVertexBuffer = this.initBuffers(vertices, 3, endCount);
+
+        // 쉐이더 초기화
+        this.initShaders(color, geometry, vertices, 0.9);
+
+        // console.time('webgldraw-' + this.selector);
+        // 화면 그리기
+        this.drawScene(lineVertexBuffer, endCount, canvas as HTMLCanvasElement, this.gl.LINE_STRIP);
+
+        // 버퍼 초기화
+        const pointVertexBuffer = this.initBuffers(vertices, 3, endCount);
+
+        // 쉐이더 초기화
+        this.initShaders(color, geometry, vertices, 1);
+
+        this.drawScene(pointVertexBuffer, endCount, canvas as HTMLCanvasElement, this.gl.POINTS);
+        // console.timeEnd('webgldraw-' + this.selector);
+    }
+
+    private makeVertices(chartData: Array<T>, xAxis: any, yAxis: any) {
         // data 만들기
         const xScale = scaleLinear().domain([xAxis.min, xAxis.max]).range([-1, 1]); // [-0.99, 0.99]
 
@@ -349,31 +387,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
             vertices.push(0);   
         }
 
-
-		// 캔버스 얻어오기
-        const canvas: HTMLCanvasElement = this.canvas.node() as HTMLCanvasElement;
-
-        // 초기화
-        this.initGL(canvas as HTMLCanvasElement);
-
-        if (this.seriesIndex === 0) {
-            // 화면 지우기
-            this.gl.clearColor(0,  0,  0,  0); // rgba
-
-            // 깊이버퍼 활성화
-            this.gl.enable(this.gl.DEPTH_TEST);
-        }
-
-        // 버퍼 초기화
-        const vertexBuffer = this.initBuffers(vertices, 3, endCount);
-
-        // 쉐이더 초기화
-        this.initShaders(color, geometry, vertices);
-
-        // console.time('webgldraw-' + this.selector);
-        // 화면 그리기
-        this.drawScene(vertexBuffer, endCount, canvas as HTMLCanvasElement, vertices);
-        // console.timeEnd('webgldraw-' + this.selector);
+        return vertices;
     }
 
     private initGL(canvas: HTMLCanvasElement) {
@@ -411,7 +425,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         }
     }
 
-    private initShaders(color: string, geometry: ContainerSize, vertices: Array<[number, number]>) {
+    private initShaders(color: string, geometry: ContainerSize, vertices: Array<[number, number]>, alpha: number = 1) {
         const radius = this.config.dot ? (this.config.dot.radius || 6) : 0;
         
         // Vertex shader source code
@@ -459,7 +473,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         // ];
 
         const tempColor = hexToRgb(color);
-        const colorStr = `${(tempColor[0] / 255).toFixed(1)}, ${(tempColor[1] / 255).toFixed(1)}, ${(tempColor[2] / 255).toFixed(1)}, ${this.strokeOpacity === 1 ? '1.0' : this.strokeOpacity + ''}`;
+        const colorStr = `${(tempColor[0] / 255).toFixed(1)}, ${(tempColor[1] / 255).toFixed(1)}, ${(tempColor[2] / 255).toFixed(1)}, ${alpha === 1 ? '1.0' : alpha + ''}`;
         const fragCode =
         `
         precision mediump float;
@@ -641,7 +655,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         return vertexBuffer;
     }
 
-    private drawScene(buffer: any, dataSize: number, canvas: HTMLCanvasElement, vertices: any) {
+    private drawScene(buffer: any, dataSize: number, canvas: HTMLCanvasElement, glType: any) {
         // 창을 설정
         this.gl.viewport(0, 0, canvas.clientWidth, canvas.clientHeight);
 
@@ -664,11 +678,13 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
 
         this.gl.lineWidth(1/1000);
 
+        this.gl.drawArrays(glType, 0, dataSize);
+
         // 선 그리기
-        this.gl.drawArrays(this.gl.LINE_STRIP, 0, dataSize);
+        // this.gl.drawArrays(this.gl.LINE_STRIP, 0, dataSize);
 
         // 포인터 그리기
-        this.gl.drawArrays(this.gl.POINTS, 0, dataSize);
+        // this.gl.drawArrays(this.gl.POINTS, 0, dataSize);
 
         // Bind vertex buffer object
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
@@ -775,7 +791,8 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
                 
                 delayExcute(100, () => {
                     if (selected.length && !this.chartBase.isTooltipDisplay) {
-                        const index = Math.floor(selected.length / 2);
+                        // const index = Math.floor(selected.length / 2);
+                        const index = selected.length - 1;
                         const selectedItem = selected[index];
                         this.drawTooltipPoint(geometry, selectedItem, {radius: style.radius / 2 + 1, strokeColor: style.strokeColor, strokeWidth: style.strokeWidth});
                         this.setChartTooltip(selectedItem, {

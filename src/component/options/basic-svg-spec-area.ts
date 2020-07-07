@@ -86,7 +86,10 @@ export class BasicSpecArea<T = any> extends SeriesBase {
                      (exit) => exit.remove
                 )
                 .attr('transform', (data: T) => {
-                    return `translate(${axis(data[this.startField])}, 0)`;
+                    const x = this.placement === 'bottom' ? axis(data[this.startField]) : 0;
+                    const y = this.placement === 'bottom' ? 0 : axis(data[this.startField]);
+                    const translate = `translate(${x}, ${y})`;
+                    return translate;
                 });
 
         elementGroup.selectAll('.' + this.selector + '-box')
@@ -97,10 +100,14 @@ export class BasicSpecArea<T = any> extends SeriesBase {
                     (exit) => exit.remove
                 )
                 .style('fill', '#f9e1fa')
-                .attr('width', (data: T) => { 
-                    return axis(data[this.endField]) - axis(data[this.startField]);
+                .attr('width', (data: T) => {
+                    const targetWidth = this.placement === 'bottom' ? axis(data[this.endField]) - axis(data[this.startField]) : geometry.width;
+                    return targetWidth;
                 })
-                .attr('height', geometry.height);
+                .attr('height', (data: T) => {
+                    const targetHeight = this.placement === 'bottom' ? geometry.height: axis(data[this.endField]) - axis(data[this.startField]);
+                    return targetHeight;
+                });
     }
 
     select(displayName: string, isSelected: boolean) {

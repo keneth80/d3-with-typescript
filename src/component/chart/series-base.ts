@@ -73,6 +73,10 @@ export class SeriesBase implements ISeries {
 
     }
 
+    getSeriesDataByPosition() {
+        return null;
+    }
+
     destroy() {
         this.subscription.unsubscribe();
     }

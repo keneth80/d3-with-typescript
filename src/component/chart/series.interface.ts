@@ -25,6 +25,8 @@ export interface ISeries<T = any> {
 
     destroy(): void;
 
+    getSeriesDataByPosition(): any;
+
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, seriesGroup: Selection<BaseType, any, HTMLElement, any>, index: number): void;
     // series 최초 생성 시 svg element, series 출력 영역, series index를 해당 메서드를 통해 인자값으로 내려줌.
 
