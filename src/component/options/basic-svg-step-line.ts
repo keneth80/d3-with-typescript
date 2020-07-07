@@ -30,15 +30,7 @@ export class BasicStepLine<T = any> extends SeriesBase {
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>) {
-        const parentElement = select((svg.node() as HTMLElement).parentElement);
-        if(!parentElement.select('.option-canvas').node()) {
-            this.svg = parentElement.append('svg')
-                .attr('class', 'option-canvas')
-                .style('z-index', 0)
-                .style('position', 'absolute');
-        } else {
-            this.svg = parentElement.select('.option-canvas').style('z-index', 0);
-        }
+        this.svg = this.setOptionCanvas(svg);
 
         if (!this.svg.select('.' + this.selector + '-group').node()) {
             this.mainGroup = this.svg.append('g').attr('class', this.selector + '-group');

@@ -3,7 +3,7 @@ import { select, Selection, BaseType } from 'd3-selection';
 import { Scale, ContainerSize, ChartMouseEvent } from '../chart/chart.interface';
 import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
-import { Placement } from '../chart';
+import { Placement, guid } from '../chart';
 
 export interface BasicSpecAreaConfiguration<T = any> extends SeriesConfiguration {
     selector: string;
@@ -53,15 +53,8 @@ export class BasicSpecArea<T = any> extends SeriesBase {
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>) {
-        const parentElement = select((svg.node() as HTMLElement).parentElement);
-        if(!parentElement.select('.option-canvas').node()) {
-            this.svg = parentElement.append('svg')
-                .attr('class', 'option-canvas')
-                .style('z-index', 0)
-                .style('position', 'absolute');
-        } else {
-            this.svg = parentElement.select('.option-canvas').style('z-index', 0);
-        }
+        // option canvas 생성
+        this.svg = this.setOptionCanvas(svg);
 
         if (!this.svg.select('.' + this.selector + '-group').node()) {
             this.mainGroup = this.svg.append('g').attr('class', this.selector + '-group');
@@ -72,6 +65,8 @@ export class BasicSpecArea<T = any> extends SeriesBase {
         if (!this.stepData || !this.stepData.length) {
             return;
         }
+
+        this.mainGroup.selectAll('clipPath').select('rect').attr('width', geometry.width).attr('height', geometry.height);
         
         const compareScale: Scale = scales.find((scale: Scale) => scale.orient === this.placement);
         const axis = compareScale.scale;

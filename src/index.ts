@@ -248,7 +248,7 @@ const dfdChartSample = () => {
     const alarmSeriesList = [];
     for (let i = 0; i < tracePoints.length; i++) {
         const tempData = tracePoints[i];
-        const seriesData = tempData.data.rows.map((row: Array<any>, index: number) => {
+        const seriesData = tempData.data.rows.map((row: Array<any>) => {
             const rowData: any = {};
             for (let j = 0; j < tempData.data.columns.length; j++) {
                 const columnName = tempData.data.columns[j];
@@ -279,6 +279,25 @@ const dfdChartSample = () => {
             );
         });
 
+        // test data 늘리기
+        const tempRow: BasicCanvasWebglLineSeriesModel = seriesData[seriesData.length - 1];
+        for (let index = 1; index < 1000; index++) {
+            const x = tempRow.x + index;
+            const y = tempRow.y;
+
+            if (xmax < x) {
+                xmax = x;
+            }
+
+            seriesData.push(new BasicCanvasWebglLineSeriesModel(
+                x,
+                y,
+                i,
+                tempRow
+            ));
+        }
+
+        // type별 컬러 지정.
         const seriesColor = setSeriesColor(tempData);
 
         const configuration: BasicCanvasWebglLineSeriesOneConfiguration = {
@@ -310,7 +329,7 @@ const dfdChartSample = () => {
         calcField: 'y',
         isResize: true,
         // displayDelay: {
-        //     delayTime: 10
+        //     delayTime: 20
         // },
         axes: [
             {
@@ -342,10 +361,10 @@ const dfdChartSample = () => {
     }).draw();
     console.timeEnd('webgllinedraw');
 
-    json('./component/mock-data/dfd-page.json')
-    .then((data: any) => {
-        console.log('json data : ', data);
-    });
+    // json('./component/mock-data/dfd-page.json')
+    // .then((data: any) => {
+    //     console.log('json data : ', data);
+    // });
 }
 
 const webglTraceChart = () => {
