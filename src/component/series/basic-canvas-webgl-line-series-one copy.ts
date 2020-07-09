@@ -172,10 +172,9 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
     }
 
     drawSeries(chartBaseData: Array<T>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
-        this.seriesIndex = index;
         const chartData = this.seriesData ? this.seriesData : chartBaseData;
 
-        const xScale: Scale = scales.find((scale: Scale) => scale.orient === Placement.BOTTOM);
+        const xScale: Scale = scales.find((scale: Scale) => scale.field === this.xField);
         const yScale: Scale = scales.find((scale: Scale) => scale.orient === Placement.LEFT);
         // const yScale: Scale = scales.find((scale: Scale) => scale.field === this.yField);
         const x: any = xScale.scale;
@@ -192,8 +191,6 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         const ymin = yScale.min;
         const ymax = yScale.max;
 
-        console.log('scale : ', xmin, ymin, xmax, ymax);
-
         let padding = 0;
 
         if (x.bandwidth) {
@@ -203,7 +200,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         // TODO: 최초 full data를 가지고 있을지 고민.
         // why? full scan 하여 다시 모델을 생성하는데 시간이 걸림.
 
-        // console.time('data_generate' + this.selector);
+        console.time('data_generate' + this.selector);
         const lineData: Array<any> = (!this.dataFilter
             ? chartData
             : chartData.filter((item: T) => this.dataFilter(item))
@@ -214,7 +211,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
                 d[this.yField] >= ymin &&
                 d[this.yField] <= ymax
         );
-        // console.timeEnd('data_generate' + this.selector);
+        console.timeEnd('data_generate' + this.selector);
 
         this.canvas
             .attr('width', geometry.width)
@@ -286,73 +283,8 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         this.canvas.remove();
     }
 
-    getSeriesDataByPosition(value: Array<number>) {
-        const radius = (this.config.dot ? this.config.dot.radius || 4 : 0);
-        return this.search(
-            this.originQuadTree,
-            value[0] - radius,
-            value[1] - radius,
-            value[0] + radius,
-            value[1] + radius
-        );
-    }
-
-    zoomHandler(event: ChartMouseEvent) {
-        if (event.type === 'dragstart') {
-            // this.pointerClear(selectionContext, geometry, this.chartBase);
-        } else if (event.type === 'zoomin') {
-            this.viewClear();
-        } else if (event.type === 'zoomout') {
-            this.viewClear();
-        } else {
-
-        }
-    }
-
-    mouseHandler(event: ChartMouseEvent) {
-        // this.pointerClear(selectionContext, geometry, this.chartBase);
-        if (!this.originQuadTree) {
-            return;
-        }
-
-        this.isMouseLeave = false;
-        if (event.type === 'mousemove') {
-            this.move$.next(event.position);
-        } else if (event.type === 'mouseleave') {
-            this.isMouseLeave = true;
-            // this.pointerClear(selectionContext, geometry, this.chartBase);
-        } else if (event.type === 'mouseup') {
-            // endX = event.position[0];
-            // endY = event.position[1];
-
-            // const selected = this.search(
-            //     this.originQuadTree,
-            //     endX - style.radius,
-            //     endY - style.radius,
-            //     endX + style.radius,
-            //     endY + style.radius
-            // );
-
-            // if (selected.length) {
-            //     // const selectedItem = selected[selected.length - 1];
-            //     const selectedItem = selected[0];
-            //     this.onClickItem(
-            //         selectedItem,
-            //         {
-            //             width: geometry.width,
-            //             height: geometry.height
-            //         },
-            //         [endX, endY]
-            //     );
-            // } else {
-            //     this.chartBase.hideTooltip();
-            // }
-        } else if (event.type === 'mousedown') {
-            // startX = event.position[0];
-            // startY = event.position[1];
-        } else {
-
-        }
+    getPointDataByPosition() {
+        
     }
 
     private search(quadtreeObj: Quadtree<Array<any>>, x0: number, y0: number, x3: number, y3: number) {
@@ -452,14 +384,12 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         // 초기화
         this.initGL(canvas as HTMLCanvasElement);
 
-        if (this.seriesIndex === 3) {
-            console.log('clear');
-
+        if (this.seriesIndex === 0) {
             // 화면 지우기
             this.gl.clearColor(0, 0, 0, 0); // rgba
 
             // 깊이버퍼 활성화
-            // this.gl.enable(this.gl.DEPTH_TEST);
+            this.gl.enable(this.gl.DEPTH_TEST);
         }
 
         // 버퍼 초기화
@@ -647,7 +577,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
 
         this.gl.enable(this.gl.CULL_FACE);
 
-        this.gl.cullFace(this.gl.FRONT);
+        // this.gl.cullFace(this.gl.FRONT);
     }
 
     private execRestore(image: any, width: number, height: number) {
@@ -843,6 +773,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
                 if (event.type === 'dragstart') {
                     this.pointerClear(selectionContext, geometry, this.chartBase);
                     isDragStart = true;
+                    this.move$.next(event.position);
                 } else if (event.type === 'zoomin') {
                     endX = event.position[0];
                     endY = event.position[1];
@@ -976,7 +907,6 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
     }
 
     private viewClear() {
-        console.log('viewClear');
         // 화면 지우기
         this.gl.clearColor(0, 0, 0, 0); // rgba
 

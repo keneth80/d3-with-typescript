@@ -332,23 +332,23 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
                 const yStartValue = y.invert(startY);
                 const xEndValue = x.invert(endX);
                 const yEndValue = y.invert(endY);
-                this.chartBase.updateAxisForZoom([
-                    {
-                        field: this.xField,
-                        min: xStartValue,
-                        max: xEndValue
-                    },
-                    {
-                        field: this.yField,
-                        min: yEndValue,
-                        max: yStartValue
-                    }
-                ]);
+                // this.chartBase.updateAxisForZoom([
+                //     {
+                //         field: this.xField,
+                //         min: xStartValue,
+                //         max: xEndValue
+                //     },
+                //     {
+                //         field: this.yField,
+                //         min: yEndValue,
+                //         max: yStartValue
+                //     }
+                // ]);
             } else if (event.type === 'zoomout') {
                 this.isRestore = true;
-                delayExcute(50, () => {
-                    this.chartBase.updateAxisForZoom([]);
-                });
+                // delayExcute(50, () => {
+                //     this.chartBase.updateAxisForZoom([]);
+                // });
             } else {
 
             }

@@ -13,7 +13,7 @@ import { debounceTime, delay, switchMap, map, concatMap, mapTo } from 'rxjs/oper
 
 // import crossfilter, { Crossfilter } from 'crossfilter2';
 
-import { IChart, Scale, ContainerSize, LegendItem } from './chart.interface';
+import { IChart, Scale, ContainerSize, LegendItem, ChartMouseEvent, ChartZoomEvent } from './chart.interface';
 import { ChartConfiguration, Axis, Margin, Placement, ChartTitle, ScaleType, Align, AxisTitle, ChartTooltip, Shape, PlacementByElement } from './chart-configuration';
 import { ISeries } from './series.interface';
 import { guid, textWrapping, getTextWidth, getMaxText, drawSvgCheckBox, getAxisByPlacement, getTransformByArray, getTextWidthByComputedTextLength, drawLegendColorItemByRect, drawLegendColorItemByCircle, drawLegendColorItemByLine, delayExcute } from './util/d3-svg-util';
@@ -30,20 +30,9 @@ export class ChartBase<T = any> implements IChart {
 
     isResize = false;
 
-    mouseEventSubject: Subject<{
-        type: string,
-        position: [number, number],
-        target: Selection<BaseType, any, HTMLElement, any>
-    }> = new Subject();
+    mouseEventSubject: Subject<ChartMouseEvent> = new Subject();
 
-    zoomEventSubject: Subject<{
-        type: string,
-        position: [number, number],
-        target: Selection<BaseType, any, HTMLElement, any>,
-        zoom?: {
-            direction: string
-        }
-    }> = new Subject();
+    zoomEventSubject: Subject<ChartZoomEvent> = new Subject();
 
     isTooltipDisplay = false;
 
@@ -214,6 +203,8 @@ export class ChartBase<T = any> implements IChart {
     private eachElementAsObservableSubscription: Subscription = new Subscription();
 
     private reScale$: Subject<Array<any>> = new Subject(); 
+
+    private move$: Subject<any> = new Subject();
 
     constructor(
         configuration: ChartConfiguration
@@ -508,7 +499,6 @@ export class ChartBase<T = any> implements IChart {
             if (this.seriesList && this.seriesList.length) {
                 if (!this.config.displayDelay) {
                     this.seriesList.map((series: ISeries, index: number) => {
-                        // console.log('series1 : ', series.selector, index);
                         series.chartBase = this;
                         series.setSvgElement(this.svg, this.seriesGroup, index);
                         series.drawSeries(this.data, this.scales, {width: this.width, height: this.height}, index, this.colors[index]);
@@ -518,7 +508,6 @@ export class ChartBase<T = any> implements IChart {
                 } else {
                     if (this.currentScale.length) {
                         this.seriesList.map((series: ISeries, index: number) => {
-                            // console.log('series2 : ', series.selector, index);
                             series.chartBase = this;
                             series.setSvgElement(this.svg, this.seriesGroup, index);
                             series.drawSeries(this.data, this.scales, {width: this.width, height: this.height}, index, this.colors[index]);
@@ -870,6 +859,7 @@ export class ChartBase<T = any> implements IChart {
         this.tooltipGroup.style('display', 'none');
     }
 
+    // 모든 외부에서 들어오는 이벤트는 여기서 처리한다.
     protected addEventListner() {
         this.svg.on('click', this.chartCanvasClick);
         this.subscription = new Subscription();
@@ -895,7 +885,97 @@ export class ChartBase<T = any> implements IChart {
                 
                 this.updateSeries();
             })
-        )
+        );
+
+        // let isDragStart = false;
+
+        // this.subscription.add(
+        //     this.mouseEvent$.subscribe((event: ChartMouseEvent) => {
+        //         // TODO: 시리즈 루프 돌면서 해당 포지션에 데이터가 있는지 찾되
+        //         // 툴팁을 보여줄 때면 멀티인지 싱글인지 체크 해서 break 여부를 판단하고 해당 시리즈의 메서드 실행.
+        //         if (event.type === 'mousemove') {
+        //             if (!isDragStart) {
+        //                 this.move$.next(event.position);
+        //             }
+
+        //             // this.move$.next(event.position);
+        //         } else if (event.type === 'mouseleave') {
+        //             // this.isMouseLeave = true;
+        //             // this.pointerClear(selectionContext, geometry, this.chartBase);
+        //         } else if (event.type === 'mouseup') {
+        //             // endX = event.position[0];
+        //             // endY = event.position[1];
+                    
+        //             // const selected = this.search(this.originQuadTree, endX - style.radius, endY - style.radius, endX + style.radius, endY + style.radius);
+                    
+        //             // if (selected.length) {
+        //             //     // const selectedItem = selected[selected.length - 1];
+        //             //     const selectedItem = selected[0];
+        //             //     this.onClickItem(selectedItem, {
+        //             //         width: geometry.width, height: geometry.height
+        //             //     }, [endX, endY]);
+        //             // } else {
+        //             //     this.chartBase.hideTooltip();
+        //             // }
+
+        //         } else if (event.type === 'mousedown') {
+        //             // startX = event.position[0];
+        //             // startY = event.position[1];
+        //         } else {
+
+        //         }
+        //     })
+        // );
+
+        // this.subscription.add(
+        //     this.move$.pipe(debounceTime(100)).subscribe((value: any) => {
+        //         if (!isDragStart) {
+        //             // TODO: tooltip or selection
+        //             // const selected = this.search();    
+        //         }
+        //     })
+        // );
+
+        // // TODO: zoom event subscribe
+        // this.subscription.add(
+        //     this.zoomEvent$.subscribe((event: ChartZoomEvent) => {
+        //         if (event.type === 'dragstart') {
+        //             isDragStart = true;
+        //             // this.pointerClear(selectionContext, geometry, this.chartBase);
+        //             // isDragStart = true;
+        //         } else if (event.type === 'zoomin') {
+        //             isDragStart = false;
+                    
+        //             // this.viewClear();
+        //             const xScale: Scale = this.scales.find((scale: Scale) => scale.orient === Placement.BOTTOM);
+        //             const yScale: Scale = this.scales.find((scale: Scale) => scale.orient === Placement.LEFT);
+        //             const reScale = [
+        //                 {
+        //                     field: xScale.field,
+        //                     min: event.zoom.start.x,
+        //                     max: event.zoom.end.x
+        //                 },
+        //                 {
+        //                     field: yScale.field,
+        //                     min: event.zoom.start.y,
+        //                     max: event.zoom.end.y
+        //                 }
+        //             ];
+
+        //             this.scales = this.setupScale(this.config.axes, this.width, this.height, reScale);
+        //             this.updateRescaleAxis(false);
+        //             this.updateFunctions();
+        //             this.updateSeries();
+        //         } else if (event.type === 'zoomout') {
+        //             isDragStart = false;
+        //             // this.viewClear();
+        //             this.scales = this.setupScale(this.config.axes, this.width, this.height, []);
+        //             this.updateRescaleAxis(false);
+        //             this.updateFunctions();
+        //             this.updateSeries();
+        //         }
+        //     })
+        // );
     }
 
     protected chartCanvasClick = () => {

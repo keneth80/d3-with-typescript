@@ -219,7 +219,15 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
                             position: [endX, endY],
                             target: this.pointerCanvas,
                             zoom: {
-                                direction: this.direction
+                                direction: this.direction,
+                                start: {
+                                    x: xStartValue,
+                                    y: yStartValue
+                                },
+                                end: {
+                                    x: xEndValue,
+                                    y: yEndValue
+                                }
                             }
                         });
                         

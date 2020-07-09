@@ -7,6 +7,20 @@ export interface ChartMouseEvent {
     target: Selection<BaseType, any, HTMLElement, any>
 }
 
+export interface ChartZoomEvent extends ChartMouseEvent {
+    zoom?: {
+        direction: string,
+        start: {
+            x: number,
+            y: number
+        },
+        end: {
+            x: number,
+            y: number
+        }
+    }
+}
+
 export interface ISeriesConfiguration {
     selector?: string;
     xField: string;

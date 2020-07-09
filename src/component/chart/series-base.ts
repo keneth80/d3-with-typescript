@@ -7,6 +7,8 @@ import { Scale, ContainerSize } from './chart.interface';
 import { guid } from './util/d3-svg-util';
 
 export class SeriesBase implements ISeries {
+    type: string = 'series';
+
     selector: string;
 
     displayName: string; // legend 출력시 출력 명칭
@@ -32,6 +34,10 @@ export class SeriesBase implements ISeries {
     private maskId = '';
 
     constructor(configuration: SeriesConfiguration) {
+        if (configuration.type) {
+            this.type = configuration.type;
+        }
+
         if (configuration.selector) {
             this.selector = configuration.selector;
         }
@@ -78,7 +84,7 @@ export class SeriesBase implements ISeries {
 
     }
 
-    getSeriesDataByPosition() {
+    getSeriesDataByPosition(value: Array<number>) {
         return null;
     }
 
@@ -88,7 +94,7 @@ export class SeriesBase implements ISeries {
 
     setOptionCanvas(svg: Selection<BaseType, any, HTMLElement, any>) {
         const parentElement = select((svg.node() as HTMLElement).parentElement);
-        
+
         if(!parentElement.select('.option-canvas').node()) {
             const targetSvg = parentElement.append('svg')
                 .attr('class', 'option-canvas')
