@@ -5,7 +5,7 @@ import { scaleLinear } from 'd3-scale';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 
-import { Scale, ContainerSize, ChartMouseEvent } from '../chart/chart.interface';
+import { Scale, ContainerSize, ChartMouseEvent, ChartZoomEvent } from '../chart/chart.interface';
 import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
 import { textBreak } from '../chart/util/d3-svg-util';
@@ -192,8 +192,6 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         const ymin = yScale.min;
         const ymax = yScale.max;
 
-        console.log('scale : ', xmin, ymin, xmax, ymax);
-
         let padding = 0;
 
         if (x.bandwidth) {
@@ -297,7 +295,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         );
     }
 
-    zoomHandler(event: ChartMouseEvent) {
+    zoomHandler(event: ChartZoomEvent) {
         if (event.type === 'dragstart') {
             // this.pointerClear(selectionContext, geometry, this.chartBase);
         } else if (event.type === 'zoomin') {
