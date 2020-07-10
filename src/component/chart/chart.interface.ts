@@ -10,6 +10,10 @@ export interface ChartMouseEvent {
 export interface ChartZoomEvent extends ChartMouseEvent {
     zoom?: {
         direction: string,
+        field: {
+            x: string,
+            y: string
+        },
         start: {
             x: number,
             y: number

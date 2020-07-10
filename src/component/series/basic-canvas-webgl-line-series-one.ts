@@ -242,11 +242,11 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         this.webGLStart(lineData, { min: xmin, max: xmax }, { min: ymin, max: ymax }, geometry, lineColor);
 
         // mouse event listen
-        this.addPluginEventListner(x, y, geometry, {
-            radius: radius,
-            strokeColor: lineColor,
-            strokeWidth: this.strokeWidth
-        });
+        // this.addPluginEventListner(x, y, geometry, {
+        //     radius: radius,
+        //     strokeColor: lineColor,
+        //     strokeWidth: this.strokeWidth
+        // });
 
         if (this.originQuadTree) {
             this.originQuadTree = undefined;
@@ -452,7 +452,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         // 초기화
         this.initGL(canvas as HTMLCanvasElement);
 
-        if (this.seriesIndex === 3) {
+        if (this.seriesIndex === 0) {
             console.log('clear');
 
             // 화면 지우기
@@ -777,7 +777,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
 
         if (this.seriesIndex === 0) {
             // 화면 지우기
-            this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+            this.viewClear();
         }
 
         // Bind vertex buffer object
@@ -984,8 +984,8 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
         // Enable depth testing
-        this.gl.enable(this.gl.DEPTH_TEST);
+        // this.gl.enable(this.gl.DEPTH_TEST);
 
-        this.gl.depthFunc(this.gl.LEQUAL);
+        // this.gl.depthFunc(this.gl.LEQUAL);
     }
 }

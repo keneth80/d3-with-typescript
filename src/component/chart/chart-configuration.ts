@@ -1,5 +1,6 @@
 import { ISeries } from './series.interface';
 import { IFunctions } from './functions.interface';
+import { IOptions } from './options.interface';
 
 export enum Direction {
     BOTH = 'both',
@@ -125,6 +126,8 @@ export interface ChartConfiguration<T = any> {
     series?: Array<ISeries<T>>; // series list
     
     functions?: Array<IFunctions<T>>; // function list
+
+    options?: Array<IOptions<T>>; // function list
 
     data: T; // data
 

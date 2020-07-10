@@ -239,9 +239,9 @@ const dfdChartSample = () => {
         data: stepData
     });
 
-    seriesList.push(basicSpecArea);
-    seriesList.push(basicStepArea);
-    seriesList.push(basicStepLine);
+    // seriesList.push(basicSpecArea);
+    // seriesList.push(basicStepArea);
+    // seriesList.push(basicStepLine);
 
     let xmin = 0;
     let xmax = 0;
@@ -331,9 +331,9 @@ const dfdChartSample = () => {
         data: [],
         calcField: 'y',
         isResize: true,
-        displayDelay: {
-            delayTime: 20
-        },
+        // displayDelay: {
+        //     delayTime: 20
+        // },
         axes: [
             {
                 field: 'x',

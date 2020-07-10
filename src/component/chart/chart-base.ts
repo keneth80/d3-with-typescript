@@ -18,15 +18,18 @@ import { ChartConfiguration, Axis, Margin, Placement, ChartTitle, ScaleType, Ali
 import { ISeries } from './series.interface';
 import { guid, textWrapping, getTextWidth, getMaxText, drawSvgCheckBox, getAxisByPlacement, getTransformByArray, getTextWidthByComputedTextLength, drawLegendColorItemByRect, drawLegendColorItemByCircle, drawLegendColorItemByLine, delayExcute } from './util/d3-svg-util';
 import { IFunctions } from './functions.interface';
+import { IOptions } from './options.interface';
 
 
 // TODO: 모든 참조되는 함수들은 subject로 바꾼다.
 export class ChartBase<T = any> implements IChart {
-    POINTER_CANVAS = 'pointer-canvas';
+    static POINTER_CANVAS = 'pointer-canvas';
 
-    ZOOM_CANVAS = 'zoom-canvas';
+    static ZOOM_CANVAS = 'zoom-canvas';
 
-    SELECTION_CANVAS = 'selection-canvas';
+    static SELECTION_CANVAS = 'selection-canvas';
+
+    static DRAWING_CANVAS = 'drawing-canvas';
 
     isResize = false;
 
@@ -63,6 +66,8 @@ export class ChartBase<T = any> implements IChart {
     protected seriesList: Array<ISeries> = [];
 
     protected functionList: Array<IFunctions> = [];
+
+    protected optionList: Array<IOptions> = [];
 
     protected subscription: Subscription;
 
@@ -493,6 +498,10 @@ export class ChartBase<T = any> implements IChart {
         this.data.length = 0;
     }
 
+    updateOptions() {
+
+    }
+
     updateSeries() {
         try {
             // TODO: subject next 로 변경할 것
@@ -566,9 +575,9 @@ export class ChartBase<T = any> implements IChart {
     getObjectWithArrayInPromise(list: Array<ISeries>) {
 		const data = list.map((series: ISeries, index: number) => index);
         return new Promise(resolve => {
-            setTimeout(() => resolve({
+            delayExcute(20, () => resolve({
                 data
-            }), 20);
+            }));
         });
     }
 
@@ -579,7 +588,9 @@ export class ChartBase<T = any> implements IChart {
     }
 
     updateRescaleAxis(isZoom: boolean = true) {
-        this.scales.map((scale: Scale) => {
+        let index = 0;
+        for (index = 0; index < this.scales.length; index++) {
+            const scale = this.scales[index];
             const orientedAxis: any = this.axisSetupByScale(scale);
             
             if (scale.visible) {
@@ -592,7 +603,7 @@ export class ChartBase<T = any> implements IChart {
             if (isZoom && scale.isZoom === true) {
                 this.setupBrush(scale);
             }
-        });
+        }
     }
 
     protected axisSetupByScale(scale: Scale) {
@@ -870,113 +881,122 @@ export class ChartBase<T = any> implements IChart {
             );
         }
 
-        // reScale에 따른 update series 함수 정의 (제일 마지막에 호출하는 함수만 실행한다.)
+        let isDragStart = false;
+
         this.subscription.add(
-            this.reScale$
-            .pipe(
-                debounceTime(100)
-            )
-            .subscribe((reScale: Array<any>) => {
-                this.scales = this.setupScale(this.config.axes, this.width, this.height, reScale);
+            this.mouseEvent$.subscribe((event: ChartMouseEvent) => {
+                // TODO: 시리즈 루프 돌면서 해당 포지션에 데이터가 있는지 찾되
+                // 툴팁을 보여줄 때면 멀티인지 싱글인지 체크 해서 break 여부를 판단하고 해당 시리즈의 메서드 실행.
+                if (event.type === 'mousemove') {
+                    if (!isDragStart) {
+                        this.move$.next(event.position);
+                    }
 
-                this.updateRescaleAxis(false);
+                    // this.move$.next(event.position);
+                } else if (event.type === 'mouseleave') {
+                    // this.isMouseLeave = true;
+                    // this.pointerClear(selectionContext, geometry, this.chartBase);
+                } else if (event.type === 'mouseup') {
+                    // endX = event.position[0];
+                    // endY = event.position[1];
+                    
+                    // const selected = this.search(this.originQuadTree, endX - style.radius, endY - style.radius, endX + style.radius, endY + style.radius);
+                    
+                    // if (selected.length) {
+                    //     // const selectedItem = selected[selected.length - 1];
+                    //     const selectedItem = selected[0];
+                    //     this.onClickItem(selectedItem, {
+                    //         width: geometry.width, height: geometry.height
+                    //     }, [endX, endY]);
+                    // } else {
+                    //     this.chartBase.hideTooltip();
+                    // }
 
-                this.updateFunctions();
-                
-                this.updateSeries();
+                } else if (event.type === 'mousedown') {
+                    // startX = event.position[0];
+                    // startY = event.position[1];
+                } else {
+
+                }
             })
         );
 
-        // let isDragStart = false;
+        this.subscription.add(
+            this.move$.pipe(debounceTime(200)).subscribe((value: any) => {
+                if (!isDragStart) {
+                    // TODO: tooltip or selection
+                    // const selected = this.search();    
+                }
+            })
+        );
 
-        // this.subscription.add(
-        //     this.mouseEvent$.subscribe((event: ChartMouseEvent) => {
-        //         // TODO: 시리즈 루프 돌면서 해당 포지션에 데이터가 있는지 찾되
-        //         // 툴팁을 보여줄 때면 멀티인지 싱글인지 체크 해서 break 여부를 판단하고 해당 시리즈의 메서드 실행.
-        //         if (event.type === 'mousemove') {
-        //             if (!isDragStart) {
-        //                 this.move$.next(event.position);
-        //             }
-
-        //             // this.move$.next(event.position);
-        //         } else if (event.type === 'mouseleave') {
-        //             // this.isMouseLeave = true;
-        //             // this.pointerClear(selectionContext, geometry, this.chartBase);
-        //         } else if (event.type === 'mouseup') {
-        //             // endX = event.position[0];
-        //             // endY = event.position[1];
+        // TODO: zoom event subscribe
+        this.subscription.add(
+            this.zoomEvent$.subscribe((event: ChartZoomEvent) => {
+                if (event.type === 'dragstart') {
+                    isDragStart = true;
+                    // this.pointerClear(selectionContext, geometry, this.chartBase);
+                    // isDragStart = true;
+                } else if (event.type === 'zoomin') {
+                    isDragStart = false;
                     
-        //             // const selected = this.search(this.originQuadTree, endX - style.radius, endY - style.radius, endX + style.radius, endY + style.radius);
-                    
-        //             // if (selected.length) {
-        //             //     // const selectedItem = selected[selected.length - 1];
-        //             //     const selectedItem = selected[0];
-        //             //     this.onClickItem(selectedItem, {
-        //             //         width: geometry.width, height: geometry.height
-        //             //     }, [endX, endY]);
-        //             // } else {
-        //             //     this.chartBase.hideTooltip();
-        //             // }
+                    // this.viewClear();
+                    const reScale = [
+                        {
+                            field: event.zoom.field.x,
+                            min: event.zoom.start.x,
+                            max: event.zoom.end.x
+                        },
+                        {
+                            field: event.zoom.field.y,
+                            min: event.zoom.start.y,
+                            max: event.zoom.end.y
+                        }
+                    ];
 
-        //         } else if (event.type === 'mousedown') {
-        //             // startX = event.position[0];
-        //             // startY = event.position[1];
-        //         } else {
-
-        //         }
-        //     })
-        // );
-
-        // this.subscription.add(
-        //     this.move$.pipe(debounceTime(100)).subscribe((value: any) => {
-        //         if (!isDragStart) {
-        //             // TODO: tooltip or selection
-        //             // const selected = this.search();    
-        //         }
-        //     })
-        // );
-
-        // // TODO: zoom event subscribe
-        // this.subscription.add(
-        //     this.zoomEvent$.subscribe((event: ChartZoomEvent) => {
-        //         if (event.type === 'dragstart') {
-        //             isDragStart = true;
-        //             // this.pointerClear(selectionContext, geometry, this.chartBase);
-        //             // isDragStart = true;
-        //         } else if (event.type === 'zoomin') {
-        //             isDragStart = false;
-                    
-        //             // this.viewClear();
-        //             const xScale: Scale = this.scales.find((scale: Scale) => scale.orient === Placement.BOTTOM);
-        //             const yScale: Scale = this.scales.find((scale: Scale) => scale.orient === Placement.LEFT);
-        //             const reScale = [
-        //                 {
-        //                     field: xScale.field,
-        //                     min: event.zoom.start.x,
-        //                     max: event.zoom.end.x
-        //                 },
-        //                 {
-        //                     field: yScale.field,
-        //                     min: event.zoom.start.y,
-        //                     max: event.zoom.end.y
-        //                 }
-        //             ];
-
-        //             this.scales = this.setupScale(this.config.axes, this.width, this.height, reScale);
-        //             this.updateRescaleAxis(false);
-        //             this.updateFunctions();
-        //             this.updateSeries();
-        //         } else if (event.type === 'zoomout') {
-        //             isDragStart = false;
-        //             // this.viewClear();
-        //             this.scales = this.setupScale(this.config.axes, this.width, this.height, []);
-        //             this.updateRescaleAxis(false);
-        //             this.updateFunctions();
-        //             this.updateSeries();
-        //         }
-        //     })
-        // );
+                    this.scales = this.setupScale(this.config.axes, this.width, this.height, reScale);
+                    this.updateRescaleAxis(false);
+                    this.updateFunctions();
+                    this.updateSeries();
+                } else if (event.type === 'zoomout') {
+                    isDragStart = false;
+                    // this.viewClear();
+                    this.scales = this.setupScale(this.config.axes, this.width, this.height, []);
+                    this.updateRescaleAxis(false);
+                    this.updateFunctions();
+                    this.updateSeries();
+                }
+            })
+        );
     }
+
+    // protected addEventListner() {
+    //     this.svg.on('click', this.chartCanvasClick);
+    //     this.subscription = new Subscription();
+    //     if (this.config.isResize && this.config.isResize === true) {
+    //         const resizeEvent = fromEvent(window, 'resize').pipe(debounceTime(500));
+    //         this.subscription.add(
+    //             resizeEvent.subscribe(this.resizeEventHandler)
+    //         );
+    //     }
+
+    //     // reScale에 따른 update series 함수 정의 (제일 마지막에 호출하는 함수만 실행한다.)
+    //     this.subscription.add(
+    //         this.reScale$
+    //         .pipe(
+    //             debounceTime(100)
+    //         )
+    //         .subscribe((reScale: Array<any>) => {
+    //             this.scales = this.setupScale(this.config.axes, this.width, this.height, reScale);
+
+    //             this.updateRescaleAxis(false);
+
+    //             this.updateFunctions();
+                
+    //             this.updateSeries();
+    //         })
+    //     );
+    // }
 
     protected chartCanvasClick = () => {
         this.chartClickSubject.next();

@@ -8,6 +8,7 @@ import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
 import { textBreak } from '../chart/util/d3-svg-util';
 import { debounceTime } from 'rxjs/operators';
+import { ChartBase } from '../chart';
 
 export class BasicCanvasLineSeriesModel {
     x: number;
@@ -136,14 +137,14 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
         }
 
         // pointer canvas는 단 한개만 존재한다. 이벤트를 받는 canvas 임.
-        if (!this.parentElement.select('.' + this.chartBase.POINTER_CANVAS).node()) {
+        if (!this.parentElement.select('.' + ChartBase.POINTER_CANVAS).node()) {
             this.pointerCanvas = this.parentElement
                 .append('canvas')
-                .attr('class', this.chartBase.POINTER_CANVAS)
+                .attr('class', ChartBase.POINTER_CANVAS)
                 .style('z-index', index + 4)
                 .style('position', 'absolute');
         } else {
-            this.pointerCanvas = this.parentElement.select('.' + this.chartBase.POINTER_CANVAS).style('z-index', index + 4);
+            this.pointerCanvas = this.parentElement.select('.' + ChartBase.POINTER_CANVAS).style('z-index', index + 4);
         }
     }
 

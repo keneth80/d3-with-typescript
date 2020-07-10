@@ -71,14 +71,14 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
             this.zoomCanvas = select((this.svg.node() as HTMLElement).parentElement).select('.zoom-canvas');
         }
 
-        if (!select((this.svg.node() as HTMLElement).parentElement).select('.' + this.chartBase.POINTER_CANVAS).node()) {
+        if (!select((this.svg.node() as HTMLElement).parentElement).select('.' + ChartBase.POINTER_CANVAS).node()) {
             this.pointerCanvas = select((this.svg.node() as HTMLElement).parentElement)
                 .append('canvas')
-                .attr('class', this.chartBase.POINTER_CANVAS)
+                .attr('class', ChartBase.POINTER_CANVAS)
                 .style('z-index', index + 20)
                 .style('position', 'absolute');
         } else {
-            this.pointerCanvas = select((this.svg.node() as HTMLElement).parentElement).select('.' + this.chartBase.POINTER_CANVAS);
+            this.pointerCanvas = select((this.svg.node() as HTMLElement).parentElement).select('.' + ChartBase.POINTER_CANVAS);
         }
     }
 
@@ -202,12 +202,17 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
                 endY = mouseEvent[1];
                 zoomContext.clearRect(0, 0, geometry.width, geometry.height);
 
-                if (this.isZoom && Math.abs(startX - endX) > 4 && Math.abs(startY - endY) > 4) {
-                    // const xStartValue = x.invert(start.x);
-                    // const yStartValue = y.invert(start.y);
-                    // const xEndValue = x.invert(end.x);
-                    // const yEndValue = y.invert(end.y);
+                let isZoomArea = true;
 
+                if (this.direction === Direction.VERTICAL) {
+                    isZoomArea = Math.abs(startY - endY) > 4;
+                } else if (this.direction === Direction.HORIZONTAL) {
+                    isZoomArea = Math.abs(startX - endX) > 4;
+                } else {
+                    isZoomArea = Math.abs(startX - endX) > 4 && Math.abs(startY - endY) > 4;
+                }
+
+                if (this.isZoom && isZoomArea) {
                     const xStartValue = xScale.type === ScaleType.TIME ? x.invert(start.x).getTime() : x.invert(start.x);
                     const yStartValue = xScale.type === ScaleType.TIME ? y.invert(start.y) : y.invert(start.y);
                     const xEndValue = xScale.type === ScaleType.TIME ? x.invert(end.x).getTime() : x.invert(end.x);
@@ -220,32 +225,37 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
                             target: this.pointerCanvas,
                             zoom: {
                                 direction: this.direction,
+                                field: {
+                                    x: xScale.field,
+                                    y: yScale.field
+                                },
                                 start: {
                                     x: xStartValue,
-                                    y: yStartValue
+                                    y: yEndValue
                                 },
                                 end: {
                                     x: xEndValue,
-                                    y: yEndValue
+                                    y: yStartValue
                                 }
                             }
                         });
                         
-                        delayExcute(5, () => {
-                            this.chartBase.updateAxisForZoom([
-                                {
-                                    field: xScale.field,
-                                    min: xStartValue,
-                                    max: xEndValue
-                                },
-                                {
-                                    field: yScale.field,
-                                    min: yEndValue,
-                                    max: yStartValue
-                                }
-                            ]);
-                        });
+                        // delayExcute(5, () => {
+                        //     this.chartBase.updateAxisForZoom([
+                        //         {
+                        //             field: xScale.field,
+                        //             min: xStartValue,
+                        //             max: xEndValue
+                        //         },
+                        //         {
+                        //             field: yScale.field,
+                        //             min: yEndValue,
+                        //             max: yStartValue
+                        //         }
+                        //     ]);
+                        // });
                     } else {
+                        console.log('zoom not ! ');
                         if (this.xMaxValue === xmax && this.yMaxValue === ymax) {
                             return;
                         }
@@ -256,9 +266,9 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
                             target: this.pointerCanvas
                         });
 
-                        delayExcute(5, () => {
-                            this.chartBase.updateAxisForZoom([]);
-                        });
+                        // delayExcute(5, () => {
+                        //     this.chartBase.updateAxisForZoom([]);
+                        // });
                     }
                 }
             })
