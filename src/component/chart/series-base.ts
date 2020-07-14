@@ -4,7 +4,6 @@ import { Subject, Observable, Subscription } from 'rxjs';
 import { ChartBase } from './chart-base';
 import { ISeries, SeriesConfiguration } from './series.interface';
 import { Scale, ContainerSize, ChartMouseEvent } from './chart.interface';
-import { guid } from './util/d3-svg-util';
 
 export class SeriesBase implements ISeries {
     type: string = 'series';
@@ -28,10 +27,6 @@ export class SeriesBase implements ISeries {
     }> = new Subject();
 
     private chart: ChartBase;
-
-    private clipPath: Selection<BaseType, any, HTMLElement, any>;
-
-    private maskId = '';
 
     constructor(configuration: SeriesConfiguration) {
         if (configuration.type) {
@@ -94,32 +89,6 @@ export class SeriesBase implements ISeries {
 
     destroy() {
         this.subscription.unsubscribe();
-    }
-
-    setOptionCanvas(svg: Selection<BaseType, any, HTMLElement, any>) {
-        const parentElement = select((svg.node() as HTMLElement).parentElement);
-
-        if(!parentElement.select('.option-canvas').node()) {
-            const targetSvg = parentElement.append('svg')
-                .attr('class', 'option-canvas')
-                .style('z-index', 0)
-                .style('position', 'absolute');
-
-            if (!this.clipPath) {
-                this.maskId = guid();
-                this.clipPath = targetSvg.append('defs')
-                    .append('svg:clipPath')
-                        .attr('id', this.maskId)
-                        .append('rect')
-                        .attr('clas', 'option-mask')
-                        .attr('x', 0)
-                        .attr('y', 0);
-            }
-
-            return targetSvg;
-        } else {
-            return parentElement.select('.option-canvas').style('z-index', 0);
-        }
     }
 
     drawProgress(

@@ -215,8 +215,9 @@ const dfdChartSample = () => {
 
     const seriesList = [];
 
+    const optionList = [];
+
     const basicSpecArea = new BasicSpecArea({
-        type: 'option',
         selector: 'spec',
         startField: 'start',
         endField: 'end',
@@ -224,14 +225,12 @@ const dfdChartSample = () => {
     });
 
     const basicStepLine = new BasicStepLine({
-        type: 'option',
         selector: 'step-line',
         xField: 'start',
         data: stepData
     });
     
     const basicStepArea = new BasicStepArea({
-        type: 'option',
         selector: 'step',
         startField: 'start',
         labelField: 'label',
@@ -239,9 +238,9 @@ const dfdChartSample = () => {
         data: stepData
     });
 
-    // seriesList.push(basicSpecArea);
-    // seriesList.push(basicStepArea);
-    // seriesList.push(basicStepLine);
+    optionList.push(basicSpecArea);
+    optionList.push(basicStepArea);
+    optionList.push(basicStepLine);
 
     let xmin = 0;
     let xmax = 0;
@@ -351,14 +350,12 @@ const dfdChartSample = () => {
             }
         ],
         series: seriesList.concat(alarmSeriesList),
+        options: optionList,
         functions: [
             new BasicCanvasMouseZoomHandler({
                 xDirection: 'bottom',
                 yDirection: 'left',
                 direction: Direction.HORIZONTAL
-            }),
-            new BasicCanvasMouseHandler({
-                isMoveEvent: true
             })
         ]
     }).draw();

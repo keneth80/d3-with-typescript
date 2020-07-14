@@ -1,23 +1,23 @@
 import { select, Selection, BaseType } from 'd3-selection';
 
 import { Scale, ContainerSize, ChartMouseEvent } from '../chart/chart.interface';
-import { SeriesBase } from '../chart/series-base';
-import { SeriesConfiguration } from '../chart/series.interface';
 import { Placement } from '../chart';
+import { OptionsBase } from '../chart/options-base';
 
-export interface BasicStepLineConfiguration<T = any> extends SeriesConfiguration {
+export interface BasicStepLineConfiguration<T = any> {
     selector: string;
     xField: string;
     data?: Array<T>;
 }
 
-export class BasicStepLine<T = any> extends SeriesBase {
+export class BasicStepLine<T = any> extends OptionsBase {
     private xField: string;
 
     private stepData: Array<T>;
 
     constructor(configuration: BasicStepLineConfiguration) {
-        super(configuration);
+        super();
+        this.selector = configuration.selector;
         if (configuration) {
             if (configuration.xField) {
                 this.xField = configuration.xField;
@@ -37,7 +37,7 @@ export class BasicStepLine<T = any> extends SeriesBase {
         }
     }
 
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
+    drawOptions(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
         if (!this.stepData || !this.stepData.length) {
             return;
         }

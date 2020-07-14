@@ -59,6 +59,8 @@ export class ChartBase<T = any> implements IChart {
 
     protected seriesGroup: Selection<BaseType, any, HTMLElement, any>;
 
+    protected optionGroup: Selection<BaseType, any, HTMLElement, any>;
+
     protected titleGroup: Selection<BaseType, any, BaseType, any>;
 
     protected legendGroup: Selection<BaseType, any, BaseType, any>;
@@ -313,6 +315,10 @@ export class ChartBase<T = any> implements IChart {
             this.functionList = configuration.functions;
         }
 
+        if (configuration.options && configuration.options.length) {
+            this.optionList = configuration.options;
+        }
+
         if (configuration.colors && configuration.colors.length) {
             this.colors = this.config.colors;
         } else {
@@ -499,7 +505,13 @@ export class ChartBase<T = any> implements IChart {
     }
 
     updateOptions() {
-
+        if (this.optionList && this.optionList.length) {
+            this.optionList.map((option: IOptions, index: number) => {
+                option.chartBase = this;
+                option.setSvgElement(this.svg, this.seriesGroup, index);
+                option.drawOptions(this.data, this.scales, {width: this.width, height: this.height});
+            });
+        }
     }
 
     updateSeries() {
@@ -910,7 +922,14 @@ export class ChartBase<T = any> implements IChart {
                     // startX = event.position[0];
                     // startY = event.position[1];
                 } else {
-
+                    let max = this.seriesList.length;
+                    while(max--) {
+                        const positionData = this.seriesList[max].getSeriesDataByPosition(event.position);
+                        if (positionData.length) {
+                            this.seriesList[max].onSelectItem(positionData, event);
+                            break;
+                        }
+                    }
                 }
             })
         );
@@ -960,6 +979,7 @@ export class ChartBase<T = any> implements IChart {
                     this.updateRescaleAxis(false);
                     this.updateFunctions();
                     this.updateSeries();
+                    this.updateOptions();
                 } else if (event.type === 'zoomout') {
                     isDragStart = false;
                     // this.viewClear();
@@ -967,6 +987,7 @@ export class ChartBase<T = any> implements IChart {
                     this.updateRescaleAxis(false);
                     this.updateFunctions();
                     this.updateSeries();
+                    this.updateOptions()
                 }
             })
         );
@@ -1476,6 +1497,7 @@ export class ChartBase<T = any> implements IChart {
                 this.updateFunctions();
                 this.updateTitle();
                 this.updateSeries();
+                this.updateOptions();
             });
     }
 
@@ -1705,6 +1727,7 @@ export class ChartBase<T = any> implements IChart {
         // this.axisGroups[orient].transition().duration(1000).call(currnetAxis);
 
         this.updateSeries();
+        this.updateOptions();
     }
 
     // TODO: 해상도에 최적화중입니다. 팝업 표시 추가.

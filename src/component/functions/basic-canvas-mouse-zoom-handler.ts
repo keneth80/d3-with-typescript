@@ -39,6 +39,8 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
 
     private direction: string = Direction.BOTH;
 
+    private isMoveEvent = true;
+
     constructor(configuration: BasicCanvasMouseZoomHandlerConfiguration) {
         super();
         if (configuration) {
@@ -52,6 +54,10 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
 
             if (configuration.hasOwnProperty('direction')) {
                 this.direction = configuration.direction;
+            }
+
+            if (configuration.hasOwnProperty('isMove')) {
+                this.isMoveEvent = configuration.isMove;
             }
         }
     }
@@ -125,6 +131,53 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
         const end = {
             x: 0, y: 0
         };
+
+        if (this.isMoveEvent) {
+            this.pointerCanvas.on('mousemove', () => {
+                const mouseEvent = mouse(this.pointerCanvas.node() as any);
+                this.chartBase.mouseEventSubject.next({
+                    type: 'mousemove',
+                    position: mouseEvent,
+                    target: this.pointerCanvas
+                });
+            });
+        }
+
+        this.pointerCanvas.on('click', () => {
+            const mouseEvent = mouse(this.pointerCanvas.node() as any);
+
+            this.chartBase.mouseEventSubject.next({
+                type: 'click',
+                position: mouseEvent,
+                target: this.pointerCanvas
+            });
+        }).on('mouseleave', () => {
+            const mouseEvent = mouse(this.pointerCanvas.node() as any);
+
+            this.chartBase.mouseEventSubject.next({
+                type: 'mouseleave',
+                position: mouseEvent,
+                target: this.pointerCanvas
+            });
+        })
+        .on('mousedown', () => {
+            const mouseEvent = mouse(this.pointerCanvas.node() as any);
+
+            this.chartBase.mouseEventSubject.next({
+                type: 'mousedown',
+                position: mouseEvent,
+                target: this.pointerCanvas
+            });
+        })
+        .on('mouseup', () => {
+            const mouseEvent = mouse(this.pointerCanvas.node() as any);
+
+            this.chartBase.mouseEventSubject.next({
+                type: 'mouseup',
+                position: mouseEvent,
+                target: this.pointerCanvas
+            });
+        });
         
         this.pointerCanvas.call(
             drag()
@@ -296,6 +349,11 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
 
     private setContainerPosition(geometry: ContainerSize, chartBase: ChartBase) {
         this.zoomCanvas
+            .attr('width', geometry.width - 1)
+            .attr('height', geometry.height - 1)
+            .style('transform', `translate(${(chartBase.chartMargin.left + 1)}px, ${(chartBase.chartMargin.top + 1)}px)`);
+        
+        this.pointerCanvas
             .attr('width', geometry.width - 1)
             .attr('height', geometry.height - 1)
             .style('transform', `translate(${(chartBase.chartMargin.left + 1)}px, ${(chartBase.chartMargin.top + 1)}px)`);
