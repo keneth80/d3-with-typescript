@@ -1,6 +1,6 @@
 import { Selection, BaseType } from 'd3-selection';
 import { ChartBase } from './chart-base';
-import { Scale, ContainerSize } from './chart.interface';
+import { Scale, ContainerSize, ChartMouseEvent } from './chart.interface';
 
 export interface SeriesConfiguration {
     type?: string; // default: series, or option
@@ -29,6 +29,10 @@ export interface ISeries<T = any> {
     destroy(): void;
 
     getSeriesDataByPosition(value: Array<number>): any;
+
+    showPointAndTooltip(value: Array<number>, selected: Array<any>): void;
+
+    onSelectItem(value: Array<number>, event: ChartMouseEvent): void;
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, seriesGroup: Selection<BaseType, any, HTMLElement, any>, index: number): void;
     // series 최초 생성 시 svg element, series 출력 영역, series index를 해당 메서드를 통해 인자값으로 내려줌.

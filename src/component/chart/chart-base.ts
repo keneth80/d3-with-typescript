@@ -581,11 +581,11 @@ export class ChartBase<T = any> implements IChart {
         });
     }
 
-    updateAxisForZoom(
-        reScale: Array<any>
-    ) {
-        this.reScale$.next(reScale);
-    }
+    // updateAxisForZoom(
+    //     reScale: Array<any>
+    // ) {
+    //     this.reScale$.next(reScale);
+    // }
 
     updateRescaleAxis(isZoom: boolean = true) {
         let index = 0;
@@ -888,29 +888,23 @@ export class ChartBase<T = any> implements IChart {
                 // TODO: 시리즈 루프 돌면서 해당 포지션에 데이터가 있는지 찾되
                 // 툴팁을 보여줄 때면 멀티인지 싱글인지 체크 해서 break 여부를 판단하고 해당 시리즈의 메서드 실행.
                 if (event.type === 'mousemove') {
+                    this.pointerClear();
                     if (!isDragStart) {
                         this.move$.next(event.position);
                     }
-
-                    // this.move$.next(event.position);
                 } else if (event.type === 'mouseleave') {
                     // this.isMouseLeave = true;
-                    // this.pointerClear(selectionContext, geometry, this.chartBase);
+                    this.pointerClear();
                 } else if (event.type === 'mouseup') {
-                    // endX = event.position[0];
-                    // endY = event.position[1];
-                    
-                    // const selected = this.search(this.originQuadTree, endX - style.radius, endY - style.radius, endX + style.radius, endY + style.radius);
-                    
-                    // if (selected.length) {
-                    //     // const selectedItem = selected[selected.length - 1];
-                    //     const selectedItem = selected[0];
-                    //     this.onClickItem(selectedItem, {
-                    //         width: geometry.width, height: geometry.height
-                    //     }, [endX, endY]);
-                    // } else {
-                    //     this.chartBase.hideTooltip();
-                    // }
+                    console.log('mosue up');
+                    let max = this.seriesList.length;
+                    while(max--) {
+                        const positionData = this.seriesList[max].getSeriesDataByPosition(event.position);
+                        if (positionData.length) {
+                            this.seriesList[max].onSelectItem(positionData, event);
+                            break;
+                        }
+                    }
 
                 } else if (event.type === 'mousedown') {
                     // startX = event.position[0];
@@ -922,15 +916,23 @@ export class ChartBase<T = any> implements IChart {
         );
 
         this.subscription.add(
-            this.move$.pipe(debounceTime(200)).subscribe((value: any) => {
+            this.move$.pipe(debounceTime(300)).subscribe((value: any) => {
                 if (!isDragStart) {
+                    let max = this.seriesList.length;
+                    while(max--) {
+                        const positionData = this.seriesList[max].getSeriesDataByPosition(value);
+                        // multi tooltip이면 break 걸지 않는다.
+                        if (positionData.length) {
+                            this.seriesList[max].showPointAndTooltip(value, positionData);
+                            break;
+                        }
+                    }
                     // TODO: tooltip or selection
                     // const selected = this.search();    
                 }
             })
         );
 
-        // TODO: zoom event subscribe
         this.subscription.add(
             this.zoomEvent$.subscribe((event: ChartZoomEvent) => {
                 if (event.type === 'dragstart') {
@@ -969,34 +971,6 @@ export class ChartBase<T = any> implements IChart {
             })
         );
     }
-
-    // protected addEventListner() {
-    //     this.svg.on('click', this.chartCanvasClick);
-    //     this.subscription = new Subscription();
-    //     if (this.config.isResize && this.config.isResize === true) {
-    //         const resizeEvent = fromEvent(window, 'resize').pipe(debounceTime(500));
-    //         this.subscription.add(
-    //             resizeEvent.subscribe(this.resizeEventHandler)
-    //         );
-    //     }
-
-    //     // reScale에 따른 update series 함수 정의 (제일 마지막에 호출하는 함수만 실행한다.)
-    //     this.subscription.add(
-    //         this.reScale$
-    //         .pipe(
-    //             debounceTime(100)
-    //         )
-    //         .subscribe((reScale: Array<any>) => {
-    //             this.scales = this.setupScale(this.config.axes, this.width, this.height, reScale);
-
-    //             this.updateRescaleAxis(false);
-
-    //             this.updateFunctions();
-                
-    //             this.updateSeries();
-    //         })
-    //     );
-    // }
 
     protected chartCanvasClick = () => {
         this.chartClickSubject.next();
@@ -1752,6 +1726,13 @@ export class ChartBase<T = any> implements IChart {
         this.updateDisplay();
 
         this.isResize = false;
+    }
+
+    private pointerClear() {
+        const selectionCanvas = select((this.svg.node() as HTMLElement).parentElement).select('.' + ChartBase.SELECTION_CANVAS);
+        const context = (selectionCanvas.node() as any).getContext('2d');
+        context.clearRect(0, 0, this.width, this.height);
+        this.hideTooltip();
     }
 
     private clearOption() {

@@ -133,7 +133,7 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
                 startX = mouseEvent[0];
                 startY = mouseEvent[1];
 
-                this.chartBase.mouseEventSubject.next({
+                this.chartBase.zoomEventSubject.next({
                     type: 'dragstart',
                     position: mouseEvent,
                     target: this.pointerCanvas
@@ -190,7 +190,7 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
                     end
                 );
 
-                this.chartBase.mouseEventSubject.next({
+                this.chartBase.zoomEventSubject.next({
                     type: 'drag',
                     position: mouseEvent,
                     target: this.pointerCanvas

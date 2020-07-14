@@ -97,6 +97,15 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
 
     private isRestore = false;
 
+    // ================= style 관련 변수 =============== //
+    private radius = 4;
+
+    private lineStroke = 1;
+
+    private lineColor = '#000000';
+
+    private geometry: ContainerSize;
+
     constructor(configuration: BasicCanvasWebglLineSeriesOneConfiguration) {
         super(configuration);
         this.config = configuration;
@@ -173,19 +182,23 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
 
     drawSeries(chartBaseData: Array<T>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
         this.seriesIndex = index;
+
+        this.geometry = geometry;
+
+        this.radius = this.config.dot ? this.config.dot.radius || 4 : 0;
+
+        this.lineStroke = (this.config.style && this.config.style.strokeWidth) || 1;
+
+        this.lineColor = this.strokeColor ? this.strokeColor : color;
+
         const chartData = this.seriesData ? this.seriesData : chartBaseData;
 
         const xScale: Scale = scales.find((scale: Scale) => scale.orient === Placement.BOTTOM);
         const yScale: Scale = scales.find((scale: Scale) => scale.orient === Placement.LEFT);
         // const yScale: Scale = scales.find((scale: Scale) => scale.field === this.yField);
+
         const x: any = xScale.scale;
         const y: any = yScale.scale;
-
-        const radius = this.config.dot ? this.config.dot.radius || 4 : 0;
-
-        const lineStroke = (this.config.style && this.config.style.strokeWidth) || 1;
-
-        const lineColor = this.strokeColor ? this.strokeColor : color;
 
         const xmin = xScale.min;
         const xmax = xScale.max;
@@ -237,7 +250,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         //     this.webGLStart(lineData, {min: xmin, max: xmax}, {min:ymin, max: ymax}, geometry, lineColor);
         // }
 
-        this.webGLStart(lineData, { min: xmin, max: xmax }, { min: ymin, max: ymax }, geometry, lineColor);
+        this.webGLStart(lineData, { min: xmin, max: xmax }, { min: ymin, max: ymax }, geometry, this.lineColor);
 
         // mouse event listen
         // this.addPluginEventListner(x, y, geometry, {
@@ -285,88 +298,64 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
     }
 
     getSeriesDataByPosition(value: Array<number>) {
-        const radius = (this.config.dot ? this.config.dot.radius || 4 : 0);
         return this.search(
             this.originQuadTree,
-            value[0] - radius,
-            value[1] - radius,
-            value[0] + radius,
-            value[1] + radius
+            value[0] - this.radius,
+            value[1] - this.radius,
+            value[0] + this.radius,
+            value[1] + this.radius
         );
     }
 
-    zoomHandler(event: ChartZoomEvent) {
-        if (event.type === 'dragstart') {
-            // this.pointerClear(selectionContext, geometry, this.chartBase);
-        } else if (event.type === 'zoomin') {
-            this.viewClear();
-        } else if (event.type === 'zoomout') {
-            this.viewClear();
-        } else {
-
+    showPointAndTooltip(value: Array<number>, selected: Array<any>) {
+        if (selected.length && !this.chartBase.isTooltipDisplay) {
+            // const index = Math.floor(selected.length / 2);
+            const index = selected.length - 1;
+            const selectedItem = selected[index];
+            this.drawTooltipPoint(this.geometry, selectedItem, {
+                radius: this.radius / 2 + 1,
+                strokeColor: this.strokeColor,
+                strokeWidth: this.strokeWidth
+            });
+            this.setChartTooltip(
+                selectedItem,
+                {
+                    width: this.geometry.width,
+                    height: this.geometry.height
+                },
+                value
+            );
         }
     }
 
-    mouseHandler(event: ChartMouseEvent) {
-        // this.pointerClear(selectionContext, geometry, this.chartBase);
-        if (!this.originQuadTree) {
-            return;
-        }
-
-        this.isMouseLeave = false;
-        if (event.type === 'mousemove') {
-            this.move$.next(event.position);
-        } else if (event.type === 'mouseleave') {
-            this.isMouseLeave = true;
-            // this.pointerClear(selectionContext, geometry, this.chartBase);
-        } else if (event.type === 'mouseup') {
-            // endX = event.position[0];
-            // endY = event.position[1];
-
-            // const selected = this.search(
-            //     this.originQuadTree,
-            //     endX - style.radius,
-            //     endY - style.radius,
-            //     endX + style.radius,
-            //     endY + style.radius
-            // );
-
-            // if (selected.length) {
-            //     // const selectedItem = selected[selected.length - 1];
-            //     const selectedItem = selected[0];
-            //     this.onClickItem(
-            //         selectedItem,
-            //         {
-            //             width: geometry.width,
-            //             height: geometry.height
-            //         },
-            //         [endX, endY]
-            //     );
-            // } else {
-            //     this.chartBase.hideTooltip();
-            // }
-        } else if (event.type === 'mousedown') {
-            // startX = event.position[0];
-            // startY = event.position[1];
-        } else {
-
-        }
+    onSelectItem(selectedItem: Array<any>, event: ChartMouseEvent) {
+        console.log('onSelectItem : ', selectedItem, event);
+        this.onClickItem(
+            selectedItem,
+            {
+                width: this.geometry.width,
+                height: this.geometry.height
+            },
+            [event.position[0], event.position[1]]
+        );
     }
 
     private search(quadtreeObj: Quadtree<Array<any>>, x0: number, y0: number, x3: number, y3: number) {
         const temp = [];
-        quadtreeObj.visit((node: any, x1: number, y1: number, x2: number, y2: number) => {
-            if (!node.length) {
-                do {
-                    const d = node.data;
-                    const selected = d[0] >= x0 && d[0] < x3 && d[1] >= y0 && d[1] < y3;
-                    if (selected) {
-                        temp.push(d);
-                    }
-                } while ((node = node.next));
-            }
-            return x1 >= x3 || y1 >= y3 || x2 < x0 || y2 < y0;
-        });
+        if (quadtreeObj) {
+            quadtreeObj.visit((node: any, x1: number, y1: number, x2: number, y2: number) => {
+                if (!node.length) {
+                    do {
+                        const d = node.data;
+                        const selected = d[0] >= x0 && d[0] < x3 && d[1] >= y0 && d[1] < y3;
+                        if (selected) {
+                            temp.push(d);
+                        }
+                    } while ((node = node.next));
+                }
+                return x1 >= x3 || y1 >= y3 || x2 < x0 || y2 < y0;
+            });
+        }
 
         return temp;
     }

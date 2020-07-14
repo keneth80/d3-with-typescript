@@ -3,7 +3,7 @@ import { Subject, Observable, Subscription } from 'rxjs';
 
 import { ChartBase } from './chart-base';
 import { ISeries, SeriesConfiguration } from './series.interface';
-import { Scale, ContainerSize } from './chart.interface';
+import { Scale, ContainerSize, ChartMouseEvent } from './chart.interface';
 import { guid } from './util/d3-svg-util';
 
 export class SeriesBase implements ISeries {
@@ -87,6 +87,10 @@ export class SeriesBase implements ISeries {
     getSeriesDataByPosition(value: Array<number>) {
         return null;
     }
+
+    showPointAndTooltip(value: Array<number>, selected: Array<any>) {}
+
+    onSelectItem(value: Array<number>, event: ChartMouseEvent) {}
 
     destroy() {
         this.subscription.unsubscribe();
