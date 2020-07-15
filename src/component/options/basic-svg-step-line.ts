@@ -29,9 +29,13 @@ export class BasicStepLine<T = any> extends OptionsBase {
         }
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>) {
-        this.svg = this.setOptionCanvas(svg);
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, mainGroup: Selection<BaseType, any, HTMLElement, any>) {
+        // option canvas 생성
+        // this.svg = this.setOptionCanvas(svg);
 
+        // option 을 제일 뒤로 보내기 위함.
+        svg.style('z-index', 1);
+        this.svg = mainGroup;
         if (!this.svg.select('.' + this.selector + '-group').node()) {
             this.mainGroup = this.svg.append('g').attr('class', this.selector + '-group');
         }
@@ -45,8 +49,6 @@ export class BasicStepLine<T = any> extends OptionsBase {
         const xScale: Scale = scales.find((scale: Scale) => scale.orient === Placement.BOTTOM);
         const x = xScale.scale;
 
-        this.mainGroup.attr('transform', `translate(${this.chartBase.chartMargin.left}, ${this.chartBase.chartMargin.top})`);
-        
         this.mainGroup.selectAll('.' + this.selector + '-line')
             .data(this.stepData)
                 .join(

@@ -143,7 +143,9 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
 
         this.svg = svg;
 
-        this.svg.style('z-index', 3).style('position', 'absolute');
+        this.svg.style('position', 'absolute');
+
+        this.setTooltipCanvas(this.svg);
 
         this.parentElement = select((this.svg.node() as HTMLElement).parentElement);
 

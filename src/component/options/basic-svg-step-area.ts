@@ -44,18 +44,22 @@ export class BasicStepArea<T = any> extends OptionsBase {
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>) {
-        const parentElement = select((svg.node() as HTMLElement).parentElement);
-        if(!parentElement.select('.step-canvas').node()) {
-            this.svg = parentElement.append('svg')
-                .attr('class', 'step-canvas')
-                .style('z-index', 99)
-                .style('position', 'absolute')
-                .style('width', '100%')
-                .style('height', this.chartBase.chartMargin.top + 'px');
-        } else {
-            this.svg = parentElement.select('.step-canvas').style('z-index', 99);
-        }
+        // const parentElement = select((svg.node() as HTMLElement).parentElement);
+        // if(!parentElement.select('.step-canvas').node()) {
+        //     this.svg = parentElement.append('svg')
+        //         .attr('class', 'step-canvas')
+        //         .style('z-index', 99)
+        //         .style('position', 'absolute')
+        //         .style('width', '100%')
+        //         .style('height', this.chartBase.chartMargin.top + 'px');
+        // } else {
+        //     this.svg = parentElement.select('.step-canvas').style('z-index', 99);
+        // }
 
+        // if (!this.svg.select('.' + this.selector + '-group').node()) {
+        //     this.mainGroup = this.svg.append('g').attr('class', this.selector + '-group');
+        // }
+        this.svg = svg;
         if (!this.svg.select('.' + this.selector + '-group').node()) {
             this.mainGroup = this.svg.append('g').attr('class', this.selector + '-group');
         }

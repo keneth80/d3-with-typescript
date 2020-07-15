@@ -4,6 +4,7 @@ import { Subject, Observable, Subscription } from 'rxjs';
 import { ChartBase } from './chart-base';
 import { ISeries, SeriesConfiguration } from './series.interface';
 import { Scale, ContainerSize, ChartMouseEvent } from './chart.interface';
+import { guid } from '.';
 
 export class SeriesBase implements ISeries {
     type: string = 'series';
@@ -27,6 +28,10 @@ export class SeriesBase implements ISeries {
     }> = new Subject();
 
     private chart: ChartBase;
+
+    private clipPath: Selection<BaseType, any, HTMLElement, any>;
+
+    private maskId = '';
 
     constructor(configuration: SeriesConfiguration) {
         if (configuration.type) {
@@ -77,6 +82,35 @@ export class SeriesBase implements ISeries {
 
     drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
 
+    }
+
+    setTooltipCanvas(svg: Selection<BaseType, any, HTMLElement, any>) {
+        const parentElement = select((svg.node() as HTMLElement).parentElement);
+
+        if(!parentElement.select('.tooltip-canvas').node()) {
+            const targetSvg = parentElement.append('svg')
+                .attr('class', 'tooltip-canvas')
+                .style('z-index', 3)
+                .style('position', 'absolute');
+
+            if (!this.clipPath) {
+                this.maskId = guid();
+                this.clipPath = targetSvg.append('defs')
+                    .append('svg:clipPath')
+                        .attr('id', this.maskId)
+                        .append('rect')
+                        .attr('clas', 'option-mask')
+                        .attr('x', 0)
+                        .attr('y', 0);
+            }
+
+            const toolTipGroup = targetSvg.append('g').attr('class', 'tooltip-group');
+            this.chartBase.toolTipTarget = toolTipGroup;
+
+            return targetSvg;
+        } else {
+            return parentElement.select('.tooltip-canvas');
+        }
     }
 
     getSeriesDataByPosition(value: Array<number>) {

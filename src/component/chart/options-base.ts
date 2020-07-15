@@ -19,10 +19,6 @@ export class OptionsBase implements IOptions {
 
     private chart: ChartBase;
 
-    private clipPath: Selection<BaseType, any, HTMLElement, any>;
-
-    private maskId = '';
-
     constructor() { }
 
     set chartBase(value: ChartBase) {
@@ -35,32 +31,6 @@ export class OptionsBase implements IOptions {
 
     get $currentItem(): Observable<any> {
         return this.itemClickSubject.asObservable();
-    }
-
-    setOptionCanvas(svg: Selection<BaseType, any, HTMLElement, any>) {
-        const parentElement = select((svg.node() as HTMLElement).parentElement);
-
-        if(!parentElement.select('.option-canvas').node()) {
-            const targetSvg = parentElement.append('svg')
-                .attr('class', 'option-canvas')
-                .style('z-index', 0)
-                .style('position', 'absolute');
-
-            if (!this.clipPath) {
-                this.maskId = guid();
-                this.clipPath = targetSvg.append('defs')
-                    .append('svg:clipPath')
-                        .attr('id', this.maskId)
-                        .append('rect')
-                        .attr('clas', 'option-mask')
-                        .attr('x', 0)
-                        .attr('y', 0);
-            }
-
-            return targetSvg;
-        } else {
-            return parentElement.select('.option-canvas').style('z-index', 0);
-        }
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 

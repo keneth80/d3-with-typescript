@@ -241,6 +241,10 @@ export class ChartBase<T = any> implements IChart {
         };
     }
 
+    set toolTipTarget(value: Selection<BaseType, any, HTMLElement, any>) {
+        this.tooltipGroup = value;
+    }
+
     get tooltip(): ChartTooltip {
         return this.config.tooltip;
     }
@@ -508,7 +512,7 @@ export class ChartBase<T = any> implements IChart {
         if (this.optionList && this.optionList.length) {
             this.optionList.map((option: IOptions, index: number) => {
                 option.chartBase = this;
-                option.setSvgElement(this.svg, this.seriesGroup, index);
+                option.setSvgElement(this.svg, this.optionGroup, index);
                 option.drawOptions(this.data, this.scales, {width: this.width, height: this.height});
             });
         }
@@ -843,6 +847,14 @@ export class ChartBase<T = any> implements IChart {
             });
         }
 
+        if (!this.optionGroup) {
+            this.optionGroup = this.svg.append('g')
+                .attr('class', 'option-group')
+        }
+        this.optionGroup
+            .attr('transform', `translate(${x}, ${y})`)
+            .attr('clip-path', `url(#${this.maskId})`);
+
         if (!this.seriesGroup) {
             this.seriesGroup = this.svg.append('g')
                 .attr('class', 'series-group')
@@ -895,20 +907,22 @@ export class ChartBase<T = any> implements IChart {
 
         let isDragStart = false;
 
+        let isMouseLeave = false;
+
         this.subscription.add(
             this.mouseEvent$.subscribe((event: ChartMouseEvent) => {
                 // TODO: 시리즈 루프 돌면서 해당 포지션에 데이터가 있는지 찾되
                 // 툴팁을 보여줄 때면 멀티인지 싱글인지 체크 해서 break 여부를 판단하고 해당 시리즈의 메서드 실행.
                 if (event.type === 'mousemove') {
+                    isMouseLeave = false;
                     this.pointerClear();
                     if (!isDragStart) {
                         this.move$.next(event.position);
                     }
                 } else if (event.type === 'mouseleave') {
-                    // this.isMouseLeave = true;
+                    isMouseLeave = true;
                     this.pointerClear();
                 } else if (event.type === 'mouseup') {
-                    console.log('mosue up');
                     let max = this.seriesList.length;
                     while(max--) {
                         const positionData = this.seriesList[max].getSeriesDataByPosition(event.position);
@@ -935,8 +949,8 @@ export class ChartBase<T = any> implements IChart {
         );
 
         this.subscription.add(
-            this.move$.pipe(debounceTime(300)).subscribe((value: any) => {
-                if (!isDragStart) {
+            this.move$.pipe(debounceTime(200)).subscribe((value: any) => {
+                if (!isDragStart && !isMouseLeave) {
                     let max = this.seriesList.length;
                     while(max--) {
                         const positionData = this.seriesList[max].getSeriesDataByPosition(value);

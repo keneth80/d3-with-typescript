@@ -52,10 +52,13 @@ export class BasicSpecArea<T = any> extends OptionsBase {
         }
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>) {
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         // option canvas 생성
-        this.svg = this.setOptionCanvas(svg);
+        // this.svg = this.setOptionCanvas(svg);
 
+        // option 을 제일 뒤로 보내기 위함.
+        svg.style('z-index', 1);
+        this.svg = mainGroup;
         if (!this.svg.select('.' + this.selector + '-group').node()) {
             this.mainGroup = this.svg.append('g').attr('class', this.selector + '-group');
         }
@@ -66,13 +69,9 @@ export class BasicSpecArea<T = any> extends OptionsBase {
             return;
         }
 
-        this.mainGroup.selectAll('clipPath').select('rect').attr('width', geometry.width).attr('height', geometry.height);
-        
         const compareScale: Scale = scales.find((scale: Scale) => scale.orient === this.placement);
         const axis = compareScale.scale;
 
-        this.mainGroup.attr('transform', `translate(${this.chartBase.chartMargin.left}, ${this.chartBase.chartMargin.top})`);
-        
         const elementGroup = this.mainGroup.selectAll('.' + this.selector + '-group')
             .data(this.stepData)
                 .join(
@@ -83,7 +82,7 @@ export class BasicSpecArea<T = any> extends OptionsBase {
                 .attr('transform', (data: T) => {
                     const x = this.placement === 'bottom' ? axis(data[this.startField]) : 0;
                     const y = this.placement === 'bottom' ? 0 : axis(data[this.startField]);
-                    const translate = `translate(${x}, ${y})`;
+                    const translate = `translate(${(x < 0 ? 0 : x) + 1}, ${(y > geometry.height ? geometry.height : y)})`;
                     return translate;
                 });
 
@@ -97,11 +96,11 @@ export class BasicSpecArea<T = any> extends OptionsBase {
                 .style('fill', '#f9e1fa')
                 .attr('width', (data: T) => {
                     const targetWidth = this.placement === 'bottom' ? axis(data[this.endField]) - axis(data[this.startField]) : geometry.width;
-                    return targetWidth;
+                    return (targetWidth > geometry.width ? geometry.width : targetWidth) - 1;
                 })
                 .attr('height', (data: T) => {
                     const targetHeight = this.placement === 'bottom' ? geometry.height: axis(data[this.endField]) - axis(data[this.startField]);
-                    return targetHeight;
+                    return (targetHeight > geometry.height ? geometry.height : targetHeight);
                 });
     }
 
