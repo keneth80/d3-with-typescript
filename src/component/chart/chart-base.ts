@@ -625,6 +625,7 @@ export class ChartBase<T = any> implements IChart {
     }
 
     protected axisSetupByScale(scale: Scale) {
+        console.log('axisSetupByScale');
         let orientedAxis: any = null;
 
         if (scale.orient === Placement.RIGHT) {
@@ -643,6 +644,7 @@ export class ChartBase<T = any> implements IChart {
             }
         } else if (scale.type === ScaleType.TIME) {
             if (scale.tickFormat) {
+                console.log('scale time : ', scale.tickFormat);
                 orientedAxis.tickFormat(timeFormat(scale.tickFormat));
             }
         }
@@ -1096,7 +1098,7 @@ export class ChartBase<T = any> implements IChart {
 
         this.scales.map((scale: Scale) => {
             const orientedAxis: any = this.axisSetupByScale(scale);
-            console.log('orientedAxis : ', orientedAxis);
+            
             let bandWidth: number = -1;
 
             if (scale.type === ScaleType.STRING) {
@@ -1106,19 +1108,31 @@ export class ChartBase<T = any> implements IChart {
             if (scale.visible) {
                 this.axisGroups[scale.orient].call(
                     orientedAxis
-                );
-            }
-
-            this.axisGroups[scale.orient].selectAll('text')
+                )
+                .selectAll('text')
                 .style('font-size', this.defaultAxisLabelStyle.font.size + 'px')
-                .style('font-family', this.defaultAxisLabelStyle.font.family)
-                .text((d: string) => {
-                    console.log('label : ', d);
-                    return scale.tickTextParser ? scale.tickTextParser(d) : d
-                });
+                .style('font-family', this.defaultAxisLabelStyle.font.family);
                 // .style('font-weight', 100)
                 // .style('stroke-width', 0.5)
                 // .style('stroke', this.defaultAxisLabelStyle.font.color);
+            }
+
+            if (scale.tickTextParser) {
+                delayExcute(50, () => {
+                    this.axisGroups[scale.orient].selectAll('text')
+                    .text((d: string) => {
+                        return scale.tickTextParser ? scale.tickTextParser(d) : d
+                    })
+                })
+            }
+
+            // this.axisGroups[scale.orient].selectAll('text')
+            //     .style('font-size', this.defaultAxisLabelStyle.font.size + 'px')
+            //     .style('font-family', this.defaultAxisLabelStyle.font.family)
+            //     .text((d: any) => {
+            //         console.log('label : ', d);
+            //         return scale.tickTextParser ? scale.tickTextParser(d) : d
+            //     });
 
             if (scale.isGridLine) {
                 const targetScale = getAxisByPlacement(scale.orient, scale.scale);

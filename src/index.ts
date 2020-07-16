@@ -759,6 +759,9 @@ const canvasLineChart = () => {
                 placement: Placement.BOTTOM,
                 tickFormat: '%H:%M %m-%d',
                 tickSize: 5,
+                // tickTextParser: (d) => {
+                //     return parseTime(new Date(d));
+                // },
                 isGridLine: true,
                 isZoom: true,
                 title: {
