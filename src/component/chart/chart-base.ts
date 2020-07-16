@@ -625,7 +625,6 @@ export class ChartBase<T = any> implements IChart {
     }
 
     protected axisSetupByScale(scale: Scale) {
-        console.log('axisSetupByScale');
         let orientedAxis: any = null;
 
         if (scale.orient === Placement.RIGHT) {
@@ -644,7 +643,6 @@ export class ChartBase<T = any> implements IChart {
             }
         } else if (scale.type === ScaleType.TIME) {
             if (scale.tickFormat) {
-                console.log('scale time : ', scale.tickFormat);
                 orientedAxis.tickFormat(timeFormat(scale.tickFormat));
             }
         }
