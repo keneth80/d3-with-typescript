@@ -694,11 +694,7 @@ const canvasLineChart = () => {
             dot: {
                 radius: 3
             },
-            crossFilter: {
-                filerField: 'member',
-                filterValue: member
-            },
-            // filter,
+            filter,
             shape: Shape.LINE
         });
 
@@ -1665,7 +1661,7 @@ dfdChartSample();
 
 // webglTraceChart();
 
-// canvasLineChart();
+canvasLineChart();
 
 // canvasTraceChart();
 

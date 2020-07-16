@@ -613,7 +613,9 @@ export class ChartBase<T = any> implements IChart {
                 // TODO: axis label list setup
                 this.axisGroups[scale.orient].call(
                     orientedAxis
-                ).selectAll('text').text((d: string) => scale.tickTextParser ? scale.tickTextParser(d) : d);
+                ).selectAll('text').text((d: string) => {
+                    return scale.tickTextParser ? scale.tickTextParser(d) : d
+                });
             }
 
             if (isZoom && scale.isZoom === true) {
@@ -642,10 +644,6 @@ export class ChartBase<T = any> implements IChart {
         } else if (scale.type === ScaleType.TIME) {
             if (scale.tickFormat) {
                 orientedAxis.tickFormat(timeFormat(scale.tickFormat));
-            }
-
-            if (scale.tickSize) {
-                orientedAxis.ticks(scale.tickSize);
             }
         }
 
@@ -1098,6 +1096,7 @@ export class ChartBase<T = any> implements IChart {
 
         this.scales.map((scale: Scale) => {
             const orientedAxis: any = this.axisSetupByScale(scale);
+            console.log('orientedAxis : ', orientedAxis);
             let bandWidth: number = -1;
 
             if (scale.type === ScaleType.STRING) {
@@ -1114,6 +1113,7 @@ export class ChartBase<T = any> implements IChart {
                 .style('font-size', this.defaultAxisLabelStyle.font.size + 'px')
                 .style('font-family', this.defaultAxisLabelStyle.font.family)
                 .text((d: string) => {
+                    console.log('label : ', d);
                     return scale.tickTextParser ? scale.tickTextParser(d) : d
                 });
                 // .style('font-weight', 100)
@@ -1580,13 +1580,21 @@ export class ChartBase<T = any> implements IChart {
                     maxValue = tempScale ? tempScale.max : 0;
                 } else {
                     if (!axis.hasOwnProperty('max')) {
-                        axis.max = max(this.data.map((item: T) => parseFloat(item[axis.field])));
-                        axis.max += Math.round(axis.max * 0.05);
+                        if (axis.type === ScaleType.TIME) {
+                            axis.max = max(this.data.map((item: T) => new Date(item[axis.field]).getTime()));
+                        } else {
+                            axis.max = max(this.data.map((item: T) => parseFloat(item[axis.field])));
+                            axis.max += Math.round(axis.max * 0.05);
+                        }
                     }
     
                     if (!axis.hasOwnProperty('min')) {
-                        axis.min = min(this.data.map((item: T) => parseFloat(item[axis.field])));
-                        axis.min -= Math.round(axis.min * 0.05);
+                        if (axis.type === ScaleType.TIME) {
+                            axis.min = min(this.data.map((item: T) => new Date(item[axis.field]).getTime()));
+                        } else {
+                            axis.min = min(this.data.map((item: T) => parseFloat(item[axis.field])));
+                            axis.min -= Math.round(axis.min * 0.05);
+                        }
                     }
     
                     minValue = axis.min;
