@@ -254,13 +254,6 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
 
         this.webGLStart(lineData, { min: xmin, max: xmax }, { min: ymin, max: ymax }, geometry, this.lineColor);
 
-        // mouse event listen
-        // this.addPluginEventListner(x, y, geometry, {
-        //     radius: radius,
-        //     strokeColor: lineColor,
-        //     strokeWidth: this.strokeWidth
-        // });
-
         if (this.originQuadTree) {
             this.originQuadTree = undefined;
         }
@@ -442,8 +435,6 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         this.initGL(canvas as HTMLCanvasElement);
 
         if (this.seriesIndex === 0) {
-            console.log('clear');
-
             // 화면 지우기
             this.gl.clearColor(0, 0, 0, 0); // rgba
 
@@ -458,7 +449,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         this.initShaders(color, geometry, vertices, 0.9);
 
         // console.time('webgldraw-' + this.selector);
-        // 화면 그리기
+        // 라인 그리기
         this.drawScene(lineVertexBuffer, endCount, canvas as HTMLCanvasElement, this.gl.LINE_STRIP);
 
         // 버퍼 초기화
@@ -467,6 +458,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         // 쉐이더 초기화
         this.initShaders(color, geometry, vertices, 1);
 
+        // 포인트 그리기
         this.drawScene(pointVertexBuffer, endCount, canvas as HTMLCanvasElement, this.gl.POINTS);
         // console.timeEnd('webgldraw-' + this.selector);
     }
@@ -485,8 +477,6 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
 
         const endCount = chartData.length;
 
-        // this.generateData.length = 0;
-
         for (let i = 0; i < endCount; i++) {
             const xposition = xScale(chartData[i][this.xField]);
             const yposition = yScale(chartData[i][this.yField]);
@@ -502,7 +492,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
     private initGL(canvas: HTMLCanvasElement) {
         try {
             if (!this.gl) {
-                this.gl = canvas.getContext('experimental-webgl', {
+                const webglOption = {
                     alpha: true, // 캔버스에 알파 버퍼가 포함되어 있는지 를 나타내는 부울입니다.
                     antialias: true, // 항별칭을 수행할지 여부를 나타내는 부울
                     preserveDrawingBuffer: true, // 값이 true인 경우 버퍼가 지워지지 않으며 작성자가 지우거나 덮어쓸 때까지 해당 값을 보존합니다.
@@ -518,7 +508,8 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
                     stencil: true, // 도면 버퍼에 최소 8비트의 스텐실 버퍼가 있음을 나타내는 부울입니다.
                     // desynchronized: true, // 이벤트 루프에서 캔버스 페인트 주기의 비동기화를 해제하여 사용자 에이전트가 대기 시간을 줄이도록 힌트하는 부울
                     failIfMajorPerformanceCaveat: true // 시스템 성능이 낮거나 하드웨어 GPU를 사용할 수 없는 경우 컨텍스트가 생성될지 를 나타내는 부울수입니다.
-                });
+                }
+                this.gl = canvas.getContext('webgl', webglOption) || canvas.getContext('experimental-webgl', webglOption);
                 this.gl.imageSmoothingEnabled = true;
             }
             this.gl.viewportWidth = canvas.width;
