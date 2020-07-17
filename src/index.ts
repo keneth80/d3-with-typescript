@@ -283,7 +283,7 @@ const dfdChartSample = () => {
 
         // test data 늘리기
         // const tempRow: BasicCanvasWebglLineSeriesModel = seriesData[seriesData.length - 1];
-        // for (let index = 1; index < 1000; index++) {
+        // for (let index = 1; index < 10000; index++) {
         //     const x = tempRow.x + index;
         //     const y = tempRow.y;
 
