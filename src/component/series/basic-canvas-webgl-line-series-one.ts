@@ -309,7 +309,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
             const selectedItem = selected[index];
             this.drawTooltipPoint(this.geometry, selectedItem, {
                 radius: this.radius / 2 + 1,
-                strokeColor: this.strokeColor,
+                strokeColor: this.lineColor,
                 strokeWidth: this.strokeWidth
             });
             this.setChartTooltip(
@@ -333,6 +333,10 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
             },
             [event.position[0], event.position[1]]
         );
+    }
+
+    clear() {
+        this.viewClear();
     }
 
     private search(quadtreeObj: Quadtree<Array<any>>, x0: number, y0: number, x3: number, y3: number) {
@@ -461,32 +465,6 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         // 포인트 그리기
         this.drawScene(pointVertexBuffer, endCount, canvas as HTMLCanvasElement, this.gl.POINTS);
         // console.timeEnd('webgldraw-' + this.selector);
-    }
-
-    private makeVertices(chartData: Array<T>, xAxis: any, yAxis: any) {
-        // data 만들기
-        const xScale = scaleLinear()
-            .domain([xAxis.min, xAxis.max])
-            .range([-1, 1]); // [-0.99, 0.99]
-
-        const yScale = scaleLinear()
-            .domain([yAxis.min, yAxis.max])
-            .range([-1, 1]); // [-0.99, 0.99]
-
-        const vertices = [];
-
-        const endCount = chartData.length;
-
-        for (let i = 0; i < endCount; i++) {
-            const xposition = xScale(chartData[i][this.xField]);
-            const yposition = yScale(chartData[i][this.yField]);
-
-            vertices.push(xposition);
-            vertices.push(yposition);
-            vertices.push(0);
-        }
-
-        return vertices;
     }
 
     private initGL(canvas: HTMLCanvasElement) {
@@ -629,6 +607,107 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
 
         this.gl.cullFace(this.gl.FRONT);
     }
+    
+    private makeVertices(chartData: Array<T>, xAxis: any, yAxis: any) {
+        // data 만들기
+        const xScale = scaleLinear()
+            .domain([xAxis.min, xAxis.max])
+            .range([-1, 1]); // [-0.99, 0.99]
+
+        const yScale = scaleLinear()
+            .domain([yAxis.min, yAxis.max])
+            .range([-1, 1]); // [-0.99, 0.99]
+
+        const vertices = [];
+
+        const endCount = chartData.length;
+
+        for (let i = 0; i < endCount; i++) {
+            const xposition = xScale(chartData[i][this.xField]);
+            const yposition = yScale(chartData[i][this.yField]);
+
+            vertices.push(xposition);
+            vertices.push(yposition);
+            vertices.push(0);
+        }
+
+        return vertices;
+    }
+
+    private initBuffers(vertices: Array<number> = [], itemSize: number, numItems: number): any {
+        // example
+        /* 
+        // 사각형 좌표
+        vertices = [
+            1.0,  1.0,  0.0,
+            -1.0,  1.0,  0.0,
+            1.0, -1.0,  0.0,
+            -1.0, -1.0,  0.0
+        ];
+
+        vertexBuffer.itemSize = 3; // 3 (col)
+        vertexBuffer.numItems = 4; // 4 (row)
+        */
+
+        // Create an empty buffer object
+        const vertexBuffer = this.gl.createBuffer();
+        vertexBuffer.itemSize = itemSize;
+        vertexBuffer.numItems = numItems;
+
+        // Bind appropriate array buffer to it
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, vertexBuffer);
+
+        // Pass the vertex data to the buffer
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices), this.gl.STATIC_DRAW);
+
+        // Unbind the buffer
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
+
+        return vertexBuffer;
+    }
+
+    private drawScene(buffer: any, dataSize: number, canvas: HTMLCanvasElement, glType: any) {
+        // 창을 설정
+        this.gl.viewport(0, 0, canvas.clientWidth, canvas.clientHeight);
+
+        if (this.seriesIndex === 0) {
+            // 화면 지우기
+            this.viewClear();
+        }
+
+        // Bind vertex buffer object
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, buffer);
+
+        // Get the attribute location
+        const coord = this.gl.getAttribLocation(this.shaderProgram, 'coordinates');
+
+        // Point an attribute to the currently bound VBO
+        this.gl.vertexAttribPointer(coord, buffer.itemSize, this.gl.FLOAT, false, 0, 0);
+
+        // Enable the attribute
+        this.gl.enableVertexAttribArray(coord);
+
+        this.gl.lineWidth(1 / 1000);
+
+        this.gl.drawArrays(glType, 0, dataSize);
+
+        // Bind vertex buffer object
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
+
+        // delayExcute(100 + this.seriesIndex * 10, () => {
+        //     if (!this.originalChartImage) {
+        //         // this.originalChartImage = new Image();
+        //         // this.originalChartImage.src = canvas.toDataURL('image/png');
+
+        //         canvas.toBlob((blob) => {
+        //             this.originalChartImage = new Image();
+        //             // this.originalChartImage.src = canvas.toDataURL('image/png');
+        //             this.originalChartImage.onload = () =>  URL.revokeObjectURL(this.originalChartImage.src);  // no longer need to read the blob so it's revoked
+        //             this.originalChartImage.src = URL.createObjectURL(blob);
+        //         });
+        //     }
+        // });
+    }
 
     private execRestore(image: any, width: number, height: number) {
         const shaderCode = `
@@ -719,216 +798,6 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
 
-    private initBuffers(vertices: Array<number> = [], itemSize: number, numItems: number): any {
-        // example
-        /* 
-        // 사각형 좌표
-        vertices = [
-            1.0,  1.0,  0.0,
-            -1.0,  1.0,  0.0,
-            1.0, -1.0,  0.0,
-            -1.0, -1.0,  0.0
-        ];
-
-        vertexBuffer.itemSize = 3; // 3 (col)
-        vertexBuffer.numItems = 4; // 4 (row)
-        */
-
-        // Create an empty buffer object
-        const vertexBuffer = this.gl.createBuffer();
-        vertexBuffer.itemSize = itemSize;
-        vertexBuffer.numItems = numItems;
-
-        // Bind appropriate array buffer to it
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, vertexBuffer);
-
-        // Pass the vertex data to the buffer
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices), this.gl.STATIC_DRAW);
-
-        // Unbind the buffer
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
-
-        return vertexBuffer;
-    }
-
-    private drawScene(buffer: any, dataSize: number, canvas: HTMLCanvasElement, glType: any) {
-        // 창을 설정
-        this.gl.viewport(0, 0, canvas.clientWidth, canvas.clientHeight);
-
-        if (this.seriesIndex === 0) {
-            // 화면 지우기
-            this.viewClear();
-        }
-
-        // Bind vertex buffer object
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, buffer);
-
-        // Get the attribute location
-        const coord = this.gl.getAttribLocation(this.shaderProgram, 'coordinates');
-
-        // Point an attribute to the currently bound VBO
-        this.gl.vertexAttribPointer(coord, buffer.itemSize, this.gl.FLOAT, false, 0, 0);
-
-        // Enable the attribute
-        this.gl.enableVertexAttribArray(coord);
-
-        this.gl.lineWidth(1 / 1000);
-
-        this.gl.drawArrays(glType, 0, dataSize);
-
-        // 선 그리기
-        // this.gl.drawArrays(this.gl.LINE_STRIP, 0, dataSize);
-
-        // 포인터 그리기
-        // this.gl.drawArrays(this.gl.POINTS, 0, dataSize);
-
-        // Bind vertex buffer object
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
-
-        // delayExcute(100 + this.seriesIndex * 10, () => {
-        //     if (!this.originalChartImage) {
-        //         // this.originalChartImage = new Image();
-        //         // this.originalChartImage.src = canvas.toDataURL('image/png');
-
-        //         canvas.toBlob((blob) => {
-        //             this.originalChartImage = new Image();
-        //             // this.originalChartImage.src = canvas.toDataURL('image/png');
-        //             this.originalChartImage.onload = () =>  URL.revokeObjectURL(this.originalChartImage.src);  // no longer need to read the blob so it's revoked
-        //             this.originalChartImage.src = URL.createObjectURL(blob);
-        //         });
-        //     }
-        // });
-    }
-
-    private addPluginEventListner(
-        x: any,
-        y: any,
-        geometry: ContainerSize,
-        style: { radius: number; strokeColor: string; strokeWidth: number }
-    ) {
-        this.subscription.unsubscribe();
-        this.subscription = new Subscription();
-
-        let startX = 0;
-        let startY = 0;
-        let endX = 0;
-        let endY = 0;
-
-        let isDragStart = false;
-
-        const selectionContext = (this.selectionCanvas.node() as any).getContext('2d');
-
-        this.subscription.add(
-            this.chartBase.zoomEvent$.subscribe((event: ChartMouseEvent) => {
-                if (event.type === 'dragstart') {
-                    this.pointerClear(selectionContext, geometry, this.chartBase);
-                    isDragStart = true;
-                } else if (event.type === 'zoomin') {
-                    endX = event.position[0];
-                    endY = event.position[1];
-
-                    isDragStart = false;
-                    this.viewClear();
-                } else if (event.type === 'zoomout') {
-                    this.isRestore = true;
-                    isDragStart = false;
-                    this.viewClear();
-                } else {
-                }
-            })
-        );
-
-        this.subscription.add(
-            this.chartBase.mouseEvent$.subscribe((event: ChartMouseEvent) => {
-                this.pointerClear(selectionContext, geometry, this.chartBase);
-                if (!this.originQuadTree) {
-                    return;
-                }
-                this.isMouseLeave = false;
-                if (event.type === 'mousemove') {
-                    this.move$.next(event.position);
-                } else if (event.type === 'mouseleave') {
-                    this.isMouseLeave = true;
-                    this.pointerClear(selectionContext, geometry, this.chartBase);
-                } else if (event.type === 'mouseup') {
-                    endX = event.position[0];
-                    endY = event.position[1];
-
-                    const selected = this.search(
-                        this.originQuadTree,
-                        endX - style.radius,
-                        endY - style.radius,
-                        endX + style.radius,
-                        endY + style.radius
-                    );
-
-                    if (selected.length) {
-                        // const selectedItem = selected[selected.length - 1];
-                        const selectedItem = selected[0];
-                        this.onClickItem(
-                            selectedItem,
-                            {
-                                width: geometry.width,
-                                height: geometry.height
-                            },
-                            [endX, endY]
-                        );
-                    } else {
-                        this.chartBase.hideTooltip();
-                    }
-                } else if (event.type === 'mousedown') {
-                    startX = event.position[0];
-                    startY = event.position[1];
-                } else {
-                }
-            })
-        );
-
-        this.subscription.add(
-            this.move$.pipe(debounceTime(100)).subscribe((value: any) => {
-                if (this.isMouseLeave || isDragStart) {
-                    return;
-                }
-
-                // http://plnkr.co/edit/AowXaSYsJM8NSH6IK5B7?p=preview&preview 참고
-                const selected = this.search(
-                    this.originQuadTree,
-                    value[0] - style.radius,
-                    value[1] - style.radius,
-                    value[0] + style.radius,
-                    value[1] + style.radius
-                );
-
-                delayExcute(100, () => {
-                    if (selected.length && !this.chartBase.isTooltipDisplay) {
-                        // const index = Math.floor(selected.length / 2);
-                        const index = selected.length - 1;
-                        const selectedItem = selected[index];
-                        this.drawTooltipPoint(geometry, selectedItem, {
-                            radius: style.radius / 2 + 1,
-                            strokeColor: style.strokeColor,
-                            strokeWidth: style.strokeWidth
-                        });
-                        this.setChartTooltip(
-                            selectedItem,
-                            {
-                                width: geometry.width,
-                                height: geometry.height
-                            },
-                            value
-                        );
-                    }
-                });
-            })
-        );
-    }
-
-    // TODO: move 만큼 호출 되는데 마지막에 한번만 호출 되도록 수정한다.
-    private pointerClear(context: any, geometry: ContainerSize, chartBase: ChartBase) {
-        context.clearRect(0, 0, geometry.width, geometry.height);
-        chartBase.hideTooltip();
-    }
-
     private drawTooltipPoint(
         geometry: ContainerSize,
         selectedItem: Array<[number, number, any]>,
@@ -956,7 +825,6 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
     }
 
     private viewClear() {
-        console.log('viewClear');
         // 화면 지우기
         this.gl.clearColor(0, 0, 0, 0); // rgba
 

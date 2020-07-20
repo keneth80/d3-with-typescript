@@ -37,7 +37,8 @@ export interface BasicCanvasTraceConfiguration extends SeriesConfiguration {
     isCurve?: boolean; // default : false
     style?: {
         strokeWidth?: number;
-        // stroke?: string;
+        strokeColor?: string;
+        opacity?: number;
         // fill?: string;
     },
     dot?: {
@@ -75,6 +76,10 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
     private strokeWidth = 2;
 
+    private strokeColor;
+
+    private strokeOpacity = 1;
+
     // private isAnimation: boolean = false;
 
     private parentElement: Selection<BaseType, any, HTMLElement, any>;
@@ -94,6 +99,15 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
     private isRestore = false;
 
+    // ================= style 관련 변수 =============== //
+    private radius = 4;
+
+    private lineStroke = 1;
+
+    private lineColor = '#000000';
+
+    private geometry: ContainerSize;
+
     constructor(configuration: BasicCanvasTraceConfiguration) {
         super(configuration);
         this.config = configuration;
@@ -112,6 +126,12 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
             if (configuration.style) {
                 this.strokeWidth = configuration.style.strokeWidth || this.strokeWidth;
+            }
+
+            if (configuration.style) {
+                this.strokeWidth = configuration.style.strokeWidth || this.strokeWidth;
+                this.strokeColor = configuration.style.strokeColor || null;
+                this.strokeOpacity = configuration.style.opacity || 1;
             }
         }
     }
@@ -152,6 +172,8 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
     drawSeries(chartBaseData: Array<T>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
         const chartData = this.seriesData ? this.seriesData : chartBaseData;
+
+        this.geometry = geometry;
         this.seriesColor = color;
         this.currentScales = scales;
         
@@ -160,7 +182,9 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         const x: any = xScale.scale;
         const y: any = yScale.scale;
 
-        const lineStroke = (this.config.style && this.config.style.strokeWidth) || 1;
+        this.radius = this.config.dot ? this.config.dot.radius || 4 : 0;
+
+        this.lineColor = this.strokeColor ? this.strokeColor : color;
 
         const xmin = xScale.min;
         const xmax = xScale.max;
@@ -182,43 +206,6 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
             .attr('width', geometry.width)
             .attr('height', geometry.height)
             .style('transform', `translate(${(this.chartBase.chartMargin.left + 1)}px, ${(this.chartBase.chartMargin.top)}px)`);
-
-        // this.pointerCanvas.select('rect')
-        //     .attr('width', geometry.width)
-        //     .attr('height', geometry.height);
-        
-        // this.pointerCanvas
-        //     .style('transform', `translate(${(this.chartBase.chartMargin.left)}px, ${(this.chartBase.chartMargin.top)}px)`);
-
-        // this.pointerCanvas.selectAll('.mouse-line-vertical')
-        //     .data([
-        //         {
-        //             width: 1,
-        //             height: geometry.height
-        //         }
-        //     ])
-        //     .join(
-        //         (enter) => enter.append('path').attr('class', 'mouse-line-vertical'),
-        //         (update) => update,
-        //         (exit) => exit.remove()
-        //     )
-        //     .style('stroke', 'black')
-        //     .style('stroke-width', '1px');
-
-        // this.pointerCanvas.selectAll('.mouse-line-horizontal')
-        //     .data([
-        //         {
-        //             width: geometry.width,
-        //             height: 1
-        //         }
-        //     ])
-        //     .join(
-        //         (enter) => enter.append('path').attr('class', 'mouse-line-horizontal'),
-        //         (update) => update,
-        //         (exit) => exit.remove()
-        //     )
-        //     .style('stroke', 'black')
-        //     .style('stroke-width', '1px');
 
         const context = (this.canvas.node() as any).getContext('2d');
         // context.clearRect(0, 0, geometry.width, geometry.height);
@@ -265,7 +252,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
         this.line(generateData);
         context.fillStyle = 'white';
-        context.lineWidth = lineStroke;
+        context.lineWidth = this.lineStroke;
         context.strokeStyle = color;
         context.save();
         context.stroke();
@@ -273,7 +260,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         console.timeEnd('tracerendering');
 
         // mouse event listen
-        this.addPluginEventListner(x, y, geometry);
+        // this.addPluginEventListner(x, y, geometry);
 
         if (this.originQuadTree) {
             this.originQuadTree = undefined;
@@ -309,107 +296,47 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         this.pointerCanvas.remove();
     }
 
-    private addPluginEventListner(x: any, y: any, geometry: ContainerSize) {
-        this.subscription.unsubscribe();
-        this.subscription = new Subscription();
-
-        const radius = this.config.dot ? (this.config.dot.radius || 4) : 0 / 2;
-        let startX = 0;
-        let startY = 0;
-        let endX = 0;
-        let endY = 0;
-
-        let isDragStart = false;
-
-        const selectionContext = (this.selectionCanvas.node() as any).getContext('2d');
-
-        this.subscription.add(
-            this.chartBase.zoomEvent$.subscribe((event: ChartMouseEvent) => {
-                if (event.type === 'dragstart') {
-                    this.pointerClear(selectionContext, geometry, this.chartBase);
-                    isDragStart = true;
-                    this.move$.next(event.position);
-                } else if (event.type === 'zoomin') {
-                    endX = event.position[0];
-                    endY = event.position[1];
-
-                    const xScale: Scale = this.currentScales.find((scale: Scale) => scale.orient === Placement.BOTTOM);
-                    const yScale: Scale = this.currentScales.find((scale: Scale) => scale.orient === Placement.LEFT);
-                    
-                    isDragStart = false;
-                    this.viewClear(geometry);
-                } else if (event.type === 'zoomout') {
-                    this.isRestore = true;
-                    isDragStart = false;
-                    this.viewClear(geometry);
-                } else {
-
-                }
-            })
+    getSeriesDataByPosition(value: Array<number>) {
+        return this.search(
+            this.originQuadTree,
+            value[0] - this.config.dot.radius,
+            value[1] - this.config.dot.radius,
+            value[0] + this.config.dot.radius,
+            value[1] + this.config.dot.radius
         );
+    }
 
-        this.subscription.add(
-            this.chartBase.mouseEvent$.subscribe((event: ChartMouseEvent) => {
-                this.pointerClear(selectionContext, geometry, this.chartBase);
-                if (!this.originQuadTree) {
-                    return;
-                }
-                this.isMouseLeave = false;
-                if (event.type === 'mousemove') {
-                    this.move$.next(event.position);
-                } else if (event.type === 'mouseleave') {
-                    this.isMouseLeave = true;
-                    this.pointerClear(selectionContext, geometry, this.chartBase);
-                } else if (event.type === 'mouseup') {
-                    endX = event.position[0];
-                    endY = event.position[1];
-                    
-                    const selected = this.search(this.originQuadTree, endX - radius, endY - radius, endX + radius, endY + radius);
-                    
-                    if (selected.length) {
-                        // const selectedItem = selected[selected.length - 1];
-                        const selectedItem = selected[0];
-                        this.onClickItem(selectedItem, {
-                            width: geometry.width, height: geometry.height
-                        }, [endX, endY]);
-                    } else {
-                        this.chartBase.hideTooltip();
-                    }
+    showPointAndTooltip(value: Array<number>, selected: Array<any>) {
+        if (selected.length && !this.chartBase.isTooltipDisplay) {
+            // const index = Math.floor(selected.length / 2);
+            const index = selected.length - 1;
+            const selectedItem = selected[index];
+            this.drawTooltipPoint(this.geometry, selectedItem, {
+                radius: this.config.dot.radius / 2 + 1,
+                strokeColor: this.strokeColor,
+                strokeWidth: this.strokeWidth
+            });
+            this.setChartTooltip(
+                selectedItem,
+                {
+                    width: this.geometry.width,
+                    height: this.geometry.height
+                },
+                value
+            );
+        }
+    }
 
-                } else if (event.type === 'mousedown') {
-                    startX = event.position[0];
-                    startY = event.position[1];
-                } else {
-
-                }
-            })
+    onSelectItem(selectedItem: Array<any>, event: ChartMouseEvent) {
+        console.log('onSelectItem : ', selectedItem, event);
+        this.onClickItem(
+            selectedItem,
+            {
+                width: this.geometry.width,
+                height: this.geometry.height
+            },
+            [event.position[0], event.position[1]]
         );
-        
-        this.subscription.add(
-            this.move$
-            .pipe(
-                debounceTime(200)
-            )
-            .subscribe((value: any) => {
-                if (this.isMouseLeave || isDragStart) {
-                    return;
-                }
-                
-                // http://plnkr.co/edit/AowXaSYsJM8NSH6IK5B7?p=preview&preview 참고
-                const selected = this.search(this.originQuadTree, Math.round(value[0]) - radius, Math.round(value[1]) - radius, Math.round(value[0]) + radius, Math.round(value[1]) + radius);
-                
-                delayExcute(50, () => {
-                    if (selected.length && !this.chartBase.isTooltipDisplay) {
-                        const index = Math.floor(selected.length / 2);
-                        const selectedItem = selected[index];
-                        this.drawTooltipPoint(geometry, [selectedItem[0] - 1, selectedItem[1]], {radius: radius, strokeColor: this.seriesColor, strokeWidth: this.strokeWidth});
-                        this.setChartTooltip(selectedItem, {
-                            width: geometry.width, height: geometry.height
-                        }, value);
-                    }
-                });
-            })
-        )
     }
 
     private pointerClear(context: any, geometry: ContainerSize, chartBase: ChartBase) {
@@ -417,20 +344,22 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         chartBase.hideTooltip();
     }
 
-    private search(quadtree: Quadtree<Array<any>>, x0: number, y0: number, x3: number, y3: number) {
+    private search(quadtreeObj: Quadtree<Array<any>>, x0: number, y0: number, x3: number, y3: number) {
         const temp = [];
-        quadtree.visit((node: any, x1: number, y1: number, x2: number, y2: number) => {
-            if (!node.length) {
-                do {
-                    const d = node.data;
-                    const selected = (d[0] >= x0) && (d[0] < x3) && (d[1] >= y0) && (d[1] < y3);
-                    if (selected) {
-                        temp.push(d);
-                    }
-                } while (node = node.next);
-            }
-            return x1 >= x3 || y1 >= y3 || x2 < x0 || y2 < y0;
-        });
+        if (quadtreeObj) {
+            quadtreeObj.visit((node: any, x1: number, y1: number, x2: number, y2: number) => {
+                if (!node.length) {
+                    do {
+                        const d = node.data;
+                        const selected = d[0] >= x0 && d[0] < x3 && d[1] >= y0 && d[1] < y3;
+                        if (selected) {
+                            temp.push(d);
+                        }
+                    } while ((node = node.next));
+                }
+                return x1 >= x3 || y1 >= y3 || x2 < x0 || y2 < y0;
+            });
+        }
 
         return temp;
     }

@@ -365,6 +365,10 @@ export class ChartBase<T = any> implements IChart {
         return this;
     }
 
+    clear() {
+        
+    }
+
     showTooltip(): Selection<BaseType, any, HTMLElement, any> {
         if (!this.isTooltipDisplay) {
             this.isTooltipDisplay = true;
@@ -1709,8 +1713,10 @@ export class ChartBase<T = any> implements IChart {
 
     private pointerClear() {
         const selectionCanvas = select((this.svg.node() as HTMLElement).parentElement).select('.' + ChartBase.SELECTION_CANVAS);
-        const context = (selectionCanvas.node() as any).getContext('2d');
-        context.clearRect(0, 0, this.width, this.height);
+        if (selectionCanvas.node()) {
+            const context = (selectionCanvas.node() as any).getContext('2d');
+            context.clearRect(0, 0, this.width, this.height);
+        }
         this.hideTooltip();
     }
 

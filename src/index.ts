@@ -36,10 +36,9 @@ import { Placement, Align, Shape, ScaleType, Direction } from './component/chart
 import { lineData } from './component/mock-data/line-one-field-data';
 import { BasicCanvasLineSeries } from './component/series/basic-canvas-line-series';
 import { ExampleSeries } from './component/series/example-series';
-import { BasicCanvasWebgLineSeriesOne, BasicCanvasWebglLineSeriesOneConfiguration } from './component/series/basic-canvas-webgl-line-series-one';
+import { BasicCanvasWebgLineSeriesOne, BasicCanvasWebglLineSeriesOneConfiguration, BasicCanvasWebglLineSeriesOneModel } from './component/series/basic-canvas-webgl-line-series-one';
 import { BasicCanvasTrace, BasicCanvasTraceModel } from './component/series/basic-canvas-trace';
 import { BasicCanvasMouseZoomHandler } from './component/functions/basic-canvas-mouse-zoom-handler';
-import { BasicCanvasWebglLineSeriesModel, BasicCanvasWebgLineSeries } from './component/series/basic-canvas-webgl-line-series';
 import { BasicCanvasMouseHandler } from './component/functions';
 import { BasicSpecArea } from './component/options/basic-svg-spec-area';
 import { BasicStepArea } from './component/options/basic-svg-step-area';
@@ -215,114 +214,130 @@ const dfdChartSample = () => {
 
     const seriesList = [];
 
+    const alarmSeriesList = [];
+
     const optionList = [];
-
-    const basicSpecArea = new BasicSpecArea({
-        selector: 'spec',
-        startField: 'start',
-        endField: 'end',
-        data: [stepData[2]]
-    });
-
-    const basicStepLine = new BasicStepLine({
-        selector: 'step-line',
-        xField: 'start',
-        data: stepData
-    });
-    
-    const basicStepArea = new BasicStepArea({
-        selector: 'step',
-        startField: 'start',
-        labelField: 'label',
-        endField: 'end',
-        data: stepData
-    });
-
-    optionList.push(basicSpecArea);
-    optionList.push(basicStepArea);
-    optionList.push(basicStepLine);
 
     let xmin = 0;
     let xmax = 0;
     let ymin = Infinity;
     let ymax = 0;
 
-    const alarmSeriesList = [];
-    for (let i = 0; i < tracePoints.length; i++) {
-        const tempData = tracePoints[i];
-        const seriesData = tempData.data.rows.map((row: Array<any>) => {
-            const rowData: any = {};
-            for (let j = 0; j < tempData.data.columns.length; j++) {
-                const columnName = tempData.data.columns[j];
-                rowData[columnName] = row[j];
-            }
+    const parseData = () => {
+        seriesList.length = 0;
+        alarmSeriesList.length = 0;
+        optionList.length = 0;
 
-            const x = rowData['count_slot'];
-            const y = rowData['VALUE'];
-
-            if (xmin > x) {
-                xmin = x;
-            }
-            if (xmax < x) {
-                xmax = x;
-            }
-            if (ymin > y) {
-                ymin = y;
-            }
-            if (ymax < y) {
-                ymax = y;
-            }
-
-            return new BasicCanvasWebglLineSeriesModel(
-                x,
-                y,
-                i,
-                rowData
-            );
+        const basicSpecArea = new BasicSpecArea({
+            selector: 'spec',
+            startField: 'start',
+            endField: 'end',
+            data: [stepData[2]]
         });
-
-        // test data 늘리기
-        // const tempRow: BasicCanvasWebglLineSeriesModel = seriesData[seriesData.length - 1];
-        // for (let index = 1; index < 10000; index++) {
-        //     const x = tempRow.x + index;
-        //     const y = tempRow.y;
-
-        //     if (xmax < x) {
-        //         xmax = x;
-        //     }
-
-        //     seriesData.push(new BasicCanvasWebglLineSeriesModel(
-        //         x,
-        //         y,
-        //         i,
-        //         tempRow
-        //     ));
-        // }
-
-        // type별 컬러 지정.
-        const seriesColor = setSeriesColor(tempData);
-
-        const configuration: BasicCanvasWebglLineSeriesOneConfiguration = {
-            type: 'series',
-            selector: (seriesColor === '#EA3010' ? 'webgl-trace-alarm' : 'webgl-trace')  + i,
-            xField: 'x',
-            yField: 'y',
-            dot: {
-                radius: 4
-            },
-            style: {
-                strokeColor: seriesColor,
-                // opacity: seriesColor === '#EA3010' ? 1 :  0.9
-            },
-            data: seriesData
-        }
+    
+        const basicStepLine = new BasicStepLine({
+            selector: 'step-line',
+            xField: 'start',
+            data: stepData
+        });
         
-        if (seriesColor === '#EA3010') {
-            alarmSeriesList.push(new BasicCanvasWebgLineSeriesOne(configuration));
-        } else {
-            seriesList.push(new BasicCanvasWebgLineSeriesOne(configuration));
+        const basicStepArea = new BasicStepArea({
+            selector: 'step',
+            startField: 'start',
+            labelField: 'label',
+            endField: 'end',
+            data: stepData
+        });
+    
+        optionList.push(basicSpecArea);
+        optionList.push(basicStepArea);
+        optionList.push(basicStepLine);
+        
+
+        xmin = 0;
+        xmax = 0;
+        ymin = Infinity;
+        ymax = 0;
+
+        for (let i = 0; i < tracePoints.length; i++) {
+            const tempData = tracePoints[i];
+            const seriesData = tempData.data.rows.map((row: Array<any>) => {
+                const rowData: any = {};
+                for (let j = 0; j < tempData.data.columns.length; j++) {
+                    const columnName = tempData.data.columns[j];
+                    rowData[columnName] = row[j];
+                }
+    
+                const x = rowData['count_slot'];
+                const y = rowData['VALUE'];
+    
+                if (xmin > x) {
+                    xmin = x;
+                }
+                if (xmax < x) {
+                    xmax = x;
+                }
+                if (ymin > y) {
+                    ymin = y;
+                }
+                if (ymax < y) {
+                    ymax = y;
+                }
+    
+                return new BasicCanvasWebglLineSeriesOneModel(
+                    x,
+                    y,
+                    i,
+                    rowData
+                );
+            });
+    
+            // test data 늘리기
+            const tempRow: BasicCanvasWebglLineSeriesOneModel = seriesData[seriesData.length - 1];
+            for (let index = 1; index < 100000; index++) {
+                const x = tempRow.x + index;
+                const y = tempRow.y;
+    
+                if (xmax < x) {
+                    xmax = x;
+                }
+    
+                seriesData.push(new BasicCanvasWebglLineSeriesOneModel(
+                    x,
+                    y,
+                    i,
+                    tempRow
+                ));
+            }
+    
+            // type별 컬러 지정.
+            const seriesColor = setSeriesColor(tempData);
+    
+            const configuration: BasicCanvasWebglLineSeriesOneConfiguration = {
+                type: 'series',
+                selector: (seriesColor === '#EA3010' ? 'webgl-trace-alarm' : 'webgl-trace')  + i,
+                xField: 'x',
+                yField: 'y',
+                dot: {
+                    radius: 4
+                },
+                style: {
+                    strokeColor: seriesColor,
+                    // opacity: seriesColor === '#EA3010' ? 1 :  0.9
+                },
+                data: seriesData
+            }
+            
+            if (seriesColor === '#EA3010') {
+                alarmSeriesList.push(new BasicCanvasWebgLineSeriesOne(configuration));
+            } else {
+                seriesList.push(new BasicCanvasWebgLineSeriesOne(configuration));
+            }
         }
     }
+
+    parseData();
+
     // console.log('traceData : ', tracePoints);
     console.time('webgllinedraw');
     const webglLineChart = new BasicChart<BasicCanvasTraceModel>({
@@ -367,131 +382,14 @@ const dfdChartSample = () => {
         console.timeEnd('webgllinedraw');
     });
 
+    select('#clear').on('click', () => {
+        alarmSeriesList[0].clear();
+    });
+
     // json('./component/mock-data/dfd-page.json')
     // .then((data: any) => {
     //     console.log('json data : ', data);
     // });
-}
-
-const webglTraceChart = () => {
-    const randomX = randomNormal(0, 9);
-    const randomY = randomNormal(0, 9);
-    let xmin = 0;
-    let xmax = 0;
-    let ymin = 0;
-    let ymax = 0;
- 
-    const numberPoints = 500000; // 1000000
-
-    const startDt = new Date().getTime();
-    let endDt = 0;
-    const term = 1000;
-    const data = range(numberPoints).map((d: number) => {
-        const x = startDt + (term * d);
-        const y = parseFloat(randomY().toFixed(2));
-        // const i = index;
-        const i = d%numberPoints / 3 === 0 ? 0 : parseFloat(randomY().toFixed(2));
-        // const y = i%10 === 0 ? parseFloat(randomX().toFixed(2)) : i;
-        // const y = i * 10;
-        if (xmin > x) {
-            xmin = x;
-        }
-        if (xmax < x) {
-            xmax = x;
-        }
-        if (ymin > y) {
-            ymin = y;
-        }
-        if (ymax < y) {
-            ymax = y;
-        }
-
-        endDt = x;
-        return new BasicCanvasWebglLineSeriesModel(
-            x,
-            y,
-            i,
-            {}
-        );
-    });
-
-    const webglTrace = new BasicCanvasWebgLineSeries({
-        selector: 'webgl-trace',
-        xField: 'x',
-        yField: 'y',
-        dot: {
-            radius: 4
-        },
-        style: {
-            strokeColor: '#0dac09'
-        }
-    });
-
-    webglTrace.$currentItem.subscribe((item: any) => {
-        console.log('select : ', item);
-    });
-
-    const webglTrace2 = new BasicCanvasWebgLineSeries({
-        selector: 'webgl-trace2',
-        xField: 'x',
-        yField: 'i',
-        dot: {
-            radius: 4
-        },
-        style: {
-            strokeColor: '#EA3010'
-        }
-    });
-
-    webglTrace2.$currentItem.subscribe((item: any) => {
-        console.log('select2 : ', item);
-    });
-
-    const dtFmt = timeFormat('%m-%d %H:%M:%S');
-    const webglLineChart = new BasicChart<BasicCanvasTraceModel>({
-        selector: '#webgllinechart',
-        data,
-        calcField: 'y',
-        isResize: true,
-        // displayDelay: {
-        //     delayTime: 100
-        // },
-        axes: [
-            {
-                field: 'x',
-                type: ScaleType.NUMBER,
-                placement: 'bottom',
-                // tickFormat: '%m-%d %H:%M:%S',
-                tickTextParser: (d: any) => dtFmt(new Date(d)),
-                min: startDt - term * (numberPoints * 0.005),
-                max: endDt + term * (numberPoints * 0.005),
-                // min: 0,
-                // max: numberPoints,
-                tickSize: 5
-            },
-            {
-                field: 'y',
-                type: ScaleType.NUMBER,
-                placement: 'left',
-                min: ymin - (ymax * 0.5),
-                max: ymax + (ymax * 0.5)
-            }
-        ],
-        series: [
-            webglTrace,
-            webglTrace2
-        ],
-        functions: [
-            new BasicCanvasMouseZoomHandler({
-                xDirection: 'bottom',
-                yDirection: 'left',
-                direction: Direction.HORIZONTAL
-            }),
-            new BasicCanvasMouseHandler({
-                isMoveEvent: true
-            })
-        ]
-    }).draw();
 }
 
 const canvasTraceChart = () => {
@@ -554,6 +452,10 @@ const canvasTraceChart = () => {
     const scatterChart = new BasicChart<BasicCanvasTraceModel>({
         selector: '#canvastracechart',
         data,
+        title: {
+            placement: Placement.TOP,
+            content: 'Canvas Trace Chart'
+        },
         calcField: 'y',
         isResize: true,
         axes: [
@@ -581,9 +483,6 @@ const canvasTraceChart = () => {
             new BasicCanvasMouseZoomHandler({
                 xDirection: 'bottom',
                 yDirection: 'left'
-            }),
-            new BasicCanvasMouseHandler({
-                isMoveEvent: true
             })
         ]
     }).draw();
@@ -638,6 +537,10 @@ const canvasScatter = (id: string) => {
     const scatterChart = new BasicChart<BasicCanvasScatterPlotModel>({
         selector: id,
         data,
+        title: {
+            placement: Placement.TOP,
+            content: 'Canvas Scatter Plot'
+        },
         margin: {
             top: 10, right: 10, bottom: 30, left: 40
         },
@@ -847,6 +750,10 @@ const svgTraceChart = () => {
         selector: '#svgtrace',
         data,
         calcField: 'y',
+        title: {
+            placement: Placement.TOP,
+            content: 'SVG Line Series'
+        },
         isResize: true,
         axes: [
             {
@@ -1662,15 +1569,13 @@ const gaugeChart = () => {
 
 dfdChartSample();
 
-// webglTraceChart();
-
 canvasLineChart();
 
-// canvasTraceChart();
+canvasTraceChart();
 
-// canvasScatter('#scatter');
+canvasScatter('#scatter');
 
-// svgTraceChart();
+svgTraceChart();
 
 // lineChart();
 

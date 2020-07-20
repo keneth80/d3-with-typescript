@@ -64,6 +64,8 @@ export interface IChart {
 
     draw(): void;
 
+    clear(): void;
+
     showTooltip(): Selection<BaseType, any, HTMLElement, any>;
 
     hideTooltip(): Selection<BaseType, any, HTMLElement, any>;
