@@ -159,26 +159,12 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
                 .datum({
                     index
                 })
-                .attr('class', 'drawing-canvas')
+                .attr('class', ChartBase.DRAWING_CANVAS)
                 .style('opacity', this.strokeOpacity)
                 .style('z-index', 2)
                 .style('position', 'absolute');
         } else {
-            this.canvas = this.parentElement.select('.drawing-canvas');
-        }
-
-        if (
-            !select((this.svg.node() as HTMLElement).parentElement)
-                .select('.selection-canvas')
-                .node()
-        ) {
-            this.selectionCanvas = select((this.svg.node() as HTMLElement).parentElement)
-                .append('canvas')
-                .attr('class', 'selection-canvas')
-                .style('z-index', 4)
-                .style('position', 'absolute');
-        } else {
-            this.selectionCanvas = select((this.svg.node() as HTMLElement).parentElement).select('.selection-canvas');
+            this.canvas = this.parentElement.select('.' + ChartBase.DRAWING_CANVAS);
         }
     }
 
@@ -230,14 +216,6 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         // console.timeEnd('data_generate' + this.selector);
 
         this.canvas
-            .attr('width', geometry.width)
-            .attr('height', geometry.height)
-            .style(
-                'transform',
-                `translate(${this.chartBase.chartMargin.left + 1}px, ${this.chartBase.chartMargin.top}px)`
-            );
-
-        this.selectionCanvas
             .attr('width', geometry.width)
             .attr('height', geometry.height)
             .style(
@@ -324,7 +302,6 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
     }
 
     onSelectItem(selectedItem: Array<any>, event: ChartMouseEvent) {
-        console.log('onSelectItem : ', selectedItem, event);
         this.onClickItem(
             selectedItem,
             {
@@ -803,7 +780,8 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         selectedItem: Array<[number, number, any]>,
         style: { radius: number; strokeColor: string; strokeWidth: number }
     ) {
-        const context = (this.selectionCanvas.node() as any).getContext('2d');
+        const selectionCanvas = select((this.svg.node() as HTMLElement).parentElement).select('.' + ChartBase.SELECTION_CANVAS);
+        const context = (selectionCanvas.node() as any).getContext('2d');
         context.clearRect(0, 0, geometry.width, geometry.height);
         context.fillStyle = style.strokeColor;
         context.lineWidth = style.strokeWidth;

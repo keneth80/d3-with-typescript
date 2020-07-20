@@ -444,6 +444,15 @@ const canvasTraceChart = () => {
         }
     });
 
+    const canvasTrace2 = new BasicCanvasTrace({
+        selector: 'canvas-trace2',
+        xField: 'x',
+        yField: 'i',
+        dot: {
+            radius: 4
+        }
+    });
+
     canvasTrace.$currentItem.subscribe((item: any) => {
         console.log('item : ', item);
     })
@@ -477,7 +486,8 @@ const canvasTraceChart = () => {
             }
         ],
         series: [
-            canvasTrace
+            canvasTrace,
+            canvasTrace2
         ],
         functions: [
             new BasicCanvasMouseZoomHandler({

@@ -56,10 +56,6 @@ interface Indexing {
 export class BasicCanvasTrace<T = any> extends SeriesBase {
     protected canvas: Selection<BaseType, any, HTMLElement, any>;
 
-    protected pointerCanvas: Selection<BaseType, any, HTMLElement, any>;
-
-    private selectionCanvas: Selection<BaseType, any, HTMLElement, any>;
-
     private tooltipGroup: Selection<BaseType, any, HTMLElement, any>;
 
     private line: any;
@@ -159,15 +155,15 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                 .style('position', 'absolute');
         }
 
-        if (!select((this.svg.node() as HTMLElement).parentElement).select('.selection-canvas').node()) {
-            this.selectionCanvas = select((this.svg.node() as HTMLElement).parentElement)
-                .append('canvas')
-                .attr('class', 'selection-canvas')
-                .style('z-index', index + 9)
-                .style('position', 'absolute');
-        } else {
-            this.selectionCanvas = select((this.svg.node() as HTMLElement).parentElement).select('.selection-canvas');
-        }
+        // if (!select((this.svg.node() as HTMLElement).parentElement).select('.selection-canvas').node()) {
+        //     this.selectionCanvas = select((this.svg.node() as HTMLElement).parentElement)
+        //         .append('canvas')
+        //         .attr('class', 'selection-canvas')
+        //         .style('z-index', index + 9)
+        //         .style('position', 'absolute');
+        // } else {
+        //     this.selectionCanvas = select((this.svg.node() as HTMLElement).parentElement).select('.selection-canvas');
+        // }
     }
 
     drawSeries(chartBaseData: Array<T>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
@@ -202,10 +198,10 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
             .attr('height', geometry.height)
             .style('transform', `translate(${(this.chartBase.chartMargin.left)}px, ${(this.chartBase.chartMargin.top)}px)`);
 
-        this.selectionCanvas
-            .attr('width', geometry.width)
-            .attr('height', geometry.height)
-            .style('transform', `translate(${(this.chartBase.chartMargin.left + 1)}px, ${(this.chartBase.chartMargin.top)}px)`);
+        // this.selectionCanvas
+        //     .attr('width', geometry.width)
+        //     .attr('height', geometry.height)
+        //     .style('transform', `translate(${(this.chartBase.chartMargin.left + 1)}px, ${(this.chartBase.chartMargin.top)}px)`);
 
         const context = (this.canvas.node() as any).getContext('2d');
         // context.clearRect(0, 0, geometry.width, geometry.height);
@@ -216,8 +212,6 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         // TODO: zoom in out 시 crossfilter 사용해서 filtering해야함.
         const lineData: Array<any> = (!this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item)))
         .filter((d: T) => d[this.xField] >= (xmin - xmin * 0.01) && d[this.xField] <= (xmax + xmax * 0.01) && d[this.yField] >= ymin && d[this.yField] <= ymax);
-        // const lineData = this.crossFilterDimension ? this.crossFilterDimension.filter(this.config.crossFilter.filterValue).top(Infinity) : 
-        // !this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item));
 
         console.time('traceindexing');
         const generateData: Array<any> = lineData
@@ -253,6 +247,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         this.line(generateData);
         context.fillStyle = 'white';
         context.lineWidth = this.lineStroke;
+        // context.lineWidth = 0.5;
         context.strokeStyle = color;
         context.save();
         context.stroke();
@@ -293,7 +288,6 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         this.subscription.unsubscribe();
         this.canvas.remove();
         this.memoryCanvas.remove();
-        this.pointerCanvas.remove();
     }
 
     getSeriesDataByPosition(value: Array<number>) {
@@ -420,7 +414,8 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         position: Array<number>, 
         style:{radius: number, strokeColor: string, strokeWidth: number}
     ) {
-        const context = (this.selectionCanvas.node() as any).getContext('2d');
+        const selectionCanvas = select((this.svg.node() as HTMLElement).parentElement).select('.' + ChartBase.SELECTION_CANVAS);
+        const context = (selectionCanvas.node() as any).getContext('2d');
         context.clearRect(0, 0, geometry.width, geometry.height);
         context.fillStyle = this.seriesColor;
         context.lineWidth = style.strokeWidth;
