@@ -20,6 +20,8 @@ import { guid, textWrapping, getTextWidth, getMaxText, drawSvgCheckBox, getAxisB
 import { IFunctions } from './functions.interface';
 import { IOptions } from './options.interface';
 
+import { baseTooltipTemplate } from '../chart/util/tooltip-template';
+
 
 // TODO: 모든 참조되는 함수들은 subject로 바꾼다.
 export class ChartBase<T = any> implements IChart {
@@ -398,35 +400,8 @@ export class ChartBase<T = any> implements IChart {
         }
 
         this.isTooltip = true;
-        this.tooltipGroup.selectAll('.tooltip-background')
-            .data(['background'])
-            .join(
-                (enter) => enter.append('rect').attr('class', '.tooltip-background'),
-                (update) => update,
-                (exit) => exit.remove()
-            )
-            .attr('rx', 3)
-            .attr('ry', 3)
-            .attr('x', 0)
-            .attr('y', 0)
-            .attr('width', 60)
-            .attr('height', 20)
-            .attr('fill', '#111')
-            .style('fill-opacity', 0.6);
 
-        this.tooltipGroup.selectAll('.tooltip-text')
-            .data(['text'])
-            .join(
-                (enter) => enter.append('text').attr('class', '.tooltip-text'),
-                (update) => update,
-                (exit) => exit.remove()
-            )
-            .attr('x', 5)
-            .attr('dy', '1.2em')
-            .style('text-anchor', 'start')
-            .style('fill', '#fff')
-            .attr('font-size', '14px')
-            .attr('font-weight', '100');
+        baseTooltipTemplate(this.tooltipGroup);
     }
 
     showTooltipBySeriesSelector(selector: string): Selection<BaseType, any, HTMLElement, any> {
@@ -879,7 +854,6 @@ export class ChartBase<T = any> implements IChart {
 
         this.subscription.add(
             this.mouseEvent$.subscribe((event: ChartMouseEvent) => {
-                
                 if (event.type === 'mousemove') {
                     isMouseLeave = false;
                     this.pointerClear();
@@ -887,11 +861,9 @@ export class ChartBase<T = any> implements IChart {
                         this.move$.next(event.position);
                     }
                 } else if (event.type === 'mouseleave') {
-                    console.log('mouseleave : ', event);
                     isMouseLeave = true;
                     this.pointerClear();
                 } else if (event.type === 'mouseup') {
-                    console.log('mouseup : ', event);
                     isDragStart = false;
                     let max = this.seriesList.length;
                     while(max--) {
@@ -903,11 +875,8 @@ export class ChartBase<T = any> implements IChart {
                     }
 
                 } else if (event.type === 'mousedown') {
-                    console.log('mousedown : ', event);
-                    // startX = event.position[0];
-                    // startY = event.position[1];
+                    
                 } else {
-                    console.log('mouse? : ', event);
                     isDragStart = false;
                     let max = this.seriesList.length;
                     while(max--) {
@@ -923,7 +892,6 @@ export class ChartBase<T = any> implements IChart {
 
         this.subscription.add(
             this.move$.pipe(debounceTime(200)).subscribe((value: any) => {
-                console.log('move : ', value);
                 if (!isDragStart && !isMouseLeave) {
                     let max = this.seriesList.length;
                     while(max--) {
@@ -942,7 +910,6 @@ export class ChartBase<T = any> implements IChart {
 
         this.subscription.add(
             this.zoomEvent$.subscribe((event: ChartZoomEvent) => {
-                console.log('zoom : ', event);
                 if (event.type === 'dragstart') {
                     isDragStart = true;
                     this.pointerClear();
