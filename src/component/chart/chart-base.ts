@@ -879,6 +879,7 @@ export class ChartBase<T = any> implements IChart {
 
         this.subscription.add(
             this.mouseEvent$.subscribe((event: ChartMouseEvent) => {
+                
                 if (event.type === 'mousemove') {
                     isMouseLeave = false;
                     this.pointerClear();
@@ -886,9 +887,12 @@ export class ChartBase<T = any> implements IChart {
                         this.move$.next(event.position);
                     }
                 } else if (event.type === 'mouseleave') {
+                    console.log('mouseleave : ', event);
                     isMouseLeave = true;
                     this.pointerClear();
                 } else if (event.type === 'mouseup') {
+                    console.log('mouseup : ', event);
+                    isDragStart = false;
                     let max = this.seriesList.length;
                     while(max--) {
                         const positionData = this.seriesList[max].getSeriesDataByPosition(event.position);
@@ -899,9 +903,12 @@ export class ChartBase<T = any> implements IChart {
                     }
 
                 } else if (event.type === 'mousedown') {
+                    console.log('mousedown : ', event);
                     // startX = event.position[0];
                     // startY = event.position[1];
                 } else {
+                    console.log('mouse? : ', event);
+                    isDragStart = false;
                     let max = this.seriesList.length;
                     while(max--) {
                         const positionData = this.seriesList[max].getSeriesDataByPosition(event.position);
@@ -916,6 +923,7 @@ export class ChartBase<T = any> implements IChart {
 
         this.subscription.add(
             this.move$.pipe(debounceTime(200)).subscribe((value: any) => {
+                console.log('move : ', value);
                 if (!isDragStart && !isMouseLeave) {
                     let max = this.seriesList.length;
                     while(max--) {
@@ -934,6 +942,7 @@ export class ChartBase<T = any> implements IChart {
 
         this.subscription.add(
             this.zoomEvent$.subscribe((event: ChartZoomEvent) => {
+                console.log('zoom : ', event);
                 if (event.type === 'dragstart') {
                     isDragStart = true;
                     this.pointerClear();
@@ -967,6 +976,8 @@ export class ChartBase<T = any> implements IChart {
                     this.updateFunctions();
                     this.updateSeries();
                     this.updateOptions()
+                } else {
+                    isDragStart = false;
                 }
             })
         );
@@ -1713,7 +1724,7 @@ export class ChartBase<T = any> implements IChart {
 
     private pointerClear() {
         const selectionCanvas = select((this.svg.node() as HTMLElement).parentElement).select('.' + ChartBase.SELECTION_CANVAS);
-        if (selectionCanvas.node()) {
+        if (selectionCanvas && selectionCanvas.node()) {
             const context = (selectionCanvas.node() as any).getContext('2d');
             context.clearRect(0, 0, this.width, this.height);
         }

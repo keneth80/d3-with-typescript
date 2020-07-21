@@ -37,7 +37,7 @@ import { lineData } from './component/mock-data/line-one-field-data';
 import { BasicCanvasLineSeries } from './component/series/basic-canvas-line-series';
 import { ExampleSeries } from './component/series/example-series';
 import { BasicCanvasWebgLineSeriesOne, BasicCanvasWebglLineSeriesOneConfiguration, BasicCanvasWebglLineSeriesOneModel } from './component/series/basic-canvas-webgl-line-series-one';
-import { BasicCanvasTrace, BasicCanvasTraceModel } from './component/series/basic-canvas-trace';
+import { BasicCanvasTrace, BasicCanvasTraceModel, BasicCanvasTraceConfiguration } from './component/series/basic-canvas-trace';
 import { BasicCanvasMouseZoomHandler } from './component/functions/basic-canvas-mouse-zoom-handler';
 import { BasicCanvasMouseHandler } from './component/functions';
 import { BasicSpecArea } from './component/options/basic-svg-spec-area';
@@ -173,36 +173,36 @@ const examples = [
 
 // example();
 
-const dfdChartSample = () => {
-    const setSeriesColor = (data: any) => {
-        const seriesFaultType = data.referenceYn === 'Y' ? '' : data.segmentStatus;
-        // console.log('setSeriesColor : ', data.referenceYn, data.fdtaFaultYn, seriesFaultType, data.primeYn);
-        if (data.referenceYn === 'N' && data.fdtaFaultYn === 'Y' && seriesFaultType === 'F' && data.primeYn === 'N') { // selectedAlarm
-            // console.log('selectedAlarm');
-            return '#EA3010';
-        } else if (data.referenceYn === 'N' && data.fdtaFaultYn === 'N' && seriesFaultType === 'F' && data.primeYn === 'N') { //Fault
-            // console.log('Fault');
-            return '#f57416';
-        } else if (data.referenceYn === 'N' && data.fdtaFaultYn === 'N' && seriesFaultType === 'W' && data.primeYn === 'N') { // Warning
-            // console.log('Warning');
-            return '#f7ba00';
-        } else if (data.referenceYn === 'N' && data.fdtaFaultYn === 'N' && seriesFaultType === 'S' && data.primeYn === 'N') { // Safe
-            // console.log('Safe');
-            return '#0dac09';
-        } else if (data.referenceYn === 'Y' && data.fdtaFaultYn === 'Y' && seriesFaultType === '' && data.primeYn === 'N') { // referenceAlarm
-            // console.log('referenceAlarm');
-            return '#970f94';
-        } else if (data.referenceYn === 'Y' && data.fdtaFaultYn === 'N' && seriesFaultType === '' && data.primeYn === 'N') { // referenceNonAlarm
-            // console.log('referenceNonAlarm');
-            return '#3766c7';
-        } else if (data.referenceYn === 'Y' && data.fdtaFaultYn === 'N' && seriesFaultType === '' && data.primeYn === 'Y') { // primeReference
-            // console.log('primeReference');
-            return '#3766c7';
-        } else {
-            return '#EA3010';
-        }
-    };
+const setSeriesColor = (data: any) => {
+    const seriesFaultType = data.referenceYn === 'Y' ? '' : data.segmentStatus;
+    // console.log('setSeriesColor : ', data.referenceYn, data.fdtaFaultYn, seriesFaultType, data.primeYn);
+    if (data.referenceYn === 'N' && data.fdtaFaultYn === 'Y' && seriesFaultType === 'F' && data.primeYn === 'N') { // selectedAlarm
+        // console.log('selectedAlarm');
+        return '#EA3010';
+    } else if (data.referenceYn === 'N' && data.fdtaFaultYn === 'N' && seriesFaultType === 'F' && data.primeYn === 'N') { //Fault
+        // console.log('Fault');
+        return '#f57416';
+    } else if (data.referenceYn === 'N' && data.fdtaFaultYn === 'N' && seriesFaultType === 'W' && data.primeYn === 'N') { // Warning
+        // console.log('Warning');
+        return '#f7ba00';
+    } else if (data.referenceYn === 'N' && data.fdtaFaultYn === 'N' && seriesFaultType === 'S' && data.primeYn === 'N') { // Safe
+        // console.log('Safe');
+        return '#0dac09';
+    } else if (data.referenceYn === 'Y' && data.fdtaFaultYn === 'Y' && seriesFaultType === '' && data.primeYn === 'N') { // referenceAlarm
+        // console.log('referenceAlarm');
+        return '#970f94';
+    } else if (data.referenceYn === 'Y' && data.fdtaFaultYn === 'N' && seriesFaultType === '' && data.primeYn === 'N') { // referenceNonAlarm
+        // console.log('referenceNonAlarm');
+        return '#3766c7';
+    } else if (data.referenceYn === 'Y' && data.fdtaFaultYn === 'N' && seriesFaultType === '' && data.primeYn === 'Y') { // primeReference
+        // console.log('primeReference');
+        return '#3766c7';
+    } else {
+        return '#EA3010';
+    }
+};
 
+const dfdChartSample = () => {
     const stepData = stepInfo.map((step: any) => {
         return {
             start: step.startCountSlot,
@@ -340,7 +340,7 @@ const dfdChartSample = () => {
 
     // console.log('traceData : ', tracePoints);
     console.time('webgllinedraw');
-    const webglLineChart = new BasicChart<BasicCanvasTraceModel>({
+    const webglLineChart = new BasicChart<BasicCanvasWebglLineSeriesOneModel>({
         selector: '#dfdchart',
         data: [],
         calcField: 'y',
@@ -391,6 +391,182 @@ const dfdChartSample = () => {
     //     console.log('json data : ', data);
     // });
 }
+
+const dfdCanvasChartSample = () => {
+
+    const stepData = stepInfo.map((step: any) => {
+        return {
+            start: step.startCountSlot,
+            end: step.startCountSlot + step.maxCount,
+            label: step.step,
+            data: step
+        };
+    });
+
+    const seriesList = [];
+
+    const alarmSeriesList = [];
+
+    const optionList = [];
+
+    let xmin = 0;
+    let xmax = 0;
+    let ymin = Infinity;
+    let ymax = 0;
+
+    const parseData = () => {
+        seriesList.length = 0;
+        alarmSeriesList.length = 0;
+        optionList.length = 0;
+
+        const basicSpecArea = new BasicSpecArea({
+            selector: 'spec',
+            startField: 'start',
+            endField: 'end',
+            data: [stepData[2]]
+        });
+    
+        const basicStepLine = new BasicStepLine({
+            selector: 'step-line',
+            xField: 'start',
+            data: stepData
+        });
+        
+        const basicStepArea = new BasicStepArea({
+            selector: 'step',
+            startField: 'start',
+            labelField: 'label',
+            endField: 'end',
+            data: stepData
+        });
+    
+        optionList.push(basicSpecArea);
+        optionList.push(basicStepArea);
+        optionList.push(basicStepLine);
+        
+
+        xmin = 0;
+        xmax = 0;
+        ymin = Infinity;
+        ymax = 0;
+
+        for (let i = 0; i < tracePoints.length; i++) {
+            const tempData = tracePoints[i];
+            const seriesData = tempData.data.rows.map((row: Array<any>) => {
+                const rowData: any = {};
+                for (let j = 0; j < tempData.data.columns.length; j++) {
+                    const columnName = tempData.data.columns[j];
+                    rowData[columnName] = row[j];
+                }
+    
+                const x = rowData['count_slot'];
+                const y = rowData['VALUE'];
+    
+                if (xmin > x) {
+                    xmin = x;
+                }
+                if (xmax < x) {
+                    xmax = x;
+                }
+                if (ymin > y) {
+                    ymin = y;
+                }
+                if (ymax < y) {
+                    ymax = y;
+                }
+    
+                return new BasicCanvasTraceModel(
+                    x,
+                    y,
+                    i,
+                    rowData
+                );
+            });
+    
+            // test data 늘리기
+            const tempRow: BasicCanvasTraceModel = seriesData[seriesData.length - 1];
+            for (let index = 1; index < 100000; index++) {
+                const x = tempRow.x + index;
+                const y = tempRow.y;
+    
+                if (xmax < x) {
+                    xmax = x;
+                }
+    
+                seriesData.push(new BasicCanvasTraceModel(
+                    x,
+                    y,
+                    i,
+                    tempRow
+                ));
+            }
+    
+            // type별 컬러 지정.
+            const seriesColor = setSeriesColor(tempData);
+    
+            const configuration: BasicCanvasTraceConfiguration = {
+                type: 'series',
+                selector: (seriesColor === '#EA3010' ? 'canvas-trace-alarm' : 'canvas-trace')  + i,
+                xField: 'x',
+                yField: 'y',
+                dot: {
+                    radius: 4
+                },
+                style: {
+                    strokeColor: seriesColor,
+                    // opacity: seriesColor === '#EA3010' ? 1 :  0.9
+                },
+                data: seriesData
+            }
+            
+            if (seriesColor === '#EA3010') {
+                alarmSeriesList.push(new BasicCanvasTrace(configuration));
+            } else {
+                seriesList.push(new BasicCanvasTrace(configuration));
+            }
+        }
+    }
+
+    parseData();
+
+    // console.log('traceData : ', tracePoints);
+    console.time('canvaslinedraw');
+    const canvasLineChart = new BasicChart<BasicCanvasTraceModel>({
+        selector: '#canvastracechart',
+        data: [],
+        calcField: 'y',
+        isResize: true,
+        // displayDelay: {
+        //     delayTime: 20
+        // },
+        axes: [
+            {
+                field: 'x',
+                type: ScaleType.NUMBER,
+                placement: 'bottom',
+                min: xmin - (xmax * 0.01),
+                max: xmax + (xmax * 0.01)
+            },
+            {
+                field: 'y',
+                type: ScaleType.NUMBER,
+                placement: 'left',
+                min: ymin,
+                max: ymax
+            }
+        ],
+        series: seriesList.concat(alarmSeriesList),
+        options: optionList,
+        functions: [
+            new BasicCanvasMouseZoomHandler({
+                xDirection: 'bottom',
+                yDirection: 'left',
+                direction: Direction.HORIZONTAL
+            })
+        ]
+    }).draw();
+    console.timeEnd('canvaslinedraw');
+} 
 
 const canvasTraceChart = () => {
     const randomX = randomNormal(0, 9);
@@ -1581,7 +1757,9 @@ dfdChartSample();
 
 canvasLineChart();
 
-canvasTraceChart();
+dfdCanvasChartSample();
+
+// canvasTraceChart();
 
 canvasScatter('#scatter');
 

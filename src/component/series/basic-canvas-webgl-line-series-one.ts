@@ -150,8 +150,8 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         this.parentElement = select((this.svg.node() as HTMLElement).parentElement);
 
         if (
-            !select((this.svg.node() as HTMLElement).parentElement)
-                .select('.drawing-canvas')
+            !this.parentElement
+                .select('.' + ChartBase.DRAWING_CANVAS)
                 .node()
         ) {
             this.canvas = this.parentElement
@@ -165,6 +165,21 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
                 .style('position', 'absolute');
         } else {
             this.canvas = this.parentElement.select('.' + ChartBase.DRAWING_CANVAS);
+        }
+
+        if (
+            !this.parentElement
+                .select('.' + ChartBase.SELECTION_CANVAS)
+                .node()
+        ) {
+            this.parentElement
+                .append('canvas')
+                .datum({
+                    index
+                })
+                .attr('class', ChartBase.SELECTION_CANVAS)
+                .style('z-index', 98)
+                .style('position', 'absolute');
         }
     }
 
@@ -223,12 +238,14 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
                 `translate(${this.chartBase.chartMargin.left + 1}px, ${this.chartBase.chartMargin.top}px)`
             );
 
-        // if (this.isRestore) {
-        //     this.isRestore = false;
-        //     this.execRestore(this.originalChartImage, geometry.width, geometry.height);
-        // } else {
-        //     this.webGLStart(lineData, {min: xmin, max: xmax}, {min:ymin, max: ymax}, geometry, lineColor);
-        // }
+        this.parentElement
+            .select('.' + ChartBase.SELECTION_CANVAS)
+            .attr('width', geometry.width)
+            .attr('height', geometry.height)
+            .style(
+                'transform',
+                `translate(${this.chartBase.chartMargin.left + 1}px, ${this.chartBase.chartMargin.top}px)`
+            );
 
         this.webGLStart(lineData, { min: xmin, max: xmax }, { min: ymin, max: ymax }, geometry, this.lineColor);
 
@@ -285,11 +302,13 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
             // const index = Math.floor(selected.length / 2);
             const index = selected.length - 1;
             const selectedItem = selected[index];
+
             this.drawTooltipPoint(this.geometry, selectedItem, {
                 radius: this.radius / 2 + 1,
                 strokeColor: this.lineColor,
                 strokeWidth: this.strokeWidth
             });
+
             this.setChartTooltip(
                 selectedItem,
                 {
@@ -302,14 +321,19 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
     }
 
     onSelectItem(selectedItem: Array<any>, event: ChartMouseEvent) {
-        this.onClickItem(
-            selectedItem,
-            {
-                width: this.geometry.width,
-                height: this.geometry.height
-            },
-            [event.position[0], event.position[1]]
-        );
+        if (selectedItem && selectedItem.length) {
+            this.itemClickSubject.next({
+                data: selectedItem[2],
+                event: {
+                    offsetX: event.position[0] + this.chartBase.chartMargin.left,
+                    offsetY: event.position[1] + this.chartBase.chartMargin.top
+                },
+                target: {
+                    width: 1,
+                    height: 1
+                }
+            });
+        }
     }
 
     clear() {
@@ -334,22 +358,6 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         }
 
         return temp;
-    }
-
-    private onClickItem(selectedItem: any, geometry: ContainerSize, mouseEvent: Array<number>) {
-        if (selectedItem) {
-            this.itemClickSubject.next({
-                data: selectedItem[2],
-                event: {
-                    offsetX: mouseEvent[0] + this.chartBase.chartMargin.left,
-                    offsetY: mouseEvent[1] + this.chartBase.chartMargin.top
-                },
-                target: {
-                    width: 1,
-                    height: 1
-                }
-            });
-        }
     }
 
     // TODO: tooltip에 시리즈 아이디를 부여하여 시리즈 마다 tooltip을 컨트롤 할 수 있도록 한다.

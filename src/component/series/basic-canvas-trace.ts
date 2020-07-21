@@ -36,7 +36,7 @@ export interface BasicCanvasTraceConfiguration extends SeriesConfiguration {
     yField: string;
     isCurve?: boolean; // default : false
     style?: {
-        strokeWidth?: number;
+        lineWidth?: number;
         strokeColor?: string;
         opacity?: number;
         // fill?: string;
@@ -45,7 +45,7 @@ export interface BasicCanvasTraceConfiguration extends SeriesConfiguration {
         radius?: number;
     };
     filter?: any;
-    seriesData?: Array<any>;
+    data?: Array<any>;
     // animation?: boolean;
 }
 
@@ -69,8 +69,6 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
     private seriesColor: string = '';
 
     private dataFilter: any;
-
-    private strokeWidth = 2;
 
     private strokeColor;
 
@@ -98,7 +96,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
     // ================= style 관련 변수 =============== //
     private radius = 4;
 
-    private lineStroke = 1;
+    private lineWidth = 1;
 
     private lineColor = '#000000';
 
@@ -121,13 +119,13 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
             }
 
             if (configuration.style) {
-                this.strokeWidth = configuration.style.strokeWidth || this.strokeWidth;
-            }
-
-            if (configuration.style) {
-                this.strokeWidth = configuration.style.strokeWidth || this.strokeWidth;
+                this.lineWidth = configuration.style.lineWidth || 1;
                 this.strokeColor = configuration.style.strokeColor || null;
                 this.strokeOpacity = configuration.style.opacity || 1;
+            }
+
+            if (configuration.data) {
+                this.seriesData = configuration.data;
             }
         }
     }
@@ -136,6 +134,13 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                   mainGroup: Selection<BaseType, any, HTMLElement, any>, 
                   index: number) {
         this.svg = svg;
+        
+        if (!this.tooltipGroup) {
+            this.tooltipGroup = this.setTooltipCanvas(this.svg);
+            this.tooltipGroup.style('z-index', index + 2);
+        } else {
+            this.tooltipGroup.style('z-index', index + 2);
+        }
 
         this.svg
             .style('z-index', index + 2)
@@ -150,20 +155,20 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                     index
                 })
                 .attr('class', 'drawing-canvas')
-                .style('opacity', 0.6)
+                .style('opacity', 1)
                 .style('z-index', index + 1)
                 .style('position', 'absolute');
         }
 
-        // if (!select((this.svg.node() as HTMLElement).parentElement).select('.selection-canvas').node()) {
-        //     this.selectionCanvas = select((this.svg.node() as HTMLElement).parentElement)
-        //         .append('canvas')
-        //         .attr('class', 'selection-canvas')
-        //         .style('z-index', index + 9)
-        //         .style('position', 'absolute');
-        // } else {
-        //     this.selectionCanvas = select((this.svg.node() as HTMLElement).parentElement).select('.selection-canvas');
-        // }
+        if (!this.parentElement.select('.' + ChartBase.SELECTION_CANVAS).node()) {
+            this.parentElement
+                .append('canvas')
+                .attr('class', ChartBase.SELECTION_CANVAS)
+                .style('z-index', index + 2)
+                .style('position', 'absolute');
+        } else {
+            this.parentElement.select('.' + ChartBase.SELECTION_CANVAS).style('z-index', index + 3)
+        }
     }
 
     drawSeries(chartBaseData: Array<T>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
@@ -198,22 +203,22 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
             .attr('height', geometry.height)
             .style('transform', `translate(${(this.chartBase.chartMargin.left)}px, ${(this.chartBase.chartMargin.top)}px)`);
 
-        // this.selectionCanvas
-        //     .attr('width', geometry.width)
-        //     .attr('height', geometry.height)
-        //     .style('transform', `translate(${(this.chartBase.chartMargin.left + 1)}px, ${(this.chartBase.chartMargin.top)}px)`);
+        this.parentElement.select('.' + ChartBase.SELECTION_CANVAS)
+            .attr('width', geometry.width)
+            .attr('height', geometry.height)
+            .style('transform', `translate(${(this.chartBase.chartMargin.left + 1)}px, ${(this.chartBase.chartMargin.top)}px)`);
 
         const context = (this.canvas.node() as any).getContext('2d');
+        context.fillStyle = this.lineColor;
+        context.lineWidth = this.lineWidth;
+        // context.lineWidth = 0.5;
+        context.strokeStyle = this.lineColor;
         // context.clearRect(0, 0, geometry.width, geometry.height);
-        context.beginPath();
-        context.fillStyle = color;
-        context.strokeStyle = '#000';
 
         // TODO: zoom in out 시 crossfilter 사용해서 filtering해야함.
         const lineData: Array<any> = (!this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item)))
         .filter((d: T) => d[this.xField] >= (xmin - xmin * 0.01) && d[this.xField] <= (xmax + xmax * 0.01) && d[this.yField] >= ymin && d[this.yField] <= ymax);
 
-        console.time('traceindexing');
         const generateData: Array<any> = lineData
             .map((d: BasicCanvasTraceModel, i: number) => {
                 const xposition = x(d[this.xField]) + padding;
@@ -227,7 +232,6 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
                 return [xposition, yposition, d];
             });
-        console.timeEnd('traceindexing');
 
         this.line = line()
             .x((data: any) => {
@@ -242,17 +246,10 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
             this.line.curve(curveMonotoneX); // apply smoothing to the line
         }
 
-        console.time('tracerendering');
-
         this.line(generateData);
-        context.fillStyle = 'white';
-        context.lineWidth = this.lineStroke;
-        // context.lineWidth = 0.5;
-        context.strokeStyle = color;
+        
         context.save();
         context.stroke();
-
-        console.timeEnd('tracerendering');
 
         // mouse event listen
         // this.addPluginEventListner(x, y, geometry);
@@ -307,8 +304,8 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
             const selectedItem = selected[index];
             this.drawTooltipPoint(this.geometry, selectedItem, {
                 radius: this.config.dot.radius / 2 + 1,
-                strokeColor: this.strokeColor,
-                strokeWidth: this.strokeWidth
+                strokeColor: this.lineColor,
+                lineWidth: this.lineWidth
             });
             this.setChartTooltip(
                 selectedItem,
@@ -322,7 +319,6 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
     }
 
     onSelectItem(selectedItem: Array<any>, event: ChartMouseEvent) {
-        console.log('onSelectItem : ', selectedItem, event);
         this.onClickItem(
             selectedItem,
             {
@@ -412,13 +408,13 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
     private drawTooltipPoint(
         geometry: ContainerSize, 
         position: Array<number>, 
-        style:{radius: number, strokeColor: string, strokeWidth: number}
+        style:{radius: number, strokeColor: string, lineWidth: number}
     ) {
         const selectionCanvas = select((this.svg.node() as HTMLElement).parentElement).select('.' + ChartBase.SELECTION_CANVAS);
         const context = (selectionCanvas.node() as any).getContext('2d');
         context.clearRect(0, 0, geometry.width, geometry.height);
-        context.fillStyle = this.seriesColor;
-        context.lineWidth = style.strokeWidth;
+        context.fillStyle = style.strokeColor;
+        context.lineWidth = style.lineWidth;
         context.strokeStyle = '#000000';
         // this.drawPoint(context, {cx: selectedItem[0], cy:selectedItem[1], r: style.radius});
         // cx, cy과 해당영역에 출력이 되는지? 좌표가 마이너스면 출력 안하는 로직을 넣어야 함.

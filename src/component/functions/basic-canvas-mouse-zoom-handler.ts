@@ -81,7 +81,7 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
             this.pointerCanvas = select((this.svg.node() as HTMLElement).parentElement)
                 .append('canvas')
                 .attr('class', ChartBase.POINTER_CANVAS)
-                .style('z-index', index + 20)
+                .style('z-index', 99)
                 .style('position', 'absolute');
         } else {
             this.pointerCanvas = select((this.svg.node() as HTMLElement).parentElement).select('.' + ChartBase.POINTER_CANVAS);
@@ -308,8 +308,16 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
                         //     ]);
                         // });
                     } else {
-                        console.log('zoom not ! ');
+                        
                         if (this.xMaxValue === xmax && this.yMaxValue === ymax) {
+                            if (console && console.log) {
+                                console.log('zoom not ! ');
+                                this.chartBase.zoomEventSubject.next({
+                                    type: 'not',
+                                    position: [endX, endY],
+                                    target: this.pointerCanvas
+                                });
+                            }
                             return;
                         }
                         
