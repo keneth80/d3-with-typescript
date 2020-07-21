@@ -102,6 +102,8 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
     private geometry: ContainerSize;
 
+    private cashingData: Array<T>;
+
     constructor(configuration: BasicCanvasTraceConfiguration) {
         super(configuration);
         this.config = configuration;
@@ -173,8 +175,20 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
     drawSeries(chartBaseData: Array<T>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
         const chartData = this.seriesData ? this.seriesData : chartBaseData;
+        
+        let isSizeUpdate = false;
 
-        this.geometry = geometry;
+        if (!this.geometry) {
+            this.geometry = geometry;
+            this.cashingData = [];
+        } else {
+            if (this.geometry.width !== geometry.width ||
+                this.geometry.height !== geometry.height) {
+                isSizeUpdate = true;
+                this.cashingData.length = 0;
+            }
+        }
+
         this.seriesColor = color;
         this.currentScales = scales;
         
@@ -215,7 +229,6 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         context.strokeStyle = this.lineColor;
         // context.clearRect(0, 0, geometry.width, geometry.height);
 
-        // TODO: zoom in out 시 crossfilter 사용해서 filtering해야함.
         const lineData: Array<any> = (!this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item)))
         .filter((d: T) => d[this.xField] >= (xmin - xmin * 0.01) && d[this.xField] <= (xmax + xmax * 0.01) && d[this.yField] >= ymin && d[this.yField] <= ymax);
 

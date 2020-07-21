@@ -497,11 +497,30 @@ export class ChartBase<T = any> implements IChart {
         }
     }
 
+    targetSeriesUpdate(series: ISeries, index: number) {
+        return new Promise(resolve => {
+            series.chartBase = this;
+            series.setSvgElement(this.svg, this.seriesGroup, index);
+            series.drawSeries(this.data, this.scales, {width: this.width, height: this.height}, index, this.colors[index]);
+            resolve();
+        });
+    }
+
+    async execute() {
+        let index = -1;
+        for (const series of this.seriesList) {
+            index++;
+            await this.targetSeriesUpdate(series, index);
+        }
+        console.log('series update Done!');
+    }
+
     updateSeries() {
         try {
             // TODO: subject next 로 변경할 것
             if (this.seriesList && this.seriesList.length) {
                 if (!this.config.displayDelay) {
+                    // this.execute();
                     this.seriesList.map((series: ISeries, index: number) => {
                         series.chartBase = this;
                         series.setSvgElement(this.svg, this.seriesGroup, index);

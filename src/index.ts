@@ -370,7 +370,7 @@ const dfdChartSample = () => {
             new BasicCanvasMouseZoomHandler({
                 xDirection: 'bottom',
                 yDirection: 'left',
-                direction: Direction.HORIZONTAL
+                direction: Direction.BOTH
             })
         ]
     }).draw();
@@ -561,7 +561,7 @@ const dfdCanvasChartSample = () => {
             new BasicCanvasMouseZoomHandler({
                 xDirection: 'bottom',
                 yDirection: 'left',
-                direction: Direction.HORIZONTAL
+                direction: Direction.BOTH
             })
         ]
     }).draw();
