@@ -1,6 +1,17 @@
 import { Selection, BaseType } from 'd3-selection';
 import { ChartConfiguration, AxisTitle } from './chart-configuration';
 
+export interface ScaleValue {
+    x: {
+        min: number,
+        max: number
+    },
+    y: {
+        min: number,
+        max: number
+    }
+}
+
 export interface ChartMouseEvent {
     type: string;
     position: [number, number];

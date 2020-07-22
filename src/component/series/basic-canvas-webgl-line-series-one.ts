@@ -104,8 +104,6 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
 
     private lineColor = '#000000';
 
-    private geometry: ContainerSize;
-
     constructor(configuration: BasicCanvasWebglLineSeriesOneConfiguration) {
         super(configuration);
         this.config = configuration;

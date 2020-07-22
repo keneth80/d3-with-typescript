@@ -3,7 +3,7 @@ import { Subject, Observable, Subscription } from 'rxjs';
 
 import { ChartBase } from './chart-base';
 import { ISeries, SeriesConfiguration } from './series.interface';
-import { Scale, ContainerSize, ChartMouseEvent } from './chart.interface';
+import { Scale, ContainerSize, ChartMouseEvent, ScaleValue } from './chart.interface';
 import { guid } from '.';
 
 export class SeriesBase implements ISeries {
@@ -26,6 +26,19 @@ export class SeriesBase implements ISeries {
         target?: any,
         event?: any
     }> = new Subject();
+
+    protected geometry: ContainerSize;
+
+    protected scaleValue: ScaleValue = {
+        x: {
+            min: Infinity,
+            max: Infinity,
+        },
+        y: {
+            min: Infinity,
+            max: Infinity,
+        }
+    };
 
     private chart: ChartBase;
 

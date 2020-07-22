@@ -100,9 +100,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
     private lineColor = '#000000';
 
-    private geometry: ContainerSize;
-
-    private cashingData: Array<T>;
+    private cashingData: Array<[number, number, BasicCanvasTraceModel]>;
 
     constructor(configuration: BasicCanvasTraceConfiguration) {
         super(configuration);
@@ -175,19 +173,6 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
     drawSeries(chartBaseData: Array<T>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
         const chartData = this.seriesData ? this.seriesData : chartBaseData;
-        
-        let isSizeUpdate = false;
-
-        if (!this.geometry) {
-            this.geometry = geometry;
-            this.cashingData = [];
-        } else {
-            if (this.geometry.width !== geometry.width ||
-                this.geometry.height !== geometry.height) {
-                isSizeUpdate = true;
-                this.cashingData.length = 0;
-            }
-        }
 
         this.seriesColor = color;
         this.currentScales = scales;
@@ -205,6 +190,38 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         const xmax = xScale.max;
         const ymin = yScale.min;
         const ymax = yScale.max;
+
+        let isSizeUpdate = true;
+        let isZoomIn = false;
+
+        // 최초 setup
+        if (!this.geometry) {
+            this.geometry = geometry;
+            this.cashingData = [];
+
+            this.scaleValue.x.min = xmin;
+            this.scaleValue.x.max = xmax;
+            this.scaleValue.y.min = ymin;
+            this.scaleValue.y.max = ymax;
+
+        } else {
+            if (this.geometry.width !== geometry.width ||
+                this.geometry.height !== geometry.height) {
+                isSizeUpdate = true;
+                this.cashingData.length = 0;
+            } else {
+                isSizeUpdate = false;
+            }
+        }
+
+        if (this.scaleValue.x.min !== xmin || 
+            this.scaleValue.x.max !== xmax ||
+            this.scaleValue.y.min !== ymin || 
+            this.scaleValue.y.max !== ymax) {
+            isZoomIn = true;
+        }
+
+        // console.log('falg => isSizeUpdate, isZoomIn : ', isSizeUpdate, isZoomIn);
 
         let padding = 0;
 
@@ -227,10 +244,85 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         context.lineWidth = this.lineWidth;
         // context.lineWidth = 0.5;
         context.strokeStyle = this.lineColor;
-        // context.clearRect(0, 0, geometry.width, geometry.height);
+        context.clearRect(0, 0, geometry.width, geometry.height);
 
         const lineData: Array<any> = (!this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item)))
-        .filter((d: T) => d[this.xField] >= (xmin - xmin * 0.01) && d[this.xField] <= (xmax + xmax * 0.01) && d[this.yField] >= ymin && d[this.yField] <= ymax);
+        .filter((d: T) => d[this.xField] >= (xmin - xmin * 0.02) && d[this.xField] <= (xmax + xmax * 0.02) && d[this.yField] >= ymin && d[this.yField] <= ymax);
+
+        // let dataIndex = 0;
+
+        // const generateData = [];
+        
+        // const remakeData = () => {
+        //     for (dataIndex = 0; dataIndex < lineData.length; dataIndex++) {
+        //         const d: BasicCanvasTraceModel = lineData[dataIndex];
+        //         const xposition = x(d[this.xField]) + padding;
+        //         const yposition = y(d[this.yField]);
+    
+        //         this.cashingData.push([xposition, yposition, d]);
+        //         generateData.push([xposition, yposition, d]);
+        //     }
+        // }
+
+        // const remakeDataAndDrawPoint = () => {
+        //     for (dataIndex = 0; dataIndex < lineData.length; dataIndex++) {
+        //         const d: BasicCanvasTraceModel = lineData[dataIndex];
+        //         const xposition = x(d[this.xField]) + padding;
+        //         const yposition = y(d[this.yField]);
+                
+        //         // POINT: data 만들면서 포인트 찍는다.
+        //         const rectSize = this.config.dot.radius / 2;
+        //         context.fillRect(xposition - rectSize, yposition - rectSize, this.config.dot.radius, this.config.dot.radius);
+    
+        //         this.cashingData.push([xposition, yposition, d]);
+        //         generateData.push([xposition, yposition, d]);
+        //     }
+        // }
+
+        // if (isZoomIn) {
+        //     if (this.config.dot) {
+        //         remakeDataAndDrawPoint();
+        //     } else {
+        //         remakeData();
+        //     }
+        // } else {
+        //     if (isSizeUpdate) {
+        //         if (this.config.dot) {
+        //             remakeDataAndDrawPoint();
+        //         } else {
+        //             remakeData();
+        //         }
+        //     } else {
+        //         if (this.cashingData && this.cashingData.length) {
+        //             console.log('cashing');
+        //             if (this.config.dot) {
+        //                 for (dataIndex = 0; dataIndex < this.cashingData.length; dataIndex++) {
+        //                     const d: BasicCanvasTraceModel = this.cashingData[dataIndex][2];
+        //                     const xposition = this.cashingData[dataIndex][0];
+        //                     const yposition = this.cashingData[dataIndex][1];
+                            
+        //                     // POINT: data 만들면서 포인트 찍는다.
+        //                     const rectSize = this.config.dot.radius / 2;
+        //                     context.fillRect(xposition - rectSize, yposition - rectSize, this.config.dot.radius, this.config.dot.radius);    
+        //                     generateData.push([xposition, yposition, d]);
+        //                 }
+        //             } else {
+        //                 for (dataIndex = 0; dataIndex < this.cashingData.length; dataIndex++) {
+        //                     const d: BasicCanvasTraceModel = this.cashingData[dataIndex][2];
+        //                     const xposition = this.cashingData[dataIndex][0];
+        //                     const yposition = this.cashingData[dataIndex][1];
+        //                     generateData.push([xposition, yposition, d]);
+        //                 }
+        //             }
+        //         } else {
+        //             if (this.config.dot) {
+        //                 remakeDataAndDrawPoint();
+        //             } else {
+        //                 remakeData();
+        //             }
+        //         }
+        //     }
+        // }
 
         const generateData: Array<any> = lineData
             .map((d: BasicCanvasTraceModel, i: number) => {
@@ -238,10 +330,15 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                 const yposition = y(d[this.yField]);
                 
                 // POINT: data 만들면서 포인트 찍는다.
-                if (this.config.dot) {
-                    const rectSize = this.config.dot.radius / 2;
-                    context.fillRect(xposition - rectSize, yposition - rectSize, this.config.dot.radius, this.config.dot.radius);
-                }
+                // if (this.config.dot) {
+                //     const rectSize = this.config.dot.radius / 2;
+                //     context.fillRect(xposition - rectSize, yposition - rectSize, this.config.dot.radius, this.config.dot.radius);
+                // }
+
+                const rectSize = this.config.dot.radius / 2;
+                context.fillRect(xposition - rectSize, yposition - rectSize, this.config.dot.radius, this.config.dot.radius);
+
+                // this.cashingData.push([xposition, yposition, d]);
 
                 return [xposition, yposition, d];
             });
