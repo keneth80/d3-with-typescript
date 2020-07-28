@@ -266,6 +266,8 @@ export class BasicTopology extends SeriesBase {
         // bottom sector title
         this.drawSectorTitle(bottomSectorGroup, `${this.selector}-sector-bottom-group-title`, 'bottom');
 
+        // TODO: 타이틀과 백그라운드 클릭 포인트를 같게 하기위해 투명한 판 생성
+
         bottomSectorGroup
             .on('mouseover', this.onSectorMouseOver)
             .on('mouseout', this.onSectorMouseOut);

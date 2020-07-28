@@ -43,6 +43,7 @@ import { BasicCanvasMouseHandler } from './component/functions';
 import { BasicSpecArea } from './component/options/basic-svg-spec-area';
 import { BasicStepArea } from './component/options/basic-svg-step-area';
 import { BasicStepLine } from './component/options/basic-svg-step-line';
+import { BasicCanvasWebglLineSeriesModel, BasicCanvasWebgLineSeries, BasicCanvasWebglLineSeriesConfiguration } from './component/series/basic-canvas-webgl-line-series';
 
 class SalesModel {
     salesperson: string;
@@ -229,7 +230,7 @@ const dfdChartSample = () => {
         optionList.length = 0;
 
         const basicSpecArea = new BasicSpecArea({
-            selector: 'spec',
+            selector: 'spec-area',
             startField: 'start',
             endField: 'end',
             data: [stepData[2]]
@@ -252,7 +253,6 @@ const dfdChartSample = () => {
         optionList.push(basicSpecArea);
         optionList.push(basicStepArea);
         optionList.push(basicStepLine);
-        
 
         xmin = 0;
         xmax = 0;
@@ -294,7 +294,7 @@ const dfdChartSample = () => {
     
             // test data 늘리기
             const tempRow: BasicCanvasWebglLineSeriesOneModel = seriesData[seriesData.length - 1];
-            for (let index = 1; index < 100000; index++) {
+            for (let index = 1; index < 50000; index++) {
                 const x = tempRow.x + index;
                 const y = tempRow.y;
     
@@ -338,11 +338,14 @@ const dfdChartSample = () => {
 
     parseData();
 
-    // console.log('traceData : ', tracePoints);
     console.time('webgllinedraw');
     const webglLineChart = new BasicChart<BasicCanvasWebglLineSeriesOneModel>({
         selector: '#dfdchart',
         data: [],
+        title: {
+            placement: Placement.TOP,
+            content: 'DFD Concept WebGL'
+        },
         calcField: 'y',
         isResize: true,
         // displayDelay: {
@@ -385,11 +388,187 @@ const dfdChartSample = () => {
     select('#clear').on('click', () => {
         alarmSeriesList[0].clear();
     });
+}
 
-    // json('./component/mock-data/dfd-page.json')
-    // .then((data: any) => {
-    //     console.log('json data : ', data);
-    // });
+const dfdChartWebglSample = () => {
+    const stepData = stepInfo.map((step: any) => {
+        return {
+            start: step.startCountSlot,
+            end: step.startCountSlot + step.maxCount,
+            label: step.step,
+            data: step
+        };
+    });
+
+    const seriesList = [];
+
+    const alarmSeriesList = [];
+
+    const optionList = [];
+
+    let xmin = 0;
+    let xmax = 0;
+    let ymin = Infinity;
+    let ymax = 0;
+
+    const parseData = () => {
+        seriesList.length = 0;
+        alarmSeriesList.length = 0;
+        optionList.length = 0;
+
+        const basicSpecArea = new BasicSpecArea({
+            selector: 'spec-area',
+            startField: 'start',
+            endField: 'end',
+            data: [stepData[2]]
+        });
+    
+        const basicStepLine = new BasicStepLine({
+            selector: 'step-line',
+            xField: 'start',
+            data: stepData
+        });
+        
+        const basicStepArea = new BasicStepArea({
+            selector: 'step',
+            startField: 'start',
+            labelField: 'label',
+            endField: 'end',
+            data: stepData
+        });
+    
+        optionList.push(basicSpecArea);
+        optionList.push(basicStepArea);
+        optionList.push(basicStepLine);
+
+        xmin = 0;
+        xmax = 0;
+        ymin = Infinity;
+        ymax = 0;
+
+        for (let i = 0; i < tracePoints.length; i++) {
+            const tempData = tracePoints[i];
+            const seriesData = tempData.data.rows.map((row: Array<any>) => {
+                const rowData: any = {};
+                for (let j = 0; j < tempData.data.columns.length; j++) {
+                    const columnName = tempData.data.columns[j];
+                    rowData[columnName] = row[j];
+                }
+    
+                const x = rowData['count_slot'];
+                const y = rowData['VALUE'];
+    
+                if (xmin > x) {
+                    xmin = x;
+                }
+                if (xmax < x) {
+                    xmax = x;
+                }
+                if (ymin > y) {
+                    ymin = y;
+                }
+                if (ymax < y) {
+                    ymax = y;
+                }
+    
+                return new BasicCanvasWebglLineSeriesModel(
+                    x,
+                    y,
+                    i,
+                    rowData
+                );
+            });
+    
+            // test data 늘리기
+            const tempRow: BasicCanvasWebglLineSeriesModel = seriesData[seriesData.length - 1];
+            for (let index = 1; index < 50000; index++) {
+                const x = tempRow.x + index;
+                const y = tempRow.y;
+    
+                if (xmax < x) {
+                    xmax = x;
+                }
+    
+                seriesData.push(new BasicCanvasWebglLineSeriesModel(
+                    x,
+                    y,
+                    i,
+                    tempRow
+                ));
+            }
+    
+            // type별 컬러 지정.
+            const seriesColor = setSeriesColor(tempData);
+    
+            const configuration: BasicCanvasWebglLineSeriesConfiguration = {
+                type: 'series',
+                selector: (seriesColor === '#EA3010' ? 'webgl-trace-alarm' : 'webgl-trace')  + i,
+                xField: 'x',
+                yField: 'y',
+                dot: {
+                    radius: 4
+                },
+                style: {
+                    strokeColor: seriesColor,
+                    // opacity: seriesColor === '#EA3010' ? 1 :  0.9
+                },
+                data: seriesData
+            }
+            
+            if (seriesColor === '#EA3010') {
+                alarmSeriesList.push(new BasicCanvasWebgLineSeries(configuration));
+            } else {
+                seriesList.push(new BasicCanvasWebgLineSeries(configuration));
+            }
+        }
+    }
+
+    parseData();
+
+    const webglLineChart = new BasicChart<BasicCanvasWebglLineSeriesModel>({
+        selector: '#dfdwebgl',
+        data: [],
+        title: {
+            placement: Placement.TOP,
+            content: 'DFD Concept WebGL Multi'
+        },
+        calcField: 'y',
+        isResize: true,
+        // displayDelay: {
+        //     delayTime: 50
+        // },
+        axes: [
+            {
+                field: 'x',
+                type: ScaleType.NUMBER,
+                placement: 'bottom',
+                min: xmin - (xmax * 0.01),
+                max: xmax + (xmax * 0.01)
+            },
+            {
+                field: 'y',
+                type: ScaleType.NUMBER,
+                placement: 'left',
+                min: ymin,
+                max: ymax
+            }
+        ],
+        series: seriesList.concat(alarmSeriesList),
+        options: optionList,
+        functions: [
+            new BasicCanvasMouseZoomHandler({
+                xDirection: 'bottom',
+                yDirection: 'left',
+                direction: Direction.BOTH
+            })
+        ]
+    }).draw();
+
+    let index = -1;
+    select('#targetdraw').on('click', () => {
+        index++;
+        seriesList[index].drawTargetSeries();
+    })
 }
 
 const dfdCanvasChartSample = () => {
@@ -485,7 +664,7 @@ const dfdCanvasChartSample = () => {
     
             // test data 늘리기
             const tempRow: BasicCanvasTraceModel = seriesData[seriesData.length - 1];
-            for (let index = 1; index < 100000; index++) {
+            for (let index = 1; index < 50000; index++) {
                 const x = tempRow.x + index;
                 const y = tempRow.y;
     
@@ -535,6 +714,10 @@ const dfdCanvasChartSample = () => {
         selector: '#canvastracechart',
         data: [],
         calcField: 'y',
+        title: {
+            placement: Placement.TOP,
+            content: 'DFD Concept Canvas'
+        },
         isResize: true,
         // displayDelay: {
         //     delayTime: 20
@@ -1755,15 +1938,17 @@ const gaugeChart = () => {
 
 dfdChartSample();
 
-canvasLineChart();
+dfdChartWebglSample();
 
-dfdCanvasChartSample();
+// dfdCanvasChartSample();
+
+// canvasLineChart();
 
 // canvasTraceChart();
 
-canvasScatter('#scatter');
+// canvasScatter('#scatter');
 
-svgTraceChart();
+// svgTraceChart();
 
 // lineChart();
 

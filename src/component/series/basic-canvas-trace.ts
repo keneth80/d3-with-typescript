@@ -102,6 +102,8 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
     private cashingData: Array<[number, number, BasicCanvasTraceModel]>;
 
+    private restoreCanvas: Selection<BaseType, any, HTMLElement, any>;
+
     constructor(configuration: BasicCanvasTraceConfiguration) {
         super(configuration);
         this.config = configuration;
@@ -192,7 +194,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         const ymax = yScale.max;
 
         let isSizeUpdate = true;
-        let isZoomIn = false;
+        let isRestore = false;
 
         // 최초 setup
         if (!this.geometry) {
@@ -214,14 +216,18 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
             }
         }
 
-        if (this.scaleValue.x.min !== xmin || 
-            this.scaleValue.x.max !== xmax ||
-            this.scaleValue.y.min !== ymin || 
-            this.scaleValue.y.max !== ymax) {
-            isZoomIn = true;
+        if (this.scaleValue.x.min === xmin || 
+            this.scaleValue.x.max === xmax ||
+            this.scaleValue.y.min === ymin || 
+            this.scaleValue.y.max === ymax) {
+            
+            if (this.restoreCanvas) {
+                isRestore = true;
+            } else {
+                // 최초에는 생성이 안되어 있으니 다시 그린다.
+                isRestore = false;
+            }
         }
-
-        // console.log('falg => isSizeUpdate, isZoomIn : ', isSizeUpdate, isZoomIn);
 
         let padding = 0;
 
@@ -249,80 +255,25 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         const lineData: Array<any> = (!this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item)))
         .filter((d: T) => d[this.xField] >= (xmin - xmin * 0.02) && d[this.xField] <= (xmax + xmax * 0.02) && d[this.yField] >= ymin && d[this.yField] <= ymax);
 
-        // let dataIndex = 0;
-
-        // const generateData = [];
-        
-        // const remakeData = () => {
-        //     for (dataIndex = 0; dataIndex < lineData.length; dataIndex++) {
-        //         const d: BasicCanvasTraceModel = lineData[dataIndex];
-        //         const xposition = x(d[this.xField]) + padding;
-        //         const yposition = y(d[this.yField]);
-    
-        //         this.cashingData.push([xposition, yposition, d]);
-        //         generateData.push([xposition, yposition, d]);
-        //     }
-        // }
-
-        // const remakeDataAndDrawPoint = () => {
-        //     for (dataIndex = 0; dataIndex < lineData.length; dataIndex++) {
-        //         const d: BasicCanvasTraceModel = lineData[dataIndex];
+        // const dataParse = (isDrawPoint: boolean = true) => {
+        //     return lineData
+        //     .map((d: BasicCanvasTraceModel, i: number) => {
         //         const xposition = x(d[this.xField]) + padding;
         //         const yposition = y(d[this.yField]);
                 
         //         // POINT: data 만들면서 포인트 찍는다.
-        //         const rectSize = this.config.dot.radius / 2;
-        //         context.fillRect(xposition - rectSize, yposition - rectSize, this.config.dot.radius, this.config.dot.radius);
-    
-        //         this.cashingData.push([xposition, yposition, d]);
-        //         generateData.push([xposition, yposition, d]);
-        //     }
+        //         if (this.config.dot && isDrawPoint) {
+        //             const rectSize = this.config.dot.radius / 2;
+        //             context.fillRect(xposition - rectSize, yposition - rectSize, this.config.dot.radius, this.config.dot.radius);
+        //         }
+
+        //         // this.cashingData.push([xposition, yposition, d]);
+
+        //         return [xposition, yposition, d];
+        //     });
         // }
 
-        // if (isZoomIn) {
-        //     if (this.config.dot) {
-        //         remakeDataAndDrawPoint();
-        //     } else {
-        //         remakeData();
-        //     }
-        // } else {
-        //     if (isSizeUpdate) {
-        //         if (this.config.dot) {
-        //             remakeDataAndDrawPoint();
-        //         } else {
-        //             remakeData();
-        //         }
-        //     } else {
-        //         if (this.cashingData && this.cashingData.length) {
-        //             console.log('cashing');
-        //             if (this.config.dot) {
-        //                 for (dataIndex = 0; dataIndex < this.cashingData.length; dataIndex++) {
-        //                     const d: BasicCanvasTraceModel = this.cashingData[dataIndex][2];
-        //                     const xposition = this.cashingData[dataIndex][0];
-        //                     const yposition = this.cashingData[dataIndex][1];
-                            
-        //                     // POINT: data 만들면서 포인트 찍는다.
-        //                     const rectSize = this.config.dot.radius / 2;
-        //                     context.fillRect(xposition - rectSize, yposition - rectSize, this.config.dot.radius, this.config.dot.radius);    
-        //                     generateData.push([xposition, yposition, d]);
-        //                 }
-        //             } else {
-        //                 for (dataIndex = 0; dataIndex < this.cashingData.length; dataIndex++) {
-        //                     const d: BasicCanvasTraceModel = this.cashingData[dataIndex][2];
-        //                     const xposition = this.cashingData[dataIndex][0];
-        //                     const yposition = this.cashingData[dataIndex][1];
-        //                     generateData.push([xposition, yposition, d]);
-        //                 }
-        //             }
-        //         } else {
-        //             if (this.config.dot) {
-        //                 remakeDataAndDrawPoint();
-        //             } else {
-        //                 remakeData();
-        //             }
-        //         }
-        //     }
-        // }
+        // const generateData: Array<any> = dataParse(!isSizeUpdate && isZoomIn);
 
         const generateData: Array<any> = lineData
             .map((d: BasicCanvasTraceModel, i: number) => {
@@ -330,39 +281,57 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                 const yposition = y(d[this.yField]);
                 
                 // POINT: data 만들면서 포인트 찍는다.
-                // if (this.config.dot) {
-                //     const rectSize = this.config.dot.radius / 2;
-                //     context.fillRect(xposition - rectSize, yposition - rectSize, this.config.dot.radius, this.config.dot.radius);
-                // }
-
-                const rectSize = this.config.dot.radius / 2;
-                context.fillRect(xposition - rectSize, yposition - rectSize, this.config.dot.radius, this.config.dot.radius);
-
-                // this.cashingData.push([xposition, yposition, d]);
+                if (this.config.dot && !isRestore) {
+                    const rectSize = this.config.dot.radius / 2;
+                    context.fillRect(xposition - rectSize, yposition - rectSize, this.config.dot.radius, this.config.dot.radius);
+                }
 
                 return [xposition, yposition, d];
             });
 
-        this.line = line()
-            .x((data: any) => {
-                return data[0]; 
-            }) // set the x values for the line generator
-            .y((data: any) => {
-                return data[1]; 
-            })
-            .context(context); // set the y values for the line generator
+        if (isRestore) {
+            context.drawImage(this.restoreCanvas.node(), 0, 0);
+        } else {
+            this.line = line()
+                .x((data: any) => {
+                    return data[0]; 
+                }) // set the x values for the line generator
+                .y((data: any) => {
+                    return data[1]; 
+                })
+                .context(context); // set the y values for the line generator
 
-        if (this.config.isCurve === true) {
-            this.line.curve(curveMonotoneX); // apply smoothing to the line
+            if (this.config.isCurve === true) {
+                this.line.curve(curveMonotoneX); // apply smoothing to the line
+            }
+
+            this.line(generateData);
+            
+            context.save();
+            context.stroke();
         }
 
-        this.line(generateData);
-        
-        context.save();
-        context.stroke();
+        // if (!isSizeUpdate && !isZoomIn) {
+        //     context.drawImage(this.restoreCanvas.node(), 0, 0);
+        // } else {
+        //     this.line = line()
+        //         .x((data: any) => {
+        //             return data[0]; 
+        //         }) // set the x values for the line generator
+        //         .y((data: any) => {
+        //             return data[1]; 
+        //         })
+        //         .context(context); // set the y values for the line generator
 
-        // mouse event listen
-        // this.addPluginEventListner(x, y, geometry);
+        //     if (this.config.isCurve === true) {
+        //         this.line.curve(curveMonotoneX); // apply smoothing to the line
+        //     }
+
+        //     this.line(generateData);
+            
+        //     context.save();
+        //     context.stroke();
+        // }
 
         if (this.originQuadTree) {
             this.originQuadTree = undefined;
@@ -372,6 +341,14 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
             this.originQuadTree = quadtree()
                 .extent([[0, 0], [geometry.width, geometry.height]])
                 .addAll(generateData);
+
+            if (!this.restoreCanvas) {
+                this.restoreCanvas = select(document.createElement('CANVAS'));
+                this.restoreCanvas
+                    .attr('width', geometry.width)
+                    .attr('height', geometry.height);
+                (this.restoreCanvas.node() as any).getContext('2d').drawImage(this.canvas.node(), 0, 0);
+            }
         });
 
         (this.canvas.node() as any).addEventListener('DOMNodeRemoved', () => {
@@ -437,11 +414,6 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
             },
             [event.position[0], event.position[1]]
         );
-    }
-
-    private pointerClear(context: any, geometry: ContainerSize, chartBase: ChartBase) {
-        context.clearRect(0, 0, geometry.width, geometry.height);
-        chartBase.hideTooltip();
     }
 
     private search(quadtreeObj: Quadtree<Array<any>>, x0: number, y0: number, x3: number, y3: number) {

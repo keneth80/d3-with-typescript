@@ -12,7 +12,7 @@ import { textBreak } from '../chart/util/d3-svg-util';
 import { ChartBase, delayExcute, Placement } from '../chart';
 import { createProgramFromSources, createProgramFromScripts, hexToRgb } from '../chart/util/webgl-util';
 
-export class BasicCanvasWebglLineSeriesOneModel {
+export class BasicCanvasWebglLineSeriesModel {
     x: number;
     y: number;
     i: number; // save the index of the point as a property, this is useful
@@ -33,7 +33,7 @@ export class BasicCanvasWebglLineSeriesOneModel {
     }
 }
 
-export interface BasicCanvasWebglLineSeriesOneConfiguration extends SeriesConfiguration {
+export interface BasicCanvasWebglLineSeriesConfiguration extends SeriesConfiguration {
     dotSelector?: string;
     xField: string;
     yField: string;
@@ -52,18 +52,16 @@ export interface BasicCanvasWebglLineSeriesOneConfiguration extends SeriesConfig
     // animation?: boolean;
 }
 
-export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
+export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
     protected canvas: Selection<BaseType, any, HTMLElement, any>;
 
     private tooltipGroup: Selection<BaseType, any, HTMLElement, any>;
-
-    private selectionCanvas: Selection<BaseType, any, HTMLElement, any>;
 
     private xField: string;
 
     private yField: string;
 
-    private config: BasicCanvasWebglLineSeriesOneConfiguration;
+    private config: BasicCanvasWebglLineSeriesConfiguration;
 
     private dataFilter: any;
 
@@ -82,8 +80,6 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
     private move$: Subject<any> = new Subject();
 
     private originQuadTree: Quadtree<Array<any>> = undefined;
-
-    private originalChartImage: any = null;
 
     private seriesData: Array<T>;
 
@@ -106,7 +102,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
 
     private lineColor = '#000000';
 
-    constructor(configuration: BasicCanvasWebglLineSeriesOneConfiguration) {
+    constructor(configuration: BasicCanvasWebglLineSeriesConfiguration) {
         super(configuration);
         this.config = configuration;
         if (configuration) {
@@ -208,16 +204,46 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         const ymin = yScale.min;
         const ymax = yScale.max;
 
+        let isSizeUpdate = true;
+        let isRestore = false;
+
+        // 최초 setup
+        if (!this.geometry) {
+            this.geometry = geometry;
+
+            this.scaleValue.x.min = xmin;
+            this.scaleValue.x.max = xmax;
+            this.scaleValue.y.min = ymin;
+            this.scaleValue.y.max = ymax;
+
+        } else {
+            if (this.geometry.width !== geometry.width ||
+                this.geometry.height !== geometry.height) {
+                isSizeUpdate = true;
+            } else {
+                isSizeUpdate = false;
+            }
+        }
+
+        if (this.scaleValue.x.min === xmin || 
+            this.scaleValue.x.max === xmax ||
+            this.scaleValue.y.min === ymin || 
+            this.scaleValue.y.max === ymax) {
+            
+            if (this.restoreCanvas) {
+                isRestore = true;
+            } else {
+                // 최초에는 생성이 안되어 있으니 다시 그린다.
+                isRestore = false;
+            }
+        }
+
         let padding = 0;
 
         if (x.bandwidth) {
             padding = x.bandwidth() / 2;
         }
 
-        // TODO: 최초 full data를 가지고 있을지 고민.
-        // why? full scan 하여 다시 모델을 생성하는데 시간이 걸림.
-
-        // console.time('data_generate' + this.selector);
         const lineData: Array<any> = (!this.dataFilter
             ? chartData
             : chartData.filter((item: T) => this.dataFilter(item))
@@ -246,9 +272,32 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
                 'transform',
                 `translate(${this.chartBase.chartMargin.left + 1}px, ${this.chartBase.chartMargin.top}px)`
             );
+        
+        if (isRestore) {
+            (this.canvas.node() as any).getContext('2d').drawImage(this.restoreCanvas.node(), 0, 0, geometry.width, geometry.height, 0, 0, geometry.width, geometry.height);
+        } else {
+            this.webGLStart(lineData, { min: xmin, max: xmax }, { min: ymin, max: ymax }, geometry, this.lineColor);
+        }
+        
+        // canvas로 drawImage 했을때 라인이 픽셀로 지그재그로 보이는 현상이 있음 antialicing 적용방법이 필요함.
+        // 아니면 그냥 다시 그리도록 함.
 
-        this.webGLStart(lineData, { min: xmin, max: xmax }, { min: ymin, max: ymax }, geometry, this.lineColor);
-
+        delayExcute(100, () => {
+            (this.canvas.node() as any).getContext('2d').drawImage(this.chartBase.webglCanvasElement.node(), 0, 0, geometry.width * 6, geometry.height * 6, 0, 0, geometry.width * 6, geometry.height * 6);
+            
+            if (!this.restoreCanvas) {
+                this.restoreCanvas = select(document.createElement('CANVAS'));
+                this.restoreCanvas
+                    .attr('width', geometry.width)
+                    .attr('height', geometry.height);
+                (this.restoreCanvas.node() as any).getContext('2d').drawImage(this.chartBase.webglCanvasElement.node(), 0, 0);
+            }
+        });
+        
+        delayExcute(200, () => {
+            this.viewClear();
+        });
+        
         if (this.originQuadTree) {
             this.originQuadTree = undefined;
         }
@@ -261,23 +310,13 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
                     [geometry.width, geometry.height]
                 ])
                 .addAll(
-                    lineData.map<any>((d: BasicCanvasWebglLineSeriesOneModel) => {
+                    lineData.map<any>((d: BasicCanvasWebglLineSeriesModel) => {
                         const xposition = x(d[this.xField]);
                         const yposition = y(d[this.yField]);
 
                         return [xposition, yposition, d];
                     })
                 );
-            // TODO: 제일 마지막 시리즈를 출력하고 나서 그려진 캔버스를 저장한다.
-            // TODO: 시리즈 마다 webgl로 그리고 그린 내용은 캔버스로 저장해서 해당 시리즈를 선택할 수 있는 기능을 고려해본다.
-
-            // if (!this.restoreCanvas) {
-            //     this.restoreCanvas = select(document.createElement('CANVAS'));
-            //     this.restoreCanvas
-            //         .attr('width', geometry.width)
-            //         .attr('height', geometry.height);
-            //     (this.restoreCanvas.node() as any).getContext('2d').drawImage(this.canvas.node(), 0, 0);
-            // }
         });
     }
 
@@ -358,6 +397,10 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
     // TEST
     getGeometry() {
         return this.geometry;
+    }
+
+    drawTargetSeries() {
+        (this.canvas.node() as any).getContext('2d').drawImage(this.chartBase.webglCanvasElement.node(), 0, 0);
     }
 
     private search(quadtreeObj: Quadtree<Array<any>>, x0: number, y0: number, x3: number, y3: number) {
@@ -441,11 +484,13 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         const canvas: HTMLCanvasElement = this.canvas.node() as HTMLCanvasElement;
 
         // 초기화
-        this.initGL(canvas as HTMLCanvasElement);
+        this.initGL(canvas);
+
+        // this.viewClear();
 
         if (this.seriesIndex === 0) {
             // 화면 지우기
-            this.gl.clearColor(0, 0, 0, 0); // rgba
+            this.viewClear();
 
             // 깊이버퍼 활성화
             // this.gl.enable(this.gl.DEPTH_TEST);
@@ -475,25 +520,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
     private initGL(canvas: HTMLCanvasElement) {
         try {
             if (!this.gl) {
-                const webglOption = {
-                    alpha: true, // 캔버스에 알파 버퍼가 포함되어 있는지 를 나타내는 부울입니다.
-                    antialias: true, // 항별칭을 수행할지 여부를 나타내는 부울
-                    preserveDrawingBuffer: true, // 값이 true인 경우 버퍼가 지워지지 않으며 작성자가 지우거나 덮어쓸 때까지 해당 값을 보존합니다.
-                    powerPreference: 'high-performance',
-                    // depth: false, // 도면 버퍼에 최소 16비트의 깊이 버퍼가 있음을 나타내는 부울입니다.
-                    // /**
-                    //  * 웹GL 컨텍스트에 적합한 GPU 구성을 나타내는 사용자 에이전트에 대한 힌트입니다. 가능한 값은 다음과 같습니다.
-                    // "default": 사용자 에이전트가 가장 적합한 GPU 구성을 결정하도록 합니다. 기본 값입니다.
-                    // "high-performance": 전력 소비보다 렌더링 성능의 우선 순위를 지정합니다.
-                    // "low-power": 렌더링 성능보다 절전의 우선 순위를 지정합니다.
-                    //  */
-                    premultipliedAlpha: true, // 페이지 작성자가 드로잉 버퍼에 미리 곱한 알파가 있는 색상이 포함되어 있다고 가정한다는 것을 나타내는 부울입니다.
-                    stencil: true, // 도면 버퍼에 최소 8비트의 스텐실 버퍼가 있음을 나타내는 부울입니다.
-                    // desynchronized: true, // 이벤트 루프에서 캔버스 페인트 주기의 비동기화를 해제하여 사용자 에이전트가 대기 시간을 줄이도록 힌트하는 부울
-                    failIfMajorPerformanceCaveat: true // 시스템 성능이 낮거나 하드웨어 GPU를 사용할 수 없는 경우 컨텍스트가 생성될지 를 나타내는 부울수입니다.
-                }
-                this.gl = canvas.getContext('webgl', webglOption) || canvas.getContext('experimental-webgl', webglOption);
-                this.gl.imageSmoothingEnabled = true;
+                this.gl = this.chartBase.webglElementContext;
             }
             this.gl.viewportWidth = canvas.width;
             this.gl.viewportHeight = canvas.height;

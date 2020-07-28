@@ -21,6 +21,7 @@ import { IFunctions } from './functions.interface';
 import { IOptions } from './options.interface';
 
 import { baseTooltipTemplate } from '../chart/util/tooltip-template';
+import { format } from 'd3';
 
 
 // TODO: 모든 참조되는 함수들은 subject로 바꾼다.
@@ -215,6 +216,10 @@ export class ChartBase<T = any> implements IChart {
 
     private move$: Subject<any> = new Subject();
 
+    private webglCanvas: Selection<BaseType, any, HTMLElement, any>;
+
+    private webglContext: any;
+
     constructor(
         configuration: ChartConfiguration
     ) {
@@ -229,6 +234,47 @@ export class ChartBase<T = any> implements IChart {
     set chartData(value: Array<T>) {
         this.data = value;
         this.draw();
+    }
+
+    // 이 함수는 보류 (미구현)
+    get webglElementContext() {
+        if (!this.webglCanvas) {
+            this.webglCanvas = select(document.createElement('CANVAS'));
+            this.webglCanvas
+                .attr('width', this.width)
+                .attr('height', this.height);
+
+            if (!this.webglContext) {
+                const webglOption = {
+                    alpha: true, // 캔버스에 알파 버퍼가 포함되어 있는지 를 나타내는 부울입니다.
+                    antialias: true, // 항별칭을 수행할지 여부를 나타내는 부울
+                    // preserveDrawingBuffer: true, // 값이 true인 경우 버퍼가 지워지지 않으며 작성자가 지우거나 덮어쓸 때까지 해당 값을 보존합니다.
+                    powerPreference: 'high-performance',
+                    // depth: false, // 도면 버퍼에 최소 16비트의 깊이 버퍼가 있음을 나타내는 부울입니다.
+                    // /**
+                    //  * 웹GL 컨텍스트에 적합한 GPU 구성을 나타내는 사용자 에이전트에 대한 힌트입니다. 가능한 값은 다음과 같습니다.
+                    // "default": 사용자 에이전트가 가장 적합한 GPU 구성을 결정하도록 합니다. 기본 값입니다.
+                    // "high-performance": 전력 소비보다 렌더링 성능의 우선 순위를 지정합니다.
+                    // "low-power": 렌더링 성능보다 절전의 우선 순위를 지정합니다.
+                    //  */
+                    premultipliedAlpha: true, // 페이지 작성자가 드로잉 버퍼에 미리 곱한 알파가 있는 색상이 포함되어 있다고 가정한다는 것을 나타내는 부울입니다.
+                    stencil: true, // 도면 버퍼에 최소 8비트의 스텐실 버퍼가 있음을 나타내는 부울입니다.
+                    // desynchronized: true, // 이벤트 루프에서 캔버스 페인트 주기의 비동기화를 해제하여 사용자 에이전트가 대기 시간을 줄이도록 힌트하는 부울
+                    failIfMajorPerformanceCaveat: true // 시스템 성능이 낮거나 하드웨어 GPU를 사용할 수 없는 경우 컨텍스트가 생성될지 를 나타내는 부울수입니다.
+                };
+                this.webglContext = (this.webglCanvas.node() as any).getContext('webgl', webglOption) || (this.webglCanvas.node() as any).getContext('experimental-webgl', webglOption);
+            }
+        }
+        this.webglContext.imageSmoothingQuality = 'high'; // "low|medium|high"
+        this.webglContext.imageSmoothingEnabled = true;
+        this.webglContext.viewportWidth = this.width;
+        this.webglContext.viewportHeight = this.height;
+        return this.webglContext;
+    }
+
+    // 이 함수는 보류 (미구현)
+    get webglCanvasElement() {
+        return this.webglCanvas;
     }
 
     get chartMargin(): any {
@@ -607,9 +653,18 @@ export class ChartBase<T = any> implements IChart {
                     orientedAxis
                 )
                 .selectAll('text')
-                .text((d: string) => {
-                    return scale.tickTextParser ? scale.tickTextParser(d) : d
-                });
+                .style('font-size', this.defaultAxisLabelStyle.font.size + 'px')
+                .style('font-family', this.defaultAxisLabelStyle.font.family);
+
+                if (scale.tickTextParser) {
+                    delayExcute(50, () => {
+                        this.axisGroups[scale.orient]
+                            .selectAll('text')
+                            .text((d: string) => {
+                                return scale.tickTextParser(d);
+                            })
+                    })
+                }
             }
 
             if (isZoom && scale.isZoom === true) {
@@ -1694,6 +1749,8 @@ export class ChartBase<T = any> implements IChart {
         if (scale.type === ScaleType.NUMBER) {
             if (scale.tickFormat) {
                 orientedAxis.ticks(null, scale.tickFormat);
+            } else {
+                orientedAxis.tickFormat(format(',.0f'));
             }
         } else if (scale.type === ScaleType.TIME) {
             if (scale.tickFormat) {
