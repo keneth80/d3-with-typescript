@@ -1938,9 +1938,9 @@ const gaugeChart = () => {
 
 dfdChartSample();
 
-dfdChartWebglSample();
+// dfdChartWebglSample();
 
-// dfdCanvasChartSample();
+dfdCanvasChartSample();
 
 // canvasLineChart();
 

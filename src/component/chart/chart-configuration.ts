@@ -131,13 +131,13 @@ export interface ChartConfiguration<T = any> {
 
     data: T; // data
 
+    colors?: Array<string>; // custom color (default: d3.schemeCategory10, size: 10)
+
     min?: number, // only type is number
 
     max?: number  // only type is number
 
     calcField?: string; // for only min max configration
-
-    colors?: Array<string>; // custom color (default: d3.schemeCategory10, size: 10)
 
     displayDelay?: {
         delayTime: number;

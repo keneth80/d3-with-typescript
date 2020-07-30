@@ -240,7 +240,9 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
                 this.drawZoomBox(
                     zoomContext,
                     start,
-                    end
+                    end,
+                    geometry,
+                    startX > moveX && startY > moveY
                 );
 
                 this.chartBase.zoomEventSubject.next({
@@ -345,14 +347,37 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
     private drawZoomBox(
         zoomContext: any,
         start: {x: number, y: number},
-        end: {x: number, y: number}
+        end: {x: number, y: number},
+        size: ContainerSize,
+        isRestore: boolean = false
     ) {
-        zoomContext.strokeStyle = 'blue';
-        zoomContext.fillStyle = 'rgba(5,222,255,0.5)';
+        // zoomContext.strokeStyle = 'blue';
+        // zoomContext.fillStyle = 'rgba(5,222,255,0.5)';
+        // zoomContext.beginPath();
+        // zoomContext.rect(start.x, start.y, Math.abs(end.x - start.x), Math.abs(end.y - start.y));
+        // zoomContext.fill();
+        // zoomContext.stroke();
+
         zoomContext.beginPath();
+        zoomContext.fillStyle = 'rgba(179,176,191,0.5)';
+        zoomContext.moveTo(0, 0);
+        zoomContext.lineTo(0, size.height);
+        zoomContext.lineTo(size.width, size.height);
+        zoomContext.lineTo(size.width, 0);
+        // zoomContext.clip();
         zoomContext.rect(start.x, start.y, Math.abs(end.x - start.x), Math.abs(end.y - start.y));
         zoomContext.fill();
-        zoomContext.stroke();
+
+        if (isRestore) {
+            zoomContext.beginPath();
+            zoomContext.strokeStyle = 'rgba(255,255,255)';
+            zoomContext.lineWidth = 5;
+            zoomContext.moveTo(start.x, start.y);
+            zoomContext.lineTo(start.x + Math.abs(end.x - start.x), start.y + Math.abs(end.y - start.y));
+            zoomContext.moveTo(start.x + Math.abs(end.x - start.x), start.y);
+            zoomContext.lineTo(start.x, start.y + Math.abs(end.y - start.y));
+            zoomContext.stroke();
+        }
     }
 
     private setContainerPosition(geometry: ContainerSize, chartBase: ChartBase) {

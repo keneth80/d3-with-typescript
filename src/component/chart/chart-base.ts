@@ -1,27 +1,30 @@
 import './chart.css';
 
-import { min, max, extent } from 'd3-array';
+import { min, max } from 'd3-array';
 import { timeFormat } from 'd3-time-format';
-import { scaleBand, scaleLinear, scaleTime, scalePoint, scaleOrdinal, ScaleOrdinal } from 'd3-scale';
+import { scaleBand, scaleLinear, scaleTime, scalePoint } from 'd3-scale';
 import { schemeCategory10 } from 'd3-scale-chromatic';
 import { select, Selection, BaseType, event } from 'd3-selection';
 import { axisBottom, axisLeft, axisTop, axisRight } from 'd3-axis';
 import { brushX, brushY } from 'd3-brush';
+import { format } from 'd3-format';
 
-import { fromEvent, Subscription, Subject, of, Observable, Observer, from, timer } from 'rxjs';
-import { debounceTime, delay, switchMap, map, concatMap, mapTo } from 'rxjs/operators';
-
-// import crossfilter, { Crossfilter } from 'crossfilter2';
+import { fromEvent, Subscription, Subject, of, Observable, from, timer } from 'rxjs';
+import { debounceTime, switchMap, map, concatMap, mapTo } from 'rxjs/operators';
 
 import { IChart, Scale, ContainerSize, LegendItem, ChartMouseEvent, ChartZoomEvent } from './chart.interface';
-import { ChartConfiguration, Axis, Margin, Placement, ChartTitle, ScaleType, Align, AxisTitle, ChartTooltip, Shape, PlacementByElement } from './chart-configuration';
+import { ChartConfiguration, Axis, Margin, Placement, ChartTitle, ScaleType, 
+         Align, AxisTitle, ChartTooltip, Shape, PlacementByElement 
+} from './chart-configuration';
 import { ISeries } from './series.interface';
-import { guid, textWrapping, getTextWidth, getMaxText, drawSvgCheckBox, getAxisByPlacement, getTransformByArray, getTextWidthByComputedTextLength, drawLegendColorItemByRect, drawLegendColorItemByCircle, drawLegendColorItemByLine, delayExcute } from './util/d3-svg-util';
 import { IFunctions } from './functions.interface';
 import { IOptions } from './options.interface';
 
 import { baseTooltipTemplate } from '../chart/util/tooltip-template';
-import { format } from 'd3';
+import { guid, delayExcute, textWrapping, 
+         drawSvgCheckBox, drawLegendColorItemByRect, drawLegendColorItemByCircle, drawLegendColorItemByLine,
+         getAxisByPlacement, getTransformByArray, getTextWidth, getMaxText
+} from './util/d3-svg-util';
 
 
 // TODO: 모든 참조되는 함수들은 subject로 바꾼다.
@@ -413,6 +416,7 @@ export class ChartBase<T = any> implements IChart {
         return this;
     }
 
+    // TODO: clear 로직 구현.
     clear() {
         
     }
@@ -1003,7 +1007,6 @@ export class ChartBase<T = any> implements IChart {
                             max: event.zoom.end.y
                         }
                     ];
-
                     this.scales = this.setupScale(this.config.axes, this.width, this.height, reScale);
                     this.updateRescaleAxis(false);
                     this.updateFunctions();
@@ -1103,7 +1106,7 @@ export class ChartBase<T = any> implements IChart {
 
         this.originDomains = {};
 
-        this.scales = this.setupScale(this.config.axes, this.width, this.height);
+        this.scales = this.setupScale(this.config.axes, this.width, this.height, this.currentScale);
 
         this.scales.forEach((scale: Scale) => {
             const orientedAxis: any = this.axisSetupByScale(scale);

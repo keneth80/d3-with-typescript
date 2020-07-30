@@ -41,10 +41,10 @@ module.exports = {
             {
                 test: /\.(txt|csv|svg)$/,
                 use: [
-                  {
-                    loader: 'file-loader',
-                    options: {}
-                  }
+                    {
+                        loader: 'file-loader',
+                        options: {}
+                    }
                 ]
             }
         ]

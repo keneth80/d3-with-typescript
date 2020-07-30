@@ -83,9 +83,9 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
 
     private originQuadTree: Quadtree<Array<any>> = undefined;
 
-    private originalChartImage: any = null;
-
     private seriesData: Array<T>;
+
+    private padding = 0;
 
     // ================= webgl 관련 변수 ================ //
     private gl: any;
@@ -97,7 +97,9 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
 
     private isRestore = false;
 
-    private restoreCanvas: Selection<BaseType, any, HTMLElement, any>;
+    private isSizeUpdate = false;
+
+    private cashingVertices: Array<number> = [];
 
     // ================= style 관련 변수 =============== //
     private radius = 4;
@@ -208,10 +210,40 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         const ymin = yScale.min;
         const ymax = yScale.max;
 
-        let padding = 0;
+        // 최초 setup
+        if (!this.initGeometry) {
+            this.initGeometry = geometry;
+
+            this.scaleValue.x.min = xmin;
+            this.scaleValue.x.max = xmax;
+            this.scaleValue.y.min = ymin;
+            this.scaleValue.y.max = ymax;
+        } else {
+            if (this.initGeometry.width === geometry.width &&
+                this.initGeometry.height === geometry.height) {
+                this.isSizeUpdate = false;
+            } else {
+                this.initGeometry.width = geometry.width;
+                this.initGeometry.height = geometry.height;
+
+                this.isSizeUpdate = true;
+            }
+        }
+
+        if ((this.scaleValue.x.min === xmin && this.scaleValue.x.max === xmax) && 
+            (this.scaleValue.y.min === ymin && this.scaleValue.y.max === ymax)) {
+            this.isRestore = true;
+            if (this.isSizeUpdate) {
+                this.cashingVertices.length = 0;
+            }
+        } else {
+            this.isRestore = false;
+        }
+
+        this.padding = 0;
 
         if (x.bandwidth) {
-            padding = x.bandwidth() / 2;
+            this.padding = x.bandwidth() / 2;
         }
 
         // TODO: 최초 full data를 가지고 있을지 고민.
@@ -434,9 +466,16 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
     ) {
         const endCount = chartData.length;
 
-        // data generate
-        const vertices = this.makeVertices(chartData, xAxis, yAxis);
+        // if (this.isSizeUpdate && !this.cashingVertices.length) {
+        //     console.log('makeVertices cashing');
+        //     this.cashingVertices = this.makeVertices(chartData, xAxis, yAxis);
+        // }
 
+        // // // data generate
+        // const vertices = this.isSizeUpdate ? this.makeVertices(chartData, xAxis, yAxis) : (this.isRestore ? this.cashingVertices : this.makeVertices(chartData, xAxis, yAxis));
+
+        const vertices = this.makeVertices(chartData, xAxis, yAxis);
+        
         // 캔버스 얻어오기
         const canvas: HTMLCanvasElement = this.canvas.node() as HTMLCanvasElement;
 
@@ -627,7 +666,9 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
 
         const endCount = chartData.length;
 
-        for (let i = 0; i < endCount; i++) {
+        let i = 0;
+
+        for (i = 0; i < endCount; i++) {
             const xposition = xScale(chartData[i][this.xField]);
             const yposition = yScale(chartData[i][this.yField]);
 

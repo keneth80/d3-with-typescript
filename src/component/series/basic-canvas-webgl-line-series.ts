@@ -283,6 +283,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         // 아니면 그냥 다시 그리도록 함.
 
         delayExcute(100, () => {
+            // TODO: restore 시에만 적용.
             (this.canvas.node() as any).getContext('2d').drawImage(this.chartBase.webglCanvasElement.node(), 0, 0, geometry.width * 6, geometry.height * 6, 0, 0, geometry.width * 6, geometry.height * 6);
             
             if (!this.restoreCanvas) {

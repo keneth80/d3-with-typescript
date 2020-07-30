@@ -93,6 +93,8 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
     private isRestore = false;
 
+    private isSizeUpdate = false;
+
     // ================= style 관련 변수 =============== //
     private radius = 4;
 
@@ -176,6 +178,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
     drawSeries(chartBaseData: Array<T>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
         const chartData = this.seriesData ? this.seriesData : chartBaseData;
 
+        this.geometry = geometry;
         this.seriesColor = color;
         this.currentScales = scales;
         
@@ -193,39 +196,35 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         const ymin = yScale.min;
         const ymax = yScale.max;
 
-        let isSizeUpdate = true;
-        let isRestore = false;
-
         // 최초 setup
-        if (!this.geometry) {
-            this.geometry = geometry;
-            this.cashingData = [];
+        if (!this.initGeometry) {
+            this.initGeometry = {...geometry};
 
             this.scaleValue.x.min = xmin;
             this.scaleValue.x.max = xmax;
             this.scaleValue.y.min = ymin;
             this.scaleValue.y.max = ymax;
 
-        } else {
-            if (this.geometry.width !== geometry.width ||
-                this.geometry.height !== geometry.height) {
-                isSizeUpdate = true;
-                this.cashingData.length = 0;
-            } else {
-                isSizeUpdate = false;
-            }
-        }
+            this.isSizeUpdate = false;
 
-        if (this.scaleValue.x.min === xmin || 
-            this.scaleValue.x.max === xmax ||
-            this.scaleValue.y.min === ymin || 
-            this.scaleValue.y.max === ymax) {
-            
-            if (this.restoreCanvas) {
-                isRestore = true;
+            this.isRestore = false;
+        } else {
+            if (this.initGeometry.width === geometry.width &&
+                this.initGeometry.height === geometry.height) {
+                this.isSizeUpdate = false;
             } else {
-                // 최초에는 생성이 안되어 있으니 다시 그린다.
-                isRestore = false;
+                this.isSizeUpdate = true;
+            }
+
+            if (this.isSizeUpdate) {
+                this.isRestore = false;
+            } else {
+                if ((this.scaleValue.x.min === xmin && this.scaleValue.x.max === xmax) && 
+                    (this.scaleValue.y.min === ymin && this.scaleValue.y.max === ymax)) {
+                    this.isRestore = true;
+                } else {
+                    this.isRestore = false;
+                }
             }
         }
 
@@ -281,7 +280,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                 const yposition = y(d[this.yField]);
                 
                 // POINT: data 만들면서 포인트 찍는다.
-                if (this.config.dot && !isRestore) {
+                if (this.config.dot && !this.isRestore) {
                     const rectSize = this.config.dot.radius / 2;
                     context.fillRect(xposition - rectSize, yposition - rectSize, this.config.dot.radius, this.config.dot.radius);
                 }
@@ -289,9 +288,18 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                 return [xposition, yposition, d];
             });
 
-        if (isRestore) {
+        if (!this.isSizeUpdate && this.isRestore) {
             context.drawImage(this.restoreCanvas.node(), 0, 0);
         } else {
+            // 사이즈가 변경이 되면서 zoom out 경우에는 초기 사이즈를 업데이트 해준다.
+            if ((this.scaleValue.x.min === xmin && this.scaleValue.x.max === xmax) && 
+                (this.scaleValue.y.min === ymin && this.scaleValue.y.max === ymax)) {
+                this.initGeometry.width = geometry.width;
+                this.initGeometry.height = geometry.height;
+
+                this.restoreCanvas = undefined;
+            }
+
             this.line = line()
                 .x((data: any) => {
                     return data[0]; 

@@ -27,16 +27,18 @@ export class SeriesBase implements ISeries {
         event?: any
     }> = new Subject();
 
+    protected initGeometry: ContainerSize;
+
     protected geometry: ContainerSize;
 
     protected scaleValue: ScaleValue = {
         x: {
-            min: Infinity,
-            max: Infinity,
+            min: null,
+            max: null,
         },
         y: {
-            min: Infinity,
-            max: Infinity,
+            min: null,
+            max: null,
         }
     };
 
