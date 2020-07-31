@@ -214,23 +214,30 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         const lineData: Array<any> = (!this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item)))
         .filter((d: T) => d[this.xField] >= (xmin - xmin * 0.02) && d[this.xField] <= (xmax + xmax * 0.02) && d[this.yField] >= ymin && d[this.yField] <= ymax);
 
-        const generateData: Array<any> = lineData
-            .map((d: BasicCanvasTraceModel, i: number) => {
-                const xposition = x(d[this.xField]) + padding;
-                const yposition = y(d[this.yField]);
-                
-                // POINT: data 만들면서 포인트 찍는다.
-                // if (this.config.dot) {
-                const rectSize = this.config.dot.radius / 2;
-                context.fillRect(xposition - rectSize, yposition - rectSize, this.config.dot.radius, this.config.dot.radius);
-                // }
-
-                return [xposition, yposition, d];
-            });
-
+        let generateData: Array<any>;
         if (option.displayType === DisplayType.ZOOMOUT && this.restoreCanvas) {
+            generateData = lineData
+                .map((d: BasicCanvasTraceModel, i: number) => {
+                    const xposition = x(d[this.xField]) + padding;
+                    const yposition = y(d[this.yField]);
+                    
+                    return [xposition, yposition, d];
+                });
             context.drawImage(this.restoreCanvas.node(), 0, 0);
         } else {
+            generateData = lineData
+                .map((d: BasicCanvasTraceModel, i: number) => {
+                    const xposition = x(d[this.xField]) + padding;
+                    const yposition = y(d[this.yField]);
+                    
+                    // POINT: data 만들면서 포인트 찍는다.
+                    // if (this.config.dot) {
+                    const rectSize = this.config.dot.radius / 2;
+                    context.fillRect(xposition - rectSize, yposition - rectSize, this.config.dot.radius, this.config.dot.radius);
+                    // }
+
+                    return [xposition, yposition, d];
+                });
             // 사이즈가 변경이 되면서 zoom out 경우에는 초기 사이즈를 업데이트 해준다.
             this.line = line()
                 .x((data: any) => {
@@ -247,7 +254,6 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
             this.line(generateData);
             
-            context.save();
             context.stroke();
         }
 
@@ -256,23 +262,23 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         }
 
         delayExcute(300, () => {
-            this.originQuadTree = quadtree()
-                .extent([[0, 0], [geometry.width, geometry.height]])
-                .addAll(generateData);
-
-            if ((option.displayType === DisplayType.NORMAL && !this.restoreCanvas) ||
-                (option.displayType === DisplayType.ZOOMOUT && !this.restoreCanvas)) {
+            if ((option.displayType === DisplayType.NORMAL || option.displayType === DisplayType.ZOOMOUT && !this.restoreCanvas)) 
+            {
                 this.restoreCanvas = select(document.createElement('CANVAS'));
                 this.restoreCanvas
                     .attr('width', geometry.width)
                     .attr('height', geometry.height);
                 (this.restoreCanvas.node() as any).getContext('2d').drawImage(this.canvas.node(), 0, 0);
             }
+
+            this.originQuadTree = quadtree()
+                .extent([[0, 0], [geometry.width, geometry.height]])
+                .addAll(generateData);
         });
 
-        (this.canvas.node() as any).addEventListener('DOMNodeRemoved', () => {
-            console.log('remove canvas');
-        });
+        // (this.canvas.node() as any).addEventListener('DOMNodeRemoved', () => {
+        //     console.log('remove canvas');
+        // });
     }
 
     select(displayName: string, isSelected: boolean) {
