@@ -215,7 +215,6 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         }
 
         if (option.displayType === DisplayType.RESIZE) {
-            console.log('cashing remove');
             this.cashingVertices.length = 0;
         }
 
@@ -433,7 +432,6 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
             (this.displayType === DisplayType.NORMAL && !this.cashingVertices.length) ||
             (this.displayType === DisplayType.ZOOMOUT && !this.cashingVertices.length)
         ) {
-            console.log('makeVertices cashing');
             this.cashingVertices = this.makeVertices(chartData, xAxis, yAxis);
         }
 

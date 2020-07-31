@@ -38,7 +38,7 @@ export interface CanvasTraceChartConfiguration extends MiccBaseConfiguration {
     series: Array<BasicCanvasTraceConfiguration>
 }
 
-export class Micc {
+export class MiChart {
     static traceChartByCanvas(configuration: CanvasTraceChartConfiguration): BasicChart {
         const chartConfiguration: ChartConfiguration = {
             selector: configuration.selector,
