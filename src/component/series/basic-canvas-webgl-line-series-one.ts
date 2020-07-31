@@ -198,7 +198,6 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
 
         const xScale: Scale = scales.find((scale: Scale) => scale.orient === Placement.BOTTOM);
         const yScale: Scale = scales.find((scale: Scale) => scale.orient === Placement.LEFT);
-        // const yScale: Scale = scales.find((scale: Scale) => scale.field === this.yField);
 
         const x: any = xScale.scale;
         const y: any = yScale.scale;
@@ -214,14 +213,11 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
             this.padding = x.bandwidth() / 2;
         }
 
+        // resize가 되면 cashing된 scale data를 초기화 한다.
         if (option.displayType === DisplayType.RESIZE) {
             this.cashingVertices.length = 0;
         }
 
-        // TODO: 최초 full data를 가지고 있을지 고민.
-        // why? full scan 하여 다시 모델을 생성하는데 시간이 걸림.
-
-        // console.time('data_generate' + this.selector);
         const lineData: Array<any> = (!this.dataFilter
             ? chartData
             : chartData.filter((item: T) => this.dataFilter(item))
@@ -232,7 +228,6 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
                 d[this.yField] >= ymin &&
                 d[this.yField] <= ymax
         );
-        // console.timeEnd('data_generate' + this.selector);
 
         this.canvas
             .attr('width', geometry.width)
@@ -444,7 +439,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         const canvas: HTMLCanvasElement = this.canvas.node() as HTMLCanvasElement;
 
         // 초기화
-        this.initGL(canvas as HTMLCanvasElement);
+        this.initGL(canvas);
 
         if (this.seriesIndex === 0) {
             // 화면 지우기

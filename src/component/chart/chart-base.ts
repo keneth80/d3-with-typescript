@@ -440,6 +440,7 @@ export class ChartBase<T = any> implements IChart {
                 series.unSelectItem();
             });
             this.tooltipGroup.style('display', 'none');
+            // TODO: tooltip hide event 발생.
         }
         return this.tooltipGroup;
     }
@@ -1026,6 +1027,7 @@ export class ChartBase<T = any> implements IChart {
                         // multi tooltip이면 break 걸지 않는다.
                         if (positionData.length) {
                             this.seriesList[max].showPointAndTooltip(value, positionData);
+                            // TODO: tooltip show event 발생.
                             break;
                         }
                     }   

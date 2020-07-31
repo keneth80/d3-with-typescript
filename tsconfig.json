@@ -10,6 +10,7 @@
         "lib": [
             "es2015", "es6", "esnext", "dom"
         ],
+        "declaration": true,
         "allowJs": true,
         // produce a source map
         "sourceMap": true,
