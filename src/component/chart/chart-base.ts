@@ -12,7 +12,7 @@ import { format } from 'd3-format';
 import { fromEvent, Subscription, Subject, of, Observable, from, timer } from 'rxjs';
 import { debounceTime, switchMap, map, concatMap, mapTo } from 'rxjs/operators';
 
-import { IChart, Scale, ContainerSize, LegendItem, ChartMouseEvent, ChartZoomEvent } from './chart.interface';
+import { IChart, Scale, ContainerSize, LegendItem, ChartMouseEvent, ChartZoomEvent, DisplayType } from './chart.interface';
 import { ChartConfiguration, Axis, Margin, Placement, ChartTitle, ScaleType, 
          Align, AxisTitle, ChartTooltip, Shape, PlacementByElement 
 } from './chart-configuration';
@@ -551,7 +551,19 @@ export class ChartBase<T = any> implements IChart {
         return new Promise(resolve => {
             series.chartBase = this;
             series.setSvgElement(this.svg, this.seriesGroup, index);
-            series.drawSeries(this.data, this.scales, {width: this.width, height: this.height}, index, this.colors[index]);
+            series.drawSeries(
+                this.data, 
+                this.scales,
+                {
+                    width: this.width, 
+                    height: this.height
+                }, 
+                {
+                    index, 
+                    color: this.colors[index], 
+                    displayType: DisplayType.NORMAL
+                }
+            );
             resolve();
         });
     }
@@ -565,7 +577,7 @@ export class ChartBase<T = any> implements IChart {
         console.log('series update Done!');
     }
 
-    updateSeries() {
+    updateSeries(displayType: DisplayType = DisplayType.NORMAL) {
         try {
             // TODO: subject next 로 변경할 것
             if (this.seriesList && this.seriesList.length) {
@@ -574,7 +586,19 @@ export class ChartBase<T = any> implements IChart {
                     this.seriesList.map((series: ISeries, index: number) => {
                         series.chartBase = this;
                         series.setSvgElement(this.svg, this.seriesGroup, index);
-                        series.drawSeries(this.data, this.scales, {width: this.width, height: this.height}, index, this.colors[index]);
+                        series.drawSeries(
+                            this.data, 
+                            this.scales, 
+                            {
+                                width: this.width, 
+                                height: this.height
+                            },
+                            {
+                                index, 
+                                color: this.colors[index], 
+                                displayType
+                            }
+                        );
                     });
 
                     return;
@@ -583,7 +607,19 @@ export class ChartBase<T = any> implements IChart {
                         this.seriesList.map((series: ISeries, index: number) => {
                             series.chartBase = this;
                             series.setSvgElement(this.svg, this.seriesGroup, index);
-                            series.drawSeries(this.data, this.scales, {width: this.width, height: this.height}, index, this.colors[index]);
+                            series.drawSeries(
+                                this.data, 
+                                this.scales, 
+                                {
+                                    width: this.width, 
+                                    height: this.height
+                                }, 
+                                {
+                                    index, 
+                                    color: this.colors[index], 
+                                    displayType: DisplayType.NORMAL
+                                }
+                            );
                         });
 
                         return;
@@ -615,7 +651,19 @@ export class ChartBase<T = any> implements IChart {
                         const currentIndex = parseInt(index + '');
                         this.seriesList[currentIndex].chartBase = this;
                         this.seriesList[currentIndex].setSvgElement(this.svg, this.seriesGroup, currentIndex);
-                        this.seriesList[currentIndex].drawSeries(this.data, this.scales, {width: this.width, height: this.height}, currentIndex, this.colors[currentIndex]);
+                        this.seriesList[currentIndex].drawSeries(
+                            this.data, 
+                            this.scales, 
+                            {
+                                width: this.width, 
+                                height: this.height
+                            }, 
+                            {
+                                index: currentIndex, 
+                                color: this.colors[currentIndex], 
+                                displayType: DisplayType.NORMAL
+                            }
+                        );
                     },
                     error => {
                         if (console && console.log) {
@@ -652,7 +700,6 @@ export class ChartBase<T = any> implements IChart {
             const orientedAxis: any = this.axisSetupByScale(scale);
             
             if (scale.visible) {
-                // TODO: axis label list setup
                 this.axisGroups[scale.orient].call(
                     orientedAxis
                 )
@@ -1010,7 +1057,7 @@ export class ChartBase<T = any> implements IChart {
                     this.scales = this.setupScale(this.config.axes, this.width, this.height, reScale);
                     this.updateRescaleAxis(false);
                     this.updateFunctions();
-                    this.updateSeries();
+                    this.updateSeries(DisplayType.ZOOMIN);
                     this.updateOptions();
                 } else if (event.type === 'zoomout') {
                     isDragStart = false;
@@ -1018,7 +1065,7 @@ export class ChartBase<T = any> implements IChart {
                     this.scales = this.setupScale(this.config.axes, this.width, this.height, []);
                     this.updateRescaleAxis(false);
                     this.updateFunctions();
-                    this.updateSeries();
+                    this.updateSeries(DisplayType.ZOOMOUT);
                     this.updateOptions()
                 } else {
                     isDragStart = false;
@@ -1476,7 +1523,7 @@ export class ChartBase<T = any> implements IChart {
         }
     }
 
-    protected updateDisplay() {
+    protected updateDisplay(displayType: DisplayType = DisplayType.NORMAL) {
         if (this.width <= 50 || this.height <= 50) {
             if (console && console.log) {
                 console.log('It is too small to draw.');
@@ -1491,7 +1538,7 @@ export class ChartBase<T = any> implements IChart {
                 // POINT: 해당 기능이 series에 의존함으로 series를 먼저 그린뒤에 function을 설정 하도록 한다.
                 this.updateFunctions();
                 this.updateTitle();
-                this.updateSeries();
+                this.updateSeries(displayType);
                 this.updateOptions();
             });
     }
@@ -1731,7 +1778,7 @@ export class ChartBase<T = any> implements IChart {
                 .attr('x', 0)
                 .attr('y', 0);
 
-        this.updateDisplay();
+        this.updateDisplay(DisplayType.RESIZE);
 
         this.isResize = false;
     }

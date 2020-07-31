@@ -3,7 +3,10 @@ import { ChartConfiguration,
          ChartTooltip, ChartTitle, ChartLegend,
          Margin, Axis,  } from './chart/chart-configuration';
 
-export interface MiccConfiguration {
+import { BasicCanvasTraceConfiguration, BasicCanvasTrace } from './series/basic-canvas-trace';
+
+
+export interface MiccBaseConfiguration {
     selector: string;
 
     tooltip?: ChartTooltip;
@@ -17,8 +20,6 @@ export interface MiccConfiguration {
     margin?: Margin; // custom margin
 
     axes?: Array<Axis>; // axis list
-
-    series?: Array<any>; // series list
     
     functions?: Array<any>; // function list
 
@@ -27,15 +28,37 @@ export interface MiccConfiguration {
     data: Array<any>; // data
 
     colors?: Array<string>; // custom color (default: d3.schemeCategory10, size: 10)
+}
 
+export interface CanvasTraceChartConfiguration extends MiccBaseConfiguration {
+    series: Array<BasicCanvasTraceConfiguration>
+}
+
+export interface CanvasTraceChartConfiguration extends MiccBaseConfiguration {
+    series: Array<BasicCanvasTraceConfiguration>
 }
 
 export class Micc {
-    static traceChart(configuration: any): BasicChart {
-        return new BasicChart(configuration);
+    static traceChartByCanvas(configuration: CanvasTraceChartConfiguration): BasicChart {
+        const chartConfiguration: ChartConfiguration = {
+            selector: configuration.selector,
+            tooltip: configuration.tooltip,
+            title: configuration.title,
+            isResize: configuration.isResize,
+            legend: configuration.legend,
+            margin: configuration.margin,
+            axes: configuration.axes,
+            data: configuration.data,
+            series: configuration.series.map((traceConfiguration: BasicCanvasTraceConfiguration) => {
+                return new BasicCanvasTrace(traceConfiguration);
+            }),
+            functions: configuration.functions,
+            options: configuration.options
+        }
+        return new BasicChart(chartConfiguration);
     }
 
-    static generalChart(configuration: any): BasicChart {
+    static generalChart(configuration: MiccBaseConfiguration): BasicChart {
         return new BasicChart(configuration);
     }
 }

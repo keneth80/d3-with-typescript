@@ -5,7 +5,7 @@ import { scaleLinear } from 'd3-scale';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 
-import { Scale, ContainerSize, ChartMouseEvent, ChartZoomEvent } from '../chart/chart.interface';
+import { Scale, ContainerSize, DisplayOption, ChartMouseEvent, DisplayType } from '../chart/chart.interface';
 import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
 import { textBreak } from '../chart/util/d3-svg-util';
@@ -93,11 +93,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
     private shaderProgram: any;
 
     // ================= zoom 관련 변수 ================ //
-    private isMouseLeave = false;
-
-    private isRestore = false;
-
-    private isSizeUpdate = false;
+    private displayType: DisplayType = DisplayType.NORMAL;
 
     private cashingVertices: Array<number> = [];
 
@@ -185,8 +181,10 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         }
     }
 
-    drawSeries(chartBaseData: Array<T>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
-        this.seriesIndex = index;
+    drawSeries(chartBaseData: Array<T>, scales: Array<Scale>, geometry: ContainerSize, option: DisplayOption) {
+        this.displayType = option.displayType;
+
+        this.seriesIndex = option.index;
 
         this.geometry = geometry;
 
@@ -194,7 +192,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
 
         this.lineStroke = (this.config.style && this.config.style.strokeWidth) || 1;
 
-        this.lineColor = this.strokeColor ? this.strokeColor : color;
+        this.lineColor = this.strokeColor ? this.strokeColor : option.color;
 
         const chartData = this.seriesData ? this.seriesData : chartBaseData;
 
@@ -210,40 +208,15 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         const ymin = yScale.min;
         const ymax = yScale.max;
 
-        // 최초 setup
-        if (!this.initGeometry) {
-            this.initGeometry = geometry;
-
-            this.scaleValue.x.min = xmin;
-            this.scaleValue.x.max = xmax;
-            this.scaleValue.y.min = ymin;
-            this.scaleValue.y.max = ymax;
-        } else {
-            if (this.initGeometry.width === geometry.width &&
-                this.initGeometry.height === geometry.height) {
-                this.isSizeUpdate = false;
-            } else {
-                this.initGeometry.width = geometry.width;
-                this.initGeometry.height = geometry.height;
-
-                this.isSizeUpdate = true;
-            }
-        }
-
-        if ((this.scaleValue.x.min === xmin && this.scaleValue.x.max === xmax) && 
-            (this.scaleValue.y.min === ymin && this.scaleValue.y.max === ymax)) {
-            this.isRestore = true;
-            if (this.isSizeUpdate) {
-                this.cashingVertices.length = 0;
-            }
-        } else {
-            this.isRestore = false;
-        }
-
         this.padding = 0;
 
         if (x.bandwidth) {
             this.padding = x.bandwidth() / 2;
+        }
+
+        if (option.displayType === DisplayType.RESIZE) {
+            console.log('cashing remove');
+            this.cashingVertices.length = 0;
         }
 
         // TODO: 최초 full data를 가지고 있을지 고민.
@@ -300,16 +273,6 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
                         return [xposition, yposition, d];
                     })
                 );
-            // TODO: 제일 마지막 시리즈를 출력하고 나서 그려진 캔버스를 저장한다.
-            // TODO: 시리즈 마다 webgl로 그리고 그린 내용은 캔버스로 저장해서 해당 시리즈를 선택할 수 있는 기능을 고려해본다.
-
-            // if (!this.restoreCanvas) {
-            //     this.restoreCanvas = select(document.createElement('CANVAS'));
-            //     this.restoreCanvas
-            //         .attr('width', geometry.width)
-            //         .attr('height', geometry.height);
-            //     (this.restoreCanvas.node() as any).getContext('2d').drawImage(this.canvas.node(), 0, 0);
-            // }
         });
     }
 
@@ -466,15 +429,18 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
     ) {
         const endCount = chartData.length;
 
-        // if (this.isSizeUpdate && !this.cashingVertices.length) {
-        //     console.log('makeVertices cashing');
-        //     this.cashingVertices = this.makeVertices(chartData, xAxis, yAxis);
-        // }
+        if (
+            (this.displayType === DisplayType.NORMAL && !this.cashingVertices.length) ||
+            (this.displayType === DisplayType.ZOOMOUT && !this.cashingVertices.length)
+        ) {
+            console.log('makeVertices cashing');
+            this.cashingVertices = this.makeVertices(chartData, xAxis, yAxis);
+        }
 
         // // // data generate
         // const vertices = this.isSizeUpdate ? this.makeVertices(chartData, xAxis, yAxis) : (this.isRestore ? this.cashingVertices : this.makeVertices(chartData, xAxis, yAxis));
 
-        const vertices = this.makeVertices(chartData, xAxis, yAxis);
+        const vertices = this.displayType === DisplayType.ZOOMOUT? this.cashingVertices : this.makeVertices(chartData, xAxis, yAxis);
         
         // 캔버스 얻어오기
         const canvas: HTMLCanvasElement = this.canvas.node() as HTMLCanvasElement;

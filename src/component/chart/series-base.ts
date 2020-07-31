@@ -3,7 +3,7 @@ import { Subject, Observable, Subscription } from 'rxjs';
 
 import { ChartBase } from './chart-base';
 import { ISeries, SeriesConfiguration } from './series.interface';
-import { Scale, ContainerSize, ChartMouseEvent, ScaleValue } from './chart.interface';
+import { Scale, ContainerSize, ChartMouseEvent, ScaleValue, DisplayOption } from './chart.interface';
 import { guid } from '.';
 
 export class SeriesBase implements ISeries {
@@ -95,7 +95,7 @@ export class SeriesBase implements ISeries {
 
     }
 
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
+    drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize, displayOption: DisplayOption) {
 
     }
 

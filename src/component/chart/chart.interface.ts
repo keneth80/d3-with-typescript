@@ -1,6 +1,19 @@
 import { Selection, BaseType } from 'd3-selection';
 import { ChartConfiguration, AxisTitle } from './chart-configuration';
 
+export enum DisplayType {
+    NORMAL = 'normal',
+    ZOOMIN = 'zoomin',
+    ZOOMOUT = 'zoomout',
+    RESIZE = 'resize'
+}
+
+export interface DisplayOption {
+    index: number;
+    color?: string;
+    displayType?: DisplayType;
+}
+
 export interface ScaleValue {
     x: {
         min: number,

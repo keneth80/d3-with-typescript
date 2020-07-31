@@ -2,15 +2,14 @@ import { Selection, BaseType, select } from 'd3-selection';
 import { Quadtree } from 'd3';
 import { quadtree } from 'd3-quadtree';
 import { scaleLinear } from 'd3-scale';
-import { Subject, Subscription } from 'rxjs';
-import { debounceTime } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
-import { Scale, ContainerSize, ChartMouseEvent, ChartZoomEvent } from '../chart/chart.interface';
+import { Scale, ContainerSize, DisplayOption, ChartMouseEvent, DisplayType } from '../chart/chart.interface';
 import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
 import { textBreak } from '../chart/util/d3-svg-util';
 import { ChartBase, delayExcute, Placement } from '../chart';
-import { createProgramFromSources, createProgramFromScripts, hexToRgb } from '../chart/util/webgl-util';
+import { createProgramFromSources, hexToRgb } from '../chart/util/webgl-util';
 
 export class BasicCanvasWebglLineSeriesModel {
     x: number;
@@ -89,10 +88,6 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
     private shaderProgram: any;
 
     // ================= zoom 관련 변수 ================ //
-    private isMouseLeave = false;
-
-    private isRestore = false;
-
     private restoreCanvas: Selection<BaseType, any, HTMLElement, any>;
 
     // ================= style 관련 변수 =============== //
@@ -179,8 +174,8 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         }
     }
 
-    drawSeries(chartBaseData: Array<T>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
-        this.seriesIndex = index;
+    drawSeries(chartBaseData: Array<T>, scales: Array<Scale>, geometry: ContainerSize, option: DisplayOption) {
+        this.seriesIndex = option.index;
 
         this.geometry = geometry;
 
@@ -188,7 +183,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
 
         this.lineStroke = (this.config.style && this.config.style.strokeWidth) || 1;
 
-        this.lineColor = this.strokeColor ? this.strokeColor : color;
+        this.lineColor = this.strokeColor ? this.strokeColor : option.color;
 
         const chartData = this.seriesData ? this.seriesData : chartBaseData;
 
@@ -203,40 +198,6 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         const xmax = xScale.max;
         const ymin = yScale.min;
         const ymax = yScale.max;
-
-        let isSizeUpdate = true;
-        let isRestore = false;
-
-        // 최초 setup
-        if (!this.geometry) {
-            this.geometry = geometry;
-
-            this.scaleValue.x.min = xmin;
-            this.scaleValue.x.max = xmax;
-            this.scaleValue.y.min = ymin;
-            this.scaleValue.y.max = ymax;
-
-        } else {
-            if (this.geometry.width !== geometry.width ||
-                this.geometry.height !== geometry.height) {
-                isSizeUpdate = true;
-            } else {
-                isSizeUpdate = false;
-            }
-        }
-
-        if (this.scaleValue.x.min === xmin || 
-            this.scaleValue.x.max === xmax ||
-            this.scaleValue.y.min === ymin || 
-            this.scaleValue.y.max === ymax) {
-            
-            if (this.restoreCanvas) {
-                isRestore = true;
-            } else {
-                // 최초에는 생성이 안되어 있으니 다시 그린다.
-                isRestore = false;
-            }
-        }
 
         let padding = 0;
 
@@ -273,7 +234,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
                 `translate(${this.chartBase.chartMargin.left + 1}px, ${this.chartBase.chartMargin.top}px)`
             );
         
-        if (isRestore) {
+        if (this.restoreCanvas && option.displayType === DisplayType.ZOOMOUT) {
             (this.canvas.node() as any).getContext('2d').drawImage(this.restoreCanvas.node(), 0, 0, geometry.width, geometry.height, 0, 0, geometry.width, geometry.height);
         } else {
             this.webGLStart(lineData, { min: xmin, max: xmax }, { min: ymin, max: ymax }, geometry, this.lineColor);
@@ -282,11 +243,17 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         // canvas로 drawImage 했을때 라인이 픽셀로 지그재그로 보이는 현상이 있음 antialicing 적용방법이 필요함.
         // 아니면 그냥 다시 그리도록 함.
 
-        delayExcute(100, () => {
+        if (option.displayType === DisplayType.RESIZE) {
+            this.restoreCanvas = undefined;
+        }
+
+        delayExcute(150, () => {
             // TODO: restore 시에만 적용.
-            (this.canvas.node() as any).getContext('2d').drawImage(this.chartBase.webglCanvasElement.node(), 0, 0, geometry.width * 6, geometry.height * 6, 0, 0, geometry.width * 6, geometry.height * 6);
+            if (option.displayType === DisplayType.ZOOMOUT) {
+                (this.canvas.node() as any).getContext('2d').drawImage(this.chartBase.webglCanvasElement.node(), 0, 0, geometry.width * 6, geometry.height * 6, 0, 0, geometry.width * 6, geometry.height * 6);
+            }
             
-            if (!this.restoreCanvas) {
+            if (option.displayType === DisplayType.ZOOMOUT && !this.restoreCanvas) {
                 this.restoreCanvas = select(document.createElement('CANVAS'));
                 this.restoreCanvas
                     .attr('width', geometry.width)

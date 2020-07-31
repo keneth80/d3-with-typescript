@@ -2,15 +2,11 @@ import { Selection, BaseType, select, mouse } from 'd3-selection';
 import { line, curveMonotoneX } from 'd3-shape';
 import { quadtree, Quadtree } from 'd3-quadtree';
 
-import { fromEvent, Subject, of, generate, Subscription } from 'rxjs';
-
-import { Scale, ContainerSize, ChartMouseEvent } from '../chart/chart.interface';
+import { Scale, ContainerSize, DisplayOption, ChartMouseEvent, DisplayType } from '../chart/chart.interface';
 import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
 import { textBreak, delayExcute } from '../chart/util/d3-svg-util';
-import { debounceTime } from 'rxjs/operators';
-import { ChartBase, Placement } from '../chart';
-import { connectableObservableDescriptor } from 'rxjs/internal/observable/ConnectableObservable';
+import { ChartBase } from '../chart';
 
 export class BasicCanvasTraceModel {
     x: number;
@@ -78,22 +74,12 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
     private parentElement: Selection<BaseType, any, HTMLElement, any>;
 
-    private memoryCanvas: Selection<BaseType, any, HTMLElement, any>;
-
-    private move$: Subject<any> = new Subject();
-
     private originQuadTree: Quadtree<Array<any>> = undefined;
 
     private seriesData: Array<T>;
 
     // ================= zoom 관련 변수 ================ //
     private currentScales: Array<Scale>;
-
-    private isMouseLeave: boolean = false;
-
-    private isRestore = false;
-
-    private isSizeUpdate = false;
 
     // ================= style 관련 변수 =============== //
     private radius = 4;
@@ -175,11 +161,13 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         }
     }
 
-    drawSeries(chartBaseData: Array<T>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
+    drawSeries(chartBaseData: Array<T>, scales: Array<Scale>, geometry: ContainerSize, option: DisplayOption) {
         const chartData = this.seriesData ? this.seriesData : chartBaseData;
 
         this.geometry = geometry;
-        this.seriesColor = color;
+
+        this.seriesColor = option.color;
+
         this.currentScales = scales;
         
         const xScale: Scale = scales.find((scale: Scale) => scale.field === this.xField);
@@ -189,49 +177,21 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
         this.radius = this.config.dot ? this.config.dot.radius || 4 : 0;
 
-        this.lineColor = this.strokeColor ? this.strokeColor : color;
+        this.lineColor = this.strokeColor ? this.strokeColor : option.color;
 
         const xmin = xScale.min;
         const xmax = xScale.max;
         const ymin = yScale.min;
         const ymax = yScale.max;
 
-        // 최초 setup
-        if (!this.initGeometry) {
-            this.initGeometry = {...geometry};
-
-            this.scaleValue.x.min = xmin;
-            this.scaleValue.x.max = xmax;
-            this.scaleValue.y.min = ymin;
-            this.scaleValue.y.max = ymax;
-
-            this.isSizeUpdate = false;
-
-            this.isRestore = false;
-        } else {
-            if (this.initGeometry.width === geometry.width &&
-                this.initGeometry.height === geometry.height) {
-                this.isSizeUpdate = false;
-            } else {
-                this.isSizeUpdate = true;
-            }
-
-            if (this.isSizeUpdate) {
-                this.isRestore = false;
-            } else {
-                if ((this.scaleValue.x.min === xmin && this.scaleValue.x.max === xmax) && 
-                    (this.scaleValue.y.min === ymin && this.scaleValue.y.max === ymax)) {
-                    this.isRestore = true;
-                } else {
-                    this.isRestore = false;
-                }
-            }
-        }
-
         let padding = 0;
 
         if (x.bandwidth) {
             padding = x.bandwidth() / 2;
+        }
+
+        if (option.displayType === DisplayType.RESIZE) {
+            this.restoreCanvas = undefined;
         }
         
         this.canvas
@@ -254,52 +214,24 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         const lineData: Array<any> = (!this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item)))
         .filter((d: T) => d[this.xField] >= (xmin - xmin * 0.02) && d[this.xField] <= (xmax + xmax * 0.02) && d[this.yField] >= ymin && d[this.yField] <= ymax);
 
-        // const dataParse = (isDrawPoint: boolean = true) => {
-        //     return lineData
-        //     .map((d: BasicCanvasTraceModel, i: number) => {
-        //         const xposition = x(d[this.xField]) + padding;
-        //         const yposition = y(d[this.yField]);
-                
-        //         // POINT: data 만들면서 포인트 찍는다.
-        //         if (this.config.dot && isDrawPoint) {
-        //             const rectSize = this.config.dot.radius / 2;
-        //             context.fillRect(xposition - rectSize, yposition - rectSize, this.config.dot.radius, this.config.dot.radius);
-        //         }
-
-        //         // this.cashingData.push([xposition, yposition, d]);
-
-        //         return [xposition, yposition, d];
-        //     });
-        // }
-
-        // const generateData: Array<any> = dataParse(!isSizeUpdate && isZoomIn);
-
         const generateData: Array<any> = lineData
             .map((d: BasicCanvasTraceModel, i: number) => {
                 const xposition = x(d[this.xField]) + padding;
                 const yposition = y(d[this.yField]);
                 
                 // POINT: data 만들면서 포인트 찍는다.
-                if (this.config.dot && !this.isRestore) {
-                    const rectSize = this.config.dot.radius / 2;
-                    context.fillRect(xposition - rectSize, yposition - rectSize, this.config.dot.radius, this.config.dot.radius);
-                }
+                // if (this.config.dot) {
+                const rectSize = this.config.dot.radius / 2;
+                context.fillRect(xposition - rectSize, yposition - rectSize, this.config.dot.radius, this.config.dot.radius);
+                // }
 
                 return [xposition, yposition, d];
             });
 
-        if (!this.isSizeUpdate && this.isRestore) {
+        if (option.displayType === DisplayType.ZOOMOUT && this.restoreCanvas) {
             context.drawImage(this.restoreCanvas.node(), 0, 0);
         } else {
             // 사이즈가 변경이 되면서 zoom out 경우에는 초기 사이즈를 업데이트 해준다.
-            if ((this.scaleValue.x.min === xmin && this.scaleValue.x.max === xmax) && 
-                (this.scaleValue.y.min === ymin && this.scaleValue.y.max === ymax)) {
-                this.initGeometry.width = geometry.width;
-                this.initGeometry.height = geometry.height;
-
-                this.restoreCanvas = undefined;
-            }
-
             this.line = line()
                 .x((data: any) => {
                     return data[0]; 
@@ -319,28 +251,6 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
             context.stroke();
         }
 
-        // if (!isSizeUpdate && !isZoomIn) {
-        //     context.drawImage(this.restoreCanvas.node(), 0, 0);
-        // } else {
-        //     this.line = line()
-        //         .x((data: any) => {
-        //             return data[0]; 
-        //         }) // set the x values for the line generator
-        //         .y((data: any) => {
-        //             return data[1]; 
-        //         })
-        //         .context(context); // set the y values for the line generator
-
-        //     if (this.config.isCurve === true) {
-        //         this.line.curve(curveMonotoneX); // apply smoothing to the line
-        //     }
-
-        //     this.line(generateData);
-            
-        //     context.save();
-        //     context.stroke();
-        // }
-
         if (this.originQuadTree) {
             this.originQuadTree = undefined;
         }
@@ -350,7 +260,8 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                 .extent([[0, 0], [geometry.width, geometry.height]])
                 .addAll(generateData);
 
-            if (!this.restoreCanvas) {
+            if ((option.displayType === DisplayType.NORMAL && !this.restoreCanvas) ||
+                (option.displayType === DisplayType.ZOOMOUT && !this.restoreCanvas)) {
                 this.restoreCanvas = select(document.createElement('CANVAS'));
                 this.restoreCanvas
                     .attr('width', geometry.width)
@@ -361,7 +272,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
         (this.canvas.node() as any).addEventListener('DOMNodeRemoved', () => {
             console.log('remove canvas');
-        })
+        });
     }
 
     select(displayName: string, isSelected: boolean) {
@@ -373,13 +284,8 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
     }
 
     destroy() {
-        // if (this.crossFilterDimension) {
-        //     this.crossFilterDimension.dispose();
-        // }
-        // this.crossFilterDimension = undefined;
         this.subscription.unsubscribe();
         this.canvas.remove();
-        this.memoryCanvas.remove();
     }
 
     getSeriesDataByPosition(value: Array<number>) {

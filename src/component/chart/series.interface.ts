@@ -1,6 +1,6 @@
 import { Selection, BaseType } from 'd3-selection';
 import { ChartBase } from './chart-base';
-import { Scale, ContainerSize, ChartMouseEvent } from './chart.interface';
+import { Scale, DisplayOption, ContainerSize, ChartMouseEvent } from './chart.interface';
 
 export interface SeriesConfiguration {
     type?: string; // default: series, or option
@@ -37,6 +37,7 @@ export interface ISeries<T = any> {
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, seriesGroup: Selection<BaseType, any, HTMLElement, any>, index: number): void;
     // series 최초 생성 시 svg element, series 출력 영역, series index를 해당 메서드를 통해 인자값으로 내려줌.
 
-    drawSeries(data: Array<T>, scales: Array<Scale>, geometry: ContainerSize, index: number, sereisColor: string): void;
+    drawSeries(data: Array<T>, scales: Array<Scale>, geometry: ContainerSize, displayOption: DisplayOption): void;
+    // drawSeries(data: Array<T>, scales: Array<Scale>, geometry: ContainerSize, index: number, sereisColor: string): void;
     // chart container의 사이즈가 변경 되거나 다시 display 될 때 호출되는 메서드로 chart data, scale, series 영역의 사이즈, series index, series color를 해당 메서드를 통해 인자값으로 내려줌.
 }

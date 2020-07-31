@@ -1,6 +1,6 @@
 import { Selection, BaseType } from 'd3-selection';
 
-import { Scale, ContainerSize } from '../chart/chart.interface';
+import { Scale, ContainerSize, DisplayOption } from '../chart/chart.interface';
 import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
 
@@ -36,7 +36,7 @@ export class ExampleSeries extends SeriesBase {
         }
     }
 
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
+    drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize, option: DisplayOption) {
         const x: any = scales.find((scale: Scale) => scale.field === this.xField).scale;
         const y: any = scales.find((scale: Scale) => scale.field === this.yField).scale;
         this.mainGroup.selectAll('.' + this.selector)
@@ -47,7 +47,7 @@ export class ExampleSeries extends SeriesBase {
                     (exit) => exit.remove
                 )
                 .style('stroke', '#fff')
-                .style('fill', color)
+                .style('fill', option.color)
                 .attr('x', (data: any) => { 
                     return x(data[this.xField]); 
                 })

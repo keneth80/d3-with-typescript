@@ -3,7 +3,7 @@ import { line, curveMonotoneX } from 'd3-shape';
 import { hsl } from 'd3-color';
 import { fromEvent, Subject, of } from 'rxjs';
 
-import { Scale, ContainerSize } from '../chart/chart.interface';
+import { Scale, ContainerSize, DisplayOption, DisplayType } from '../chart/chart.interface';
 import { SeriesBase } from '../chart/series-base';
 import { SeriesConfiguration } from '../chart/series.interface';
 import { textBreak } from '../chart/util/d3-svg-util';
@@ -148,7 +148,7 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
         }
     }
 
-    drawSeries(chartData: Array<T>, scales: Array<Scale>, geometry: ContainerSize, index: number, color: string) {
+    drawSeries(chartData: Array<T>, scales: Array<Scale>, geometry: ContainerSize, option: DisplayOption) {
         const xScale: Scale = scales.find((scale: Scale) => scale.field === this.xField);
         const yScale: Scale = scales.find((scale: Scale) => scale.field === this.yField);
         const x: any = xScale.scale;
@@ -215,7 +215,7 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
             this.line.curve(curveMonotoneX); // apply smoothing to the line
         }
 
-        const strokeStyle = hsl(color);
+        const strokeStyle = hsl(option.color);
 
         this.line(lineData);
         context.fillStyle = 'white';
@@ -250,7 +250,7 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
                 memoryCanvasContext.fill();
 
                 colorData[memoryColor] = new BasicCanvasLineSeriesModel(
-                    drawX, drawY, i, color, memoryColor, false, point
+                    drawX, drawY, i, option.color, memoryColor, false, point
                 );
             });
 
@@ -263,7 +263,7 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
             // 머지한 데이터를 canvas에 저장한다.
             // this.pointerCanvas.data([colorIndex]);
 
-            if (this.chartBase.series.length - 1 === index) {
+            if (this.chartBase.series.length - 1 === option.index) {
                 this.subscription.unsubscribe();
 
                 this.subscription = this.move$
