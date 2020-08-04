@@ -31,16 +31,7 @@ export class SeriesBase implements ISeries {
 
     protected geometry: ContainerSize;
 
-    protected scaleValue: ScaleValue = {
-        x: {
-            min: null,
-            max: null,
-        },
-        y: {
-            min: null,
-            max: null,
-        }
-    };
+    protected scaleValue: ScaleValue;
 
     private chart: ChartBase;
 
@@ -76,6 +67,10 @@ export class SeriesBase implements ISeries {
 
     get $currentItem(): Observable<any> {
         return this.itemClickSubject.asObservable();
+    }
+
+    changeConfiguration(configuration: SeriesConfiguration) {
+
     }
 
     select(displayName: string, isSelected: boolean) {

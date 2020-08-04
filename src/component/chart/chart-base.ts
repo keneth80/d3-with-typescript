@@ -380,21 +380,21 @@ export class ChartBase<T = any> implements IChart {
             this.colors = schemeCategory10.map((color: string) => color);
         }
 
-        if (configuration.hasOwnProperty('title')) {
+        if (configuration.title) {
             this.isTitle = true;
             this.titlePlacement = configuration.title.placement;
         } else {
             this.isTitle = false;
         }
 
-        if (configuration.hasOwnProperty('legend')) {
+        if (configuration.legend) {
             this.isLegend = true;
             this.legendPlacement = configuration.legend.placement;
             this.isCheckBox = configuration.legend.isCheckBox === false ? configuration.legend.isCheckBox : true;
             this.isAll = configuration.legend.isAll === false ? configuration.legend.isAll : true;
         }
 
-        if (configuration.hasOwnProperty('tooltip')) {
+        if (configuration.tooltip) {
             this.isTooltipMultiple = configuration.tooltip.isMultiple === true ? true : false;
         }
 

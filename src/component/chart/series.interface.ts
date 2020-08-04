@@ -20,6 +20,8 @@ export interface ISeries<T = any> {
 
     selector: string; // legend 출력시 출력 명칭이 없으면 selector로 보여줌.
 
+    changeConfiguration(configuration: SeriesConfiguration): void;
+
     select(displayName: string, isSelected: boolean): void; // 해당 series 선택 메서드
 
     hide(displayName: string, isHide: boolean): void; // 해당 series hidden show 기능 메서드

@@ -45,6 +45,10 @@ import { BasicStepArea } from './component/options/basic-svg-step-area';
 import { BasicStepLine } from './component/options/basic-svg-step-line';
 import { BasicCanvasWebglLineSeriesModel, BasicCanvasWebgLineSeries, BasicCanvasWebglLineSeriesConfiguration } from './component/series/basic-canvas-webgl-line-series';
 
+import { delayExcute } from './component/chart/util/d3-svg-util';
+import { MiChart, OptionConfiguration } from './component/mi-chart';
+
+
 class SalesModel {
     salesperson: string;
     sales: number;
@@ -229,31 +233,6 @@ const dfdChartSample = () => {
         alarmSeriesList.length = 0;
         optionList.length = 0;
 
-        const basicSpecArea = new BasicSpecArea({
-            selector: 'spec-area',
-            startField: 'start',
-            endField: 'end',
-            data: [stepData[2]]
-        });
-    
-        const basicStepLine = new BasicStepLine({
-            selector: 'step-line',
-            xField: 'start',
-            data: stepData
-        });
-        
-        const basicStepArea = new BasicStepArea({
-            selector: 'step',
-            startField: 'start',
-            labelField: 'label',
-            endField: 'end',
-            data: stepData
-        });
-    
-        optionList.push(basicSpecArea);
-        optionList.push(basicStepArea);
-        optionList.push(basicStepLine);
-
         xmin = 0;
         xmax = 0;
         ymin = Infinity;
@@ -302,12 +281,9 @@ const dfdChartSample = () => {
                     xmax = x;
                 }
     
-                seriesData.push(new BasicCanvasWebglLineSeriesOneModel(
-                    x,
-                    y,
-                    i,
-                    tempRow
-                ));
+                seriesData.push(
+                    new BasicCanvasWebglLineSeriesOneModel(x, y, i, tempRow)
+                );
             }
     
             // type별 컬러 지정.
@@ -329,28 +305,56 @@ const dfdChartSample = () => {
             }
             
             if (seriesColor === '#EA3010') {
-                alarmSeriesList.push(new BasicCanvasWebgLineSeriesOne(configuration));
+                alarmSeriesList.push(configuration);
             } else {
-                seriesList.push(new BasicCanvasWebgLineSeriesOne(configuration));
+                seriesList.push(configuration);
             }
         }
     }
 
     parseData();
 
-    console.time('webgllinedraw');
-    const webglLineChart = new BasicChart<BasicCanvasWebglLineSeriesOneModel>({
+    const basicSpecArea: OptionConfiguration = {
+        className: 'BasicSpecArea',
+        configuration: {
+            selector: 'spec-area',
+            startField: 'start',
+            endField: 'end',
+            data: [stepData[2]]
+        }
+    };
+
+    const basicStepLine: OptionConfiguration = {
+        className: 'BasicStepLine',
+        configuration: {
+            selector: 'step-line',
+            xField: 'start',
+            data: stepData
+        }
+    };
+    
+    const basicStepArea: OptionConfiguration = {
+        className: 'BasicStepArea',
+        configuration: {
+            startField: 'start',
+            labelField: 'label',
+            endField: 'end',
+            data: stepData
+        }
+    };
+
+    optionList.push(basicSpecArea);
+    optionList.push(basicStepArea);
+    optionList.push(basicStepLine);
+
+    const webglLineChart = MiChart.traceChartByWebgl({
         selector: '#dfdchart',
         data: [],
         title: {
             placement: Placement.TOP,
             content: 'DFD Concept WebGL'
         },
-        calcField: 'y',
         isResize: true,
-        // displayDelay: {
-        //     delayTime: 20
-        // },
         axes: [
             {
                 field: 'x',
@@ -367,17 +371,12 @@ const dfdChartSample = () => {
                 max: ymax
             }
         ],
-        series: seriesList.concat(alarmSeriesList),
-        options: optionList,
-        functions: [
-            new BasicCanvasMouseZoomHandler({
-                xDirection: 'bottom',
-                yDirection: 'left',
-                direction: Direction.BOTH
-            })
-        ]
-    }).draw();
-    console.timeEnd('webgllinedraw');
+        zoom: {
+            xDirection: 'bottom',
+            yDirection: 'left',
+            direction: Direction.BOTH
+        }
+    }, seriesList.concat(alarmSeriesList), optionList).draw();
 
     select('#refresh').on('click', () => {
         console.time('webgllinedraw');
@@ -1936,11 +1935,15 @@ const gaugeChart = () => {
     }).draw();
 }
 
-dfdChartSample();
+delayExcute(200, () => {
+    dfdChartSample();
+});
+
+delayExcute(500, () => {
+    dfdCanvasChartSample();
+});
 
 // dfdChartWebglSample();
-
-dfdCanvasChartSample();
 
 // canvasLineChart();
 

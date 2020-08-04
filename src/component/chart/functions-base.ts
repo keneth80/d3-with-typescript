@@ -30,6 +30,10 @@ export class FunctionsBase implements IFunctions {
         return this.itemClickSubject.asObservable();
     }
 
+    changeConfiguration(configuration: any) {
+        
+    }
+
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
         mainGroup: Selection<BaseType, any, HTMLElement, any>, index: number) {
 
