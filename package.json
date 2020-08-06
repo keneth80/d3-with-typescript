@@ -6,7 +6,9 @@
     "scripts": {
         "build": "cross-env NODE_ENV=development webpack --mode development",
         "build-prod": "cross-env NODE_ENV=production webpack --mode production",
-        "dev": "webpack-dev-server --open --mode development"
+        "dev": "webpack-dev-server --open --mode development",
+        "bundle-analyze": "webpack --profile --json > stats.json",
+        "bundle-analyze-open": "webpack-bundle-analyzer stats.json --port=9900"
     },
     "author": "pretty9967@naver.com",
     "license": "MIT",
@@ -14,6 +16,7 @@
         "@babel/core": "^7.4.5",
         "@babel/preset-env": "^7.4.5",
         "@types/d3": "^5.7.2",
+        "@types/d3-selection-multi": "^1.0.7",
         "babel-loader": "^8.0.6",
         "browser-sync-client": "^2.26.6",
         "clean-webpack-plugin": "^3.0.0",
@@ -38,6 +41,7 @@
     "dependencies": {
         "crossfilter2": "^1.5.2",
         "d3": "^5.9.2",
+        "d3-selection-multi": "^1.0.1",
         "lodash": "^4.17.15",
         "rxjs": "~6.5.2"
     }

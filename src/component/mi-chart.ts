@@ -6,8 +6,8 @@ import { ChartConfiguration,
 
 import { IFunctions } from './chart/functions.interface';
 
-import { BasicCanvasTraceConfiguration, BasicCanvasTrace } from './series/basic-canvas-trace';
-import { BasicCanvasWebglLineSeriesOneConfiguration, BasicCanvasWebgLineSeriesOne } from './series/basic-canvas-webgl-line-series-one';
+import { BasicCanvasTraceConfiguration, BasicCanvasTrace } from './series/canvas/basic-canvas-trace';
+import { BasicCanvasWebglLineSeriesOneConfiguration, BasicCanvasWebgLineSeriesOne } from './series/webgl/basic-canvas-webgl-line-series-one';
 
 import { BasicCanvasMouseZoomHandler } from './functions/basic-canvas-mouse-zoom-handler';
 import { BasicCanvasMouseHandler } from './functions/basic-canvas-mouse-handler';
@@ -17,7 +17,7 @@ import { BasicStepLine } from './options/basic-svg-step-line';
 import { BasicStepArea } from './options/basic-svg-step-area';
 
 export interface OptionConfiguration {
-    className: any;
+    name: any;
     configuration: any;
 }
 
@@ -127,7 +127,7 @@ export class MiChart {
     ): Array<IOptions> {
 
         const options: Array<IOptions> = optionConfiguraions.map((option: OptionConfiguration) => {
-            return MiChart.retriveOptionClass(option.className, option.configuration)
+            return MiChart.retriveOptionClass(option.name, option.configuration)
         }).filter((option: IOptions) => option);
 
         return options;
