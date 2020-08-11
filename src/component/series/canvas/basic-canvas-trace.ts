@@ -64,16 +64,11 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
     private strokeOpacity = 1;
 
-    // private isAnimation: boolean = false;
-
     private parentElement: Selection<BaseType, any, HTMLElement, any>;
 
     private originQuadTree: Quadtree<Array<any>> = undefined;
 
     private seriesData: Array<T>;
-
-    // ================= zoom 관련 변수 ================ //
-    private currentScales: Array<Scale>;
 
     // ================= style 관련 변수 =============== //
     private radius = 4;
@@ -81,8 +76,6 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
     private lineWidth = 1;
 
     private lineColor = '#000000';
-
-    private cashingData: Array<[number, number, BasicCanvasTraceModel]>;
 
     private restoreCanvas: Selection<BaseType, any, HTMLElement, any>;
 
@@ -161,8 +154,6 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         this.geometry = geometry;
 
         this.seriesColor = option.color;
-
-        this.currentScales = scales;
         
         const xScale: Scale = scales.find((scale: Scale) => scale.field === this.xField);
         const yScale: Scale = scales.find((scale: Scale) => scale.field === this.yField);
