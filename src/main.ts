@@ -8,7 +8,7 @@ import { timeParse, timeFormat } from 'd3-time-format';
 import { schemeCategory10 } from 'd3-scale-chromatic';
 import { csv, json } from 'd3-fetch';
 
-import * as _ from 'lodash';
+import { highlightBlock } from 'highlight.js';
 
 import { BasicChart } from './component/basic-chart';
 import { VerticalBarSeries } from './component/series/svg/vertical-bar-series';
@@ -45,7 +45,7 @@ import { BasicStepArea } from './component/options/basic-svg-step-area';
 import { BasicStepLine } from './component/options/basic-svg-step-line';
 
 import { delayExcute } from './component/chart/util/d3-svg-util';
-import { MiChart, OptionConfiguration } from './component/mi-chart';
+import { MiChart, OptionConfiguration, MiccBaseConfiguration } from './component/mi-chart';
 
 
 class SalesModel {
@@ -176,6 +176,26 @@ const examples = [
 // };
 
 // example();
+
+let chart: BasicChart;
+
+const clear = () => {
+    if (chart) {
+        chart.clear();
+    }
+}
+
+const buttonMapping = () => {
+    select('#webgl-line-series').on('click', () => {
+        clear();
+        delayExcute(100, dfdChartSample);
+    });
+
+    select('#canvas-line-series').on('click', () => {
+        clear();
+        delayExcute(100, dfdCanvasChartSample);
+    });
+}
 
 const setSeriesColor = (data: any) => {
     const seriesFaultType = data.referenceYn === 'Y' ? '' : data.segmentStatus;
@@ -346,8 +366,8 @@ const dfdChartSample = () => {
     optionList.push(basicStepArea);
     optionList.push(basicStepLine);
 
-    const webglLineChart = MiChart.traceChartByWebgl({
-        selector: '#dfdchart',
+    const commonConfiguration: MiccBaseConfiguration = {
+        selector: '#chart',
         data: [],
         title: {
             placement: Placement.TOP,
@@ -375,17 +395,22 @@ const dfdChartSample = () => {
             yDirection: 'left',
             direction: Direction.BOTH
         }
-    }, seriesList.concat(alarmSeriesList), optionList).draw();
+    };
 
-    select('#refresh').on('click', () => {
-        console.time('webgllinedraw');
-        webglLineChart.draw();
-        console.timeEnd('webgllinedraw');
-    });
+    (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
+    highlightBlock((select('#json-configuration').node() as any));
 
-    select('#clear').on('click', () => {
-        alarmSeriesList[0].clear();
-    });
+    chart = MiChart.WebglTraceChart(commonConfiguration, seriesList.concat(alarmSeriesList), optionList).draw();
+
+    // select('#refresh').on('click', () => {
+    //     console.time('webgllinedraw');
+    //     webglLineChart.draw();
+    //     console.timeEnd('webgllinedraw');
+    // });
+
+    // select('#clear').on('click', () => {
+    //     alarmSeriesList[0].clear();
+    // });
 }
 
 const dfdCanvasChartSample = () => {
@@ -415,26 +440,34 @@ const dfdCanvasChartSample = () => {
         alarmSeriesList.length = 0;
         optionList.length = 0;
 
-        const basicSpecArea = new BasicSpecArea({
-            selector: 'spec',
-            startField: 'start',
-            endField: 'end',
-            data: [stepData[2]]
-        });
+        const basicSpecArea: OptionConfiguration = {
+            name: 'BasicSpecArea',
+            configuration: {
+                selector: 'spec-area',
+                startField: 'start',
+                endField: 'end',
+                data: [stepData[2]]
+            }
+        };
     
-        const basicStepLine = new BasicStepLine({
-            selector: 'step-line',
-            xField: 'start',
-            data: stepData
-        });
+        const basicStepLine: OptionConfiguration = {
+            name: 'BasicStepLine',
+            configuration: {
+                selector: 'step-line',
+                xField: 'start',
+                data: stepData
+            }
+        };
         
-        const basicStepArea = new BasicStepArea({
-            selector: 'step',
-            startField: 'start',
-            labelField: 'label',
-            endField: 'end',
-            data: stepData
-        });
+        const basicStepArea: OptionConfiguration = {
+            name: 'BasicStepArea',
+            configuration: {
+                startField: 'start',
+                labelField: 'label',
+                endField: 'end',
+                data: stepData
+            }
+        };
     
         optionList.push(basicSpecArea);
         optionList.push(basicStepArea);
@@ -516,29 +549,25 @@ const dfdCanvasChartSample = () => {
             }
             
             if (seriesColor === '#EA3010') {
-                alarmSeriesList.push(new BasicCanvasTrace(configuration));
+                alarmSeriesList.push(configuration);
+                // alarmSeriesList.push(new BasicCanvasTrace(configuration));
             } else {
-                seriesList.push(new BasicCanvasTrace(configuration));
+                seriesList.push(configuration);
+                // seriesList.push(new BasicCanvasTrace(configuration));
             }
         }
     }
 
     parseData();
 
-    // console.log('traceData : ', tracePoints);
-    console.time('canvaslinedraw');
-    const canvasLineChart = new BasicChart<BasicCanvasTraceModel>({
-        selector: '#canvastracechart',
+    const commonConfiguration: MiccBaseConfiguration = {
+        selector: '#chart',
         data: [],
-        calcField: 'y',
         title: {
             placement: Placement.TOP,
             content: 'DFD Concept Canvas'
         },
         isResize: true,
-        // displayDelay: {
-        //     delayTime: 20
-        // },
         axes: [
             {
                 field: 'x',
@@ -555,16 +584,53 @@ const dfdCanvasChartSample = () => {
                 max: ymax
             }
         ],
-        series: seriesList.concat(alarmSeriesList),
-        options: optionList,
-        functions: [
-            new BasicCanvasMouseZoomHandler({
-                xDirection: 'bottom',
-                yDirection: 'left',
-                direction: Direction.BOTH
-            })
-        ]
-    }).draw();
+        zoom: {
+            xDirection: 'bottom',
+            yDirection: 'left',
+            direction: Direction.BOTH
+        }
+    };
+
+    (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
+    highlightBlock((select('#json-configuration').node() as any));
+
+    console.time('canvaslinedraw');
+    chart = MiChart.CanvasTraceChart(commonConfiguration, seriesList.concat(alarmSeriesList), optionList).draw();
+    // const canvasLineChart = new BasicChart<BasicCanvasTraceModel>({
+    //     selector: '#chart',
+    //     data: [],
+    //     calcField: 'y',
+    //     title: {
+    //         placement: Placement.TOP,
+    //         content: 'DFD Concept Canvas'
+    //     },
+    //     isResize: true,
+    //     axes: [
+    //         {
+    //             field: 'x',
+    //             type: ScaleType.NUMBER,
+    //             placement: 'bottom',
+    //             min: xmin - (xmax * 0.01),
+    //             max: xmax + (xmax * 0.01)
+    //         },
+    //         {
+    //             field: 'y',
+    //             type: ScaleType.NUMBER,
+    //             placement: 'left',
+    //             min: ymin,
+    //             max: ymax
+    //         }
+    //     ],
+    //     series: seriesList.concat(alarmSeriesList),
+    //     options: optionList,
+    //     functions: [
+    //         new BasicCanvasMouseZoomHandler({
+    //             xDirection: 'bottom',
+    //             yDirection: 'left',
+    //             direction: Direction.BOTH
+    //         })
+    //     ]
+    // }).draw();
     console.timeEnd('canvaslinedraw');
 } 
 
@@ -1754,12 +1820,12 @@ const gaugeChart = () => {
 }
 
 delayExcute(200, () => {
-    dfdChartSample();
+    buttonMapping();
 });
 
-delayExcute(500, () => {
-    dfdCanvasChartSample();
-});
+// delayExcute(500, () => {
+//     dfdCanvasChartSample();
+// });
 
 // canvasLineChart();
 

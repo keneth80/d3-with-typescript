@@ -418,7 +418,19 @@ export class ChartBase<T = any> implements IChart {
 
     // TODO: clear 로직 구현.
     clear() {
-        
+        this.svg.selectAll('*').remove();
+
+        this.seriesList.forEach((series: ISeries) => {
+            series.destroy();
+        });
+
+        this.functionList.forEach((functions: IFunctions) => {
+            functions.destroy();
+        });
+
+        this.functionList.forEach((functions: IFunctions) => {
+            functions.destroy();
+        });
     }
 
     showTooltip(): Selection<BaseType, any, HTMLElement, any> {

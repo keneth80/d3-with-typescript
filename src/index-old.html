@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Webpack 4</title>
+        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/ocean.min.css">
+    </head>
+    <body>
+        <div>
+            <button id="webgl-line-series">WebGL Line Series</button>
+            <button id="canvas-line-series">Canvas Line Series</button>
+        </div>
+        <br>
+        <div>
+            <button id="refresh">Refresh</button>
+            <button id="clear">Clear</button>
+        </div>
+        <div class="container-chart-example">
+            <div class="container-control">
+                <div class="container-control-item">
+                    <label>Color</label>
+                    <input type="text" style="width: 90px;"/>
+                </div>
+                <div class="container-control-item">
+                    <label>Color</label>
+                    <input type="text" style="width: 90px;"/>
+                </div>
+                <div class="container-control-item button-apply">
+                    <button id="apply">Apply</button>
+                </div>
+                <div class="container-control-configuration">
+                    <pre><code id="json-configuration"></code></pre>
+                </div>
+            </div>
+            <div class="container-chart">
+                <svg id="dfdchart">
+                </svg>
+            </div>
+        </div>
+        <div class="container-chart-example">
+            <div class="container-control">
+                <div class="container-control-item">
+                    <label>Color</label>
+                    <input type="text" style="width: 90px;"/>
+                </div>
+                <div class="container-control-item">
+                    <label>Color</label>
+                    <input type="text" style="width: 90px;"/>
+                </div>
+                <div class="container-control-item button-apply">
+                    <button id="apply">Apply</button>
+                </div>
+                <div class="container-control-configuration">
+                    <span id="json-configuration"></span>
+                </div>
+            </div>
+            <div class="result" style="width: calc(100% - 150px); float: right;">
+                <svg id="canvastracechart">
+                    <!-- <g class="event-pointer" transform="translate(100, 100)" style="opacity: 0;">
+                        <rect width="20" height="20"></rect>
+                    </g> -->
+                </svg>
+            </div>
+        </div>
+        <div class="result">
+            <svg id="scatter"></svg>
+        </div>
+        <div class="result">
+            <svg id="canvaslinechart">
+                <g class="event-pointer" transform="translate(100, 100)" style="opacity: 0;">
+                    <rect width="20" height="20"></rect>
+                </g>
+            </svg>
+        </div>
+        <div class="result">
+            <svg id="svgtrace"></svg>
+        </div>
+        <div class="result">
+            <svg id="linechart">
+                <g class="event-pointer" transform="translate(100, 100)" style="opacity: 0;">
+                    <rect width="20" height="20"></rect>
+                </g>
+            </svg>
+        </div>
+        <div class="result" style="height: 500px; background-color: #fff;">
+            <svg id="basic-topology"></svg>
+        </div>
+        <div class="result">
+            <svg id="chart">
+                <g class="event-pointer" transform="translate(100, 100)" style="opacity: 0;">
+                    <rect width="20" height="20"></rect>
+                </g>
+            </svg>
+        </div>
+        <div class="result">
+            <svg id="boxplot"></svg>
+        </div>
+        <div class="result">
+            <svg id="bollinger"></svg>
+        </div>
+        <div class="result">
+            <svg id="violin"></svg>
+        </div>
+        <div class="result">
+            <svg id="stackedBar"></svg>
+        </div>
+        <div class="result">
+            <svg id="groupedBar"></svg>
+        </div>
+        <div class="result">
+            <svg id="pie"></svg>
+        </div>
+        <div class="result">
+            <svg id="donut"></svg>
+        </div>
+        <div class="result">
+            <svg id="area"></svg>
+        </div>
+        <div class="result">
+            <svg id="gauge"></svg>
+        </div>
+        <script id="2d-vertex-shader" type="x-shader/x-vertex">
+            attribute vec2 a_position;
+            
+            uniform vec2 u_resolution;
+            uniform mat3 u_matrix;
+            
+            varying vec2 v_texCoord;
+            
+            void main() {
+            
+               gl_Position = vec4(u_matrix * vec3(a_position, 1), 1);
+               v_texCoord = a_position;
+            }
+        </script>
+        <!-- fragment shader -->
+        <script id="2d-fragment-shader" type="x-shader/x-fragment">
+            precision mediump float;
+            
+            // our texture
+            uniform sampler2D u_image;
+            
+            // the texCoords passed in from the vertex shader.
+            varying vec2 v_texCoord;
+            
+            void main() {
+               gl_FragColor = texture2D(u_image, v_texCoord);
+            }
+        </script>
+    </body>
+</html>

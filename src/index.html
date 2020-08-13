@@ -1,93 +1,36 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Webpack 4</title>
+        <title>Common Chart</title>
+        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/ocean.min.css">
     </head>
     <body>
-        <!-- <div class="result">
-            <svg id="example"></svg>
-        </div> -->
         <div>
-            <button id="refresh">Refresh</button>
-            <button id="clear">Clear</button>
-            <!-- webgl canvas copy test -->
-            <!-- <button id="copy">Copy</button> -->
+            <button id="webgl-line-series">WebGL Line Series</button>
+            <button id="canvas-line-series">Canvas Line Series</button>
         </div>
-        <div class="result">
-            <svg id="dfdchart">
-            </svg>
-        </div>
-        <!-- webgl canvas copy test -->
-        <!-- <div class="result">
-            <canvas id="dfdcanvas">
-            </canvas>
-        </div> -->
-        <div class="result">
-            <!-- <div>
-                <button id="refresh">Refresh</button>
-            </div> -->
-            <svg id="canvastracechart">
-                <!-- <g class="event-pointer" transform="translate(100, 100)" style="opacity: 0;">
-                    <rect width="20" height="20"></rect>
-                </g> -->
-            </svg>
-        </div>
-        <div class="result">
-            <svg id="scatter"></svg>
-        </div>
-        <div class="result">
-            <svg id="canvaslinechart">
-                <g class="event-pointer" transform="translate(100, 100)" style="opacity: 0;">
-                    <rect width="20" height="20"></rect>
-                </g>
-            </svg>
-        </div>
-        <div class="result">
-            <svg id="svgtrace"></svg>
-        </div>
-        <div class="result">
-            <svg id="linechart">
-                <g class="event-pointer" transform="translate(100, 100)" style="opacity: 0;">
-                    <rect width="20" height="20"></rect>
-                </g>
-            </svg>
-        </div>
-        <div class="result" style="height: 500px; background-color: #fff;">
-            <svg id="basic-topology"></svg>
-        </div>
-        <div class="result">
-            <svg id="chart">
-                <g class="event-pointer" transform="translate(100, 100)" style="opacity: 0;">
-                    <rect width="20" height="20"></rect>
-                </g>
-            </svg>
-        </div>
-        <div class="result">
-            <svg id="boxplot"></svg>
-        </div>
-        <div class="result">
-            <svg id="bollinger"></svg>
-        </div>
-        <div class="result">
-            <svg id="violin"></svg>
-        </div>
-        <div class="result">
-            <svg id="stackedBar"></svg>
-        </div>
-        <div class="result">
-            <svg id="groupedBar"></svg>
-        </div>
-        <div class="result">
-            <svg id="pie"></svg>
-        </div>
-        <div class="result">
-            <svg id="donut"></svg>
-        </div>
-        <div class="result">
-            <svg id="area"></svg>
-        </div>
-        <div class="result">
-            <svg id="gauge"></svg>
+        <br>
+        <div class="container-chart-example">
+            <div class="container-control">
+                <div class="container-control-item">
+                    <label>Color</label>
+                    <input type="text" style="width: 90px;"/>
+                </div>
+                <div class="container-control-item">
+                    <label>Color</label>
+                    <input type="text" style="width: 90px;"/>
+                </div>
+                <div class="container-control-item button-apply">
+                    <button id="apply">Apply</button>
+                </div>
+                <div class="container-control-configuration">
+                    <pre><code id="json-configuration"></code></pre>
+                </div>
+            </div>
+            <div class="container-chart">
+                <svg id="chart">
+                </svg>
+            </div>
         </div>
         <script id="2d-vertex-shader" type="x-shader/x-vertex">
             attribute vec2 a_position;

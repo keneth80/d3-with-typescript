@@ -17,7 +17,7 @@ export class BasicStepLine<T = any> extends OptionsBase {
 
     constructor(configuration: BasicStepLineConfiguration) {
         super();
-        this.selector = configuration.selector;
+        this.selector = configuration.selector || 'step-line';
         if (configuration) {
             if (configuration.xField) {
                 this.xField = configuration.xField;
@@ -79,5 +79,6 @@ export class BasicStepLine<T = any> extends OptionsBase {
 
     destroy() {
         this.subscription.unsubscribe();
+        this.mainGroup.remove();
     }
 }

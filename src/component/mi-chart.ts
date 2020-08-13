@@ -71,7 +71,7 @@ export class MiChart {
     * 2. series: 출력되는 시리즈 설정정보
     * 3. options: 시리즈 외에 출력되는 시리즈 설정정보
     */
-    static traceChartByCanvas(
+    static CanvasTraceChart(
         configuration: MiccBaseConfiguration, 
         series: Array<BasicCanvasTraceConfiguration> = [],
         options: Array<OptionConfiguration> = []): BasicChart {
@@ -90,7 +90,7 @@ export class MiChart {
     }
 
     // webgl 시리즈 출력 설정정보 맵핑.
-    static traceChartByWebgl(
+    static WebglTraceChart(
         configuration: MiccBaseConfiguration, 
         series: Array<BasicCanvasWebglLineSeriesOneConfiguration> = [],
         options: Array<OptionConfiguration> = []): BasicChart {

@@ -28,7 +28,7 @@ export class BasicSpecArea<T = any> extends OptionsBase {
 
     constructor(configuration: BasicSpecAreaConfiguration) {
         super();
-        this.selector = configuration.selector;
+        this.selector = configuration.selector || 'spec-area';
         if (configuration) {
             if (configuration.startField) {
                 this.startField = configuration.startField;
@@ -115,5 +115,6 @@ export class BasicSpecArea<T = any> extends OptionsBase {
 
     destroy() {
         this.subscription.unsubscribe();
+        this.mainGroup.remove();
     }
 }

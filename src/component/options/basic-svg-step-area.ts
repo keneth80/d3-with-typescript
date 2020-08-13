@@ -23,7 +23,7 @@ export class BasicStepArea<T = any> extends OptionsBase {
 
     constructor(configuration: BasicStepAreaConfiguration) {
         super();
-        this.selector = configuration.selector;
+        this.selector = configuration.selector || 'step-area';
         if (configuration) {
             if (configuration.startField) {
                 this.startField = configuration.startField;
@@ -135,5 +135,6 @@ export class BasicStepArea<T = any> extends OptionsBase {
 
     destroy() {
         this.subscription.unsubscribe();
+        this.mainGroup.remove();
     }
 }
