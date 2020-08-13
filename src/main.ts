@@ -185,15 +185,27 @@ const clear = () => {
     }
 }
 
+const hideLoader = () => {
+    select('.loader').classed('show', false);
+}
+
+const showLoader = () => {
+    select('.loader').classed('show', true);
+}
+
 const buttonMapping = () => {
     select('#webgl-line-series').on('click', () => {
+        showLoader();
         clear();
-        delayExcute(100, dfdChartSample);
+        delayExcute(200, dfdChartSample);
+        delayExcute(1000, hideLoader);
     });
 
     select('#canvas-line-series').on('click', () => {
+        showLoader();
         clear();
-        delayExcute(100, dfdCanvasChartSample);
+        delayExcute(200, dfdCanvasChartSample);
+        delayExcute(1000, hideLoader);
     });
 }
 
