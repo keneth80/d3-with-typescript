@@ -678,7 +678,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
 
         if (this.seriesIndex === 0) {
             // 화면 지우기
-            this.viewClear();
+            this.gl.clearColor(0, 0, 0, 0); // rgba
         }
 
         // Bind vertex buffer object

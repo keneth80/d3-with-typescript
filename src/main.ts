@@ -82,31 +82,6 @@ class SalesModel {
     }
 }
 
-class PlotModel {
-    xValue: number;
-    yValue: number;
-
-    constructor(
-        xValue: number,
-        yValue: number
-    ) {
-        Object.assign(this, {
-            xValue,
-            yValue
-        });
-    }
-
-    static clone({
-        salesperson,
-        sales,
-        assets,
-        dateStr,
-        date
-    }): SalesModel {
-        return new SalesModel(salesperson, sales, assets, dateStr, date);
-    }
-}
-
 const data: Array<SalesModel> = [
     new SalesModel('Bob', 33, 180, '1-May-12'),
     new SalesModel('Robin', 12, 140, '29-Apr-12'),
@@ -124,59 +99,6 @@ const data: Array<SalesModel> = [
     new SalesModel('Mary', 29, 67, '26-Mar-12')
 ];
 
-const examples = [
-    {
-        salesperson: 'Bob',
-        assets: 33,
-    },
-    {
-        salesperson: 'Robin',
-        assets: 12,
-    },
-    {
-        salesperson: 'Anne',
-        assets: 41,
-    },
-    {
-        salesperson: 'Mark',
-        assets: 16,
-    },
-    {
-        salesperson: 'Joe',
-        assets: 59,
-    }
-]
-
-// const example = () => {
-//     new BasicChart({
-//         selector: '#example',
-//         data: examples,
-//         isResize: true,
-//         axes: [
-//             {
-//                 field: 'salesperson',
-//                 type: 'string',
-//                 placement: Placement.BOTTOM,
-//             },
-//             {
-//                 field: 'assets',
-//                 type: 'number',
-//                 placement: Placement.LEFT,
-//                 min: 0
-//             }
-//         ],
-//         series: [
-//             new ExampleSeries({
-//                 selector: 'examples',
-//                 xField: 'salesperson',
-//                 yField: 'assets'
-//             })
-//         ]
-//     }).draw();
-// };
-
-// example();
-
 let chart: BasicChart;
 
 const clear = () => {
@@ -186,18 +108,18 @@ const clear = () => {
 }
 
 const hideLoader = () => {
-    select('.loader').classed('show', false);
+    select('.back-drop').classed('show', false);
 }
 
 const showLoader = () => {
-    select('.loader').classed('show', true);
+    select('.back-drop').classed('show', true);
 }
 
 const buttonMapping = () => {
     select('#webgl-line-series').on('click', () => {
         showLoader();
         clear();
-        delayExcute(200, dfdChartSample);
+        delayExcute(200, simpleWebglLineSeriesExample);
         delayExcute(1000, hideLoader);
     });
 
@@ -237,6 +159,157 @@ const setSeriesColor = (data: any) => {
         return '#EA3010';
     }
 };
+
+const simpleWebglLineSeriesExample = () => {
+    // data 유형은 다를 수 있습니다.
+    const data = [
+        {
+            x: 1,
+            y: 12,
+            z: 11,
+            data: {
+                label: 'number 1'
+            }
+        },
+        {
+            x: 2,
+            y: 3,
+            z: 1,
+            data: {
+                label: 'number 2'
+            }
+        },
+        {
+            x: 3,
+            y: 20,
+            z: 8,
+            data: {
+                label: 'number 3'
+            }
+        },
+        {
+            x: 4,
+            y: 20,
+            z: 9,
+            data: {
+                label: 'number 4'
+            }
+        },
+        {
+            x: 5,
+            y: 18,
+            z: 8,
+            data: {
+                label: 'number 5'
+            }
+        },
+        {
+            x: 6,
+            y: 8,
+            z: 9,
+            data: {
+                label: 'number 6'
+            }
+        },
+        {
+            x: 7,
+            y: 8,
+            z: 9,
+            data: {
+                label: 'number 7'
+            }
+        },
+        {
+            x: 8,
+            y: 10,
+            z: 7,
+            data: {
+                label: 'number 8'
+            }
+        },
+        {
+            x: 9,
+            y: 5,
+            z: 8,
+            data: {
+                label: 'number 9'
+            }
+        }
+    ];
+
+    const yFieldSeries: BasicCanvasWebglLineSeriesOneConfiguration = {
+        selector: 'x-series',
+        xField: 'x',
+        yField: 'y',
+        dot: {
+            radius: 4
+        },
+        style: {
+            strokeColor: '#4d8700',
+        }
+    };
+
+    const zFieldSeries: BasicCanvasWebglLineSeriesOneConfiguration = {
+        selector: 'z-series',
+        xField: 'x',
+        yField: 'z',
+        dot: {
+            radius: 4
+        },
+        style: {
+            strokeColor: '#ff9421',
+        }
+    }
+
+    const xFieldSeries: BasicCanvasWebglLineSeriesOneConfiguration = {
+        selector: 'z-series',
+        xField: 'x',
+        yField: 'x',
+        dot: {
+            radius: 4
+        },
+        style: {
+            strokeColor: '#2137ff',
+        }
+    }
+
+    const seriesList = [
+        yFieldSeries,
+        zFieldSeries,
+        xFieldSeries
+    ];
+
+    const commonConfiguration: MiccBaseConfiguration = {
+        selector: '#chart',
+        data,
+        title: {
+            placement: Placement.TOP,
+            content: 'DFD Concept WebGL'
+        },
+        isResize: true,
+        axes: [
+            {
+                field: 'x',
+                type: ScaleType.NUMBER,
+                placement: 'bottom',
+                min: 0,
+                max: 10
+            },
+            {
+                field: 'y',
+                type: ScaleType.NUMBER,
+                placement: 'left',
+                min: 0,
+                max: 30
+            }
+        ]
+    };
+
+    (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
+    highlightBlock((select('#json-configuration').node() as any));
+
+    chart = MiChart.WebglTraceChart(commonConfiguration, seriesList).draw();
+}
 
 const dfdChartSample = () => {
     const stepData = stepInfo.map((step: any) => {
