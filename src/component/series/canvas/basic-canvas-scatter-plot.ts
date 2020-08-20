@@ -7,7 +7,8 @@ import { switchMap, map, concatMap, mapTo, delay } from 'rxjs/operators';
 import { Scale, ContainerSize } from '../../chart/chart.interface';
 import { SeriesBase } from '../../chart/series-base';
 import { SeriesConfiguration } from '../../chart/series.interface';
-import { ChartBase, delayExcute } from '../../chart';
+import { ChartBase } from '../../chart/chart-base';
+import { delayExcute } from '../../chart/util/d3-svg-util';
 
 export class BasicCanvasScatterPlotModel {
     x: number;

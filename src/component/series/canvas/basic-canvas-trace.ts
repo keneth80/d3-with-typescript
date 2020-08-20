@@ -6,7 +6,7 @@ import { Scale, ContainerSize, DisplayOption, ChartMouseEvent, DisplayType } fro
 import { SeriesBase } from '../../chart/series-base';
 import { SeriesConfiguration } from '../../chart/series.interface';
 import { textBreak, delayExcute } from '../../chart/util/d3-svg-util';
-import { ChartBase } from '../../chart';
+import { ChartBase } from '../../chart/chart-base';
 
 export class BasicCanvasTraceModel {
     x: number;

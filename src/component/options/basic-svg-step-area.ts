@@ -1,7 +1,7 @@
 import { select, Selection, BaseType } from 'd3-selection';
 
 import { Scale, ContainerSize, ChartMouseEvent } from '../chart/chart.interface';
-import { Placement } from '../chart';
+import { Placement } from '../chart/chart-configuration';
 import { OptionsBase } from '../chart/options-base';
 
 export interface BasicStepAreaConfiguration<T = any> {

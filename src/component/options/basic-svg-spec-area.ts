@@ -1,7 +1,8 @@
 import { select, Selection, BaseType } from 'd3-selection';
 
 import { Scale, ContainerSize, ChartMouseEvent } from '../chart/chart.interface';
-import { Placement, guid } from '../chart';
+import { Placement } from '../chart/chart-configuration';
+import { guid } from '../chart/util/d3-svg-util';
 import { OptionsBase } from '../chart/options-base';
 
 export interface BasicSpecAreaConfiguration<T = any> {

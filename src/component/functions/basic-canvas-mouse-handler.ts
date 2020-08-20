@@ -5,7 +5,8 @@ import { min, max } from 'd3-array';
 
 import { Scale, ContainerSize } from '../chart/chart.interface';
 import { FunctionsBase } from '../chart/functions-base';
-import { ChartBase, Direction, ScaleType, Placement } from '../chart';
+import { ChartBase } from '../chart/chart-base';
+import { Direction, ScaleType, Placement } from '../chart/chart-configuration';
 
 export interface BasicCanvasMouseHandlerConfiguration {
     isMoveEvent?: boolean;
