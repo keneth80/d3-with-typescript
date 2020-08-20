@@ -1,4 +1,5 @@
-import { ChartBase, ChartConfiguration } from './chart';
+import { ChartConfiguration } from './chart/chart-configuration';
+import { ChartBase } from './chart/chart-base';
 
 export class BasicChart<T = any> extends ChartBase {
     protected data: Array<T>;

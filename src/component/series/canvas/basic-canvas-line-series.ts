@@ -8,7 +8,7 @@ import { SeriesBase } from '../../chart/series-base';
 import { SeriesConfiguration } from '../../chart/series.interface';
 import { textBreak } from '../../chart/util/d3-svg-util';
 import { debounceTime } from 'rxjs/operators';
-import { ChartBase } from '../../chart';
+import { ChartBase } from '../../chart/chart-base';
 
 export class BasicCanvasLineSeriesModel {
     x: number;

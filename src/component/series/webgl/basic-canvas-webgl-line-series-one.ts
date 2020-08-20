@@ -10,7 +10,9 @@ import { Scale, ContainerSize, DisplayOption, ChartMouseEvent, DisplayType } fro
 import { SeriesBase } from '../../chart/series-base';
 import { SeriesConfiguration } from '../../chart/series.interface';
 import { textBreak } from '../../chart/util/d3-svg-util';
-import { ChartBase, delayExcute, Placement } from '../../chart';
+import { ChartBase } from '../../chart/chart-base';
+import { delayExcute } from '../../chart/util/d3-svg-util';
+import { Placement } from '../../chart/chart-configuration';
 import { createProgramFromSources, createProgramFromScripts, hexToRgb } from '../../chart/util/webgl-util';
 
 export class BasicCanvasWebglLineSeriesOneModel {

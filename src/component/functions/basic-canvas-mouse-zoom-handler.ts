@@ -5,7 +5,9 @@ import { min, max } from 'd3-array';
 
 import { Scale, ContainerSize } from '../chart/chart.interface';
 import { FunctionsBase } from '../chart/functions-base';
-import { ChartBase, delayExcute, Direction, ScaleType, Placement } from '../chart';
+import { ChartBase } from '../chart/chart-base';
+import { Direction, ScaleType, Placement } from '../chart/chart-configuration';
+import { delayExcute } from '../chart/util/d3-svg-util';
 
 export interface BasicCanvasMouseZoomHandlerConfiguration {
     xDirection?: string; // bottom or top

@@ -4,7 +4,7 @@ import { Subject, Observable, Subscription } from 'rxjs';
 import { ChartBase } from './chart-base';
 import { ISeries, SeriesConfiguration } from './series.interface';
 import { Scale, ContainerSize, ChartMouseEvent, ScaleValue, DisplayOption } from './chart.interface';
-import { guid } from '.';
+import { guid } from './util/d3-svg-util';
 
 export class SeriesBase implements ISeries {
     type: string = 'series';
