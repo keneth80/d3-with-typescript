@@ -1,10 +1,8 @@
 import { Selection, BaseType, select } from 'd3-selection';
-import * as d3SelectionMulti from 'd3-selection-multi';
 import { Quadtree } from 'd3';
 import { quadtree } from 'd3-quadtree';
 import { scaleLinear } from 'd3-scale';
-import { Subject, Subscription } from 'rxjs';
-import { debounceTime } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 import { Scale, ContainerSize, DisplayOption, ChartMouseEvent, DisplayType } from '../../chart/chart.interface';
 import { SeriesBase } from '../../chart/series-base';
