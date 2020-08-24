@@ -3,13 +3,15 @@ import { line, curveMonotoneX } from 'd3-shape';
 import { format } from 'd3-format';
 import { transition } from 'd3-transition';
 import { easeLinear, easeCircle } from 'd3-ease';
+import { quadtree, Quadtree } from 'd3-quadtree';
 
 import { Subject, Observable } from 'rxjs';
 
 import { Scale, ContainerSize, DisplayOption } from '../../chart/chart.interface';
 import { SeriesBase } from '../../chart/series-base';
 import { SeriesConfiguration } from '../../chart/series.interface';
-import { textBreak, isIE, getTextWidth } from '../../chart/util/d3-svg-util';
+import { textBreak, isIE, getTextWidth, delayExcute } from '../../chart/util/d3-svg-util';
+import { Placement } from '../../chart/chart-configuration';
 
 export interface BasicLineSeriesConfiguration extends SeriesConfiguration {
     dotSelector?: string;
@@ -113,8 +115,8 @@ export class BasicLineSeries extends SeriesBase {
 
     drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize, option: DisplayOption) {
         
-        const x: any = scales.find((scale: Scale) => scale.field === this.xField).scale;
-        const y: any = scales.find((scale: Scale) => scale.field === this.yField).scale;
+        const x: any = scales.find((scale: Scale) => scale.orient === Placement.BOTTOM).scale;
+        const y: any = scales.find((scale: Scale) => scale.orient === Placement.LEFT).scale;
 
         let padding = 0;
 
@@ -149,7 +151,7 @@ export class BasicLineSeries extends SeriesBase {
         // const lineData = this.crossFilterDimension ? this.crossFilterDimension.filter(this.config.crossFilter.filterValue).top(Infinity) : 
         // !this.dataFilter ? chartData : chartData.filter((item: any) => this.dataFilter(item));
 
-        const lineData = !this.dataFilter ? chartData : chartData.filter((item: any) => this.dataFilter(item));
+        const lineData: Array<any> = !this.dataFilter ? chartData : chartData.filter((item: any) => this.dataFilter(item));
 
         // const lineData = !this.dataFilter ? chartData : chartData.filter((item: any) => this.dataFilter(item));
 
@@ -229,6 +231,7 @@ export class BasicLineSeries extends SeriesBase {
                 } else {
                     dots
                     .on('mouseover', (d: any, i, nodeList: any) => {
+                        console.log('mouseover');
                         event.preventDefault();
                         event.stopPropagation();
 
@@ -243,6 +246,7 @@ export class BasicLineSeries extends SeriesBase {
                         select(nodeList[i]).classed('tooltip', true);
                     })
                     .on('mouseout', (d: any, i, nodeList: any) => {
+                        console.log('mouseout');
                         event.preventDefault();
                         event.stopPropagation();
 
@@ -261,6 +265,24 @@ export class BasicLineSeries extends SeriesBase {
                 }
             }
         }
+
+        // TODO: quadtree setup
+        // if (this.originQuadTree) {
+        //     this.originQuadTree = undefined;
+        // }
+
+        // delayExcute(300, () => {
+        //     const generateData: Array<any> = lineData
+        //         .map((d: any, i: number) => {
+        //             const xposition = x(d[this.xField]) + padding;
+        //             const yposition = y(d[this.yField]);
+                    
+        //             return [xposition, yposition, d];
+        //         });
+        //     this.originQuadTree = quadtree()
+        //         .extent([[0, 0], [geometry.width, geometry.height]])
+        //         .addAll(generateData);
+        // });
     }
 
     select(displayName: string, isSelected: boolean) {

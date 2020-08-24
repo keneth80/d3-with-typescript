@@ -1,6 +1,5 @@
 import { Selection, BaseType, select } from 'd3-selection';
-import { Quadtree } from 'd3';
-import { quadtree } from 'd3-quadtree';
+import { quadtree, Quadtree } from 'd3-quadtree';
 import { scaleLinear } from 'd3-scale';
 import { Subject } from 'rxjs';
 
@@ -79,8 +78,6 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
     private parentElement: Selection<BaseType, any, HTMLElement, any>;
 
     private move$: Subject<any> = new Subject();
-
-    private originQuadTree: Quadtree<Array<any>> = undefined;
 
     private seriesData: Array<T>;
 

@@ -15,6 +15,7 @@ import { IOptions } from './chart/options.interface';
 import { BasicSpecArea } from './options/basic-svg-spec-area';
 import { BasicStepLine } from './options/basic-svg-step-line';
 import { BasicStepArea } from './options/basic-svg-step-area';
+import { BasicLineSeries, BasicLineSeriesConfiguration } from './series';
 
 export interface OptionConfiguration {
     name: any;
@@ -84,7 +85,7 @@ export class MiChart {
 
         chartConfiguration.options = MiChart.generatorOptions(options);
 
-        chartConfiguration.functions = MiChart.generatorFunctions(configuration.zoom);
+        chartConfiguration.functions = MiChart.generatorCanvasFunctions(configuration.zoom);
 
         return new BasicChart(chartConfiguration);
     }
@@ -103,9 +104,41 @@ export class MiChart {
 
         chartConfiguration.options = MiChart.generatorOptions(options);
 
-        chartConfiguration.functions = MiChart.generatorFunctions(configuration.zoom);
+        chartConfiguration.functions = MiChart.generatorCanvasFunctions(configuration.zoom);
         
         return new BasicChart(chartConfiguration);
+    }
+
+    // webgl 시리즈 출력 설정정보 맵핑.
+    static SvgTraceChart(
+        configuration: MiccBaseConfiguration, 
+        series: Array<BasicCanvasWebglLineSeriesOneConfiguration> = [],
+        options: Array<OptionConfiguration> = []): BasicChart {
+
+    const chartConfiguration: ChartConfiguration = MiChart.generatorCommomConfiguration(configuration);
+
+    chartConfiguration.series = series.map((traceConfiguration: BasicLineSeriesConfiguration) => {
+        return new BasicLineSeries(traceConfiguration);
+    });
+
+    chartConfiguration.options = MiChart.generatorOptions(options);
+
+    chartConfiguration.functions = MiChart.generatorFunctions(configuration.zoom);
+    
+    return new BasicChart(chartConfiguration);
+}
+
+    // 마우스 이벤트 같은 이벤트 함수설정 정보 맵핑.
+    static generatorCanvasFunctions(
+        zoom?: ZoomConfiguration
+    ): Array<IFunctions> {
+        const functions: Array<IFunctions> = [];
+        if (zoom) {
+            functions.push(new BasicCanvasMouseZoomHandler(zoom));
+        } else {
+            functions.push(new BasicCanvasMouseHandler({isMoveEvent: true}));
+        }
+        return functions;
     }
 
     // 마우스 이벤트 같은 이벤트 함수설정 정보 맵핑.
@@ -115,8 +148,6 @@ export class MiChart {
         const functions: Array<IFunctions> = [];
         if (zoom) {
             functions.push(new BasicCanvasMouseZoomHandler(zoom));
-        } else {
-            functions.push(new BasicCanvasMouseHandler({isMoveEvent: true}));
         }
         return functions;
     }

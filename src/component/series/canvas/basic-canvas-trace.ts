@@ -66,8 +66,6 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
     private parentElement: Selection<BaseType, any, HTMLElement, any>;
 
-    private originQuadTree: Quadtree<Array<any>> = undefined;
-
     private seriesData: Array<T>;
 
     // ================= style 관련 변수 =============== //
