@@ -5,6 +5,7 @@ import { ChartBase } from './chart-base';
 import { ISeries, SeriesConfiguration } from './series.interface';
 import { Scale, ContainerSize, ChartMouseEvent, ScaleValue, DisplayOption } from './chart.interface';
 import { guid } from './util/d3-svg-util';
+import { Quadtree } from 'd3-quadtree';
 
 export class SeriesBase implements ISeries {
     type: string = 'series';
@@ -32,6 +33,8 @@ export class SeriesBase implements ISeries {
     protected geometry: ContainerSize;
 
     protected scaleValue: ScaleValue;
+
+    protected originQuadTree: Quadtree<Array<any>> = undefined;
 
     private chart: ChartBase;
 

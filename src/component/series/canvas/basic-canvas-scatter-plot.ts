@@ -77,8 +77,6 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
 
     private originData: Array<Array<number>> = [];
 
-    private originQuadTree: Quadtree<Array<any>> = undefined;
-
     private mouseSubscription: Subscription;
 
     constructor(configuration: BasicCanvasScatterPlotConfiguration) {

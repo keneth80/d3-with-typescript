@@ -12,7 +12,7 @@ import { highlightBlock } from 'highlight.js';
 
 import { BasicChart } from './component/basic-chart';
 import { VerticalBarSeries } from './component/series/svg/vertical-bar-series';
-import { BasicLineSeries } from './component/series/svg/basic-line-series';
+import { BasicLineSeries, BasicLineSeriesConfiguration } from './component/series/svg/basic-line-series';
 import { LabelSeries } from './component/series/svg/label-series';
 import { BasicPlotSeries } from './component/series/svg/basic-plot-series';
 import { BasicBoxplotSeries, BoxplotModel } from './component/series/svg/basic-boxplot-series';
@@ -116,6 +116,13 @@ const showLoader = () => {
 }
 
 const buttonMapping = () => {
+    select('#svg-line-series').on('click', () => {
+        showLoader();
+        clear();
+        delayExcute(200, simpleSvgLineSeriesExample);
+        delayExcute(1000, hideLoader);
+    });
+
     select('#webgl-line-series').on('click', () => {
         showLoader();
         clear();
@@ -126,7 +133,7 @@ const buttonMapping = () => {
     select('#canvas-line-series').on('click', () => {
         showLoader();
         clear();
-        delayExcute(200, dfdCanvasChartSample);
+        delayExcute(200, canvasChartSample);
         delayExcute(1000, hideLoader);
     });
 }
@@ -309,6 +316,160 @@ const simpleWebglLineSeriesExample = () => {
     highlightBlock((select('#json-configuration').node() as any));
 
     chart = MiChart.WebglTraceChart(commonConfiguration, seriesList).draw();
+}
+
+const simpleSvgLineSeriesExample = () => {
+    // data 유형은 다를 수 있습니다.
+    const data = [
+        {
+            x: 1,
+            y: 12,
+            z: 11,
+            data: {
+                label: 'number 1'
+            }
+        },
+        {
+            x: 2,
+            y: 3,
+            z: 1,
+            data: {
+                label: 'number 2'
+            }
+        },
+        {
+            x: 3,
+            y: 20,
+            z: 8,
+            data: {
+                label: 'number 3'
+            }
+        },
+        {
+            x: 4,
+            y: 20,
+            z: 9,
+            data: {
+                label: 'number 4'
+            }
+        },
+        {
+            x: 5,
+            y: 18,
+            z: 8,
+            data: {
+                label: 'number 5'
+            }
+        },
+        {
+            x: 6,
+            y: 8,
+            z: 9,
+            data: {
+                label: 'number 6'
+            }
+        },
+        {
+            x: 7,
+            y: 8,
+            z: 9,
+            data: {
+                label: 'number 7'
+            }
+        },
+        {
+            x: 8,
+            y: 10,
+            z: 7,
+            data: {
+                label: 'number 8'
+            }
+        },
+        {
+            x: 9,
+            y: 5,
+            z: 8,
+            data: {
+                label: 'number 9'
+            }
+        }
+    ];
+
+    const yFieldSeries: BasicLineSeriesConfiguration = {
+        selector: 'y-series',
+        xField: 'x',
+        yField: 'y',
+        dot: {
+            radius: 3
+        },
+        displayName: 'y-series',
+        dotSelector: 'basic-line-y-series-dot'
+    };
+
+    const zFieldSeries: BasicLineSeriesConfiguration = {
+        selector: 'z-series',
+        xField: 'x',
+        yField: 'z',
+        dot: {
+            radius: 3
+        },
+        displayName: 'z-series',
+        dotSelector: 'basic-line-z-series-dot'
+    }
+
+    const xFieldSeries: BasicLineSeriesConfiguration = {
+        selector: 'x-series',
+        xField: 'x',
+        yField: 'x',
+        dot: {
+            radius: 3
+        },
+        displayName: 'x-series',
+        dotSelector: 'basic-line-x-series-dot'
+    }
+
+    const seriesList = [
+        yFieldSeries,
+        zFieldSeries,
+        xFieldSeries
+    ];
+
+    const commonConfiguration: MiccBaseConfiguration = {
+        selector: '#chart',
+        tooltip: {
+            eventType: 'mouseover',
+            tooltipTextParser: (d:any) => {
+                return `x: ${d.x} \ny: ${d.y}\nz: ${d.z}`
+            }
+        },
+        data,
+        title: {
+            placement: Placement.TOP,
+            content: 'SVG Line Series'
+        },
+        isResize: true,
+        axes: [
+            {
+                field: 'x',
+                type: ScaleType.NUMBER,
+                placement: 'bottom',
+                min: 0,
+                max: 10
+            },
+            {
+                field: 'y',
+                type: ScaleType.NUMBER,
+                placement: 'left',
+                min: 0,
+                max: 30
+            }
+        ]
+    };
+
+    (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
+    highlightBlock((select('#json-configuration').node() as any));
+
+    chart = MiChart.SvgTraceChart(commonConfiguration, seriesList).draw();
 }
 
 const dfdChartSample = () => {
@@ -498,7 +659,7 @@ const dfdChartSample = () => {
     // });
 }
 
-const dfdCanvasChartSample = () => {
+const canvasChartSample = () => {
 
     const stepData = stepInfo.map((step: any) => {
         return {
@@ -1119,7 +1280,7 @@ const svgTraceChart = () => {
     console.timeEnd('svgtimechartdraw');
 }
 
-const lineChart = () => {
+const svgLineSeriesExample = () => {
     const fields = lineData.map((item: any) => item.member);
     const members = Array.from(new Set(fields));
     const series = [];
@@ -1139,11 +1300,7 @@ const lineChart = () => {
             dot: {
                 radius: 3
             },
-            crossFilter: {
-                filerField: 'member',
-                filterValue: member
-            },
-            // filter,
+            filter,
             shape: Shape.LINE
         });
 
@@ -1161,21 +1318,10 @@ const lineChart = () => {
 
     const parseTime = timeFormat('%H:%M:%S %m-%d');
     let basicChart: BasicChart = new BasicChart({
-        selector: '#linechart',
-        // margin: {
-        //     top: 60,
-        //     left: 40,
-        //     right: 20,
-        //     bottom: 50
-        // },
+        selector: '#chart',
         title: {
             placement: Placement.TOP,
             content: 'SVG Line Chart',
-            // style: {
-            //     size: 16,
-            //     color: '#ff0000',
-            //     font: 'monospace'
-            // }
         },
         legend: {
             placement: Placement.TOP,
@@ -1229,9 +1375,6 @@ const lineChart = () => {
                 },
             }
         ],
-        displayDelay: {
-            delayTime: 500
-        },
         series
     }).draw();
 }
