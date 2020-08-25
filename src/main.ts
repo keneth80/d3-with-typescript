@@ -34,7 +34,7 @@ import { BasicTopology, TopologyGroupElement, TopologyData } from './component/s
 import { Placement, Align, Shape, ScaleType, Direction } from './component/chart/chart-configuration';
 
 import { lineData } from './component/mock-data/line-one-field-data';
-import { BasicCanvasLineSeries } from './component/series/canvas/basic-canvas-line-series';
+import { BasicCanvasLineSeries, BasicCanvasLineSeriesConfiguration } from './component/series/canvas/basic-canvas-line-series';
 import { ExampleSeries } from './component/series/example-series';
 import { BasicCanvasWebgLineSeriesOne, BasicCanvasWebglLineSeriesOneConfiguration, BasicCanvasWebglLineSeriesOneModel } from './component/series/webgl/basic-canvas-webgl-line-series-one';
 import { BasicCanvasTrace, BasicCanvasTraceModel, BasicCanvasTraceConfiguration } from './component/series/canvas/basic-canvas-trace';
@@ -133,7 +133,7 @@ const buttonMapping = () => {
     select('#canvas-line-series').on('click', () => {
         showLoader();
         clear();
-        delayExcute(200, canvasChartSample);
+        delayExcute(200, simpleCanvasLineSeriesExample);
         delayExcute(1000, hideLoader);
     });
 }
@@ -470,6 +470,157 @@ const simpleSvgLineSeriesExample = () => {
     highlightBlock((select('#json-configuration').node() as any));
 
     chart = MiChart.SvgTraceChart(commonConfiguration, seriesList).draw();
+}
+
+const simpleCanvasLineSeriesExample = () => {
+    // data 유형은 다를 수 있습니다.
+    const data = [
+        {
+            x: 1,
+            y: 12,
+            z: 11,
+            data: {
+                label: 'number 1'
+            }
+        },
+        {
+            x: 2,
+            y: 3,
+            z: 1,
+            data: {
+                label: 'number 2'
+            }
+        },
+        {
+            x: 3,
+            y: 20,
+            z: 8,
+            data: {
+                label: 'number 3'
+            }
+        },
+        {
+            x: 4,
+            y: 20,
+            z: 9,
+            data: {
+                label: 'number 4'
+            }
+        },
+        {
+            x: 5,
+            y: 18,
+            z: 8,
+            data: {
+                label: 'number 5'
+            }
+        },
+        {
+            x: 6,
+            y: 8,
+            z: 9,
+            data: {
+                label: 'number 6'
+            }
+        },
+        {
+            x: 7,
+            y: 8,
+            z: 9,
+            data: {
+                label: 'number 7'
+            }
+        },
+        {
+            x: 8,
+            y: 10,
+            z: 7,
+            data: {
+                label: 'number 8'
+            }
+        },
+        {
+            x: 9,
+            y: 5,
+            z: 8,
+            data: {
+                label: 'number 9'
+            }
+        }
+    ];
+
+    const yFieldSeries: BasicCanvasTraceConfiguration = {
+        selector: 'y-series',
+        xField: 'x',
+        yField: 'y',
+        dot: {
+            radius: 3
+        },
+        displayName: 'y-series'
+    };
+
+    const zFieldSeries: BasicCanvasTraceConfiguration = {
+        selector: 'z-series',
+        xField: 'x',
+        yField: 'z',
+        dot: {
+            radius: 3
+        },
+        displayName: 'z-series'
+    }
+
+    const xFieldSeries: BasicCanvasTraceConfiguration = {
+        selector: 'x-series',
+        xField: 'x',
+        yField: 'x',
+        dot: {
+            radius: 3
+        },
+        displayName: 'x-series'
+    }
+
+    const seriesList = [
+        yFieldSeries,
+        zFieldSeries,
+        xFieldSeries
+    ];
+
+    const commonConfiguration: MiccBaseConfiguration = {
+        selector: '#chart',
+        tooltip: {
+            eventType: 'mouseover',
+            tooltipTextParser: (d:any) => {
+                return `x: ${d.x} \ny: ${d.y}\nz: ${d.z}`
+            }
+        },
+        data,
+        title: {
+            placement: Placement.TOP,
+            content: 'SVG Line Series'
+        },
+        isResize: true,
+        axes: [
+            {
+                field: 'x',
+                type: ScaleType.NUMBER,
+                placement: 'bottom',
+                min: 0,
+                max: 10
+            },
+            {
+                field: 'y',
+                type: ScaleType.NUMBER,
+                placement: 'left',
+                min: 0,
+                max: 30
+            }
+        ]
+    };
+
+    (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
+    highlightBlock((select('#json-configuration').node() as any));
+
+    chart = MiChart.CanvasTraceChart(commonConfiguration, seriesList).draw();
 }
 
 const dfdChartSample = () => {

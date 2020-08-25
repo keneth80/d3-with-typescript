@@ -7,6 +7,7 @@ import { SeriesBase } from '../../chart/series-base';
 import { SeriesConfiguration } from '../../chart/series.interface';
 import { textBreak, delayExcute } from '../../chart/util/d3-svg-util';
 import { ChartBase } from '../../chart/chart-base';
+import { Placement } from '../../chart/chart-configuration';
 
 export class BasicCanvasTraceModel {
     x: number;
@@ -152,9 +153,9 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         this.geometry = geometry;
 
         this.seriesColor = option.color;
-        
-        const xScale: Scale = scales.find((scale: Scale) => scale.field === this.xField);
-        const yScale: Scale = scales.find((scale: Scale) => scale.field === this.yField);
+        // TODO: scale direction 설정 추가 전부다.
+        const xScale: Scale = scales.find((scale: Scale) => scale.orient === Placement.BOTTOM);
+        const yScale: Scale = scales.find((scale: Scale) => scale.orient === Placement.LEFT);
         const x: any = xScale.scale;
         const y: any = yScale.scale;
 
