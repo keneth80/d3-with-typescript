@@ -21,9 +21,9 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
 
     protected pointerCanvas: Selection<BaseType, any, HTMLElement, any>;
 
-    private xDirection: string = 'bottom';
+    private xDirection: string = Placement.BOTTOM;
 
-    private yDirection: string = 'left';
+    private yDirection: string = Placement.LEFT;
 
     private isZoom: boolean = true;
 
@@ -93,8 +93,8 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
     drawFunctions(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
         this.setContainerPosition(geometry, this.chartBase);
 
-        const xScale: Scale = scales.find((scale: Scale) => scale.orient === Placement.BOTTOM);
-        const yScale: Scale = scales.find((scale: Scale) => scale.orient === Placement.LEFT);
+        const xScale: Scale = scales.find((scale: Scale) => scale.orient === this.xDirection);
+        const yScale: Scale = scales.find((scale: Scale) => scale.orient === this.yDirection);
         const x: any = xScale.scale;
         const y: any = yScale.scale;
 

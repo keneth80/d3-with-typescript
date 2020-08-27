@@ -441,10 +441,15 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
 
         if (this.seriesIndex === 0) {
             // 화면 지우기
-            this.gl.clearColor(0, 0, 0, 0); // rgba
+            this.viewClear();
+            // this.gl.clearColor(0, 0, 0, 0); // rgba
 
             // 깊이버퍼 활성화
             // this.gl.enable(this.gl.DEPTH_TEST);
+        }
+
+        if (!vertices.length) {
+            return;
         }
 
         // 버퍼 초기화

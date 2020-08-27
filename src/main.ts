@@ -130,6 +130,13 @@ const buttonMapping = () => {
         delayExcute(1000, hideLoader);
     });
 
+    select('#webgl-bigdata-line-series').on('click', () => {
+        showLoader();
+        clear();
+        delayExcute(200, webGLBigDataLineSeriesSample);
+        delayExcute(1000, hideLoader);
+    });
+
     select('#canvas-line-series').on('click', () => {
         showLoader();
         clear();
@@ -309,7 +316,10 @@ const simpleWebglLineSeriesExample = () => {
                 min: 0,
                 max: 30
             }
-        ]
+        ],
+        zoom: {
+            direction: Direction.BOTH
+        }
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
@@ -623,7 +633,7 @@ const simpleCanvasLineSeriesExample = () => {
     chart = MiChart.CanvasTraceChart(commonConfiguration, seriesList).draw();
 }
 
-const dfdChartSample = () => {
+const webGLBigDataLineSeriesSample = () => {
     const stepData = stepInfo.map((step: any) => {
         return {
             start: step.startCountSlot,
@@ -768,28 +778,28 @@ const dfdChartSample = () => {
         data: [],
         title: {
             placement: Placement.TOP,
-            content: 'DFD Concept WebGL'
+            content: 'WebGL Big Data Line Chart'
         },
         isResize: true,
         axes: [
             {
                 field: 'x',
                 type: ScaleType.NUMBER,
-                placement: 'bottom',
+                placement: Placement.BOTTOM,
                 min: xmin - (xmax * 0.01),
                 max: xmax + (xmax * 0.01)
             },
             {
                 field: 'y',
                 type: ScaleType.NUMBER,
-                placement: 'left',
+                placement: Placement.LEFT,
                 min: ymin,
                 max: ymax
             }
         ],
         zoom: {
-            xDirection: 'bottom',
-            yDirection: 'left',
+            xDirection: Placement.BOTTOM,
+            yDirection: Placement.LEFT,
             direction: Direction.BOTH
         }
     };
