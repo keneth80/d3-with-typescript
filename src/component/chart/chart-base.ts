@@ -29,6 +29,8 @@ import { guid, delayExcute, textWrapping,
 
 // TODO: 모든 참조되는 함수들은 subject로 바꾼다.
 export class ChartBase<T = any> implements IChart {
+    static ZOOM_SVG = 'zoom-svg';
+
     static POINTER_CANVAS = 'pointer-canvas';
 
     static ZOOM_CANVAS = 'zoom-canvas';
@@ -63,9 +65,11 @@ export class ChartBase<T = any> implements IChart {
 
     protected mainGroup: Selection<BaseType, any, HTMLElement, any>;
 
-    protected seriesGroup: Selection<BaseType, any, HTMLElement, any>;
+    protected zoomGroup: Selection<BaseType, any, HTMLElement, any>; // svg용 zoom handler group
 
     protected optionGroup: Selection<BaseType, any, HTMLElement, any>;
+
+    protected seriesGroup: Selection<BaseType, any, HTMLElement, any>;
 
     protected titleGroup: Selection<BaseType, any, BaseType, any>;
 
@@ -357,6 +361,12 @@ export class ChartBase<T = any> implements IChart {
             if (console && console.log) {
                 console.log('is not svg!');
             }
+        }
+
+        if (configuration.style) {
+            this.svg.style('background-color', configuration.style.backgroundColor || '#fff')
+        } else {
+            this.svg.style('background-color', '#fff')
         }
 
         // data setup origin data 와 분리.
@@ -927,6 +937,21 @@ export class ChartBase<T = any> implements IChart {
                 return translate;
             });
         }
+
+        if (!this.zoomGroup) {
+            this.zoomGroup = this.svg.append('g')
+                .attr('class', ChartBase.ZOOM_SVG)
+            this.zoomGroup.append('rect')
+                .attr('class', ChartBase.ZOOM_SVG + '-background')
+                .style('fill', 'none')
+                .style('pointer-events', 'all');
+        }
+        this.zoomGroup
+            .attr('transform', `translate(${x}, ${y})`);
+
+        this.zoomGroup.select('.' + ChartBase.ZOOM_SVG + '-background')
+            .attr('width', this.width)
+            .attr('height', this.height);
 
         if (!this.optionGroup) {
             this.optionGroup = this.svg.append('g')

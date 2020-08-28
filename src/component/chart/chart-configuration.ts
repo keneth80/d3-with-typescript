@@ -108,8 +108,14 @@ export interface ChartTooltip {
     eventType?: string; // click or mouseover
 }
 
+export interface ChartStyle {
+    backgroundColor?: string;
+}
+
 export interface ChartConfiguration<T = any> {
     selector: string;
+
+    style?: ChartStyle;
 
     tooltip?: ChartTooltip;
 

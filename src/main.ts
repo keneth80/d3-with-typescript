@@ -473,7 +473,10 @@ const simpleSvgLineSeriesExample = () => {
                 min: 0,
                 max: 30
             }
-        ]
+        ],
+        zoom: {
+            direction: Direction.BOTH
+        }
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');

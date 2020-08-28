@@ -181,11 +181,12 @@ export class BasicLineSeries extends SeriesBase {
             const radius = (this.config.dot.radius || this.defaultRadius);
 
             // dot설정이 있을 시 에는 mask 영역 늘리기
-            this.chartBase.clipPathSelector
-                .attr('width', geometry.width + (radius * 4))
-                .attr('height', geometry.height + (radius * 4))
-                .attr('x', -(radius*2))
-                .attr('y', -(radius*2));
+            // 우선 주석처리함. zoom시 라인이 늘려진 마스크 영역 때문에 시리즈 영역 바깥으로 빗나가는 현상이 생김.
+            // this.chartBase.clipPathSelector
+            //     .attr('width', geometry.width + (radius * 4))
+            //     .attr('height', geometry.height + (radius * 4))
+            //     .attr('x', -(radius*2))
+            //     .attr('y', -(radius*2));
 
             const dots = this.dotGroup.selectAll(`.${this.dotClass}`)
                 .data(lineData)

@@ -16,6 +16,7 @@ import { BasicSpecArea } from './options/basic-svg-spec-area';
 import { BasicStepLine } from './options/basic-svg-step-line';
 import { BasicStepArea } from './options/basic-svg-step-area';
 import { BasicLineSeries, BasicLineSeriesConfiguration } from './series';
+import { BasicSvgMouseZoomHandler } from './functions/basic-svg-mouse-zoom-handler';
 
 export interface OptionConfiguration {
     name: any;
@@ -147,7 +148,7 @@ export class MiChart {
     ): Array<IFunctions> {
         const functions: Array<IFunctions> = [];
         if (zoom) {
-            functions.push(new BasicCanvasMouseZoomHandler(zoom));
+            functions.push(new BasicSvgMouseZoomHandler(zoom));
         }
         return functions;
     }
