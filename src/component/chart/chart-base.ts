@@ -364,9 +364,8 @@ export class ChartBase<T = any> implements IChart {
         }
 
         if (configuration.style) {
-            this.svg.style('background-color', configuration.style.backgroundColor || '#fff')
-        } else {
-            this.svg.style('background-color', '#fff')
+            select((this.svg.node() as HTMLElement).parentElement)
+                .style('background-color', configuration.style.backgroundColor || '#fff')
         }
 
         // data setup origin data 와 분리.

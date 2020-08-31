@@ -2,7 +2,7 @@ import { BasicChart } from './basic-chart';
 import { ChartConfiguration, 
          ChartTooltip, ChartTitle, ChartLegend,
          Direction,
-         Margin, Axis,  } from './chart/chart-configuration';
+         Margin, Axis, ChartStyle,  } from './chart/chart-configuration';
 
 import { IFunctions } from './chart/functions.interface';
 
@@ -31,6 +31,8 @@ export interface ZoomConfiguration {
 
 export interface MiccBaseConfiguration {
     selector: string;
+
+    style?: ChartStyle;
 
     tooltip?: ChartTooltip;
 
@@ -169,6 +171,7 @@ export class MiChart {
     static generatorCommomConfiguration(configuration: MiccBaseConfiguration): ChartConfiguration {
         const chartConfiguration: ChartConfiguration = {
             selector: configuration.selector,
+            style: configuration.style,
             tooltip: configuration.tooltip,
             title: configuration.title,
             isResize: configuration.isResize,

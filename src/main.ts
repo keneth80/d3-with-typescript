@@ -143,6 +143,13 @@ const buttonMapping = () => {
         delayExcute(200, simpleCanvasLineSeriesExample);
         delayExcute(1000, hideLoader);
     });
+
+    select('#canvas-bigdata-line-series').on('click', () => {
+        showLoader();
+        clear();
+        delayExcute(200, canvasBigDataLineSeriesSample);
+        delayExcute(1000, hideLoader);
+    });
 }
 
 const setSeriesColor = (data: any) => {
@@ -600,6 +607,9 @@ const simpleCanvasLineSeriesExample = () => {
 
     const commonConfiguration: MiccBaseConfiguration = {
         selector: '#chart',
+        style: {
+            backgroundColor: '#fff'
+        },
         tooltip: {
             eventType: 'mouseover',
             tooltipTextParser: (d:any) => {
@@ -609,7 +619,7 @@ const simpleCanvasLineSeriesExample = () => {
         data,
         title: {
             placement: Placement.TOP,
-            content: 'SVG Line Series'
+            content: 'Canvas Line Series'
         },
         isResize: true,
         axes: [
@@ -811,19 +821,9 @@ const webGLBigDataLineSeriesSample = () => {
     highlightBlock((select('#json-configuration').node() as any));
 
     chart = MiChart.WebglTraceChart(commonConfiguration, seriesList.concat(alarmSeriesList), optionList).draw();
-
-    // select('#refresh').on('click', () => {
-    //     console.time('webgllinedraw');
-    //     webglLineChart.draw();
-    //     console.timeEnd('webgllinedraw');
-    // });
-
-    // select('#clear').on('click', () => {
-    //     alarmSeriesList[0].clear();
-    // });
 }
 
-const canvasChartSample = () => {
+const canvasBigDataLineSeriesSample = () => {
 
     const stepData = stepInfo.map((step: any) => {
         return {
@@ -975,7 +975,7 @@ const canvasChartSample = () => {
         data: [],
         title: {
             placement: Placement.TOP,
-            content: 'DFD Concept Canvas'
+            content: 'Canvas BigData Line Series'
         },
         isResize: true,
         axes: [
