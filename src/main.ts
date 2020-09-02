@@ -309,7 +309,6 @@ const simpleWebglLineSeriesExample = () => {
         },
         tooltip: {
             tooltipTextParser: (d:any) => {
-                console.log('d : ', d);
                 return `x: ${d.x} \ny: ${d.y}\nz: ${d.z}`
             }
         },
