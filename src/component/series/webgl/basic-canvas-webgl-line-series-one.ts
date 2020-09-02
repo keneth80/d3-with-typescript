@@ -381,7 +381,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
             .attr('dy', '.1em')
             .text(
                 this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser
-                    ? this.chartBase.tooltip.tooltipTextParser(seriesData)
+                    ? this.chartBase.tooltip.tooltipTextParser(seriesData[2])
                     : `${this.xField}: ${seriesData[2][this.xField]} \n ${this.yField}: ${seriesData[2][this.yField]}`
             );
 

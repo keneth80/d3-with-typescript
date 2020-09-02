@@ -305,7 +305,13 @@ const simpleWebglLineSeriesExample = () => {
         data,
         title: {
             placement: Placement.TOP,
-            content: 'DFD Concept WebGL'
+            content: 'WebGL Line Series'
+        },
+        tooltip: {
+            tooltipTextParser: (d:any) => {
+                console.log('d : ', d);
+                return `x: ${d.x} \ny: ${d.y}\nz: ${d.z}`
+            }
         },
         isResize: true,
         axes: [

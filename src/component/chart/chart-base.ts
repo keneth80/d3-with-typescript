@@ -1054,7 +1054,7 @@ export class ChartBase<T = any> implements IChart {
 
         this.subscription.add(
             this.move$.pipe(debounceTime(200)).subscribe((value: any) => {
-                if (!isDragStart && !isMouseLeave) {
+                if (this.config.tooltip && (!isDragStart && !isMouseLeave)) {
                     let max = this.seriesList.length;
                     while(max--) {
                         const positionData = this.seriesList[max].getSeriesDataByPosition(value);
