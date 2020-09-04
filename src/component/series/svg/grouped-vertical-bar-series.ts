@@ -63,16 +63,15 @@ export class GroupedVerticalBarSeries extends SeriesBase {
         const x: any = scales.find((scale: Scale) => scale.orient === 'bottom').scale;
         const y: any = scales.find((scale: Scale) => scale.orient === 'left').scale;
 
-        const keys = this.columns.slice(1);
         const barx: any = scaleBand()
-            .domain(keys)
+            .domain(this.columns)
             .rangeRound([0, x.bandwidth()]);
 
         // set the colors
         const z = scaleOrdinal()
-            .range(['#98abc5', '#8a89a6', '#7b6888', '#6b486b', '#a05d56', '#d0743c', '#ff8c00']);
+            .range(this.chartBase.seriesColors);
 
-        z.domain(keys);
+        z.domain(this.columns);
 
         this.mainGroup.selectAll('.grouped-bar-item-group')
             .data(chartData)
@@ -86,9 +85,9 @@ export class GroupedVerticalBarSeries extends SeriesBase {
                 return `translate( ${x(d[this.xField])} ,0)`;
             })
             .selectAll('.grouped-bar-item')
-                .data((d: any) => { 
-                    return keys.map(
-                        (key: string) => { return {key: key, value: d[key]}; }
+                .data((data: any) => { 
+                    return this.columns.map(
+                        (key: string, index: number) => { return {key: key, value: data[key], data, index}; }
                     ); 
                 })
                 .join(
@@ -115,7 +114,7 @@ export class GroupedVerticalBarSeries extends SeriesBase {
                             const textElement: any = this.tooltipGroup.select('text').text(`${d.key}: ${this.numberFmt(d.value)}`);
                             const textWidth = textElement.node().getComputedTextLength() + 10;
                             
-                            let xPosition = event.x;
+                            let xPosition = x(d.data[this.xField]) + (d.index * barx.bandwidth());
                             let yPosition = event.offsetY -30;
                             if (xPosition + textWidth > geometry.width) {
                                 xPosition = xPosition - textWidth;
@@ -136,7 +135,7 @@ export class GroupedVerticalBarSeries extends SeriesBase {
                 .attr('width', barx.bandwidth())
                 .attr('fill', (d: any) => z(d.key) + '');
         
-        this.drawLegend(keys, z, geometry.width);
+        // this.drawLegend(this.columns, z, geometry.width);
     }
 
     drawLegend(keys: string[], z: any, width: number) {

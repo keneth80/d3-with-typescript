@@ -17,6 +17,7 @@ import { BasicStepLine } from './options/basic-svg-step-line';
 import { BasicStepArea } from './options/basic-svg-step-area';
 import { BasicLineSeries, BasicLineSeriesConfiguration } from './series';
 import { BasicSvgMouseZoomHandler } from './functions/basic-svg-mouse-zoom-handler';
+import { GroupedVerticalBarSeriesConfiguration, GroupedVerticalBarSeries } from './series/svg/grouped-vertical-bar-series';
 
 export interface OptionConfiguration {
     name: any;
@@ -112,24 +113,43 @@ export class MiChart {
         return new BasicChart(chartConfiguration);
     }
 
-    // webgl 시리즈 출력 설정정보 맵핑.
+    // svg 시리즈 출력 설정정보 맵핑.
     static SvgTraceChart(
         configuration: MiccBaseConfiguration, 
         series: Array<BasicCanvasWebglLineSeriesOneConfiguration> = [],
         options: Array<OptionConfiguration> = []): BasicChart {
 
-    const chartConfiguration: ChartConfiguration = MiChart.generatorCommomConfiguration(configuration);
+        const chartConfiguration: ChartConfiguration = MiChart.generatorCommomConfiguration(configuration);
 
-    chartConfiguration.series = series.map((traceConfiguration: BasicLineSeriesConfiguration) => {
-        return new BasicLineSeries(traceConfiguration);
-    });
+        chartConfiguration.series = series.map((traceConfiguration: BasicLineSeriesConfiguration) => {
+            return new BasicLineSeries(traceConfiguration);
+        });
 
-    chartConfiguration.options = MiChart.generatorOptions(options);
+        chartConfiguration.options = MiChart.generatorOptions(options);
 
-    chartConfiguration.functions = MiChart.generatorFunctions(configuration.zoom);
-    
-    return new BasicChart(chartConfiguration);
-}
+        chartConfiguration.functions = MiChart.generatorFunctions(configuration.zoom);
+        
+        return new BasicChart(chartConfiguration);
+    }
+
+    // svg 시리즈 출력 설정정보 맵핑.
+    static SvgGroupedColumnChart(
+        configuration: MiccBaseConfiguration, 
+        series: GroupedVerticalBarSeriesConfiguration,
+        options: Array<OptionConfiguration> = []): BasicChart {
+
+        const chartConfiguration: ChartConfiguration = MiChart.generatorCommomConfiguration(configuration);
+
+        chartConfiguration.series = [
+            new GroupedVerticalBarSeries(series)
+        ];
+
+        chartConfiguration.options = MiChart.generatorOptions(options);
+
+        chartConfiguration.functions = MiChart.generatorFunctions(configuration.zoom);
+        
+        return new BasicChart(chartConfiguration);
+    }
 
     // 마우스 이벤트 같은 이벤트 함수설정 정보 맵핑.
     static generatorCanvasFunctions(

@@ -332,6 +332,10 @@ export class ChartBase<T = any> implements IChart {
         return this.zoomEventSubject.asObservable();
     }
 
+    get seriesColors(): string[] {
+        return this.colors;
+    }
+
     getColorBySeriesIndex(index: number): string {
         return this.colors[index];
     }
