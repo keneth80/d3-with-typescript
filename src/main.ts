@@ -600,9 +600,6 @@ const simpleSvgColumnSeriesExample = () => {
 
     const commonConfiguration: MiccBaseConfiguration = {
         selector: '#chart',
-        tooltip: {
-            eventType: 'mouseover'
-        },
         data,
         title: {
             placement: Placement.TOP,
@@ -611,14 +608,14 @@ const simpleSvgColumnSeriesExample = () => {
         isResize: true,
         axes: [
             {
-                type: 'string',
+                type: ScaleType.STRING,
                 placement: 'bottom',
                 field: 'x',
                 padding: 0.1
             },
             {
                 field: 'total',
-                type: 'number',
+                type: ScaleType.NUMBER,
                 placement: 'left',
                 tickFormat: 's',
                 isRound: true,

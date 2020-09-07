@@ -91,41 +91,47 @@ export class GroupedVerticalBarSeries extends SeriesBase {
                     ); 
                 })
                 .join(
-                    (enter) => enter.append('rect').attr('class', 'grouped-bar-item')
-                        .on('mouseover', (d: any, i, nodeList: any) => {
-                            select(nodeList[i])
-                                .style('fill', () => colorDarker(z(d.key), 2)) // point
-                                // .style('stroke', '#f5330c')
-                                // .style('stroke-width', 2);
-        
-                            this.tooltipGroup = this.chartBase.showTooltip();
-                            select(nodeList[i]).classed('tooltip', true);
-                        })
-                        .on('mouseout', (d: any, i, nodeList: any) => {
-                            select(nodeList[i])
-                                .style('fill', () => z(d.key) + '') // point
-                                // .style('stroke', null)
-                                // .style('stroke-width', null);
-        
-                            this.chartBase.hideTooltip();
-                            select(nodeList[i]).classed('tooltip', false);
-                        })
-                        .on('mousemove', (d: any, i: number, nodeList: any) => {
-                            const textElement: any = this.tooltipGroup.select('text').text(`${d.key}: ${this.numberFmt(d.value)}`);
-                            const textWidth = textElement.node().getComputedTextLength() + 10;
-                            
-                            let xPosition = x(d.data[this.xField]) + (d.index * barx.bandwidth());
-                            let yPosition = event.offsetY -30;
-                            if (xPosition + textWidth > geometry.width) {
-                                xPosition = xPosition - textWidth;
-                            }
-                            this.tooltipGroup.attr('transform', `translate(${xPosition}, ${yPosition})`).selectAll('rect').attr('width', textWidth);
-                        })
-                        .on('click', (data: any) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            this.itemClickSubject.next(data);
-                        }),
+                    (enter) => {
+                        const enterElements = enter.append('rect').attr('class', 'grouped-bar-item');
+                        if (this.chartBase.tooltip) {
+                            enterElements.on('mouseover', (d: any, i, nodeList: any) => {
+                                select(nodeList[i])
+                                    .style('fill', () => colorDarker(z(d.key), 2)) // point
+                                    // .style('stroke', '#f5330c')
+                                    // .style('stroke-width', 2);
+            
+                                this.tooltipGroup = this.chartBase.showTooltip();
+                                select(nodeList[i]).classed('tooltip', true);
+                            })
+                            .on('mouseout', (d: any, i, nodeList: any) => {
+                                select(nodeList[i])
+                                    .style('fill', () => z(d.key) + '') // point
+                                    // .style('stroke', null)
+                                    // .style('stroke-width', null);
+            
+                                this.chartBase.hideTooltip();
+                                select(nodeList[i]).classed('tooltip', false);
+                            })
+                            .on('mousemove', (d: any, i: number, nodeList: any) => {
+                                const textElement: any = this.tooltipGroup.select('text').text(`${d.key}: ${this.numberFmt(d.value)}`);
+                                const textWidth = textElement.node().getComputedTextLength() + 10;
+                                
+                                let xPosition = x(d.data[this.xField]) + (d.index * barx.bandwidth());
+                                let yPosition = event.offsetY -30;
+                                if (xPosition + textWidth > geometry.width) {
+                                    xPosition = xPosition - textWidth;
+                                }
+                                this.tooltipGroup.attr('transform', `translate(${xPosition}, ${yPosition})`).selectAll('rect').attr('width', textWidth);
+                            })
+                            .on('click', (data: any) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                this.itemClickSubject.next(data);
+                            });
+                        }
+
+                        return enterElements;
+                    },
                     (update) => update,
                     (exit) => exit.remove()
                 )
