@@ -315,6 +315,7 @@ const simpleWebglLineSeriesExample = () => {
             content: 'WebGL Line Series'
         },
         tooltip: {
+            eventType: 'mouseover',
             tooltipTextParser: (d:any) => {
                 return `x: ${d.x} \ny: ${d.y}\nz: ${d.z}`
             }
@@ -600,10 +601,7 @@ const simpleSvgColumnSeriesExample = () => {
     const commonConfiguration: MiccBaseConfiguration = {
         selector: '#chart',
         tooltip: {
-            eventType: 'mouseover',
-            tooltipTextParser: (d:any) => {
-                return `x: ${d.x} \ny: ${d.y}\nz: ${d.z}`
-            }
+            eventType: 'mouseover'
         },
         data,
         title: {
@@ -613,9 +611,9 @@ const simpleSvgColumnSeriesExample = () => {
         isResize: true,
         axes: [
             {
-                field: 'x',
                 type: 'string',
                 placement: 'bottom',
+                field: 'x',
                 padding: 0.1
             },
             {
@@ -1840,6 +1838,7 @@ const excute = () => {
             // }
         },
         tooltip: {
+            eventType: 'mouseover',
             tooltipTextParser: (d: any) => {
                 return `${d.salesperson} \n Date: ${d.date} \n Value: ${d.sales}`
             }
