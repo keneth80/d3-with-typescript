@@ -85,6 +85,8 @@ export class ChartBase<T = any> implements IChart {
 
     protected chartClickSubject: Subject<any> = new Subject();
 
+    protected chartItemClickSubject: Subject<any> = new Subject();
+
     protected updateSeriesSubject: Subject<any> = new Subject();
 
     protected tooltipGroup: Selection<BaseType, any, HTMLElement, any>;
@@ -340,8 +342,12 @@ export class ChartBase<T = any> implements IChart {
         return this.colors[index];
     }
 
-    chartClick() {
+    selectedChart() {
         return this.chartClickSubject.asObservable();
+    }
+
+    selectedChartItem() {
+        return this.chartItemClickSubject.asObservable();
     }
 
     bootstrap(configuration: ChartConfiguration) {
@@ -1036,6 +1042,13 @@ export class ChartBase<T = any> implements IChart {
                         const positionData = this.seriesList[max].getSeriesDataByPosition(event.position);
                         if (positionData.length) {
                             this.seriesList[max].onSelectItem(positionData, event);
+                            // TODO: selectitem event dispatch
+                            console.log('positionData : ', positionData);
+                            this.chartItemClickSubject.next({
+                                x: positionData[0],
+                                y: positionData[1],
+                                data: positionData[2]
+                            });
                             break;
                         }
                     }
@@ -1049,6 +1062,13 @@ export class ChartBase<T = any> implements IChart {
                         const positionData = this.seriesList[max].getSeriesDataByPosition(event.position);
                         if (positionData.length) {
                             this.seriesList[max].onSelectItem(positionData, event);
+                            // TODO: selectitem event dispatch
+                            console.log('positionData : ', positionData);
+                            this.chartItemClickSubject.next({
+                                x: positionData[0],
+                                y: positionData[1],
+                                data: positionData[2]
+                            });
                             break;
                         }
                     }

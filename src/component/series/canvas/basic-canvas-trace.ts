@@ -276,6 +276,8 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
     destroy() {
         this.subscription.unsubscribe();
         this.canvas.remove();
+        this.parentElement.select('.tooltip-canvas').remove();
+        this.parentElement.select('.' + ChartBase.SELECTION_CANVAS).remove();
     }
 
     getSeriesDataByPosition(value: Array<number>) {

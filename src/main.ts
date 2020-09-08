@@ -611,7 +611,7 @@ const simpleSvgColumnSeriesExample = () => {
                 type: ScaleType.STRING,
                 placement: 'bottom',
                 field: 'x',
-                padding: 0.1
+                padding: 0.2
             },
             {
                 field: 'total',
@@ -776,7 +776,10 @@ const simpleCanvasLineSeriesExample = () => {
                 min: 0,
                 max: 30
             }
-        ]
+        ],
+        zoom: {
+            direction: Direction.BOTH
+        }
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');

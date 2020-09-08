@@ -268,22 +268,22 @@ export class BasicLineSeries extends SeriesBase {
         }
 
         // TODO: quadtree setup
-        // if (this.originQuadTree) {
-        //     this.originQuadTree = undefined;
-        // }
+        if (this.originQuadTree) {
+            this.originQuadTree = undefined;
+        }
 
-        // delayExcute(300, () => {
-        //     const generateData: Array<any> = lineData
-        //         .map((d: any, i: number) => {
-        //             const xposition = x(d[this.xField]) + padding;
-        //             const yposition = y(d[this.yField]);
+        delayExcute(300, () => {
+            const generateData: Array<any> = lineData
+                .map((d: any, i: number) => {
+                    const xposition = x(d[this.xField]) + padding;
+                    const yposition = y(d[this.yField]);
                     
-        //             return [xposition, yposition, d];
-        //         });
-        //     this.originQuadTree = quadtree()
-        //         .extent([[0, 0], [geometry.width, geometry.height]])
-        //         .addAll(generateData);
-        // });
+                    return [xposition, yposition, d];
+                });
+            this.originQuadTree = quadtree()
+                .extent([[0, 0], [geometry.width, geometry.height]])
+                .addAll(generateData);
+        });
     }
 
     select(displayName: string, isSelected: boolean) {

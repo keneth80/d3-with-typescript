@@ -282,6 +282,9 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         }
         this.subscription.unsubscribe();
         this.canvas.remove();
+        this.parentElement.select('.tooltip-canvas').remove();
+        this.parentElement.select('.' + ChartBase.SELECTION_CANVAS).remove();
+
     }
 
     getSeriesDataByPosition(value: Array<number>) {
