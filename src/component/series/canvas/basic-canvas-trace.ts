@@ -363,7 +363,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
     
         const textElement: any = this.tooltipGroup.select('text').attr('dy', '.1em').text(
             this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser ? 
-                this.chartBase.tooltip.tooltipTextParser(d) : 
+                this.chartBase.tooltip.tooltipTextParser(d[2]) : 
                 `${this.xField}: ${d[2][this.xField]} \n ${this.yField}: ${d[2][this.yField]}`
         );
 

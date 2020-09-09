@@ -18,6 +18,7 @@ import { BasicStepArea } from './options/basic-svg-step-area';
 import { BasicLineSeries, BasicLineSeriesConfiguration } from './series';
 import { BasicSvgMouseZoomHandler } from './functions/basic-svg-mouse-zoom-handler';
 import { GroupedVerticalBarSeriesConfiguration, GroupedVerticalBarSeries } from './series/svg/grouped-vertical-bar-series';
+import { BasicSvgMouseHandler } from './functions/basic-svg-mouse-handler';
 
 export interface OptionConfiguration {
     name: any;
@@ -171,6 +172,8 @@ export class MiChart {
         const functions: Array<IFunctions> = [];
         if (zoom) {
             functions.push(new BasicSvgMouseZoomHandler(zoom));
+        } else {
+            // functions.push(new BasicSvgMouseHandler({}));
         }
         return functions;
     }

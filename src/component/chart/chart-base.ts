@@ -12,7 +12,7 @@ import { format } from 'd3-format';
 import { fromEvent, Subscription, Subject, of, Observable, from, timer } from 'rxjs';
 import { debounceTime, switchMap, map, concatMap, mapTo } from 'rxjs/operators';
 
-import { IChart, Scale, ContainerSize, LegendItem, ChartMouseEvent, ChartZoomEvent, DisplayType } from './chart.interface';
+import { IChart, Scale, ContainerSize, LegendItem, ChartMouseEvent, ChartZoomEvent, DisplayType, ChartItemSelectEvent } from './chart.interface';
 import { ChartConfiguration, Axis, Margin, Placement, ChartTitle, ScaleType, 
          Align, AxisTitle, ChartTooltip, Shape, PlacementByElement 
 } from './chart-configuration';
@@ -44,6 +44,8 @@ export class ChartBase<T = any> implements IChart {
     mouseEventSubject: Subject<ChartMouseEvent> = new Subject();
 
     zoomEventSubject: Subject<ChartZoomEvent> = new Subject();
+
+    chartItemClickSubject: Subject<ChartItemSelectEvent> = new Subject();
 
     isTooltipDisplay = false;
 
@@ -84,8 +86,6 @@ export class ChartBase<T = any> implements IChart {
     protected subscription: Subscription;
 
     protected chartClickSubject: Subject<any> = new Subject();
-
-    protected chartItemClickSubject: Subject<any> = new Subject();
 
     protected updateSeriesSubject: Subject<any> = new Subject();
 
@@ -1043,10 +1043,11 @@ export class ChartBase<T = any> implements IChart {
                         if (positionData.length) {
                             this.seriesList[max].onSelectItem(positionData, event);
                             // TODO: selectitem event dispatch
-                            console.log('positionData : ', positionData);
                             this.chartItemClickSubject.next({
-                                x: positionData[0],
-                                y: positionData[1],
+                                position: {
+                                    x: positionData[0],
+                                    y: positionData[1]
+                                },
                                 data: positionData[2]
                             });
                             break;
@@ -1063,10 +1064,11 @@ export class ChartBase<T = any> implements IChart {
                         if (positionData.length) {
                             this.seriesList[max].onSelectItem(positionData, event);
                             // TODO: selectitem event dispatch
-                            console.log('positionData : ', positionData);
                             this.chartItemClickSubject.next({
-                                x: positionData[0],
-                                y: positionData[1],
+                                position: {
+                                    x: positionData[0],
+                                    y: positionData[1]
+                                },
                                 data: positionData[2]
                             });
                             break;

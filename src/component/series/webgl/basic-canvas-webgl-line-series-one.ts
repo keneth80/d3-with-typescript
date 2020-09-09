@@ -340,16 +340,6 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         this.viewClear();
     }
 
-    // TEST
-    getCanvasNode() {
-        return (this.canvas.node() as any);
-    }
-
-    // TEST
-    getGeometry() {
-        return this.geometry;
-    }
-
     private search(quadtreeObj: Quadtree<Array<any>>, x0: number, y0: number, x3: number, y3: number) {
         const temp = [];
         if (quadtreeObj) {

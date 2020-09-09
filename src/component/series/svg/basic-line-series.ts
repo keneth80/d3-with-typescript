@@ -7,7 +7,7 @@ import { quadtree, Quadtree } from 'd3-quadtree';
 
 import { Subject, Observable } from 'rxjs';
 
-import { Scale, ContainerSize, DisplayOption } from '../../chart/chart.interface';
+import { Scale, ContainerSize, DisplayOption, ChartMouseEvent } from '../../chart/chart.interface';
 import { SeriesBase } from '../../chart/series-base';
 import { SeriesConfiguration } from '../../chart/series.interface';
 import { textBreak, isIE, getTextWidth, delayExcute } from '../../chart/util/d3-svg-util';
@@ -61,11 +61,13 @@ export class BasicLineSeries extends SeriesBase {
 
     private currentSelector: any;
 
-    private defaultRadius: number = 4;
-
     private isHide: boolean = false;
 
     private crossFilterDimension: any = undefined;
+
+    private radius = 4;
+
+    private lineColor: string = '';
 
     constructor(configuration: BasicLineSeriesConfiguration) {
         super(configuration);
@@ -94,6 +96,8 @@ export class BasicLineSeries extends SeriesBase {
             if (configuration.hasOwnProperty('animation')) {
                 this.isAnimation = configuration.animation;
             }
+
+            this.radius = this.config.dot.radius || this.radius;
         }
 
         this.numberFmt = format(',d');
@@ -123,6 +127,8 @@ export class BasicLineSeries extends SeriesBase {
         if (x.bandwidth) {
             padding = x.bandwidth() / 2;
         }
+
+        this.lineColor = option.color;
 
         this.line = line()
             .defined(data => data[this.yField])
@@ -178,8 +184,6 @@ export class BasicLineSeries extends SeriesBase {
         }
 
         if (this.config.dot) {
-            const radius = (this.config.dot.radius || this.defaultRadius);
-
             // dot설정이 있을 시 에는 mask 영역 늘리기
             // 우선 주석처리함. zoom시 라인이 늘려진 마스크 영역 때문에 시리즈 영역 바깥으로 빗나가는 현상이 생김.
             // this.chartBase.clipPathSelector
@@ -195,76 +199,78 @@ export class BasicLineSeries extends SeriesBase {
                             .on('click', (data: any, index: number, nodeList: any) => {
                                 event.preventDefault();
                                 event.stopPropagation();
-                                this.itemClickSubject.next({
-                                    data,
-                                    target: nodeList[index],
-                                    event
+                                this.chartBase.chartItemClickSubject.next({
+                                    position: {
+                                        x: x(data[this.xField]),
+                                        y: y(data[this.yField])
+                                    },
+                                    data
                                 });
                             }),
                         (update) => update,
                         (exit) => exit.remove
                     )
-                    .style('stroke-width', radius / 2)
-                    .style('stroke', option.color)
+                    .style('stroke-width', this.radius / 2)
+                    .style('stroke', this.lineColor)
                     .style('fill', '#fff')
                     .attr('cx', (data: any, i) => { return x(data[this.xField]) + padding; })
                     .attr('cy', (data: any) => { return y(data[this.yField]); })
-                    .attr('r', radius);
+                    .attr('r', this.radius);
             
-            if (this.chartBase.tooltip) {
-                if (!this.chartBase.tooltip.eventType || this.chartBase.tooltip.eventType === 'click') {
-                    dots
-                    .on('click', (d: any, i, nodeList: any) => {
-                        event.preventDefault();
-                        event.stopPropagation();
+            // if (this.chartBase.tooltip) {
+            //     if (!this.chartBase.tooltip.eventType || this.chartBase.tooltip.eventType === 'click') {
+            //         dots
+            //         .on('click', (d: any, i, nodeList: any) => {
+            //             event.preventDefault();
+            //             event.stopPropagation();
 
-                        if (this.isHide) {
-                            return;
-                        }
+            //             if (this.isHide) {
+            //                 return;
+            //             }
 
-                        if (this.currentSelector) {
-                            this.currentSelector.attr('r', radius);
-                        }
-                        this.setChartTooltip(d, geometry, radius);
-                        this.currentSelector = select(nodeList[i]);
-                        this.currentSelector.attr('r', radius * 1.7);
-                    });
-                } else {
-                    dots
-                    .on('mouseover', (d: any, i, nodeList: any) => {
-                        console.log('mouseover');
-                        event.preventDefault();
-                        event.stopPropagation();
+            //             if (this.currentSelector) {
+            //                 this.currentSelector.attr('r', this.radius);
+            //             }
+            //             this.setChartTooltip(d, geometry, this.radius);
+            //             this.currentSelector = select(nodeList[i]);
+            //             this.currentSelector.attr('r', this.radius * 1.7);
+            //         });
+            //     } else {
+            //         dots
+            //         .on('mouseover', (d: any, i, nodeList: any) => {
+            //             console.log('mouseover');
+            //             event.preventDefault();
+            //             event.stopPropagation();
 
-                        if (this.isHide) {
-                            return;
-                        }
+            //             if (this.isHide) {
+            //                 return;
+            //             }
 
-                        select(nodeList[i]).attr('r', radius * 1.7);
-                            // .style('fill', () => colorDarker(color, 2)); // point
+            //             select(nodeList[i]).attr('r', this.radius * 1.7);
+            //                 // .style('fill', () => colorDarker(color, 2)); // point
 
-                        this.setChartTooltip(d, geometry, radius);
-                        select(nodeList[i]).classed('tooltip', true);
-                    })
-                    .on('mouseout', (d: any, i, nodeList: any) => {
-                        console.log('mouseout');
-                        event.preventDefault();
-                        event.stopPropagation();
+            //             this.setChartTooltip(d, geometry, this.radius);
+            //             select(nodeList[i]).classed('tooltip', true);
+            //         })
+            //         .on('mouseout', (d: any, i, nodeList: any) => {
+            //             console.log('mouseout');
+            //             event.preventDefault();
+            //             event.stopPropagation();
 
-                        if (this.isHide) {
-                            return;
-                        }
+            //             if (this.isHide) {
+            //                 return;
+            //             }
 
-                        select(nodeList[i])
-                            .attr('r', radius) // point
-                            // .style('stroke', null)
-                            // .style('stroke-width', null);
+            //             select(nodeList[i])
+            //                 .attr('r', this.radius) // point
+            //                 // .style('stroke', null)
+            //                 // .style('stroke-width', null);
 
-                        this.chartBase.hideTooltip();
-                        select(nodeList[i]).classed('tooltip', false);
-                    });
-                }
-            }
+            //             this.chartBase.hideTooltip();
+            //             select(nodeList[i]).classed('tooltip', false);
+            //         });
+            //     }
+            // }
         }
 
         // TODO: quadtree setup
@@ -315,14 +321,82 @@ export class BasicLineSeries extends SeriesBase {
     }
 
     unSelectItem() {
-        const radius = (this.config.dot && this.config.dot.radius || this.defaultRadius);
         if (this.currentSelector) {
-            this.currentSelector.attr('r', radius);
+            this.currentSelector.attr('r', this.radius);
             this.currentSelector = null;
         }
     }
 
-    private setChartTooltip(d: any, geometry: ContainerSize, radius: number) {
+    getSeriesDataByPosition(value: Array<number>) {
+        return this.search(
+            this.originQuadTree,
+            value[0] - this.radius,
+            value[1] - this.radius,
+            value[0] + this.radius,
+            value[1] + this.radius
+        );
+    }
+
+    showPointAndTooltip(value: Array<number>, selected: Array<any>) {
+        if (selected.length && !this.chartBase.isTooltipDisplay) {
+            // const index = Math.floor(selected.length / 2);
+            const index = selected.length - 1;
+            const selectedItem = selected[index];
+
+            this.drawTooltipPoint(this.geometry, selectedItem, {
+                radius: this.radius / 2 + 1,
+                strokeColor: this.lineColor,
+                strokeWidth: this.strokeWidth
+            });
+
+            this.setChartTooltip(
+                selectedItem,
+                {
+                    width: this.geometry.width,
+                    height: this.geometry.height
+                },
+                value
+            );
+        }
+    }
+
+    onSelectItem(selectedItem: Array<any>, event: ChartMouseEvent) {
+        if (selectedItem && selectedItem.length) {
+            this.itemClickSubject.next({
+                data: selectedItem[2],
+                event: {
+                    offsetX: event.position[0] + this.chartBase.chartMargin.left,
+                    offsetY: event.position[1] + this.chartBase.chartMargin.top
+                },
+                target: {
+                    width: 1,
+                    height: 1
+                }
+            });
+        }
+    }
+
+    private search(quadtreeObj: Quadtree<Array<any>>, x0: number, y0: number, x3: number, y3: number) {
+        const temp = [];
+        if (quadtreeObj) {
+            quadtreeObj.visit((node: any, x1: number, y1: number, x2: number, y2: number) => {
+                if (!node.length) {
+                    do {
+                        const d = node.data;
+                        const selected = d[0] >= x0 && d[0] < x3 && d[1] >= y0 && d[1] < y3;
+                        if (selected) {
+                            temp.push(d);
+                        }
+                    } while ((node = node.next));
+                }
+                return x1 >= x3 || y1 >= y3 || x2 < x0 || y2 < y0;
+            });
+        }
+
+        return temp;
+    }
+
+    private setChartTooltip2(d: any, geometry: ContainerSize, radius: number) {
         this.tooltipGroup = this.chartBase.showTooltip();
     
         const textElement: any = this.tooltipGroup.select('text').attr('dy', '.1em').text(
@@ -331,15 +405,11 @@ export class BasicLineSeries extends SeriesBase {
 
         textBreak(textElement, '\n');
 
-        // const parseTextNode = textElement.node().getBoundingClientRect();
         const parseTextNode = textElement.node().getBBox();
-
-        // console.log('check : ', getTextWidth('Canvas Line Chart', 16, 'Arial, Helvetica, sans-serif'), getTextWidth('Canvas Line Chart', 16, select('body').style('font-family')));
-
         const textWidth = parseTextNode.width + 7;
         const textHeight = parseTextNode.height + 5;
         
-        const padding = radius * 2 + 5;
+        const padding = this.radius * 2 + 5;
         let xPosition = event.offsetX + padding + (isIE() ? this.chartBase.chartMargin.left : 0);
         let yPosition = event.offsetY + padding + (isIE() ? this.chartBase.chartMargin.top : 0);
         
@@ -355,17 +425,64 @@ export class BasicLineSeries extends SeriesBase {
             .selectAll('rect')
             .attr('width', textWidth)
             .attr('height', textHeight);
+    }
 
-        this.itemClickSubject.next({
-            data: d,
-            event: {
-                offsetX: xPosition,
-                offsetY: yPosition
-            },
-            target: {
-                width: radius,
-                height: radius
-            }
-        });
+    // TODO: tooltip에 시리즈 아이디를 부여하여 시리즈 마다 tooltip을 컨트롤 할 수 있도록 한다.
+    // multi tooltip도 구현해야 하기 때문에 이방법이 가장 좋음. 현재 중복으로 발생해서 왔다갔다 함.
+    private setChartTooltip(seriesData: any, geometry: ContainerSize, mouseEvent: Array<number>) {
+        if (this.chartBase.isTooltipDisplay) {
+            return;
+        }
+
+        this.tooltipGroup = this.chartBase.showTooltip();
+
+        const textElement: any = this.tooltipGroup
+            .select('text')
+            .attr('dy', '.1em')
+            .text(
+                this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser
+                    ? this.chartBase.tooltip.tooltipTextParser(seriesData[2])
+                    : `${this.xField}: ${seriesData[2][this.xField]} \n ${this.yField}: ${seriesData[2][this.yField]}`
+            );
+
+        textBreak(textElement, '\n');
+
+        // const parseTextNode = textElement.node().getBoundingClientRect();
+        const parseTextNode = textElement.node().getBBox();
+
+        const textWidth = parseTextNode.width + 7;
+        const textHeight = parseTextNode.height + 5;
+        const radius = this.config.dot ? this.config.dot.radius || 4 : 0;
+
+        let xPosition = mouseEvent[0] + this.chartBase.chartMargin.left + radius;
+        let yPosition = mouseEvent[1];
+
+        if (xPosition + textWidth > geometry.width) {
+            xPosition = xPosition - textWidth;
+        }
+
+        if (yPosition + textHeight > geometry.height) {
+            yPosition = yPosition - textHeight;
+        }
+
+        this.tooltipGroup
+            .attr('transform', `translate(${xPosition}, ${yPosition})`)
+            .selectAll('rect')
+            .attr('width', textWidth)
+            .attr('height', textHeight);
+    }
+
+    private drawTooltipPoint(
+        geometry: ContainerSize, 
+        position: Array<number>, 
+        style:{radius: number, strokeColor: string, strokeWidth: number}
+    ) {
+        // TODO: pointer 그리기
+        // select(nodeList[i]).attr('r', this.radius * 1.7);
+    }
+
+    private viewClear(geometry: ContainerSize) {
+        // 화면 지우기
+        
     }
 }
