@@ -147,8 +147,8 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
                 fromEvent(this.pointerGroup.node() as any, 'mousemove')
                     .pipe(debounceTime(100))
                     .subscribe((e: MouseEvent) => {
-                        const x = e.layerX - this.chartBase.chartMargin.left - 1;
-                        const y = e.layerY - this.chartBase.chartMargin.top - 1;
+                        const x = e.offsetX - this.chartBase.chartMargin.left - 1;
+                        const y = e.offsetY - this.chartBase.chartMargin.top - 1;
                         const mouseEvent: [number, number] = [x, y];
                         this.chartBase.mouseEventSubject.next({
                             type: 'mousemove',
