@@ -8,6 +8,8 @@ import { FunctionsBase } from '../chart/functions-base';
 import { ChartBase } from '../chart/chart-base';
 import { Direction, ScaleType, Placement } from '../chart/chart-configuration';
 import { delayExcute } from '../chart/util/d3-svg-util';
+import { fromEvent } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 
 export interface BasicCanvasMouseZoomHandlerConfiguration {
     xDirection?: string; // bottom or top
@@ -135,14 +137,29 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
         };
 
         if (this.isMoveEvent) {
-            this.pointerCanvas.on('mousemove', () => {
-                const mouseEvent = mouse(this.pointerCanvas.node() as any);
-                this.chartBase.mouseEventSubject.next({
-                    type: 'mousemove',
-                    position: mouseEvent,
-                    target: this.pointerCanvas
-                });
-            });
+            // this.pointerCanvas.on('mousemove', () => {
+            //     const mouseEvent = mouse(this.pointerCanvas.node() as any);
+            //     this.chartBase.mouseEventSubject.next({
+            //         type: 'mousemove',
+            //         position: mouseEvent,
+            //         target: this.pointerCanvas
+            //     });
+            // });
+
+            this.subscription.add(
+                fromEvent(this.pointerCanvas.node() as any, 'mousemove')
+                    .pipe(debounceTime(100))
+                    .subscribe((e: MouseEvent) => {
+                        const x = e.layerX - this.chartBase.chartMargin.left - 1;
+                        const y = e.layerY - this.chartBase.chartMargin.top - 1;
+                        const mouseEvent: [number, number] = [x, y];
+                        this.chartBase.mouseEventSubject.next({
+                            type: 'mousemove',
+                            position: mouseEvent,
+                            target: this.pointerCanvas
+                        });
+                    })
+            );
         }
 
         this.pointerCanvas.on('click', () => {

@@ -12,6 +12,7 @@ import { SeriesBase } from '../../chart/series-base';
 import { SeriesConfiguration } from '../../chart/series.interface';
 import { textBreak, isIE, getTextWidth, delayExcute } from '../../chart/util/d3-svg-util';
 import { Placement } from '../../chart/chart-configuration';
+import { ChartBase } from '../../chart';
 
 export interface BasicLineSeriesConfiguration extends SeriesConfiguration {
     dotSelector?: string;
@@ -36,6 +37,8 @@ export interface BasicLineSeriesConfiguration extends SeriesConfiguration {
 
 export class BasicLineSeries extends SeriesBase {
     protected dotGroup: Selection<BaseType, any, HTMLElement, any>;
+
+    protected selectionGroup: Selection<BaseType, any, HTMLElement, any>;
 
     private tooltipGroup: Selection<BaseType, any, HTMLElement, any>;
 
@@ -108,6 +111,7 @@ export class BasicLineSeries extends SeriesBase {
         this.svg = svg;
         
         this.seriespGroup = mainGroup;
+        this.selectionGroup = this.svg.select('.' + ChartBase.SELECTION_SVG);
         if (!mainGroup.select(`.${this.selector}-group`).node()) {
             this.mainGroup = mainGroup.append('g').attr('class', `${this.selector}-group`);
         }
@@ -127,6 +131,8 @@ export class BasicLineSeries extends SeriesBase {
         if (x.bandwidth) {
             padding = x.bandwidth() / 2;
         }
+
+        this.geometry = geometry;
 
         this.lineColor = option.color;
 
@@ -330,10 +336,10 @@ export class BasicLineSeries extends SeriesBase {
     getSeriesDataByPosition(value: Array<number>) {
         return this.search(
             this.originQuadTree,
-            value[0] - this.radius,
-            value[1] - this.radius,
-            value[0] + this.radius,
-            value[1] + this.radius
+            value[0] - (this.radius + 2),
+            value[1] - (this.radius + 2),
+            value[0] + this.radius + 2,
+            value[1] + this.radius + 2
         );
     }
 
@@ -450,23 +456,18 @@ export class BasicLineSeries extends SeriesBase {
         // const parseTextNode = textElement.node().getBoundingClientRect();
         const parseTextNode = textElement.node().getBBox();
 
-        const textWidth = parseTextNode.width + 7;
-        const textHeight = parseTextNode.height + 5;
-        const radius = this.config.dot ? this.config.dot.radius || 4 : 0;
+        const textWidth = Math.floor(parseTextNode.width) + 7;
+        const textHeight = Math.floor(parseTextNode.height) + 5;
 
-        let xPosition = mouseEvent[0] + this.chartBase.chartMargin.left + radius;
+        let xPosition = mouseEvent[0] + this.chartBase.chartMargin.left + this.radius;
         let yPosition = mouseEvent[1];
 
-        if (xPosition + textWidth > geometry.width) {
+        if (xPosition + textWidth > geometry.width + 5) {
             xPosition = xPosition - textWidth;
         }
 
-        if (yPosition + textHeight > geometry.height) {
-            yPosition = yPosition - textHeight;
-        }
-
         this.tooltipGroup
-            .attr('transform', `translate(${xPosition}, ${yPosition})`)
+            .attr('transform', `translate(${xPosition + this.radius}, ${yPosition - this.radius})`)
             .selectAll('rect')
             .attr('width', textWidth)
             .attr('height', textHeight);
@@ -477,12 +478,15 @@ export class BasicLineSeries extends SeriesBase {
         position: Array<number>, 
         style:{radius: number, strokeColor: string, strokeWidth: number}
     ) {
+        console.log('drawTooltipPoint : ', position, style);
+        this.selectionGroup.append('circle')
+            .style('stroke-width', this.radius * 1.7)
+            .style('stroke', this.lineColor)
+            .style('fill', '#fff')
+            .attr('cx', (data: any, i) => { return position[0]; })
+            .attr('cy', (data: any) => { return position[1]; })
+            .attr('r', this.radius);
         // TODO: pointer 그리기
         // select(nodeList[i]).attr('r', this.radius * 1.7);
-    }
-
-    private viewClear(geometry: ContainerSize) {
-        // 화면 지우기
-        
     }
 }

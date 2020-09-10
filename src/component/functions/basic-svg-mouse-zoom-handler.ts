@@ -8,6 +8,8 @@ import { FunctionsBase } from '../chart/functions-base';
 import { ChartBase } from '../chart/chart-base';
 import { Direction, ScaleType, Placement } from '../chart/chart-configuration';
 import { delayExcute } from '../chart/util/d3-svg-util';
+import { fromEvent } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 
 export interface BasicSvgMouseZoomHandlerConfiguration {
     xDirection?: string; // bottom or top
@@ -17,7 +19,7 @@ export interface BasicSvgMouseZoomHandlerConfiguration {
 }
 
 export class BasicSvgMouseZoomHandler extends FunctionsBase {
-    protected pointerCanvas: Selection<BaseType, any, HTMLElement, any>;
+    protected pointerGroup: Selection<BaseType, any, HTMLElement, any>;
 
     protected zoomBackDrop: Selection<BaseType, any, BaseType, any>;
 
@@ -74,7 +76,7 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
         this.svg = svg;
         this.mainGroup = mainGroup;
 
-        this.pointerCanvas = this.svg.select('.' + ChartBase.ZOOM_SVG);
+        this.pointerGroup = this.svg.select('.' + ChartBase.ZOOM_SVG);
 
         // zoom mask setup
         if (!this.svg.select('defs').select('#zoommask').node()) {
@@ -130,25 +132,91 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
         const end = {
             x: 0, y: 0
         };
+
+        if (this.isMoveEvent) {
+            // this.pointerGroup.on('mousemove', () => {
+            //     const mouseEvent = mouse(this.pointerGroup.node() as any);
+            //     this.chartBase.mouseEventSubject.next({
+            //         type: 'mousemove',
+            //         position: mouseEvent,
+            //         target: this.pointerGroup
+            //     });
+            // });
+
+            this.subscription.add(
+                fromEvent(this.pointerGroup.node() as any, 'mousemove')
+                    .pipe(debounceTime(100))
+                    .subscribe((e: MouseEvent) => {
+                        const x = e.layerX - this.chartBase.chartMargin.left - 1;
+                        const y = e.layerY - this.chartBase.chartMargin.top - 1;
+                        const mouseEvent: [number, number] = [x, y];
+                        this.chartBase.mouseEventSubject.next({
+                            type: 'mousemove',
+                            position: mouseEvent,
+                            target: this.pointerGroup
+                        });
+                    })
+            );
+        }
+
+        this.pointerGroup
+        .on('mouseleave', () => {
+            console.log('mouseleave');
+            const mouseEvent = mouse(this.pointerGroup.node() as any);
+
+            this.chartBase.mouseEventSubject.next({
+                type: 'mouseleave',
+                position: mouseEvent,
+                target: this.pointerGroup
+            });
+        })
+        .on('mousedown', () => {
+            console.log('mousedown');
+            const mouseEvent = mouse(this.pointerGroup.node() as any);
+
+            this.chartBase.mouseEventSubject.next({
+                type: 'mousedown',
+                position: mouseEvent,
+                target: this.pointerGroup
+            });
+        })
+        .on('mouseup', () => {
+            console.log('mouseup');
+            const mouseEvent = mouse(this.pointerGroup.node() as any);
+
+            this.chartBase.mouseEventSubject.next({
+                type: 'mouseup',
+                position: mouseEvent,
+                target: this.pointerGroup
+            });
+        }).on('click', () => {
+            const mouseEvent = mouse(this.pointerGroup.node() as any);
+
+            this.chartBase.mouseEventSubject.next({
+                type: 'click',
+                position: mouseEvent,
+                target: this.pointerGroup
+            });
+        });
         
-        this.pointerCanvas.call(
+        this.pointerGroup.call(
             drag()
             .on('start', () => {
                 this.tempZoomBox = this.dragElementInit(this.mainGroup, geometry);
                 this.zoomBackDrop.attr('width', geometry.width).attr('height', geometry.height);
 
-                const mouseEvent = mouse(this.pointerCanvas.node() as any);
+                const mouseEvent = mouse(this.pointerGroup.node() as any);
                 startX = mouseEvent[0];
                 startY = mouseEvent[1];
 
                 this.chartBase.zoomEventSubject.next({
                     type: 'dragstart',
                     position: mouseEvent,
-                    target: this.pointerCanvas
+                    target: this.pointerGroup
                 });
             })
             .on('drag', () => {
-                const mouseEvent = mouse(this.pointerCanvas.node() as any);
+                const mouseEvent = mouse(this.pointerGroup.node() as any);
             
                 const moveX = mouseEvent[0];
                 const moveY = mouseEvent[1];
@@ -200,11 +268,11 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
                 this.chartBase.zoomEventSubject.next({
                     type: 'drag',
                     position: mouseEvent,
-                    target: this.pointerCanvas
+                    target: this.pointerGroup
                 });
             })
             .on('end', () => {
-                const mouseEvent = mouse(this.pointerCanvas.node() as any);
+                const mouseEvent = mouse(this.pointerGroup.node() as any);
                 endX = mouseEvent[0];
                 endY = mouseEvent[1];
                 
@@ -231,7 +299,7 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
                         this.chartBase.zoomEventSubject.next({
                             type: 'zoomin',
                             position: [endX, endY],
-                            target: this.pointerCanvas,
+                            target: this.pointerGroup,
                             zoom: {
                                 direction: this.direction,
                                 field: {
@@ -257,7 +325,7 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
                                 this.chartBase.zoomEventSubject.next({
                                     type: 'not',
                                     position: [endX, endY],
-                                    target: this.pointerCanvas
+                                    target: this.pointerGroup
                                 });
                             }
                             return;
@@ -266,7 +334,7 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
                         this.chartBase.zoomEventSubject.next({
                             type: 'zoomout',
                             position: [endX, endY],
-                            target: this.pointerCanvas
+                            target: this.pointerGroup
                         });
 
                         // delayExcute(5, () => {

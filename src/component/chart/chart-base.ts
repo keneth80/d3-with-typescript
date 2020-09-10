@@ -29,7 +29,11 @@ import { guid, delayExcute, textWrapping,
 
 // TODO: 모든 참조되는 함수들은 subject로 바꾼다.
 export class ChartBase<T = any> implements IChart {
-    static ZOOM_SVG = 'zoom-svg';
+    static ZOOM_SVG = 'zoom-group';
+
+    static SELECTION_SVG = 'selection-group';
+
+    static SERIES_SVG = 'series-group';
 
     static POINTER_CANVAS = 'pointer-canvas';
 
@@ -47,7 +51,7 @@ export class ChartBase<T = any> implements IChart {
 
     chartItemClickSubject: Subject<ChartItemSelectEvent> = new Subject();
 
-    isTooltipDisplay = false;
+    isTooltipDisplay = false; // 현재 툴팁이 열려있는지 판단여부.
 
     protected data: Array<T> = [];
 
@@ -68,6 +72,8 @@ export class ChartBase<T = any> implements IChart {
     protected mainGroup: Selection<BaseType, any, HTMLElement, any>;
 
     protected zoomGroup: Selection<BaseType, any, HTMLElement, any>; // svg용 zoom handler group
+
+    protected selectionGroup: Selection<BaseType, any, HTMLElement, any>; // svg용 select item group
 
     protected optionGroup: Selection<BaseType, any, HTMLElement, any>;
 
@@ -947,6 +953,46 @@ export class ChartBase<T = any> implements IChart {
             });
         }
 
+        // 이전에 있던 순서
+        // if (!this.zoomGroup) {
+        //     this.zoomGroup = this.svg.append('g')
+        //         .attr('class', ChartBase.ZOOM_SVG)
+        //     this.zoomGroup.append('rect')
+        //         .attr('class', ChartBase.ZOOM_SVG + '-background')
+        //         .style('fill', 'none')
+        //         .style('pointer-events', 'all');
+        // }
+        // this.zoomGroup
+        //     .attr('transform', `translate(${x}, ${y})`);
+
+        // this.zoomGroup.select('.' + ChartBase.ZOOM_SVG + '-background')
+        //     .attr('width', this.width)
+        //     .attr('height', this.height);
+
+        if (!this.optionGroup) {
+            this.optionGroup = this.svg.append('g')
+                .attr('class', 'option-group')
+        }
+        this.optionGroup
+            .attr('transform', `translate(${x}, ${y})`)
+            .attr('clip-path', `url(#${this.maskId})`);
+
+        if (!this.seriesGroup) {
+            this.seriesGroup = this.svg.append('g')
+                .attr('class', ChartBase.SERIES_SVG)
+        }
+        this.seriesGroup
+            .attr('transform', `translate(${x}, ${y})`)
+            .attr('clip-path', `url(#${this.maskId})`);
+
+        if (!this.selectionGroup) {
+            this.selectionGroup = this.svg.append('g')
+                .attr('class', ChartBase.SELECTION_SVG)
+        }
+        this.selectionGroup
+            .attr('transform', `translate(${x}, ${y})`);
+
+        // zoom을 canvas와 webgl과 통일하기위한 순서.
         if (!this.zoomGroup) {
             this.zoomGroup = this.svg.append('g')
                 .attr('class', ChartBase.ZOOM_SVG)
@@ -961,22 +1007,6 @@ export class ChartBase<T = any> implements IChart {
         this.zoomGroup.select('.' + ChartBase.ZOOM_SVG + '-background')
             .attr('width', this.width)
             .attr('height', this.height);
-
-        if (!this.optionGroup) {
-            this.optionGroup = this.svg.append('g')
-                .attr('class', 'option-group')
-        }
-        this.optionGroup
-            .attr('transform', `translate(${x}, ${y})`)
-            .attr('clip-path', `url(#${this.maskId})`);
-
-        if (!this.seriesGroup) {
-            this.seriesGroup = this.svg.append('g')
-                .attr('class', 'series-group')
-        }
-        this.seriesGroup
-            .attr('transform', `translate(${x}, ${y})`)
-            .attr('clip-path', `url(#${this.maskId})`);
 
         // axis group setup
         if (!this.axisGroups.bottom) {
@@ -1025,12 +1055,27 @@ export class ChartBase<T = any> implements IChart {
         let isMouseLeave = false;
 
         this.subscription.add(
+            // TODO: 여기서 debounce를 걸지 pointerClear를 if 구문 안에 넣을지 고민해야함.
             this.mouseEvent$.subscribe((event: ChartMouseEvent) => {
                 if (event.type === 'mousemove') {
                     isMouseLeave = false;
                     this.pointerClear();
-                    if (!isDragStart) {
-                        this.move$.next(event.position);
+                    // if (!isDragStart) {
+                    //     this.move$.next(event.position);
+                    // }
+                    if (this.config.tooltip && (!isDragStart && !isMouseLeave)) {
+                        let max = this.seriesList.length;
+                        while(max--) {
+                            const positionData = this.seriesList[max].getSeriesDataByPosition(event.position);
+                            // TODO: 시리즈 루프 돌면서 해당 포지션에 데이터가 있는지 찾되
+                            // 툴팁을 보여줄 때면 멀티인지 싱글인지 체크 해서 break 여부를 판단하고 해당 시리즈의 메서드 실행.
+                            // multi tooltip이면 break 걸지 않는다.
+                            if (positionData.length) {
+                                this.seriesList[max].showPointAndTooltip(event.position, positionData);
+                                // TODO: tooltip show event 발생.
+                                break;
+                            }
+                        }   
                     }
                 } else if (event.type === 'mouseleave') {
                     isMouseLeave = true;
@@ -1040,6 +1085,7 @@ export class ChartBase<T = any> implements IChart {
                     let max = this.seriesList.length;
                     while(max--) {
                         const positionData = this.seriesList[max].getSeriesDataByPosition(event.position);
+                        console.log('positionData : ', positionData);
                         if (positionData.length) {
                             this.seriesList[max].onSelectItem(positionData, event);
                             // TODO: selectitem event dispatch
@@ -1079,7 +1125,8 @@ export class ChartBase<T = any> implements IChart {
         );
 
         this.subscription.add(
-            this.move$.pipe(debounceTime(200)).subscribe((value: any) => {
+            this.move$.subscribe((value: any) => {
+                console.log('move debounce');
                 if (this.config.tooltip && (!isDragStart && !isMouseLeave)) {
                     let max = this.seriesList.length;
                     while(max--) {
@@ -1885,6 +1932,8 @@ export class ChartBase<T = any> implements IChart {
             const context = (selectionCanvas.node() as any).getContext('2d');
             context.clearRect(0, 0, this.width, this.height);
         }
+
+        this.selectionGroup.selectAll('*').remove();
         this.hideTooltip();
     }
 

@@ -173,7 +173,9 @@ export class MiChart {
         if (zoom) {
             functions.push(new BasicSvgMouseZoomHandler(zoom));
         } else {
-            // functions.push(new BasicSvgMouseHandler({}));
+            functions.push(new BasicSvgMouseHandler({
+                isMoveEvent: true
+            }));
         }
         return functions;
     }
