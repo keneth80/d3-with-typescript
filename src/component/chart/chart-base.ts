@@ -1085,7 +1085,6 @@ export class ChartBase<T = any> implements IChart {
                     let max = this.seriesList.length;
                     while(max--) {
                         const positionData = this.seriesList[max].getSeriesDataByPosition(event.position);
-                        console.log('positionData : ', positionData);
                         if (positionData.length) {
                             this.seriesList[max].onSelectItem(positionData, event);
                             // TODO: selectitem event dispatch
@@ -1124,25 +1123,25 @@ export class ChartBase<T = any> implements IChart {
             })
         );
 
-        this.subscription.add(
-            this.move$.subscribe((value: any) => {
-                console.log('move debounce');
-                if (this.config.tooltip && (!isDragStart && !isMouseLeave)) {
-                    let max = this.seriesList.length;
-                    while(max--) {
-                        const positionData = this.seriesList[max].getSeriesDataByPosition(value);
-                        // TODO: 시리즈 루프 돌면서 해당 포지션에 데이터가 있는지 찾되
-                        // 툴팁을 보여줄 때면 멀티인지 싱글인지 체크 해서 break 여부를 판단하고 해당 시리즈의 메서드 실행.
-                        // multi tooltip이면 break 걸지 않는다.
-                        if (positionData.length) {
-                            this.seriesList[max].showPointAndTooltip(value, positionData);
-                            // TODO: tooltip show event 발생.
-                            break;
-                        }
-                    }   
-                }
-            })
-        );
+        // this.subscription.add(
+        //     this.move$.subscribe((value: any) => {
+        //         console.log('move debounce');
+        //         if (this.config.tooltip && (!isDragStart && !isMouseLeave)) {
+        //             let max = this.seriesList.length;
+        //             while(max--) {
+        //                 const positionData = this.seriesList[max].getSeriesDataByPosition(value);
+        //                 // TODO: 시리즈 루프 돌면서 해당 포지션에 데이터가 있는지 찾되
+        //                 // 툴팁을 보여줄 때면 멀티인지 싱글인지 체크 해서 break 여부를 판단하고 해당 시리즈의 메서드 실행.
+        //                 // multi tooltip이면 break 걸지 않는다.
+        //                 if (positionData.length) {
+        //                     this.seriesList[max].showPointAndTooltip(value, positionData);
+        //                     // TODO: tooltip show event 발생.
+        //                     break;
+        //                 }
+        //             }   
+        //         }
+        //     })
+        // );
 
         this.subscription.add(
             this.zoomEvent$.subscribe((event: ChartZoomEvent) => {

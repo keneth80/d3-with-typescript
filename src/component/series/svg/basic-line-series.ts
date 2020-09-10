@@ -478,7 +478,6 @@ export class BasicLineSeries extends SeriesBase {
         position: Array<number>, 
         style:{radius: number, strokeColor: string, strokeWidth: number}
     ) {
-        console.log('drawTooltipPoint : ', position, style);
         this.selectionGroup.append('circle')
             .style('stroke-width', this.radius * 1.7)
             .style('stroke', this.lineColor)
@@ -486,7 +485,5 @@ export class BasicLineSeries extends SeriesBase {
             .attr('cx', (data: any, i) => { return position[0]; })
             .attr('cy', (data: any) => { return position[1]; })
             .attr('r', this.radius);
-        // TODO: pointer 그리기
-        // select(nodeList[i]).attr('r', this.radius * 1.7);
     }
 }

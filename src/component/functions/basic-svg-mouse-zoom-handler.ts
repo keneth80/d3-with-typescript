@@ -161,7 +161,6 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
 
         this.pointerGroup
         .on('mouseleave', () => {
-            console.log('mouseleave');
             const mouseEvent = mouse(this.pointerGroup.node() as any);
 
             this.chartBase.mouseEventSubject.next({
@@ -171,7 +170,6 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
             });
         })
         .on('mousedown', () => {
-            console.log('mousedown');
             const mouseEvent = mouse(this.pointerGroup.node() as any);
 
             this.chartBase.mouseEventSubject.next({
@@ -181,7 +179,6 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
             });
         })
         .on('mouseup', () => {
-            console.log('mouseup');
             const mouseEvent = mouse(this.pointerGroup.node() as any);
 
             this.chartBase.mouseEventSubject.next({
