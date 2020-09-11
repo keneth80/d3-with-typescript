@@ -195,55 +195,58 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         context.strokeStyle = this.lineColor;
         context.clearRect(0, 0, geometry.width, geometry.height);
 
-        const lineData: Array<any> = (!this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item)))
-        .filter((d: T) => d[this.xField] >= (xmin - xmin * 0.02) && d[this.xField] <= (xmax + xmax * 0.02) && d[this.yField] >= ymin && d[this.yField] <= ymax);
-
         let generateData: Array<any>;
-        if (option.displayType === DisplayType.ZOOMOUT && this.restoreCanvas) {
-            generateData = lineData
-                .map((d: BasicCanvasTraceModel, i: number) => {
-                    const xposition = x(d[this.xField]) + padding;
-                    const yposition = y(d[this.yField]);
-                    
-                    return [xposition, yposition, d];
-                });
-            context.drawImage(this.restoreCanvas.node(), 0, 0);
-        } else {
-            generateData = lineData
-                .map((d: BasicCanvasTraceModel, i: number) => {
-                    const xposition = x(d[this.xField]) + padding;
-                    const yposition = y(d[this.yField]);
-                    
-                    // POINT: data 만들면서 포인트 찍는다.
-                    // if (this.config.dot) {
-                    const rectSize = this.config.dot.radius / 2;
-                    context.fillRect(xposition - rectSize, yposition - rectSize, this.config.dot.radius, this.config.dot.radius);
-                    // }
+        delayExcute(100, () => {
+            const lineData: Array<any> = (!this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item)))
+            .filter((d: T) => d[this.xField] >= (xmin - xmin * 0.02) && d[this.xField] <= (xmax + xmax * 0.02) && d[this.yField] >= ymin && d[this.yField] <= ymax);
 
-                    return [xposition, yposition, d];
-                });
-            // 사이즈가 변경이 되면서 zoom out 경우에는 초기 사이즈를 업데이트 해준다.
-            this.line = line()
-                .x((data: any) => {
-                    return data[0]; 
-                }) // set the x values for the line generator
-                .y((data: any) => {
-                    return data[1]; 
-                })
-                .context(context); // set the y values for the line generator
+            
+            if (option.displayType === DisplayType.ZOOMOUT && this.restoreCanvas) {
+                generateData = lineData
+                    .map((d: BasicCanvasTraceModel, i: number) => {
+                        const xposition = x(d[this.xField]) + padding;
+                        const yposition = y(d[this.yField]);
+                        
+                        return [xposition, yposition, d];
+                    });
+                context.drawImage(this.restoreCanvas.node(), 0, 0);
+            } else {
+                generateData = lineData
+                    .map((d: BasicCanvasTraceModel, i: number) => {
+                        const xposition = x(d[this.xField]) + padding;
+                        const yposition = y(d[this.yField]);
+                        
+                        // POINT: data 만들면서 포인트 찍는다.
+                        // if (this.config.dot) {
+                        const rectSize = this.config.dot.radius / 2;
+                        context.fillRect(xposition - rectSize, yposition - rectSize, this.config.dot.radius, this.config.dot.radius);
+                        // }
 
-            if (this.config.isCurve === true) {
-                this.line.curve(curveMonotoneX); // apply smoothing to the line
+                        return [xposition, yposition, d];
+                    });
+                // 사이즈가 변경이 되면서 zoom out 경우에는 초기 사이즈를 업데이트 해준다.
+                this.line = line()
+                    .x((data: any) => {
+                        return data[0]; 
+                    }) // set the x values for the line generator
+                    .y((data: any) => {
+                        return data[1]; 
+                    })
+                    .context(context); // set the y values for the line generator
+
+                if (this.config.isCurve === true) {
+                    this.line.curve(curveMonotoneX); // apply smoothing to the line
+                }
+
+                this.line(generateData);
+                
+                context.stroke();
             }
 
-            this.line(generateData);
-            
-            context.stroke();
-        }
-
-        if (this.originQuadTree) {
-            this.originQuadTree = undefined;
-        }
+            if (this.originQuadTree) {
+                this.originQuadTree = undefined;
+            }
+        });
 
         delayExcute(300, () => {
             if ((option.displayType === DisplayType.NORMAL || option.displayType === DisplayType.ZOOMOUT && !this.restoreCanvas)) 
