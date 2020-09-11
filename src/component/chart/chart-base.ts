@@ -1055,7 +1055,6 @@ export class ChartBase<T = any> implements IChart {
         let isMouseLeave = false;
 
         this.subscription.add(
-            // TODO: 여기서 debounce를 걸지 pointerClear를 if 구문 안에 넣을지 고민해야함.
             this.mouseEvent$.subscribe((event: ChartMouseEvent) => {
                 if (event.type === 'mousemove') {
                     isMouseLeave = false;

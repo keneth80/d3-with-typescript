@@ -8,7 +8,7 @@ import { FunctionsBase } from '../chart/functions-base';
 import { ChartBase } from '../chart/chart-base';
 import { Direction, ScaleType, Placement } from '../chart/chart-configuration';
 import { delayExcute } from '../chart/util/d3-svg-util';
-import { fromEvent } from 'rxjs';
+import { fromEvent, Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 
 export interface BasicCanvasMouseZoomHandlerConfiguration {
@@ -45,6 +45,8 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
 
     private isMoveEvent = true;
 
+    private move$: Subject<[number, number]> = new Subject();
+
     constructor(configuration: BasicCanvasMouseZoomHandlerConfiguration) {
         super();
         if (configuration) {
@@ -64,6 +66,7 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
                 this.isMoveEvent = configuration.isMove;
             }
         }
+        this.addEvent();
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
@@ -137,29 +140,10 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
         };
 
         if (this.isMoveEvent) {
-            // this.pointerCanvas.on('mousemove', () => {
-            //     const mouseEvent = mouse(this.pointerCanvas.node() as any);
-            //     this.chartBase.mouseEventSubject.next({
-            //         type: 'mousemove',
-            //         position: mouseEvent,
-            //         target: this.pointerCanvas
-            //     });
-            // });
-
-            this.subscription.add(
-                fromEvent(this.pointerCanvas.node() as any, 'mousemove')
-                    .pipe(debounceTime(100))
-                    .subscribe((e: MouseEvent) => {
-                        const x = e.offsetX - this.chartBase.chartMargin.left - 1;
-                        const y = e.offsetY - this.chartBase.chartMargin.top - 1;
-                        const mouseEvent: [number, number] = [x, y];
-                        this.chartBase.mouseEventSubject.next({
-                            type: 'mousemove',
-                            position: mouseEvent,
-                            target: this.pointerCanvas
-                        });
-                    })
-            );
+            this.pointerCanvas.on('mousemove', () => {
+                const mouseEvent = mouse(this.pointerCanvas.node() as any);
+                this.move$.next(mouseEvent);
+            });
         }
 
         this.pointerCanvas.on('click', () => {
@@ -361,6 +345,18 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
         this.subscription.unsubscribe();
         this.zoomCanvas.remove();
         this.pointerCanvas.remove();
+    }
+
+    private addEvent() {
+        this.subscription.add(
+            this.move$.pipe(debounceTime(200)).subscribe((value: [number, number]) => {
+                this.chartBase.mouseEventSubject.next({
+                    type: 'mousemove',
+                    position: value,
+                    target: this.pointerCanvas
+                })
+            })
+        );
     }
 
     private drawZoomBox(
