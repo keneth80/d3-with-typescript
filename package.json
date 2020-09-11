@@ -44,6 +44,7 @@
         "webpack-merge": "~4.2"
     },
     "dependencies": {
+        "core-js": "^3.6.5",
         "crossfilter2": "^1.5.2",
         "d3": "^5.9.2",
         "d3-selection-multi": "^1.0.1",
