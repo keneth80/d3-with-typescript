@@ -194,6 +194,10 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         // context.lineWidth = 0.5;
         context.strokeStyle = this.lineColor;
         context.clearRect(0, 0, geometry.width, geometry.height);
+        context.beginPath();
+
+        // ctx.fillStyle = "rgba(0, 0, 0, 0)";
+        // ctx.fillRect(left, top, width, height);
 
         let generateData: Array<any>;
         delayExcute(100, () => {
