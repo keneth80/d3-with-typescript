@@ -358,7 +358,7 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
             .attr('width', size.width)
             .attr('mask', 'url(#zoommask)')
             // .style('fill', '#ccc')
-            .attr('fill-opacity', 0.4)
+            .attr('fill-opacity', 0.3)
 
         /**
          * <rect x="0" y="0" width="500" height="300" mask="url(#mask)" fill-opacity="0.7"/>

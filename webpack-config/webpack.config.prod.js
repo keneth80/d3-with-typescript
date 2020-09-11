@@ -1,7 +1,7 @@
 'use strict';
 
 const webpackMerge            = require('webpack-merge');
-const UglifyJsPlugin          = require('uglifyjs-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const cssnano                 = require('cssnano');
 
@@ -31,9 +31,20 @@ module.exports = webpackMerge(commonConfig, {
         },
         runtimeChunk: 'single',
         minimizer: [
-            new UglifyJsPlugin({
+            new TerserPlugin({
                 cache: true,
-                parallel: true
+                parallel: true,
+                terserOptions: {
+                    warnings: false,
+                    compress: {
+                        warnings: false,
+                        unused: true,
+                    },
+                    ecma: 6,
+                    mangle: true,
+                    unused: true,
+                },
+                sourceMap: true,
             }),
 
             new OptimizeCSSAssetsPlugin({
