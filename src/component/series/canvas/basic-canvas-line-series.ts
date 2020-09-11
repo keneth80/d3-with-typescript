@@ -119,7 +119,7 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
             .style('z-index', 1)
             .style('position', 'absolute');
 
-        this.parentElement = select((this.svg.node() as HTMLElement).parentElement);
+        this.parentElement = select((this.svg.node() as HTMLElement).parentNode as any);
 
         if (!this.canvas) {            
             this.canvas = this.parentElement

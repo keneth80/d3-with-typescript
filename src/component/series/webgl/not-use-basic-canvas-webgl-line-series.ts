@@ -137,7 +137,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
 
         this.setTooltipCanvas(this.svg);
 
-        this.parentElement = select((this.svg.node() as HTMLElement).parentElement);
+        this.parentElement = select((this.svg.node() as HTMLElement).parentNode as any);
 
         if (
             !this.parentElement
@@ -802,7 +802,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         selectedItem: Array<[number, number, any]>,
         style: { radius: number; strokeColor: string; strokeWidth: number }
     ) {
-        const selectionCanvas = select((this.svg.node() as HTMLElement).parentElement).select('.' + ChartBase.SELECTION_CANVAS);
+        const selectionCanvas = this.parentElement.select('.' + ChartBase.SELECTION_CANVAS);
         const context = (selectionCanvas.node() as any).getContext('2d');
         context.clearRect(0, 0, geometry.width, geometry.height);
         context.fillStyle = style.strokeColor;

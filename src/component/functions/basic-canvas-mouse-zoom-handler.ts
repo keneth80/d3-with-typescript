@@ -74,24 +74,25 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
                   index: number) {
         this.svg = svg;
         this.mainGroup = mainGroup;
-        if (!select((this.svg.node() as HTMLElement).parentElement).select('.zoom-canvas').node()) {
-            this.zoomCanvas = select((this.svg.node() as HTMLElement).parentElement)
+        const parentElement = select((this.svg.node() as HTMLElement).parentNode as any);
+        if (!parentElement.select('.zoom-canvas').node()) {
+            this.zoomCanvas = parentElement
                 .append('canvas')
                 .attr('class', 'zoom-canvas')
                 .style('z-index', index + 10)
                 .style('position', 'absolute');
         } else {
-            this.zoomCanvas = select((this.svg.node() as HTMLElement).parentElement).select('.zoom-canvas');
+            this.zoomCanvas = parentElement.select('.zoom-canvas');
         }
 
-        if (!select((this.svg.node() as HTMLElement).parentElement).select('.' + ChartBase.POINTER_CANVAS).node()) {
-            this.pointerCanvas = select((this.svg.node() as HTMLElement).parentElement)
+        if (!parentElement.select('.' + ChartBase.POINTER_CANVAS).node()) {
+            this.pointerCanvas = parentElement
                 .append('canvas')
                 .attr('class', ChartBase.POINTER_CANVAS)
                 .style('z-index', 99)
                 .style('position', 'absolute');
         } else {
-            this.pointerCanvas = select((this.svg.node() as HTMLElement).parentElement).select('.' + ChartBase.POINTER_CANVAS);
+            this.pointerCanvas = parentElement.select('.' + ChartBase.POINTER_CANVAS);
         }
     }
 

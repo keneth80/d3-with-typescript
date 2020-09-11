@@ -93,7 +93,7 @@ export class StackedVerticalBarSeries extends SeriesBase {
                     (enter) => enter.append('rect').attr('class', 'stacked-bar-item')
                         .on('mouseover', (d: any, i, nodeList: any) => {
                             const target: any = nodeList[i];
-                            const column: string = target.parentElement.getAttribute('column');
+                            const column: string = target.parentNode.getAttribute('column');
                             const fill: string = z(column) + '';
                             
                             select(nodeList[i])
@@ -107,7 +107,7 @@ export class StackedVerticalBarSeries extends SeriesBase {
                         })
                         .on('mouseout', (d: any, i, nodeList: any) => {
                             const target: any = nodeList[i];
-                            const column: string = target.parentElement.getAttribute('column');
+                            const column: string = target.parentNode.getAttribute('column');
                             const fill: string = z(column) + '';
 
                             select(nodeList[i])
@@ -120,7 +120,7 @@ export class StackedVerticalBarSeries extends SeriesBase {
                         })
                         .on('mousemove', (d: any, i, nodeList: any) => {
                             const target: any = nodeList[i];
-                            const column: string = target.parentElement.getAttribute('column');
+                            const column: string = target.parentNode.getAttribute('column');
                             const xPosition = mouse(target)[0] + 10;
                             const yPosition = mouse(target)[1] - 10;
                             const textElement: any = this.tooltipGroup.select('text')

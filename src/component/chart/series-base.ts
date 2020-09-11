@@ -98,7 +98,7 @@ export class SeriesBase implements ISeries {
     }
 
     setTooltipCanvas(svg: Selection<BaseType, any, HTMLElement, any>) {
-        const parentElement = select((svg.node() as HTMLElement).parentElement);
+        const parentElement = select((svg.node() as HTMLElement).parentNode as any);
 
         if(!parentElement.select('.tooltip-canvas').node()) {
             const targetSvg = parentElement.append('svg')
@@ -141,7 +141,7 @@ export class SeriesBase implements ISeries {
     drawProgress(
         totalCount: number, 
         currentCount: number, 
-        canvas: {width: number, height: number, target: Selection<BaseType, any, SVGAElement, any>}
+        canvas: {width: number, height: number, target: Selection<BaseType, any, BaseType, any>}
     ) {
         const progressWidth = canvas.width / 4;
         const progressHeight = 6;

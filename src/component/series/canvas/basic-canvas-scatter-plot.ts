@@ -47,6 +47,8 @@ export interface BasicCanvasScatterPlotConfiguration extends SeriesConfiguration
 export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
     protected canvas: Selection<BaseType, any, HTMLElement, any>;
 
+    private parentElement: Selection<BaseType, any, HTMLElement, any>;
+
     // private indexing: any = {};
 
     private xField: string = 'x';
@@ -100,12 +102,13 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
-        select((this.svg.node() as HTMLElement).parentElement)
+        this.parentElement = select((this.svg.node() as HTMLElement).parentNode as any);
+        this.parentElement
             .select('svg')
             .style('z-index', 1)
             .style('position', 'absolute');
         if (!this.canvas) {            
-            this.canvas = select((this.svg.node() as HTMLElement).parentElement)
+            this.canvas = this.parentElement
                 .append('canvas')
                 .attr('class', 'drawing-canvas')
                 .style('z-index', 2)
@@ -193,7 +196,7 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
             if (!this.isZoom && totalCount >= 100000) {
                 const svgWidth = parseInt(this.svg.style('width'));
                 const svgHeight = parseInt(this.svg.style('height'));
-                const progressSvg = select((this.svg.node() as HTMLElement).parentElement)
+                const progressSvg = this.parentElement
                     .append('svg')
                     .style('z-index', 4)
                     .style('position', 'absolute')

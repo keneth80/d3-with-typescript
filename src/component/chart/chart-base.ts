@@ -380,7 +380,7 @@ export class ChartBase<T = any> implements IChart {
         }
 
         if (configuration.style) {
-            select((this.svg.node() as HTMLElement).parentElement)
+            select((this.svg.node() as HTMLElement).parentNode as any)
                 .style('background-color', configuration.style.backgroundColor || '#fff')
         }
 
@@ -1925,7 +1925,7 @@ export class ChartBase<T = any> implements IChart {
     }
 
     private pointerClear() {
-        const selectionCanvas = select((this.svg.node() as HTMLElement).parentElement).select('.' + ChartBase.SELECTION_CANVAS);
+        const selectionCanvas = select((this.svg.node() as HTMLElement).parentNode as any).select('.' + ChartBase.SELECTION_CANVAS);
         if (selectionCanvas && selectionCanvas.node()) {
             const context = (selectionCanvas.node() as any).getContext('2d');
             context.clearRect(0, 0, this.width, this.height);
