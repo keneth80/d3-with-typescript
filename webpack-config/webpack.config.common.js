@@ -24,10 +24,15 @@ module.exports = {
             },
             {
                 test: /\.js$/,
-                exclude: /node_modules/,
+                // exclude: /node_modules/,
+                exclude : [
+                    /\bcore-js\b/,
+                    /\bwebpack\/buildin\b/
+                ],
                 use: {
                     loader: 'babel-loader',
                     options: {
+                        sourceType: 'unambiguous',
                         presets: ['@babel/preset-env']
                     }
                 }
