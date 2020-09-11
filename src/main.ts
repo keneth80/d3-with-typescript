@@ -1,4 +1,5 @@
 import './style.css';
+import '@babel/polyfill';
 
 import { select } from 'd3-selection';
 import { min, max, quantile, mean, range } from 'd3-array';
