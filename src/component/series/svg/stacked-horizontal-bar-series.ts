@@ -8,13 +8,13 @@ import { SeriesBase } from '../../chart/series-base';
 import { colorDarker } from '../../chart/util/d3-svg-util';
 import { SeriesConfiguration } from '../../chart/series.interface';
 
-export interface StackedVerticalBarSeriesConfiguration extends SeriesConfiguration {
+export interface StackedHorizontalBarSeriesConfiguration extends SeriesConfiguration {
     xField: string;
     yField: string;
     columns: Array<string>;
 }
 
-export class StackedVerticalBarSeries extends SeriesBase {
+export class StackedHorizontalBarSeries extends SeriesBase {
     private xField: string;
 
     private yField: string;
@@ -29,7 +29,7 @@ export class StackedVerticalBarSeries extends SeriesBase {
 
     private numberFmt: any;
 
-    constructor(configuration: StackedVerticalBarSeriesConfiguration) {
+    constructor(configuration: StackedHorizontalBarSeriesConfiguration) {
         super(configuration);
         if (configuration) {
             if (configuration.xField) {
@@ -77,20 +77,20 @@ export class StackedVerticalBarSeries extends SeriesBase {
         
         z.domain(keys);
 
-        this.mainGroup.selectAll('.stacked-bar-group')
+        this.mainGroup.selectAll('.stacked-horizontal-group')
             .data(stack().keys(keys)(chartData))
             .join(
                 (enter) => enter.append('g')
-                            .attr('class', 'stacked-bar-group'),
+                            .attr('class', 'stacked-horizontal-group'),
                 (update) => update,
                 (exit) => exit.remove()
             )
             .attr('fill', (d: any) => { return z(d.key) + ''; })
             .attr('column', (d: any) => { return d.key; }) // point
-            .selectAll('.stacked-bar-item')
+            .selectAll('.stacked-horizontal-item')
                 .data((d: any) => { return d; })
                 .join(
-                    (enter) => enter.append('rect').attr('class', 'stacked-bar-item')
+                    (enter) => enter.append('rect').attr('class', 'stacked-horizontal-item')
                         .on('mouseover', (d: any, i, nodeList: any) => {
                             const target: any = nodeList[i];
                             const column: string = target.parentNode.getAttribute('column');

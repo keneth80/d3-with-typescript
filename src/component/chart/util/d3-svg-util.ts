@@ -2,7 +2,7 @@ import { color } from 'd3-color';
 import { select, event, Selection, BaseType } from 'd3-selection';
 import { line } from 'd3-shape';
 import { Placement } from '../chart-configuration';
-import { axisTop, axisLeft, axisRight, axisBottom } from 'd3';
+import { axisTop, axisLeft, axisRight, axisBottom } from 'd3-axis';
 import { LegendItem } from '../chart.interface';
 import { Observable, Observer } from 'rxjs';
 import { delay } from 'rxjs/operators';

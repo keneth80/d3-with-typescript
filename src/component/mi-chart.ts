@@ -17,8 +17,11 @@ import { BasicStepLine } from './options/basic-svg-step-line';
 import { BasicStepArea } from './options/basic-svg-step-area';
 import { BasicLineSeries, BasicLineSeriesConfiguration } from './series';
 import { BasicSvgMouseZoomHandler } from './functions/basic-svg-mouse-zoom-handler';
-import { GroupedVerticalBarSeriesConfiguration, GroupedVerticalBarSeries } from './series/svg/grouped-vertical-bar-series';
 import { BasicSvgMouseHandler } from './functions/basic-svg-mouse-handler';
+import { GroupedVerticalBarSeriesConfiguration, GroupedVerticalBarSeries } from './series/svg/grouped-vertical-bar-series';
+import { GroupedHorizontalBarSeriesConfiguration, GroupedHorizontalBarSeries } from './series/svg/grouped-horizontal-bar-series';
+import { StackedHorizontalBarSeriesConfiguration, StackedHorizontalBarSeries } from './series/svg/stacked-horizontal-bar-series';
+import { StackedVerticalBarSeriesConfiguration, StackedVerticalBarSeries } from './series/svg/stacked-vertical-bar-series';
 
 export interface OptionConfiguration {
     name: any;
@@ -134,15 +137,35 @@ export class MiChart {
     }
 
     // svg 시리즈 출력 설정정보 맵핑.
-    static SvgGroupedColumnChart(
+    static SvgGroupedBarChart(
         configuration: MiccBaseConfiguration, 
         series: GroupedVerticalBarSeriesConfiguration,
-        options: Array<OptionConfiguration> = []): BasicChart {
+        options: Array<OptionConfiguration> = [],
+        direction: String = Direction.VERTICAL): BasicChart {
 
         const chartConfiguration: ChartConfiguration = MiChart.generatorCommomConfiguration(configuration);
 
         chartConfiguration.series = [
-            new GroupedVerticalBarSeries(series)
+            direction === Direction.VERTICAL ? new GroupedVerticalBarSeries(series) : new GroupedHorizontalBarSeries(series)
+        ];
+
+        chartConfiguration.options = MiChart.generatorOptions(options);
+
+        chartConfiguration.functions = MiChart.generatorFunctions(configuration.zoom);
+        
+        return new BasicChart(chartConfiguration);
+    }
+
+    static SvgStackedBarChart(
+        configuration: MiccBaseConfiguration, 
+        series: StackedVerticalBarSeriesConfiguration,
+        options: Array<OptionConfiguration> = [],
+        direction: String = Direction.VERTICAL): BasicChart {
+
+        const chartConfiguration: ChartConfiguration = MiChart.generatorCommomConfiguration(configuration);
+
+        chartConfiguration.series = [
+            direction === Direction.VERTICAL ? new StackedVerticalBarSeries(series) : new StackedHorizontalBarSeries(series)
         ];
 
         chartConfiguration.options = MiChart.generatorOptions(options);

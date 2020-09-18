@@ -320,44 +320,24 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         }
     }
 
-    onSelectItem(selectedItem: Array<any>, event: ChartMouseEvent) {
-        if (selectedItem && selectedItem.length) {
-            this.itemClickSubject.next({
-                data: selectedItem[2],
-                event: {
-                    offsetX: event.position[0] + this.chartBase.chartMargin.left,
-                    offsetY: event.position[1] + this.chartBase.chartMargin.top
-                },
-                target: {
-                    width: 1,
-                    height: 1
-                }
-            });
-        }
-    }
+    // onSelectItem(selectedItem: Array<any>, event: ChartMouseEvent) {
+    //     if (selectedItem && selectedItem.length) {
+    //         this.itemClickSubject.next({
+    //             data: selectedItem[2],
+    //             event: {
+    //                 offsetX: event.position[0] + this.chartBase.chartMargin.left,
+    //                 offsetY: event.position[1] + this.chartBase.chartMargin.top
+    //             },
+    //             target: {
+    //                 width: 1,
+    //                 height: 1
+    //             }
+    //         });
+    //     }
+    // }
 
     clear() {
         this.viewClear();
-    }
-
-    private search(quadtreeObj: Quadtree<Array<any>>, x0: number, y0: number, x3: number, y3: number) {
-        const temp = [];
-        if (quadtreeObj) {
-            quadtreeObj.visit((node: any, x1: number, y1: number, x2: number, y2: number) => {
-                if (!node.length) {
-                    do {
-                        const d = node.data;
-                        const selected = d[0] >= x0 && d[0] < x3 && d[1] >= y0 && d[1] < y3;
-                        if (selected) {
-                            temp.push(d);
-                        }
-                    } while ((node = node.next));
-                }
-                return x1 >= x3 || y1 >= y3 || x2 < x0 || y2 < y0;
-            });
-        }
-
-        return temp;
     }
 
     // TODO: tooltip에 시리즈 아이디를 부여하여 시리즈 마다 tooltip을 컨트롤 할 수 있도록 한다.

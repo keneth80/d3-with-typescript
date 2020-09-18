@@ -370,26 +370,6 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         (this.canvas.node() as any).getContext('2d').drawImage(this.chartBase.webglCanvasElement.node(), 0, 0);
     }
 
-    private search(quadtreeObj: Quadtree<Array<any>>, x0: number, y0: number, x3: number, y3: number) {
-        const temp = [];
-        if (quadtreeObj) {
-            quadtreeObj.visit((node: any, x1: number, y1: number, x2: number, y2: number) => {
-                if (!node.length) {
-                    do {
-                        const d = node.data;
-                        const selected = d[0] >= x0 && d[0] < x3 && d[1] >= y0 && d[1] < y3;
-                        if (selected) {
-                            temp.push(d);
-                        }
-                    } while ((node = node.next));
-                }
-                return x1 >= x3 || y1 >= y3 || x2 < x0 || y2 < y0;
-            });
-        }
-
-        return temp;
-    }
-
     // TODO: tooltip에 시리즈 아이디를 부여하여 시리즈 마다 tooltip을 컨트롤 할 수 있도록 한다.
     // multi tooltip도 구현해야 하기 때문에 이방법이 가장 좋음. 현재 중복으로 발생해서 왔다갔다 함.
     private setChartTooltip(seriesData: T, geometry: ContainerSize, mouseEvent: Array<number>) {
