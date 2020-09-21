@@ -183,20 +183,6 @@ export class GroupedVerticalBarSeries extends SeriesBase {
             const index = selected.length - 1;
             const selectedItem = selected[index];
 
-            this.drawTooltipPoint(
-                {
-                    width: selectedItem[5],
-                    height: selectedItem[6]
-                }, 
-                [
-                    selectedItem[0],
-                    selectedItem[1]
-                ], 
-                {
-                    fill: selectedItem[7]
-                }
-            );
-
             this.setChartTooltip(
                 selectedItem,
                 {
@@ -223,6 +209,19 @@ export class GroupedVerticalBarSeries extends SeriesBase {
             return;
         }
 
+        this.drawTooltipPoint(
+            {
+                width: seriesData[5],
+                height: seriesData[6]
+            }, 
+            [
+                seriesData[0],
+                seriesData[1]
+            ], 
+            {
+                fill: seriesData[7]
+            }
+        );
 
         this.tooltipGroup = this.chartBase.showTooltip();
 
