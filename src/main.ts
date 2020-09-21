@@ -521,7 +521,7 @@ const simpleSvgStackedColumnSeriesExample = () => {
                 isRound: true,
                 tickFormat: ',d',
                 min: 0,
-                max: max(data, (d: any) => d.total)
+                max: max(simpleData, (d: any) => d.total)
             }
         ]
     }

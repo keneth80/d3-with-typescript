@@ -140,8 +140,12 @@ export class StackedVerticalBarSeries extends SeriesBase {
                     (update) => update,
                     (exit) => exit.remove()
                 )
-                .attr('x', (d: any) => { return x(d.data[this.xField]); })
-                .attr('height', (d: any) => { return y(d[0]) - y(d[1]); })
+                .attr('x', (d: any) => { 
+                    return x(d.data[this.xField]); 
+                })
+                .attr('height', (d: any) => {
+                    return y(d[0]) - y(d[1]); 
+                })
                 .attr('y', (d: any) => { return (d[1] < 0 ? y(0) : y(d[1])); })
                 // TODO: 계산 적용해 볼 것.
                 // .attr('height', (d: any) => { return Math.abs(y(d[0]) - y(d[1]) - y(0)); })
