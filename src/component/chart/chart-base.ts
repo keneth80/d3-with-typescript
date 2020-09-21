@@ -344,16 +344,16 @@ export class ChartBase<T = any> implements IChart {
         return this.colors;
     }
 
+    get selectedChartItem(): Observable<ChartItemSelectEvent> {
+        return this.chartItemClickSubject.asObservable();
+    }
+
     getColorBySeriesIndex(index: number): string {
         return this.colors[index];
     }
 
     selectedChart() {
         return this.chartClickSubject.asObservable();
-    }
-
-    selectedChartItem() {
-        return this.chartItemClickSubject.asObservable();
     }
 
     bootstrap(configuration: ChartConfiguration) {
@@ -1059,9 +1059,6 @@ export class ChartBase<T = any> implements IChart {
                 if (event.type === 'mousemove') {
                     isMouseLeave = false;
                     this.pointerClear();
-                    // if (!isDragStart) {
-                    //     this.move$.next(event.position);
-                    // }
                     if (this.config.tooltip && (!isDragStart && !isMouseLeave)) {
                         let max = this.seriesList.length;
                         while(max--) {

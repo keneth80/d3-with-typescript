@@ -10,7 +10,7 @@ import { Quadtree } from 'd3-quadtree';
 export class SeriesBase implements ISeries {
     type: string = 'series';
 
-    selector: string;
+    selector: string = 'series-base';
 
     displayName: string; // legend 출력시 출력 명칭
 
@@ -197,5 +197,25 @@ export class SeriesBase implements ISeries {
             canvas.target.selectAll('*').remove();
         }
         return canvas.target;
+    }
+
+    protected search(quadtreeObj: Quadtree<Array<any>>, x0: number, y0: number, x3: number, y3: number) {
+        const temp = [];
+        if (quadtreeObj) {
+            quadtreeObj.visit((node: any, x1: number, y1: number, x2: number, y2: number) => {
+                if (!node.length) {
+                    do {
+                        const d = node.data;
+                        const selected = d[0] >= x0 && d[0] < x3 && d[1] >= y0 && d[1] < y3;
+                        if (selected) {
+                            temp.push(d);
+                        }
+                    } while ((node = node.next));
+                }
+                return x1 >= x3 || y1 >= y3 || x2 < x0 || y2 < y0;
+            });
+        }
+
+        return temp;
     }
 }

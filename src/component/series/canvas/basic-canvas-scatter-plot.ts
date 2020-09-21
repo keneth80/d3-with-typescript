@@ -386,24 +386,6 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
         pointerContext.stroke();
     }
 
-    private search(quadtree: Quadtree<Array<any>>, x0: number, y0: number, x3: number, y3: number) {
-        const temp = [];
-        quadtree.visit((node: any, x1: number, y1: number, x2: number, y2: number) => {
-            if (!node.length) {
-                do {
-                    const d = node.data;
-                    const selected = (d[0] >= x0) && (d[0] < x3) && (d[1] >= y0) && (d[1] < y3);
-                    if (selected) {
-                        temp.push(d);
-                    }
-                } while (node = node.next);
-            }
-            return x1 >= x3 || y1 >= y3 || x2 < x0 || y2 < y0;
-        });
-
-        return temp;
-    }
-
     private drawCircle(point: [number, number], r: number, context: any) {
         if (point[0] < 0 || point[1] < 0) {
             return;

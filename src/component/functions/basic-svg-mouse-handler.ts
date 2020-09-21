@@ -19,6 +19,8 @@ export class BasicSvgMouseHandler extends FunctionsBase {
 
     private isMoveEvent = false;
 
+    private delayTime = 100;
+
     constructor(configuration: BasicSvgMouseHandlerConfiguration) {
         super();
         if (configuration) {
@@ -51,13 +53,28 @@ export class BasicSvgMouseHandler extends FunctionsBase {
 
             this.subscription.add(
                 fromEvent(this.pointerGroup.node() as any, 'mousemove')
-                    .pipe(debounceTime(100))
+                    .pipe(debounceTime(50))
                     .subscribe((e: MouseEvent) => {
                         const x = e.offsetX - this.chartBase.chartMargin.left - 1;
                         const y = e.offsetY - this.chartBase.chartMargin.top - 1;
                         const mouseEvent: [number, number] = [x, y];
                         this.chartBase.mouseEventSubject.next({
                             type: 'mousemove',
+                            position: mouseEvent,
+                            target: this.pointerGroup
+                        });
+                    })
+            );
+
+            this.subscription.add(
+                fromEvent(this.pointerGroup.node() as any, 'mouseleave')
+                    .pipe(debounceTime(150))
+                    .subscribe((e: MouseEvent) => {
+                        const x = e.offsetX - this.chartBase.chartMargin.left - 1;
+                        const y = e.offsetY - this.chartBase.chartMargin.top - 1;
+                        const mouseEvent: [number, number] = [x, y];
+                        this.chartBase.mouseEventSubject.next({
+                            type: 'mouseleave',
                             position: mouseEvent,
                             target: this.pointerGroup
                         });
@@ -78,8 +95,6 @@ export class BasicSvgMouseHandler extends FunctionsBase {
         // })
         .on('mousedown', () => {
             const mouseEvent = mouse(this.pointerGroup.node() as any);
-            console.log('mousedown : ', mouseEvent);
-
             this.chartBase.mouseEventSubject.next({
                 type: 'mousedown',
                 position: mouseEvent,
@@ -87,7 +102,6 @@ export class BasicSvgMouseHandler extends FunctionsBase {
             });
         })
         .on('mouseup', () => {
-            console.log('mouseup');
             const mouseEvent = mouse(this.pointerGroup.node() as any);
 
             this.chartBase.mouseEventSubject.next({

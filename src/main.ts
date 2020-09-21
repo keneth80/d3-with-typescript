@@ -20,7 +20,7 @@ import { BasicBoxplotSeries, BoxplotModel } from './component/series/svg/basic-b
 import { bollingerData } from './component/mock-data/bollinger-band-data';
 import { BasicBollingerBandSeries } from './component/series/svg/basic-bollinger-band-series';
 import { BasicViolinSeries } from './component/series/svg/basic-violin-series';
-import { StackedVerticalBarSeries } from './component/series/svg/stacked-vertical-bar-series';
+import { StackedVerticalBarSeries, StackedVerticalBarSeriesConfiguration } from './component/series/svg/stacked-vertical-bar-series';
 import { GroupedVerticalBarSeries, GroupedVerticalBarSeriesConfiguration } from './component/series/svg/grouped-vertical-bar-series';
 import { BasicPieSeries } from './component/series/svg/basic-pie-series';
 import { BasicDonutSeries } from './component/series/svg/basic-donut-series';
@@ -47,6 +47,9 @@ import { BasicStepLine } from './component/options/basic-svg-step-line';
 
 import { delayExcute } from './component/chart/util/d3-svg-util';
 import { MiChart, OptionConfiguration, MiccBaseConfiguration } from './component/mi-chart';
+import { GroupedHorizontalBarSeriesConfiguration } from './component/series/svg/grouped-horizontal-bar-series';
+import { StackedHorizontalBarSeriesConfiguration } from './component/series/svg/stacked-horizontal-bar-series';
+import { ChartItemSelectEvent } from './component/chart';
 
 
 class SalesModel {
@@ -158,6 +161,13 @@ const buttonMapping = () => {
         delayExcute(200, simpleSvgColumnSeriesExample);
         delayExcute(1000, hideLoader);
     });
+
+    select('#svg-stacked-column-series').on('click', () => {
+        showLoader();
+        clear();
+        delayExcute(200, simpleSvgStackedColumnSeriesExample);
+        delayExcute(1000, hideLoader);
+    });
 }
 
 const setSeriesColor = (data: any) => {
@@ -189,83 +199,91 @@ const setSeriesColor = (data: any) => {
     }
 };
 
-const simpleWebglLineSeriesExample = () => {
-    // data 유형은 다를 수 있습니다.
-    const data = [
-        {
-            x: 1,
-            y: 12,
-            z: 11,
-            data: {
-                label: 'number 1'
-            }
-        },
-        {
-            x: 2,
-            y: 3,
-            z: 1,
-            data: {
-                label: 'number 2'
-            }
-        },
-        {
-            x: 3,
-            y: 20,
-            z: 8,
-            data: {
-                label: 'number 3'
-            }
-        },
-        {
-            x: 4,
-            y: 20,
-            z: 9,
-            data: {
-                label: 'number 4'
-            }
-        },
-        {
-            x: 5,
-            y: 18,
-            z: 8,
-            data: {
-                label: 'number 5'
-            }
-        },
-        {
-            x: 6,
-            y: 8,
-            z: 9,
-            data: {
-                label: 'number 6'
-            }
-        },
-        {
-            x: 7,
-            y: 8,
-            z: 9,
-            data: {
-                label: 'number 7'
-            }
-        },
-        {
-            x: 8,
-            y: 10,
-            z: 7,
-            data: {
-                label: 'number 8'
-            }
-        },
-        {
-            x: 9,
-            y: 5,
-            z: 8,
-            data: {
-                label: 'number 9'
-            }
+const simpleData = [
+    {
+        x: 1,
+        y: 12,
+        z: 11,
+        total: 24,
+        data: {
+            label: 'number 1'
         }
-    ];
+    },
+    {
+        x: 2,
+        y: 3,
+        z: 1,
+        total: 6,
+        data: {
+            label: 'number 2'
+        }
+    },
+    {
+        x: 3,
+        y: 20,
+        z: 8,
+        total: 31,
+        data: {
+            label: 'number 3'
+        }
+    },
+    {
+        x: 4,
+        y: 20,
+        z: 9,
+        total: 34,
+        data: {
+            label: 'number 4'
+        }
+    },
+    {
+        x: 5,
+        y: 18,
+        z: 8,
+        total: 31,
+        data: {
+            label: 'number 5'
+        }
+    },
+    {
+        x: 6,
+        y: 8,
+        z: 9,
+        total: 23,
+        data: {
+            label: 'number 6'
+        }
+    },
+    {
+        x: 7,
+        y: 8,
+        z: 9,
+        total: 24,
+        data: {
+            label: 'number 7'
+        }
+    },
+    {
+        x: 8,
+        y: 10,
+        z: 7,
+        total: 25,
+        data: {
+            label: 'number 8'
+        }
+    },
+    {
+        x: 9,
+        y: 5,
+        z: 8,
+        total: 22,
+        data: {
+            label: 'number 9'
+        }
+    }
+];
 
+const simpleWebglLineSeriesExample = () => {
     const yFieldSeries: BasicCanvasWebglLineSeriesOneConfiguration = {
         selector: 'x-series',
         xField: 'x',
@@ -310,7 +328,7 @@ const simpleWebglLineSeriesExample = () => {
 
     const commonConfiguration: MiccBaseConfiguration = {
         selector: '#chart',
-        data,
+        data: simpleData,
         title: {
             placement: Placement.TOP,
             content: 'WebGL Line Series'
@@ -353,82 +371,6 @@ const simpleWebglLineSeriesExample = () => {
 }
 
 const simpleSvgLineSeriesExample = () => {
-    // data 유형은 다를 수 있습니다.
-    const data = [
-        {
-            x: 1,
-            y: 12,
-            z: 11,
-            data: {
-                label: 'number 1'
-            }
-        },
-        {
-            x: 2,
-            y: 3,
-            z: 1,
-            data: {
-                label: 'number 2'
-            }
-        },
-        {
-            x: 3,
-            y: 20,
-            z: 8,
-            data: {
-                label: 'number 3'
-            }
-        },
-        {
-            x: 4,
-            y: 20,
-            z: 9,
-            data: {
-                label: 'number 4'
-            }
-        },
-        {
-            x: 5,
-            y: 18,
-            z: 8,
-            data: {
-                label: 'number 5'
-            }
-        },
-        {
-            x: 6,
-            y: 8,
-            z: 9,
-            data: {
-                label: 'number 6'
-            }
-        },
-        {
-            x: 7,
-            y: 8,
-            z: 9,
-            data: {
-                label: 'number 7'
-            }
-        },
-        {
-            x: 8,
-            y: 10,
-            z: 7,
-            data: {
-                label: 'number 8'
-            }
-        },
-        {
-            x: 9,
-            y: 5,
-            z: 8,
-            data: {
-                label: 'number 9'
-            }
-        }
-    ];
-
     const yFieldSeries: BasicLineSeriesConfiguration = {
         selector: 'y-series',
         xField: 'x',
@@ -476,7 +418,7 @@ const simpleSvgLineSeriesExample = () => {
                 return `x: ${d.x} \ny: ${d.y}\nz: ${d.z}`
             }
         },
-        data,
+        data: simpleData,
         title: {
             placement: Placement.TOP,
             content: 'SVG Line Series'
@@ -510,104 +452,26 @@ const simpleSvgLineSeriesExample = () => {
 }
 
 const simpleSvgColumnSeriesExample = () => {
-    // data 유형은 다를 수 있습니다.
-    const data = [
-        {
-            x: 1,
-            y: 12,
-            z: 11,
-            total: 24,
-            data: {
-                label: 'number 1'
-            }
-        },
-        {
-            x: 2,
-            y: 3,
-            z: 1,
-            total: 6,
-            data: {
-                label: 'number 2'
-            }
-        },
-        {
-            x: 3,
-            y: 20,
-            z: 8,
-            total: 31,
-            data: {
-                label: 'number 3'
-            }
-        },
-        {
-            x: 4,
-            y: 20,
-            z: 9,
-            total: 34,
-            data: {
-                label: 'number 4'
-            }
-        },
-        {
-            x: 5,
-            y: 18,
-            z: 8,
-            total: 31,
-            data: {
-                label: 'number 5'
-            }
-        },
-        {
-            x: 6,
-            y: 8,
-            z: 9,
-            total: 23,
-            data: {
-                label: 'number 6'
-            }
-        },
-        {
-            x: 7,
-            y: 8,
-            z: 9,
-            total: 24,
-            data: {
-                label: 'number 7'
-            }
-        },
-        {
-            x: 8,
-            y: 10,
-            z: 7,
-            total: 25,
-            data: {
-                label: 'number 8'
-            }
-        },
-        {
-            x: 9,
-            y: 5,
-            z: 8,
-            total: 22,
-            data: {
-                label: 'number 9'
-            }
-        }
-    ];
-
     const columns = ['x', 'y', 'z'];
 
-    const groupedVerticalBarSeriesConfiguration: GroupedVerticalBarSeriesConfiguration = {
+    const groupedVerticalColumnSeriesConfiguration: GroupedVerticalBarSeriesConfiguration = {
         xField: 'x',
         columns
     };
 
     const commonConfiguration: MiccBaseConfiguration = {
         selector: '#chart',
-        data,
+        data: simpleData,
         title: {
             placement: Placement.TOP,
             content: 'SVG Column Series'
+        },
+        tooltip: {
+            tooltipTextParser: (d: any) => {
+                const item: any = d[2];
+                const key = d[4];
+                return `${key}: ${item[key]}`
+            }
         },
         isResize: true,
         axes: [
@@ -632,86 +496,47 @@ const simpleSvgColumnSeriesExample = () => {
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
     highlightBlock((select('#json-configuration').node() as any));
 
-    chart = MiChart.SvgGroupedColumnChart(commonConfiguration, groupedVerticalBarSeriesConfiguration).draw();
+    chart = MiChart.SvgGroupedBarChart(commonConfiguration, groupedVerticalColumnSeriesConfiguration).draw();
+}
+
+const simpleSvgStackedColumnSeriesExample = () => {
+    const stackedVerticalColumnSeries: StackedVerticalBarSeriesConfiguration = {
+        xField: 'x',
+        yField: 'total',
+        columns: ['x', 'y', 'z']
+    };
+
+    const commonConfiguration = {
+        selector: '#chart',
+        data: simpleData.sort((a, b) => { return b.total - a.total; }),
+        isResize: true,
+        axes: [
+            {
+                field: 'x',
+                type: ScaleType.STRING,
+                placement: Placement.BOTTOM,
+                padding: 0.2
+            },
+            {
+                field: 'total',
+                type: ScaleType.NUMBER,
+                placement: Placement.LEFT,
+                isRound: true,
+                tickFormat: ',d',
+                min: 0,
+                max: max(data, (d: any) => d.total)
+            }
+        ]
+    }
+
+    const stackedColumnChart: BasicChart = MiChart.SvgStackedBarChart(commonConfiguration, stackedVerticalColumnSeries);
+    stackedColumnChart.draw();
+    stackedColumnChart.selectedChartItem.subscribe((item: ChartItemSelectEvent) => {
+        console.log('selected item : ', item);
+    })
 }
 
 const simpleCanvasLineSeriesExample = () => {
-    // data 유형은 다를 수 있습니다.
-    const data = [
-        {
-            x: 1,
-            y: 12,
-            z: 11,
-            data: {
-                label: 'number 1'
-            }
-        },
-        {
-            x: 2,
-            y: 3,
-            z: 1,
-            data: {
-                label: 'number 2'
-            }
-        },
-        {
-            x: 3,
-            y: 20,
-            z: 8,
-            data: {
-                label: 'number 3'
-            }
-        },
-        {
-            x: 4,
-            y: 20,
-            z: 9,
-            data: {
-                label: 'number 4'
-            }
-        },
-        {
-            x: 5,
-            y: 18,
-            z: 8,
-            data: {
-                label: 'number 5'
-            }
-        },
-        {
-            x: 6,
-            y: 8,
-            z: 9,
-            data: {
-                label: 'number 6'
-            }
-        },
-        {
-            x: 7,
-            y: 8,
-            z: 9,
-            data: {
-                label: 'number 7'
-            }
-        },
-        {
-            x: 8,
-            y: 10,
-            z: 7,
-            data: {
-                label: 'number 8'
-            }
-        },
-        {
-            x: 9,
-            y: 5,
-            z: 8,
-            data: {
-                label: 'number 9'
-            }
-        }
-    ];
-
     const yFieldSeries: BasicCanvasTraceConfiguration = {
         selector: 'y-series',
         xField: 'x',
@@ -759,7 +584,7 @@ const simpleCanvasLineSeriesExample = () => {
                 return `x: ${d.x} \ny: ${d.y}\nz: ${d.z}`
             }
         },
-        data,
+        data: simpleData,
         title: {
             placement: Placement.TOP,
             content: 'Canvas Line Series'

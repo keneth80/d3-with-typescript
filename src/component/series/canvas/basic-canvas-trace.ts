@@ -318,36 +318,16 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         }
     }
 
-    onSelectItem(selectedItem: Array<any>, event: ChartMouseEvent) {
-        this.onClickItem(
-            selectedItem,
-            {
-                width: this.geometry.width,
-                height: this.geometry.height
-            },
-            [event.position[0], event.position[1]]
-        );
-    }
-
-    private search(quadtreeObj: Quadtree<Array<any>>, x0: number, y0: number, x3: number, y3: number) {
-        const temp = [];
-        if (quadtreeObj) {
-            quadtreeObj.visit((node: any, x1: number, y1: number, x2: number, y2: number) => {
-                if (!node.length) {
-                    do {
-                        const d = node.data;
-                        const selected = d[0] >= x0 && d[0] < x3 && d[1] >= y0 && d[1] < y3;
-                        if (selected) {
-                            temp.push(d);
-                        }
-                    } while ((node = node.next));
-                }
-                return x1 >= x3 || y1 >= y3 || x2 < x0 || y2 < y0;
-            });
-        }
-
-        return temp;
-    }
+    // onSelectItem(selectedItem: Array<any>, event: ChartMouseEvent) {
+    //     this.onClickItem(
+    //         selectedItem,
+    //         {
+    //             width: this.geometry.width,
+    //             height: this.geometry.height
+    //         },
+    //         [event.position[0], event.position[1]]
+    //     );
+    // }
 
     private onClickItem(selectedItem: any, geometry: ContainerSize, mouseEvent: Array<number>) {
         if (selectedItem) {

@@ -22,6 +22,7 @@ svg {
 }
 
 .loader {
+    z-index: 999;
     border: 12px solid #f3f3f3;
     border-radius: 50%;
     border-top: 12px solid #3498db;
@@ -37,6 +38,7 @@ svg {
 }
 
 .back-drop {
+    z-index: 998;
     position: absolute;
     top: 50px;
     width: 100%;

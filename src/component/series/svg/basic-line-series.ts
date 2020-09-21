@@ -66,8 +66,6 @@ export class BasicLineSeries extends SeriesBase {
 
     private isHide: boolean = false;
 
-    private crossFilterDimension: any = undefined;
-
     private radius = 4;
 
     private lineColor: string = '';
@@ -366,41 +364,21 @@ export class BasicLineSeries extends SeriesBase {
         }
     }
 
-    onSelectItem(selectedItem: Array<any>, event: ChartMouseEvent) {
-        if (selectedItem && selectedItem.length) {
-            this.itemClickSubject.next({
-                data: selectedItem[2],
-                event: {
-                    offsetX: event.position[0] + this.chartBase.chartMargin.left,
-                    offsetY: event.position[1] + this.chartBase.chartMargin.top
-                },
-                target: {
-                    width: 1,
-                    height: 1
-                }
-            });
-        }
-    }
-
-    private search(quadtreeObj: Quadtree<Array<any>>, x0: number, y0: number, x3: number, y3: number) {
-        const temp = [];
-        if (quadtreeObj) {
-            quadtreeObj.visit((node: any, x1: number, y1: number, x2: number, y2: number) => {
-                if (!node.length) {
-                    do {
-                        const d = node.data;
-                        const selected = d[0] >= x0 && d[0] < x3 && d[1] >= y0 && d[1] < y3;
-                        if (selected) {
-                            temp.push(d);
-                        }
-                    } while ((node = node.next));
-                }
-                return x1 >= x3 || y1 >= y3 || x2 < x0 || y2 < y0;
-            });
-        }
-
-        return temp;
-    }
+    // onSelectItem(selectedItem: Array<any>, event: ChartMouseEvent) {
+    //     if (selectedItem && selectedItem.length) {
+    //         this.itemClickSubject.next({
+    //             data: selectedItem[2],
+    //             event: {
+    //                 offsetX: event.position[0] + this.chartBase.chartMargin.left,
+    //                 offsetY: event.position[1] + this.chartBase.chartMargin.top
+    //             },
+    //             target: {
+    //                 width: 1,
+    //                 height: 1
+    //             }
+    //         });
+    //     }
+    // }
 
     private setChartTooltip2(d: any, geometry: ContainerSize, radius: number) {
         this.tooltipGroup = this.chartBase.showTooltip();
