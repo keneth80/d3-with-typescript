@@ -340,6 +340,9 @@ const simpleWebglLineSeriesExample = () => {
         ],
         zoom: {
             direction: Direction.BOTH
+        },
+        displayDelay: {
+            delayTime: 500
         }
     };
 
@@ -957,6 +960,9 @@ const webGLBigDataLineSeriesSample = () => {
             xDirection: Placement.BOTTOM,
             yDirection: Placement.LEFT,
             direction: Direction.BOTH
+        },
+        displayDelay: {
+            delayTime: 500
         }
     };
 

@@ -433,6 +433,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         this.initGL(canvas);
 
         if (this.seriesIndex === 0) {
+            console.log('clear');
             // 화면 지우기
             this.viewClear();
             // this.gl.clearColor(0, 0, 0, 0); // rgba
@@ -688,7 +689,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         // Enable the attribute
         this.gl.enableVertexAttribArray(coord);
 
-        this.gl.lineWidth(1 / 1000);
+        // this.gl.lineWidth(1 / 1000);
 
         this.gl.drawArrays(glType, 0, dataSize);
 

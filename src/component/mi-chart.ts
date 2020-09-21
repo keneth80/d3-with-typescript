@@ -59,6 +59,10 @@ export interface MiccBaseConfiguration {
     zoom?: ZoomConfiguration;
 
     options?: OptionConfiguration;
+
+    displayDelay?: {
+        delayTime: number;
+    }
 }
 
 export interface CanvasTraceChartConfiguration extends MiccBaseConfiguration {
@@ -203,7 +207,8 @@ export class MiChart {
             legend: configuration.legend,
             margin: configuration.margin,
             axes: configuration.axes,
-            data: configuration.data
+            data: configuration.data,
+            displayDelay: configuration.displayDelay,
         }
         return chartConfiguration;
     }
