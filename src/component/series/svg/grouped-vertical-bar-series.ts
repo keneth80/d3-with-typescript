@@ -1,12 +1,12 @@
 import { Selection, select, BaseType, mouse, event } from 'd3-selection';
 import { scaleOrdinal, scaleBand } from 'd3-scale';
 import { format } from 'd3-format';
+import { quadtree } from 'd3-quadtree';
 
 import { Scale, ContainerSize } from '../../chart/chart.interface';
 import { SeriesBase } from '../../chart/series-base';
 import { colorDarker, delayExcute, textBreak } from '../../chart/util/d3-svg-util';
 import { SeriesConfiguration } from '../../chart/series.interface';
-import { quadtree } from 'd3';
 import { ChartBase } from '../../chart';
 
 export interface GroupedVerticalBarSeriesConfiguration extends SeriesConfiguration {
@@ -145,12 +145,12 @@ export class GroupedVerticalBarSeries extends SeriesBase {
     }
 
     select(displayName: string, isSelected: boolean) {
-        this.mainGroup.selectAll(`.${this.selector}`).style('opacity', isSelected ? null : 0.4);
+        this.mainGroup.selectAll(`.${this.selector}-group`).style('opacity', isSelected ? null : 0.4);
     }
 
     hide(displayName: string, isHide: boolean) {
         this.isHide = isHide;
-        this.mainGroup.selectAll(`.${this.selector}`).style('opacity', !isHide ? null : 0);
+        this.mainGroup.selectAll(`.${this.selector}-group`).style('opacity', !isHide ? null : 0);
         
         // TODO: 좌표를 바꿀지 뎁스를 뒤로 보낼지 나중에 고민해볼 것.
         // if (this.isHide) {
@@ -262,12 +262,12 @@ export class GroupedVerticalBarSeries extends SeriesBase {
         style:{fill: string}
     ) {
         this.selectionGroup.append('rect')
-            .style('stroke-width', 3)
-            .style('stroke', colorDarker(style.fill, 1))
+            // .style('stroke-width', 3)
+            // .style('stroke', colorDarker(style.fill, 1))
             .attr('x', position[0])
             .attr('y', position[1])
             .attr('height', geometry.height)
             .attr('width', geometry.width)
-            .attr('fill', colorDarker(style.fill, 0.5));
+            .attr('fill', colorDarker(style.fill, 2));
     }
 }

@@ -505,8 +505,15 @@ const simpleSvgStackedColumnSeriesExample = () => {
 
     const commonConfiguration = {
         selector: '#chart',
-        data: simpleData.sort((a, b) => { return b.total - a.total; }),
+        data: simpleData,
         isResize: true,
+        tooltip: {
+            tooltipTextParser: (d: any) => {
+                const item: any = d[2];
+                const key = d[4];
+                return `${key}: ${item[key]}`
+            }
+        },
         axes: [
             {
                 field: 'x',
@@ -524,7 +531,10 @@ const simpleSvgStackedColumnSeriesExample = () => {
                 max: max(simpleData, (d: any) => d.total)
             }
         ]
-    }
+    };
+
+    (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
+    highlightBlock((select('#json-configuration').node() as any));
 
     const stackedColumnChart: BasicChart = MiChart.SvgStackedBarChart(commonConfiguration, stackedVerticalColumnSeries);
     stackedColumnChart.draw();

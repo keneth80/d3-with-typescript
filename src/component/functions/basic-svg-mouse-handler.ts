@@ -40,7 +40,6 @@ export class BasicSvgMouseHandler extends FunctionsBase {
 
     drawFunctions(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
         this.setContainerPosition(geometry, this.chartBase);
-        
         if (this.isMoveEvent) {
             // this.pointerGroup.on('mousemove', () => {
             //     const mouseEvent = mouse(this.pointerGroup.node() as any);
