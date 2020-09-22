@@ -235,13 +235,18 @@ export class StackedVerticalBarSeries extends SeriesBase {
         if (selected.length && !this.chartBase.isTooltipDisplay) {
             // const index = Math.floor(selected.length / 2);
             //TODO: y좌표보다 작은 아이템을 골라야함.
-            let index = 0;
+            let index = -1;
             for (let i = 0; i < selected.length; i++) {
                 if (value[1] > selected[i][1] && value[1] < (selected[i][6] + selected[i][1])) { // y좌표보다 작아야하고, 막대 크기보다 커야함.
                     index = i;
                     break;
                 }
             }
+
+            if (index < 0) {
+                return;
+            }
+
             const selectedItem = selected[index];
 
             this.setChartTooltip(
