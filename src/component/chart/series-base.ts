@@ -100,9 +100,8 @@ export class SeriesBase implements ISeries {
     }
 
     setTooltipCanvas(svg: Selection<BaseType, any, HTMLElement, any>) {
-        // const parentElement = select((svg.node() as HTMLElement).parentNode as any);
-
         return this.svg.select('.tooltip-group');
+        // const parentElement = select((svg.node() as HTMLElement).parentNode as any);
         // if(!parentElement.select('.tooltip-canvas').node()) {
         //     const targetSvg = parentElement.append('svg')
         //         .attr('class', 'tooltip-canvas')
