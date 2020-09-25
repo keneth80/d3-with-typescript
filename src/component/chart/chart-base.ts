@@ -182,6 +182,8 @@ export class ChartBase<T = any> implements IChart {
     // ===================== Legend configuration start ===================== //
     private isLegend = false;
 
+    private legendItemList: Array<LegendItem> = [];
+
     private legendPlacement = 'right';
 
     private legendItemSize: ContainerSize = {
@@ -802,15 +804,50 @@ export class ChartBase<T = any> implements IChart {
             this.height = this.height - (this.titlePlacement === Placement.LEFT || this.titlePlacement === Placement.RIGHT ? 0 : 20);
         }
 
+        // 범례 적용 시 사이즈 계산.
         if (this.isLegend) {
-            const targetText = getMaxText(this.seriesList.map((series: ISeries) => series.displayName || series.selector));
-            const targetTextWidth = getTextWidth(targetText, this.defaultLegendStyle.font.size, this.defaultLegendStyle.font.family);
+            // 초기화.
+            this.legendItemList.length = 0;
+            this.legendTextWidthList.length = 0;
+            this.legendRowBreakCount.length = 0;
+            this.totalLegendWidth = 0;
+
             // legend row 한개의 길이
             const checkWidth = this.margin.left + this.margin.right + this.width - this.legendPadding * 4;
-            
-            this.legendTextWidthList = [];
-            this.legendRowBreakCount = [];
-            this.totalLegendWidth = 0;
+
+            let targetText = null;
+            let targetTextWidth = 0;
+            if (this.seriesList && this.seriesList.length) {
+                // stacked, group bar 의 경우 범례 설정.
+                if (this.seriesList[0].displayNames && this.seriesList[0].displayNames.length) {
+                    this.seriesList[0].displayNames.forEach((displayName: string) => {
+                        const label: string = displayName;
+                        const shape: string = Shape.RECT;
+                        this.legendItemList.push({
+                            label,
+                            shape,
+                            selected: true,
+                            isHide: false
+                        });
+                    });
+                    getMaxText(this.seriesList[0].displayNames.map((displayName: string) => displayName));
+                } else {
+                    // 일반 시리즈의 경우 범례 설정.
+                    this.seriesList.forEach((series: ISeries) => {
+                        const label: string = series.displayName ? series.displayName : series.selector;
+                        const shape: string = series.shape ? series.shape : Shape.RECT;
+                        this.legendItemList.push({
+                            label,
+                            shape,
+                            selected: true,
+                            isHide: false
+                        });
+                    });
+                    getMaxText(this.seriesList.map((series: ISeries) => series.displayName || series.selector));
+                }
+
+                targetTextWidth = getTextWidth(targetText, this.defaultLegendStyle.font.size, this.defaultLegendStyle.font.family);
+            }
 
             if (this.isAll) {
                 this.totalLegendWidth = this.allWidth - (this.isCheckBox ? 0 : 10);
@@ -821,8 +858,8 @@ export class ChartBase<T = any> implements IChart {
             let compareWidth = this.totalLegendWidth;
             let pointWidth = 0;
 
-            for (let i = 0; i < this.seriesList.length; i++) {
-                const currentText = this.seriesList[i].displayName || this.seriesList[i].selector;
+            for (let i = 0; i < this.legendItemList.length; i++) {
+                const currentText = this.legendItemList[i].label;
                 const currentTextWidth = ((this.isCheckBox ? this.checkBoxWidth : 0) + getTextWidth(currentText, this.defaultLegendStyle.font.size, this.defaultLegendStyle.font.family));
                 const currentItemWidth = currentTextWidth + this.legendItemSize.width + this.legendPadding;
                 this.legendTextWidthList.push(currentItemWidth);
@@ -1464,33 +1501,15 @@ export class ChartBase<T = any> implements IChart {
         if (!this.isLegend) {
             return;
         }
-
         const checkboxPadding = this.isCheckBox ? this.legendItemSize.width + this.legendPadding : 0;
-        let addTitleWidth = 0;
-        if (this.isTitle && this.titlePlacement === Placement.LEFT) {
-            addTitleWidth = this.titleContainerSize.width;
-        }
-        let addAllWidth = 0;
-        if (this.isAll) {
-            addAllWidth = this.allWidth;
-        }
+        const addTitleWidth = this.isTitle && this.titlePlacement === Placement.LEFT ? this.titleContainerSize.width : 0;
+        const addAllWidth = this.isAll ? this.allWidth : 0;
 
         let currentRow = 0;
         let currentX = 0;
 
-        const keys: Array<LegendItem> = this.seriesList.map((series: ISeries) => {
-            const label: string = series.displayName ? series.displayName : series.selector;
-            const shape: string = series.shape ? series.shape : Shape.RECT;
-            return {
-                label,
-                shape,
-                selected: true,
-                isHide: false
-            }
-        });
-
         if (this.isAll) {
-            keys.unshift({
+            this.legendItemList.unshift({
                 label: 'All',
                 selected: true,
                 isHide: false,
@@ -1499,7 +1518,7 @@ export class ChartBase<T = any> implements IChart {
         }
         
         const legendItemGroup = this.legendGroup.selectAll('.legend-item-group')
-            .data(keys)
+            .data(this.legendItemList)
             .join(
                 (enter) => enter.append('g').attr('class', 'legend-item-group'),
                 (update) => {
@@ -1557,7 +1576,7 @@ export class ChartBase<T = any> implements IChart {
             .on('click', this.onLegendLabelItemClick);
 
         legendLabelGroup.each((d: LegendItem, i: number, nodeList: any) => {
-            const distictKeys = this.isAll ? keys.filter((key: LegendItem) => key.label !== 'All') : keys;
+            const distictKeys = this.isAll ? this.legendItemList.filter((key: LegendItem) => key.label !== 'All') : this.legendItemList;
             if (d.shape === Shape.LINE) {
                 drawLegendColorItemByLine(select(nodeList[i]), this.legendItemSize, distictKeys, this.colors);
             } else if (d.shape === Shape.CIRCLE) {
