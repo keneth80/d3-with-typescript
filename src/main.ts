@@ -968,6 +968,12 @@ const canvasBigDataLineSeriesSample = () => {
             placement: Placement.TOP,
             content: 'Canvas BigData Line Series'
         },
+        tooltip: {
+            tooltipTextParser: (d: any) => {
+                console.log('d : ', d);
+                return 'd : ' + d;
+            }
+        },
         isResize: true,
         axes: [
             {
