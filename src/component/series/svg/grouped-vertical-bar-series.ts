@@ -12,6 +12,7 @@ import { ChartBase } from '../../chart';
 export interface GroupedVerticalBarSeriesConfiguration extends SeriesConfiguration {
     xField: string;
     columns: Array<string>;
+    displayNames?: Array<string>;
 }
 
 export class GroupedVerticalBarSeries extends SeriesBase {
@@ -44,6 +45,12 @@ export class GroupedVerticalBarSeries extends SeriesBase {
 
             if (configuration.columns) {
                 this.columns = [...configuration.columns];
+            }
+
+            if (configuration.displayNames) {
+                this.displayNames = [...configuration.displayNames];
+            } else {
+                this.displayNames = [...configuration.columns];
             }
         }
 

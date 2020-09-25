@@ -423,6 +423,9 @@ const simpleSvgLineSeriesExample = () => {
             placement: Placement.TOP,
             content: 'SVG Line Series'
         },
+        legend: {
+            placement: Placement.TOP
+        },
         isResize: true,
         axes: [
             {
@@ -456,6 +459,7 @@ const simpleSvgColumnSeriesExample = () => {
 
     const groupedVerticalColumnSeriesConfiguration: GroupedVerticalBarSeriesConfiguration = {
         xField: 'x',
+        displayNames: columns,
         columns
     };
 
@@ -465,6 +469,9 @@ const simpleSvgColumnSeriesExample = () => {
         title: {
             placement: Placement.TOP,
             content: 'SVG Column Series'
+        },
+        legend: {
+            placement: Placement.TOP
         },
         tooltip: {
             tooltipTextParser: (d: any) => {
@@ -503,13 +510,17 @@ const simpleSvgStackedColumnSeriesExample = () => {
     const stackedVerticalColumnSeries: StackedVerticalBarSeriesConfiguration = {
         xField: 'x',
         yField: 'total',
-        columns: ['x', 'y', 'z']
+        columns: ['x', 'y', 'z'],
+        displayNames: ['x', 'y', 'z']
     };
 
     const commonConfiguration = {
         selector: '#chart',
         data: simpleData,
         isResize: true,
+        legend: {
+            placement: Placement.TOP
+        },
         tooltip: {
             tooltipTextParser: (d: any) => {
                 const item: any = d[2];
@@ -539,9 +550,8 @@ const simpleSvgStackedColumnSeriesExample = () => {
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
     highlightBlock((select('#json-configuration').node() as any));
 
-    const stackedColumnChart: BasicChart = MiChart.SvgStackedBarChart(commonConfiguration, stackedVerticalColumnSeries);
-    stackedColumnChart.draw();
-    stackedColumnChart.selectedChartItem.subscribe((item: ChartItemSelectEvent) => {
+    chart = MiChart.SvgStackedBarChart(commonConfiguration, stackedVerticalColumnSeries).draw();
+    chart.selectedChartItem.subscribe((item: ChartItemSelectEvent) => {
         console.log('selected item : ', item);
     })
 }
@@ -593,6 +603,9 @@ const simpleCanvasLineSeriesExample = () => {
             tooltipTextParser: (d:any) => {
                 return `x: ${d.x} \ny: ${d.y}\nz: ${d.z}`
             }
+        },
+        legend: {
+            placement: Placement.TOP
         },
         data: simpleData,
         title: {

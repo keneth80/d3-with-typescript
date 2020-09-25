@@ -14,6 +14,8 @@ export class SeriesBase implements ISeries {
 
     displayName: string; // legend 출력시 출력 명칭
 
+    displayNames: Array<string>; // legend 출력시 출력 명칭
+
     shape: string; // legend 출력 시 색상아이템의 type
 
     protected svg: Selection<BaseType, any, HTMLElement, any>;
@@ -98,32 +100,32 @@ export class SeriesBase implements ISeries {
     }
 
     setTooltipCanvas(svg: Selection<BaseType, any, HTMLElement, any>) {
-        const parentElement = select((svg.node() as HTMLElement).parentNode as any);
+        return this.svg.select('.tooltip-group');
+        // const parentElement = select((svg.node() as HTMLElement).parentNode as any);
+        // if(!parentElement.select('.tooltip-canvas').node()) {
+        //     const targetSvg = parentElement.append('svg')
+        //         .attr('class', 'tooltip-canvas')
+        //         .style('z-index', 3)
+        //         .style('position', 'absolute');
 
-        if(!parentElement.select('.tooltip-canvas').node()) {
-            const targetSvg = parentElement.append('svg')
-                .attr('class', 'tooltip-canvas')
-                .style('z-index', 3)
-                .style('position', 'absolute');
+        //     if (!this.clipPath) {
+        //         this.maskId = guid();
+        //         this.clipPath = targetSvg.append('defs')
+        //             .append('svg:clipPath')
+        //                 .attr('id', this.maskId)
+        //                 .append('rect')
+        //                 .attr('clas', 'option-mask')
+        //                 .attr('x', 0)
+        //                 .attr('y', 0);
+        //     }
 
-            if (!this.clipPath) {
-                this.maskId = guid();
-                this.clipPath = targetSvg.append('defs')
-                    .append('svg:clipPath')
-                        .attr('id', this.maskId)
-                        .append('rect')
-                        .attr('clas', 'option-mask')
-                        .attr('x', 0)
-                        .attr('y', 0);
-            }
+        //     const toolTipGroup = targetSvg.append('g').attr('class', 'tooltip-group');
+        //     this.chartBase.toolTipTarget = toolTipGroup;
 
-            const toolTipGroup = targetSvg.append('g').attr('class', 'tooltip-group');
-            this.chartBase.toolTipTarget = toolTipGroup;
-
-            return targetSvg;
-        } else {
-            return parentElement.select('.tooltip-canvas');
-        }
+        //     return targetSvg;
+        // } else {
+        //     return parentElement.select('.tooltip-canvas');
+        // }
     }
 
     getSeriesDataByPosition(value: Array<number>) {

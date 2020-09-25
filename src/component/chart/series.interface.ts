@@ -16,6 +16,8 @@ export interface ISeries<T = any> {
 
     displayName: string; // legend 출력시 출력 명칭
 
+    displayNames: Array<string>; // legend 출력시 출력 명칭 (staced, grouped 등 시리즈 하나로 처리할 경우 쓰는 변수.)
+
     shape: string; // legend 출력 시 색상아이템의 type
 
     selector: string; // legend 출력시 출력 명칭이 없으면 selector로 보여줌.

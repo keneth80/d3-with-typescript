@@ -14,6 +14,7 @@ export interface StackedVerticalBarSeriesConfiguration extends SeriesConfigurati
     xField: string;
     yField: string;
     columns: Array<string>;
+    displayNames?: Array<string>;
 }
 
 export class StackedVerticalBarSeries extends SeriesBase {
@@ -51,6 +52,12 @@ export class StackedVerticalBarSeries extends SeriesBase {
             if (configuration.columns) {
                 this.columns = [...configuration.columns];
             }
+
+            if (configuration.displayNames) {
+                this.displayNames = [...configuration.displayNames];
+            } else {
+                this.displayNames = [...configuration.columns];
+            }
         }
 
         this.numberFmt = format(',d');
@@ -73,11 +80,9 @@ export class StackedVerticalBarSeries extends SeriesBase {
 
         // set the colors
         const z = scaleOrdinal()
-        .range(['#98abc5', '#8a89a6', '#7b6888', '#6b486b', '#a05d56', '#d0743c', '#ff8c00']);
+        .range(this.chartBase.seriesColors);
 
-        const keys = this.columns;
-        
-        z.domain(keys);
+        z.domain(this.columns);
 
         this.currentBarWidth = x.bandwidth();
         this.geometry = {
@@ -87,7 +92,7 @@ export class StackedVerticalBarSeries extends SeriesBase {
         this.geometry.width = geometry.width;
         this.geometry.height = geometry.height;
 
-        const generateChartData = stack().keys(keys)(chartData);
+        const generateChartData = stack().keys(this.columns)(chartData);
         this.mainGroup.selectAll('.stacked-bar-group')
             .data(generateChartData)
             .join(
