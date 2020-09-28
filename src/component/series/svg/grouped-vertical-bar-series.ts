@@ -112,6 +112,8 @@ export class GroupedVerticalBarSeries extends SeriesBase {
                     (update) => update,
                     (exit) => exit.remove()
                 )
+                .attr('column', (d: any) => { return d.key; })
+                .attr('index', (d: any, index: number) => { return index; })
                 .attr('x', (d: any) => { return barx(d.key); })
                 .attr('y', (d: any) => { return (d.value < 0 ? y(0) : y(d.value)); })
                 .attr('height', (d: any) => { return Math.abs(y(d.value) - y(0)); })
@@ -152,19 +154,16 @@ export class GroupedVerticalBarSeries extends SeriesBase {
     }
 
     select(displayName: string, isSelected: boolean) {
-        this.mainGroup.selectAll(`.${this.selector}-group`).style('opacity', isSelected ? null : 0.4);
+        const targetIndex = this.displayNames.findIndex((seriesName: string) => seriesName === displayName);
+        if (targetIndex > -1) {
+            this.mainGroup.selectAll(`[index="${targetIndex}"]`).style('opacity', isSelected ? null : 0.4);
+        }
     }
 
     hide(displayName: string, isHide: boolean) {
         this.isHide = isHide;
-        this.mainGroup.selectAll(`.${this.selector}-group`).style('opacity', !isHide ? null : 0);
-        
-        // TODO: 좌표를 바꿀지 뎁스를 뒤로 보낼지 나중에 고민해볼 것.
-        // if (this.isHide) {
-        //     this.mainGroup.lower();
-        // } else {
-        //     this.mainGroup.raise();
-        // }
+        const targetIndex = this.displayNames.findIndex((seriesName: string) => seriesName === displayName);
+        this.mainGroup.selectAll(`[index="${targetIndex}"]`).style('opacity', !isHide ? null : 0);
     }
 
     unSelectItem() {
