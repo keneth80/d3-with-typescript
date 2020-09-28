@@ -184,20 +184,18 @@ export class GroupedVerticalBarSeries extends SeriesBase {
     }
 
     showPointAndTooltip(value: Array<number>, selected: Array<any>) {
-        if (selected.length && !this.chartBase.isTooltipDisplay) {
-            // const index = Math.floor(selected.length / 2);
-            const index = selected.length - 1;
-            const selectedItem = selected[index];
+        // const index = Math.floor(selected.length / 2);
+        const index = selected.length - 1;
+        const selectedItem = selected[index];
 
-            this.setChartTooltip(
-                selectedItem,
-                {
-                    width: this.geometry.width,
-                    height: this.geometry.height
-                },
-                value
-            );
-        }
+        this.setChartTooltip(
+            selectedItem,
+            {
+                width: this.geometry.width,
+                height: this.geometry.height
+            },
+            value
+        );
     }
 
     // TODO: tooltip에 시리즈 아이디를 부여하여 시리즈 마다 tooltip을 컨트롤 할 수 있도록 한다.
@@ -268,6 +266,7 @@ export class GroupedVerticalBarSeries extends SeriesBase {
         style:{fill: string}
     ) {
         this.selectionGroup.append('rect')
+            .attr('class', 'tooltip-point')
             // .style('stroke-width', 3)
             // .style('stroke', colorDarker(style.fill, 1))
             .attr('x', position[0])

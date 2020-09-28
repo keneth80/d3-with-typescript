@@ -314,42 +314,38 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
     }
 
     showPointAndTooltip(value: Array<number>, selected: Array<any>) {
-        if (selected.length && !this.chartBase.isTooltipDisplay) {
-            // const index = Math.floor(selected.length / 2);
-            const index = selected.length - 1;
-            const selectedItem = selected[index];
+        // const index = Math.floor(selected.length / 2);
+        const index = selected.length - 1;
+        const selectedItem = selected[index];
 
-            this.drawTooltipPoint(this.geometry, selectedItem, {
-                radius: this.radius / 2 + 1,
-                strokeColor: this.lineColor,
-                strokeWidth: this.strokeWidth
-            });
+        this.drawTooltipPoint(this.geometry, selectedItem, {
+            radius: this.radius / 2 + 1,
+            strokeColor: this.lineColor,
+            strokeWidth: this.strokeWidth
+        });
 
-            this.setChartTooltip(
-                selectedItem,
-                {
-                    width: this.geometry.width,
-                    height: this.geometry.height
-                },
-                value
-            );
-        }
+        this.setChartTooltip(
+            selectedItem,
+            {
+                width: this.geometry.width,
+                height: this.geometry.height
+            },
+            value
+        );
     }
 
-    onSelectItem(selectedItem: Array<any>, event: ChartMouseEvent) {
-        if (selectedItem && selectedItem.length) {
-            this.itemClickSubject.next({
-                data: selectedItem[2],
-                event: {
-                    offsetX: event.position[0] + this.chartBase.chartMargin.left,
-                    offsetY: event.position[1] + this.chartBase.chartMargin.top
-                },
-                target: {
-                    width: 1,
-                    height: 1
-                }
-            });
-        }
+    onSelectItem(selectedItem: Array<any>, position: Array<any>) {
+        this.itemClickSubject.next({
+            data: selectedItem[2],
+            event: {
+                offsetX: position[0] + this.chartBase.chartMargin.left,
+                offsetY: position[1] + this.chartBase.chartMargin.top
+            },
+            target: {
+                width: 1,
+                height: 1
+            }
+        });
     }
 
     clear() {

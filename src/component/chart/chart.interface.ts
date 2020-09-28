@@ -31,7 +31,7 @@ export interface ChartItemSelectEvent {
         y: number
     };
     data: any;
-    target?: Selection<BaseType, any, HTMLElement, any>
+    target?: Selection<BaseType, any, HTMLElement, any>;
 }
 
 export interface ChartMouseEvent {

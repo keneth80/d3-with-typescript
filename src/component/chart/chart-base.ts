@@ -1029,6 +1029,12 @@ export class ChartBase<T = any> implements IChart {
         this.selectionGroup
             .attr('transform', `translate(${x}, ${y})`);
 
+        if (!this.tooltipGroup) {
+            this.tooltipGroup = this.svg.append('g')
+                .attr('class', 'tooltip-group')
+        }
+        this.tooltipGroup.style('display', 'none');
+
         // zoom을 canvas와 webgl과 통일하기위한 순서.
         if (!this.zoomGroup) {
             this.zoomGroup = this.svg.append('g')
@@ -1068,12 +1074,6 @@ export class ChartBase<T = any> implements IChart {
                 .attr('class', 'y-right-axis-group')
         }
         this.axisGroups.right.attr('transform', `translate(${width}, 0)`);
-
-        if (!this.tooltipGroup) {
-            this.tooltipGroup = this.svg.append('g')
-                .attr('class', 'tooltip-group')
-        }
-        this.tooltipGroup.style('display', 'none');
     }
 
     // 모든 외부에서 들어오는 이벤트는 여기서 처리한다.
@@ -1088,7 +1088,6 @@ export class ChartBase<T = any> implements IChart {
         }
 
         let isDragStart = false;
-
         let isMouseLeave = false;
 
         this.subscription.add(
@@ -1103,7 +1102,7 @@ export class ChartBase<T = any> implements IChart {
                             // TODO: 시리즈 루프 돌면서 해당 포지션에 데이터가 있는지 찾되
                             // 툴팁을 보여줄 때면 멀티인지 싱글인지 체크 해서 break 여부를 판단하고 해당 시리즈의 메서드 실행.
                             // multi tooltip이면 break 걸지 않는다.
-                            if (positionData.length) {
+                            if (positionData.length && !this.isTooltipDisplay) {
                                 this.seriesList[max].showPointAndTooltip(event.position, positionData);
                                 // TODO: tooltip show event 발생.
                                 break;
@@ -1118,8 +1117,9 @@ export class ChartBase<T = any> implements IChart {
                     let max = this.seriesList.length;
                     while(max--) {
                         const positionData = this.seriesList[max].getSeriesDataByPosition(event.position);
+                        console.log('mouseEvent : ', event, positionData);
                         if (positionData.length) {
-                            this.seriesList[max].onSelectItem(positionData, event);
+                            this.seriesList[max].onSelectItem(positionData, event.position);
                             // TODO: selectitem event dispatch
                             this.chartItemClickSubject.next({
                                 position: {
@@ -1135,23 +1135,23 @@ export class ChartBase<T = any> implements IChart {
                 } else if (event.type === 'mousedown') {
                     
                 } else {
-                    isDragStart = false;
-                    let max = this.seriesList.length;
-                    while(max--) {
-                        const positionData = this.seriesList[max].getSeriesDataByPosition(event.position);
-                        if (positionData.length) {
-                            this.seriesList[max].onSelectItem(positionData, event);
-                            // TODO: selectitem event dispatch
-                            this.chartItemClickSubject.next({
-                                position: {
-                                    x: positionData[0],
-                                    y: positionData[1]
-                                },
-                                data: positionData[2]
-                            });
-                            break;
-                        }
-                    }
+                    // isDragStart = false;
+                    // let max = this.seriesList.length;
+                    // while(max--) {
+                    //     const positionData = this.seriesList[max].getSeriesDataByPosition(event.position);
+                    //     if (positionData.length) {
+                    //         this.seriesList[max].onSelectItem(positionData, event.position);
+                    //         // TODO: selectitem event dispatch
+                    //         this.chartItemClickSubject.next({
+                    //             position: {
+                    //                 x: positionData[0],
+                    //                 y: positionData[1]
+                    //             },
+                    //             data: positionData[2]
+                    //         });
+                    //         break;
+                    //     }
+                    // }
                 }
             })
         );
@@ -1947,7 +1947,7 @@ export class ChartBase<T = any> implements IChart {
             context.clearRect(0, 0, this.width, this.height);
         }
 
-        this.selectionGroup.selectAll('*').remove();
+        this.selectionGroup.selectAll('.tooltip-point').remove();
         this.hideTooltip();
     }
 

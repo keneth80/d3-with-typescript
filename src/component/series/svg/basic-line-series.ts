@@ -342,26 +342,24 @@ export class BasicLineSeries extends SeriesBase {
     }
 
     showPointAndTooltip(value: Array<number>, selected: Array<any>) {
-        if (selected.length && !this.chartBase.isTooltipDisplay) {
-            // const index = Math.floor(selected.length / 2);
-            const index = selected.length - 1;
-            const selectedItem = selected[index];
+        // const index = Math.floor(selected.length / 2);
+        const index = selected.length - 1;
+        const selectedItem = selected[index];
 
-            this.drawTooltipPoint(this.geometry, selectedItem, {
-                radius: this.radius / 2 + 1,
-                strokeColor: this.lineColor,
-                strokeWidth: this.strokeWidth
-            });
+        this.drawTooltipPoint(this.geometry, selectedItem, {
+            radius: this.radius / 2 + 1,
+            strokeColor: this.lineColor,
+            strokeWidth: this.strokeWidth
+        });
 
-            this.setChartTooltip(
-                selectedItem,
-                {
-                    width: this.geometry.width,
-                    height: this.geometry.height
-                },
-                value
-            );
-        }
+        this.setChartTooltip(
+            selectedItem,
+            {
+                width: this.geometry.width,
+                height: this.geometry.height
+            },
+            value
+        );
     }
 
     // onSelectItem(selectedItem: Array<any>, event: ChartMouseEvent) {

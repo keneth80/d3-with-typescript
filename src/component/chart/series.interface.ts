@@ -36,7 +36,7 @@ export interface ISeries<T = any> {
 
     showPointAndTooltip(value: Array<number>, selected: Array<any>): void;
 
-    onSelectItem(value: Array<number>, event: ChartMouseEvent): void;
+    onSelectItem(value: Array<number>, selected: Array<any>): void;
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, seriesGroup: Selection<BaseType, any, HTMLElement, any>, index: number): void;
     // series 최초 생성 시 svg element, series 출력 영역, series index를 해당 메서드를 통해 인자값으로 내려줌.

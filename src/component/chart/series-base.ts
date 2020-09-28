@@ -3,7 +3,7 @@ import { Subject, Observable, Subscription } from 'rxjs';
 
 import { ChartBase } from './chart-base';
 import { ISeries, SeriesConfiguration } from './series.interface';
-import { Scale, ContainerSize, ChartMouseEvent, ScaleValue, DisplayOption } from './chart.interface';
+import { Scale, ContainerSize, ScaleValue, DisplayOption } from './chart.interface';
 import { guid } from './util/d3-svg-util';
 import { Quadtree } from 'd3-quadtree';
 
@@ -134,7 +134,7 @@ export class SeriesBase implements ISeries {
 
     showPointAndTooltip(value: Array<number>, selected: Array<any>) {}
 
-    onSelectItem(value: Array<number>, event: ChartMouseEvent) {}
+    onSelectItem(value: Array<number>, selected: Array<any>) {}
 
     destroy() {
         this.subscription.unsubscribe();

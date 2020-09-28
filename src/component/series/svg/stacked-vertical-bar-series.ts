@@ -217,6 +217,16 @@ export class StackedVerticalBarSeries extends SeriesBase {
         this.mainGroup.selectAll(`[index="${targetIndex}"]`).style('opacity', !isHide ? null : 0);
     }
 
+    onSelectItem(selectedItem: Array<any>, position: Array<any>) {
+        this.chartBase.chartItemClickSubject.next({
+            position: {
+                x: position[0],
+                y: position[1]
+            },
+            data: selectedItem[2]
+        });
+    }
+
     unSelectItem() {
         // if (this.currentSelector) {
         //     this.currentSelector.attr('r', this.radius);
@@ -235,32 +245,30 @@ export class StackedVerticalBarSeries extends SeriesBase {
     }
 
     showPointAndTooltip(value: Array<number>, selected: Array<any>) {
-        if (selected.length && !this.chartBase.isTooltipDisplay) {
-            // const index = Math.floor(selected.length / 2);
-            //TODO: y좌표보다 작은 아이템을 골라야함.
-            let index = -1;
-            for (let i = 0; i < selected.length; i++) {
-                if (value[1] > selected[i][1] && value[1] < (selected[i][6] + selected[i][1])) { // y좌표보다 작아야하고, 막대 크기보다 커야함.
-                    index = i;
-                    break;
-                }
+        // const index = Math.floor(selected.length / 2);
+        //TODO: y좌표보다 작은 아이템을 골라야함.
+        let index = -1;
+        for (let i = 0; i < selected.length; i++) {
+            if (value[1] > selected[i][1] && value[1] < (selected[i][6] + selected[i][1])) { // y좌표보다 작아야하고, 막대 크기보다 커야함.
+                index = i;
+                break;
             }
-
-            if (index < 0) {
-                return;
-            }
-
-            const selectedItem = selected[index];
-
-            this.setChartTooltip(
-                selectedItem,
-                {
-                    width: this.geometry.width,
-                    height: this.geometry.height
-                },
-                value
-            );
         }
+
+        if (index < 0) {
+            return;
+        }
+
+        const selectedItem = selected[index];
+
+        this.setChartTooltip(
+            selectedItem,
+            {
+                width: this.geometry.width,
+                height: this.geometry.height
+            },
+            value
+        );
     }
 
     // TODO: tooltip에 시리즈 아이디를 부여하여 시리즈 마다 tooltip을 컨트롤 할 수 있도록 한다.
@@ -331,6 +339,7 @@ export class StackedVerticalBarSeries extends SeriesBase {
         style:{fill: string}
     ) {
         this.selectionGroup.append('rect')
+            .attr('class', 'tooltip-point')
             // .style('stroke-width', 3)
             // .style('stroke', colorDarker(style.fill, 1))
             .attr('x', position[0])
