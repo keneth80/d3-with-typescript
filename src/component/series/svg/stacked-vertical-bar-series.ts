@@ -217,14 +217,36 @@ export class StackedVerticalBarSeries extends SeriesBase {
         this.mainGroup.selectAll(`[index="${targetIndex}"]`).style('opacity', !isHide ? null : 0);
     }
 
-    onSelectItem(selectedItem: Array<any>, position: Array<any>) {
+    onSelectItem(value: Array<number>, selected: Array<any>) {
+        const index = this.retriveColumnIndex(value, selected);
+
+        if (index < 0) {
+            return;
+        }
+
         this.chartBase.chartItemClickSubject.next({
             position: {
-                x: position[0],
-                y: position[1]
+                x: value[0],
+                y: value[1]
             },
-            data: selectedItem[2]
+            data: selected[2]
         });
+
+        const selectedItem = selected[index];
+
+        this.drawSelectionPoint(
+            {
+                width: selectedItem[5],
+                height: selectedItem[6]
+            }, 
+            [
+                selectedItem[0],
+                selectedItem[1]
+            ], 
+            {
+                fill: selectedItem[7]
+            }
+        );
     }
 
     unSelectItem() {
@@ -247,13 +269,7 @@ export class StackedVerticalBarSeries extends SeriesBase {
     showPointAndTooltip(value: Array<number>, selected: Array<any>) {
         // const index = Math.floor(selected.length / 2);
         //TODO: y좌표보다 작은 아이템을 골라야함.
-        let index = -1;
-        for (let i = 0; i < selected.length; i++) {
-            if (value[1] > selected[i][1] && value[1] < (selected[i][6] + selected[i][1])) { // y좌표보다 작아야하고, 막대 크기보다 커야함.
-                index = i;
-                break;
-            }
-        }
+        const index = this.retriveColumnIndex(value, selected);
 
         if (index < 0) {
             return;
@@ -269,6 +285,18 @@ export class StackedVerticalBarSeries extends SeriesBase {
             },
             value
         );
+    }
+
+    private retriveColumnIndex(value: Array<number>, selected: Array<any>) {
+        let index = -1;
+        for (let i = 0; i < selected.length; i++) {
+            if (value[1] > selected[i][1] && value[1] < (selected[i][6] + selected[i][1])) { // y좌표보다 작아야하고, 막대 크기보다 커야함.
+                index = i;
+                break;
+            }
+        }
+
+        return index;
     }
 
     // TODO: tooltip에 시리즈 아이디를 부여하여 시리즈 마다 tooltip을 컨트롤 할 수 있도록 한다.
@@ -338,15 +366,39 @@ export class StackedVerticalBarSeries extends SeriesBase {
         position: Array<number>, 
         style:{fill: string}
     ) {
-        this.selectionGroup.append('rect')
-            .attr('class', 'tooltip-point')
-            // .style('stroke-width', 3)
-            // .style('stroke', colorDarker(style.fill, 1))
+        this.selectionGroup.selectAll('.tooltip-point')
+            .data([geometry])
+            .join(
+                (enter) => enter.append('rect').attr('class', 'tooltip-point'),
+                (update) => update,
+                (exit) => exit.remove()
+            )
             .attr('x', position[0])
             .attr('y', position[1])
             .attr('height', geometry.height)
             .attr('width', geometry.width)
             .attr('fill', colorDarker(style.fill, 2));
+    }
+
+    private drawSelectionPoint(
+        geometry: ContainerSize, 
+        position: Array<number>, 
+        style:{fill: string}
+    ) {
+        this.selectionGroup.selectAll('.selection-point')
+            .data([geometry])
+            .join(
+                (enter) => enter.append('rect').attr('class', 'selection-point'),
+                (update) => update,
+                (exit) => exit.remove()
+            )
+            .style('stroke-width', 3)
+            .style('stroke', colorDarker(style.fill, 2))
+            .attr('fill', colorDarker(style.fill, 1))
+            .attr('x', position[0])
+            .attr('y', position[1])
+            .attr('height', geometry.height)
+            .attr('width', geometry.width);
     }
 
     // drawLegend(keys: string[], z: any, width: number) {
