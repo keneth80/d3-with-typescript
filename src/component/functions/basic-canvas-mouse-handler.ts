@@ -12,6 +12,7 @@ import { debounceTime } from 'rxjs/operators';
 
 export interface BasicCanvasMouseHandlerConfiguration {
     isMoveEvent?: boolean;
+    delayTime?: number;
 }
 
 export class BasicCanvasMouseHandler extends FunctionsBase {
@@ -21,11 +22,17 @@ export class BasicCanvasMouseHandler extends FunctionsBase {
 
     private move$: Subject<[number, number]> = new Subject();
 
+    private delayTime = 100;
+
     constructor(configuration: BasicCanvasMouseHandlerConfiguration) {
         super();
         if (configuration) {
             if (configuration.hasOwnProperty('isMoveEvent')) {
                 this.isMoveEvent = configuration.isMoveEvent;
+            }
+
+            if (configuration.hasOwnProperty('delayTime')) {
+                this.delayTime = configuration.delayTime;
             }
         }
 
@@ -97,7 +104,7 @@ export class BasicCanvasMouseHandler extends FunctionsBase {
 
     private addEvent() {
         this.subscription.add(
-            this.move$.pipe(debounceTime(200)).subscribe((value: [number, number]) => {
+            this.move$.pipe(debounceTime(this.delayTime)).subscribe((value: [number, number]) => {
                 this.chartBase.mouseEventSubject.next({
                     type: 'mousemove',
                     position: value,

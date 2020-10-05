@@ -14,8 +14,9 @@ import { debounceTime } from 'rxjs/operators';
 export interface BasicCanvasMouseZoomHandlerConfiguration {
     xDirection?: string; // bottom or top
     yDirection?: string; // left or right
-    isMove?: boolean;
+    isMoveEvent?: boolean;
     direction?: string;
+    delayTime?: number;
 }
 
 export class BasicCanvasMouseZoomHandler extends FunctionsBase {
@@ -45,6 +46,8 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
 
     private isMoveEvent = true;
 
+    private delayTime = 100;
+
     private move$: Subject<[number, number]> = new Subject();
 
     constructor(configuration: BasicCanvasMouseZoomHandlerConfiguration) {
@@ -62,8 +65,12 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
                 this.direction = configuration.direction;
             }
 
-            if (configuration.hasOwnProperty('isMove')) {
-                this.isMoveEvent = configuration.isMove;
+            if (configuration.hasOwnProperty('isMoveEvent')) {
+                this.isMoveEvent = configuration.isMoveEvent;
+            }
+
+            if (configuration.hasOwnProperty('delayTime')) {
+                this.delayTime = configuration.delayTime;
             }
         }
         this.addEvent();
@@ -350,7 +357,7 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
 
     private addEvent() {
         this.subscription.add(
-            this.move$.pipe(debounceTime(200)).subscribe((value: [number, number]) => {
+            this.move$.pipe(debounceTime(this.delayTime)).subscribe((value: [number, number]) => {
                 this.chartBase.mouseEventSubject.next({
                     type: 'mousemove',
                     position: value,

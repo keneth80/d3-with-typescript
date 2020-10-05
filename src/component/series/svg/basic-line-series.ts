@@ -378,37 +378,6 @@ export class BasicLineSeries extends SeriesBase {
     //     }
     // }
 
-    private setChartTooltip2(d: any, geometry: ContainerSize, radius: number) {
-        this.tooltipGroup = this.chartBase.showTooltip();
-    
-        const textElement: any = this.tooltipGroup.select('text').attr('dy', '.1em').text(
-            this.chartBase.tooltip.tooltipTextParser(d)
-        );
-
-        textBreak(textElement, '\n');
-
-        const parseTextNode = textElement.node().getBBox();
-        const textWidth = parseTextNode.width + 7;
-        const textHeight = parseTextNode.height + 5;
-        
-        const padding = this.radius * 2 + 5;
-        let xPosition = event.offsetX + padding + (isIE() ? this.chartBase.chartMargin.left : 0);
-        let yPosition = event.offsetY + padding + (isIE() ? this.chartBase.chartMargin.top : 0);
-        
-        if (xPosition + textWidth > geometry.width) {
-            xPosition = xPosition - textWidth;
-        }
-
-        if (yPosition + textHeight > geometry.height) {
-            yPosition = yPosition - textHeight - radius * 2;
-        }
-
-        this.tooltipGroup.attr('transform', `translate(${xPosition}, ${yPosition})`)
-            .selectAll('rect')
-            .attr('width', textWidth)
-            .attr('height', textHeight);
-    }
-
     // TODO: tooltip에 시리즈 아이디를 부여하여 시리즈 마다 tooltip을 컨트롤 할 수 있도록 한다.
     // multi tooltip도 구현해야 하기 때문에 이방법이 가장 좋음. 현재 중복으로 발생해서 왔다갔다 함.
     private setChartTooltip(seriesData: any, geometry: ContainerSize, mouseEvent: Array<number>) {
@@ -454,7 +423,13 @@ export class BasicLineSeries extends SeriesBase {
         position: Array<number>, 
         style:{radius: number, strokeColor: string, strokeWidth: number}
     ) {
-        this.selectionGroup.append('circle')
+        this.selectionGroup.selectAll('.selection-point')
+            .data([geometry])
+            .join(
+                (enter) => enter.append('circle').attr('class', 'selection-point'),
+                (update) => update,
+                (exit) => exit.remove()
+            )
             .style('stroke-width', this.radius * 1.7)
             .style('stroke', this.lineColor)
             .style('fill', '#fff')

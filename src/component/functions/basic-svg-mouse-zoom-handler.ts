@@ -14,8 +14,9 @@ import { debounceTime } from 'rxjs/operators';
 export interface BasicSvgMouseZoomHandlerConfiguration {
     xDirection?: string; // bottom or top
     yDirection?: string; // left or right
-    isMove?: boolean;
+    isMoveEvent?: boolean;
     direction?: string;
+    delayTime?: number;
 }
 
 export class BasicSvgMouseZoomHandler extends FunctionsBase {
@@ -32,6 +33,8 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
     private isZoom: boolean = true;
 
     private isMouseMove: boolean = false;
+
+    private delayTime = 100;
 
     private isRestore: boolean = false;
 
@@ -64,8 +67,12 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
                 this.direction = configuration.direction;
             }
 
-            if (configuration.hasOwnProperty('isMove')) {
-                this.isMoveEvent = configuration.isMove;
+            if (configuration.hasOwnProperty('isMoveEvent')) {
+                this.isMoveEvent = configuration.isMoveEvent;
+            }
+
+            if (configuration.hasOwnProperty('delayTime')) {
+                this.delayTime = configuration.delayTime;
             }
         }
     }
@@ -145,7 +152,7 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
 
             this.subscription.add(
                 fromEvent(this.pointerGroup.node() as any, 'mousemove')
-                    .pipe(debounceTime(100))
+                    .pipe(debounceTime(this.delayTime))
                     .subscribe((e: MouseEvent) => {
                         const x = e.offsetX - this.chartBase.chartMargin.left - 1;
                         const y = e.offsetY - this.chartBase.chartMargin.top - 1;

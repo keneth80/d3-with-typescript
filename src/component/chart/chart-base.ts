@@ -1106,12 +1106,15 @@ export class ChartBase<T = any> implements IChart {
                                 this.seriesList[max].showPointAndTooltip(event.position, positionData);
                                 // TODO: tooltip show event 발생.
                                 break;
+                            } else {
+                                this.selectionClear();
                             }
                         }   
                     }
                 } else if (event.type === 'mouseleave') {
                     isMouseLeave = true;
                     this.pointerClear();
+                    this.selectionClear();
                 } else if (event.type === 'mouseup') {
                     isDragStart = false;
                     let max = this.seriesList.length;

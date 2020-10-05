@@ -12,6 +12,7 @@ import { debounceTime } from 'rxjs/operators';
 
 export interface BasicSvgMouseHandlerConfiguration {
     isMoveEvent?: boolean;
+    delayTime?: number;
 }
 
 export class BasicSvgMouseHandler extends FunctionsBase {
@@ -26,6 +27,10 @@ export class BasicSvgMouseHandler extends FunctionsBase {
         if (configuration) {
             if (configuration.hasOwnProperty('isMoveEvent')) {
                 this.isMoveEvent = configuration.isMoveEvent;
+            }
+
+            if (configuration.hasOwnProperty('delayTime')) {
+                this.delayTime = configuration.delayTime;
             }
         }
     }
@@ -67,7 +72,7 @@ export class BasicSvgMouseHandler extends FunctionsBase {
 
             this.subscription.add(
                 fromEvent(this.pointerGroup.node() as any, 'mouseleave')
-                    .pipe(debounceTime(150))
+                    .pipe(debounceTime(this.delayTime + 10))
                     .subscribe((e: MouseEvent) => {
                         const x = e.offsetX - this.chartBase.chartMargin.left - 1;
                         const y = e.offsetY - this.chartBase.chartMargin.top - 1;
@@ -82,16 +87,6 @@ export class BasicSvgMouseHandler extends FunctionsBase {
         }
 
         this.pointerGroup
-        // .on('mouseleave', () => {
-        //     console.log('mouseleave');
-        //     const mouseEvent = mouse(this.pointerGroup.node() as any);
-
-        //     this.chartBase.mouseEventSubject.next({
-        //         type: 'mouseleave',
-        //         position: mouseEvent,
-        //         target: this.pointerGroup
-        //     });
-        // })
         .on('mousedown', () => {
             const mouseEvent = mouse(this.pointerGroup.node() as any);
             this.chartBase.mouseEventSubject.next({
