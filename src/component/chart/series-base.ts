@@ -82,7 +82,7 @@ export class SeriesBase implements ISeries {
 
     unSelectItem() {}
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
         mainGroup: Selection<BaseType, any, HTMLElement, any>, index: number) {}
 
     drawSeries(chartData: any[], scales: Scale[], geometry: ContainerSize, displayOption: DisplayOption) {}
@@ -118,21 +118,21 @@ export class SeriesBase implements ISeries {
         }
     }
 
-    getSeriesDataByPosition(value: Array<number>) {
+    getSeriesDataByPosition(value: number[]) {
         return null;
     }
 
-    showPointAndTooltip(value: Array<number>, selected: Array<any>) {}
+    showPointAndTooltip(value: number[], selected: any[]) {}
 
-    onSelectItem(value: Array<number>, selected: Array<any>) {}
+    onSelectItem(value: number[], selected: any[]) {}
 
     destroy() {
         this.subscription.unsubscribe();
     }
 
     drawProgress(
-        totalCount: number, 
-        currentCount: number, 
+        totalCount: number,
+        currentCount: number,
         canvas: {width: number, height: number, target: Selection<BaseType, any, BaseType, any>}
     ) {
         const progressWidth = canvas.width / 4;
@@ -191,7 +191,7 @@ export class SeriesBase implements ISeries {
         return canvas.target;
     }
 
-    protected search(quadtreeObj: Quadtree<Array<any>>, x0: number, y0: number, x3: number, y3: number) {
+    protected search(quadtreeObj: Quadtree<any[]>, x0: number, y0: number, x3: number, y3: number) {
         const temp = [];
         if (quadtreeObj) {
             quadtreeObj.visit((node: any, x1: number, y1: number, x2: number, y2: number) => {
