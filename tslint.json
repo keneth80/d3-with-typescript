@@ -6,7 +6,12 @@
     "jsRules": {},
     "rules": {
         "no-unused-variable": true,
-        "no-unused-declaration": true
+        "no-unused-declaration": true,
+        "max-classes-per-file": true,
+        "prefer-for-of": false,
+        "no-string-literal": false,
+        "no-console": false,
+        "forin": false
     },
     "rulesDirectory": []
 }

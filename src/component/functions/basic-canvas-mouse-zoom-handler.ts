@@ -29,10 +29,6 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
 
     private isZoom: boolean = true;
 
-    private isMouseMove: boolean = false;
-
-    private isRestore: boolean = false;
-
     private xMinValue: number = NaN;
 
     private xMaxValue: number = NaN;
@@ -55,7 +51,7 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
             if (configuration.hasOwnProperty('xDirection')) {
                 this.xDirection = configuration.xDirection;
             }
-    
+
             if (configuration.hasOwnProperty('yDirection')) {
                 this.yDirection = configuration.yDirection;
             }
@@ -75,8 +71,8 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
         this.addEvent();
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
-                  mainGroup: Selection<BaseType, any, HTMLElement, any>, 
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
+                  mainGroup: Selection<BaseType, any, HTMLElement, any>,
                   index: number) {
         this.svg = svg;
         this.mainGroup = mainGroup;
@@ -102,7 +98,7 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
         }
     }
 
-    drawFunctions(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
+    drawFunctions(chartData: any[], scales: Scale[], geometry: ContainerSize) {
         this.setContainerPosition(geometry, this.chartBase);
 
         const xScale: Scale = scales.find((scale: Scale) => scale.orient === this.xDirection);
@@ -119,7 +115,7 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
         if (!this.xMinValue) {
             this.xMaxValue = xScale.min;
         }
-        
+
         if (!this.xMaxValue) {
             this.xMaxValue = xScale.max;
         }
@@ -188,7 +184,7 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
                 target: this.pointerCanvas
             });
         });
-        
+
         this.pointerCanvas.call(
             drag()
             .on('start', () => {
@@ -204,12 +200,11 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
             })
             .on('drag', () => {
                 const mouseEvent = mouse(this.pointerCanvas.node() as any);
-            
                 const moveX = mouseEvent[0];
                 const moveY = mouseEvent[1];
 
                 zoomContext.clearRect(0, 0, geometry.width, geometry.height);
-                
+
                 if (this.direction === Direction.HORIZONTAL) {
                     start.x = min([startX, moveX]);
                     start.y = 0;
@@ -245,8 +240,7 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
                 if (end.y > geometry.height) {
                     end.y = geometry.height - 1;
                 }
-                
-                
+
                 this.drawZoomBox(
                     zoomContext,
                     start,
@@ -304,44 +298,20 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
                                 }
                             }
                         });
-                        
-                        // delayExcute(5, () => {
-                        //     this.chartBase.updateAxisForZoom([
-                        //         {
-                        //             field: xScale.field,
-                        //             min: xStartValue,
-                        //             max: xEndValue
-                        //         },
-                        //         {
-                        //             field: yScale.field,
-                        //             min: yEndValue,
-                        //             max: yStartValue
-                        //         }
-                        //     ]);
-                        // });
                     } else {
-                        
                         if (this.xMaxValue === xmax && this.yMaxValue === ymax) {
-                            if (console && console.log) {
-                                console.log('zoom not ! ');
-                                this.chartBase.zoomEventSubject.next({
-                                    type: 'not',
-                                    position: [endX, endY],
-                                    target: this.pointerCanvas
-                                });
-                            }
+                            this.chartBase.zoomEventSubject.next({
+                                type: 'not',
+                                position: [endX, endY],
+                                target: this.pointerCanvas
+                            });
                             return;
                         }
-                        
                         this.chartBase.zoomEventSubject.next({
                             type: 'zoomout',
                             position: [endX, endY],
                             target: this.pointerCanvas
                         });
-
-                        // delayExcute(5, () => {
-                        //     this.chartBase.updateAxisForZoom([]);
-                        // });
                     }
                 }
             })
@@ -407,7 +377,7 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
             .attr('width', geometry.width - 1)
             .attr('height', geometry.height - 1)
             .style('transform', `translate(${(chartBase.chartMargin.left + 1)}px, ${(chartBase.chartMargin.top + 1)}px)`);
-        
+
         this.pointerCanvas
             .attr('width', geometry.width - 1)
             .attr('height', geometry.height - 1)

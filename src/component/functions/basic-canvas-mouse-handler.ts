@@ -35,8 +35,8 @@ export class BasicCanvasMouseHandler extends FunctionsBase {
         this.addEvent();
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
-                  mainGroup: Selection<BaseType, any, HTMLElement, any>, 
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
+                  mainGroup: Selection<BaseType, any, HTMLElement, any>,
                   index: number) {
         this.svg = svg;
         this.mainGroup = mainGroup;
@@ -52,9 +52,9 @@ export class BasicCanvasMouseHandler extends FunctionsBase {
         }
     }
 
-    drawFunctions(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
+    drawFunctions(chartData: any[], scales: Scale[], geometry: ContainerSize) {
         this.setContainerPosition(geometry, this.chartBase);
-        
+
         if (this.isMoveEvent) {
             this.pointerCanvas.on('mousemove', () => {
                 const mouseEvent = mouse(this.pointerCanvas.node() as any);
@@ -90,7 +90,6 @@ export class BasicCanvasMouseHandler extends FunctionsBase {
                 target: this.pointerCanvas
             });
         });
-        
     }
 
     destroy() {

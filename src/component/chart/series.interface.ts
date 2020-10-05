@@ -16,7 +16,7 @@ export interface ISeries<T = any> {
 
     displayName: string; // legend 출력시 출력 명칭
 
-    displayNames: Array<string>; // legend 출력시 출력 명칭 (staced, grouped 등 시리즈 하나로 처리할 경우 쓰는 변수.)
+    displayNames: string[]; // legend 출력시 출력 명칭 (staced, grouped 등 시리즈 하나로 처리할 경우 쓰는 변수.)
 
     shape: string; // legend 출력 시 색상아이템의 type
 
@@ -32,16 +32,16 @@ export interface ISeries<T = any> {
 
     destroy(): void;
 
-    getSeriesDataByPosition(value: Array<number>): any;
+    getSeriesDataByPosition(value: number[]): any;
 
-    showPointAndTooltip(value: Array<number>, selected: Array<any>): void;
+    showPointAndTooltip(value: number[], selected: any[]): void;
 
-    onSelectItem(value: Array<number>, selected: Array<any>): void;
+    onSelectItem(value: number[], selected: any[]): void;
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, seriesGroup: Selection<BaseType, any, HTMLElement, any>, index: number): void;
     // series 최초 생성 시 svg element, series 출력 영역, series index를 해당 메서드를 통해 인자값으로 내려줌.
 
-    drawSeries(data: Array<T>, scales: Array<Scale>, geometry: ContainerSize, displayOption: DisplayOption): void;
+    drawSeries(data: T[], scales: Scale[], geometry: ContainerSize, displayOption: DisplayOption): void;
     // drawSeries(data: Array<T>, scales: Array<Scale>, geometry: ContainerSize, index: number, sereisColor: string): void;
     // chart container의 사이즈가 변경 되거나 다시 display 될 때 호출되는 메서드로 chart data, scale, series 영역의 사이즈, series index, series color를 해당 메서드를 통해 인자값으로 내려줌.
 }

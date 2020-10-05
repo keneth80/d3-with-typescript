@@ -102,10 +102,9 @@ export class BasicLineSeries extends SeriesBase {
         this.numberFmt = format(',d');
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
                   mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
-        
         this.seriespGroup = mainGroup;
         this.selectionGroup = this.svg.select('.' + ChartBase.SELECTION_SVG);
         if (!mainGroup.select(`.${this.selector}-group`).node()) {
@@ -117,8 +116,7 @@ export class BasicLineSeries extends SeriesBase {
         }
     }
 
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize, option: DisplayOption) {
-        
+    drawSeries(chartData: any[], scales: Scale[], geometry: ContainerSize, option: DisplayOption) {
         const x: any = scales.find((scale: Scale) => scale.orient === Placement.BOTTOM).scale;
         const y: any = scales.find((scale: Scale) => scale.orient === Placement.LEFT).scale;
 
@@ -136,32 +134,18 @@ export class BasicLineSeries extends SeriesBase {
             .defined(data => data[this.yField])
             .x((data: any, i) => {
                 const xposition = x(data[this.xField]) + padding;
-                return xposition; 
+                return xposition;
             }) // set the x values for the line generator
             .y((data: any) => {
                 const yposition = y(data[this.yField]);
-                return yposition; 
+                return yposition;
             }); // set the y values for the line generator
 
         if (this.config.isCurve === true) {
             this.line.curve(curveMonotoneX); // apply smoothing to the line
         }
 
-        // if (this.config.crossFilter) {
-        //     this.crossFilterDimension = this.chartBase.crossFilter(chartData).dimension((item: any) => item[this.config.crossFilter.filerField]);
-        // } else {
-        //     if (this.crossFilterDimension) {
-        //         this.crossFilterDimension.dispose();
-        //     }
-        //     this.crossFilterDimension = undefined;
-        // }
-
-        // const lineData = this.crossFilterDimension ? this.crossFilterDimension.filter(this.config.crossFilter.filterValue).top(Infinity) : 
-        // !this.dataFilter ? chartData : chartData.filter((item: any) => this.dataFilter(item));
-
-        const lineData: Array<any> = !this.dataFilter ? chartData : chartData.filter((item: any) => this.dataFilter(item));
-
-        // const lineData = !this.dataFilter ? chartData : chartData.filter((item: any) => this.dataFilter(item));
+        const lineData: any[] = !this.dataFilter ? chartData : chartData.filter((item: any) => this.dataFilter(item));
 
         const lineSeries = this.mainGroup.selectAll(`.${this.selector}`)
             .data([lineData])
@@ -218,74 +202,17 @@ export class BasicLineSeries extends SeriesBase {
                     .attr('cx', (data: any, i) => { return x(data[this.xField]) + padding; })
                     .attr('cy', (data: any) => { return y(data[this.yField]); })
                     .attr('r', this.radius);
-            
-            // if (this.chartBase.tooltip) {
-            //     if (!this.chartBase.tooltip.eventType || this.chartBase.tooltip.eventType === 'click') {
-            //         dots
-            //         .on('click', (d: any, i, nodeList: any) => {
-            //             event.preventDefault();
-            //             event.stopPropagation();
-
-            //             if (this.isHide) {
-            //                 return;
-            //             }
-
-            //             if (this.currentSelector) {
-            //                 this.currentSelector.attr('r', this.radius);
-            //             }
-            //             this.setChartTooltip(d, geometry, this.radius);
-            //             this.currentSelector = select(nodeList[i]);
-            //             this.currentSelector.attr('r', this.radius * 1.7);
-            //         });
-            //     } else {
-            //         dots
-            //         .on('mouseover', (d: any, i, nodeList: any) => {
-            //             console.log('mouseover');
-            //             event.preventDefault();
-            //             event.stopPropagation();
-
-            //             if (this.isHide) {
-            //                 return;
-            //             }
-
-            //             select(nodeList[i]).attr('r', this.radius * 1.7);
-            //                 // .style('fill', () => colorDarker(color, 2)); // point
-
-            //             this.setChartTooltip(d, geometry, this.radius);
-            //             select(nodeList[i]).classed('tooltip', true);
-            //         })
-            //         .on('mouseout', (d: any, i, nodeList: any) => {
-            //             console.log('mouseout');
-            //             event.preventDefault();
-            //             event.stopPropagation();
-
-            //             if (this.isHide) {
-            //                 return;
-            //             }
-
-            //             select(nodeList[i])
-            //                 .attr('r', this.radius) // point
-            //                 // .style('stroke', null)
-            //                 // .style('stroke-width', null);
-
-            //             this.chartBase.hideTooltip();
-            //             select(nodeList[i]).classed('tooltip', false);
-            //         });
-            //     }
-            // }
         }
 
-        // TODO: quadtree setup
         if (this.originQuadTree) {
             this.originQuadTree = undefined;
         }
 
         delayExcute(300, () => {
-            const generateData: Array<any> = lineData
+            const generateData: any[] = lineData
                 .map((d: any, i: number) => {
                     const xposition = x(d[this.xField]) + padding;
                     const yposition = y(d[this.yField]);
-                    
                     return [xposition, yposition, d];
                 });
             this.originQuadTree = quadtree()
@@ -304,7 +231,6 @@ export class BasicLineSeries extends SeriesBase {
     hide(displayName: string, isHide: boolean) {
         this.isHide = isHide;
         this.mainGroup.selectAll(`.${this.selector}`).style('opacity', !isHide ? null : 0);
-        
         // TODO: 좌표를 바꿀지 뎁스를 뒤로 보낼지 나중에 고민해볼 것.
         if (this.isHide) {
             this.mainGroup.lower();
@@ -329,7 +255,7 @@ export class BasicLineSeries extends SeriesBase {
         }
     }
 
-    getSeriesDataByPosition(value: Array<number>) {
+    getSeriesDataByPosition(value: number[]) {
         return this.search(
             this.originQuadTree,
             value[0] - (this.radius + 2),
@@ -339,7 +265,7 @@ export class BasicLineSeries extends SeriesBase {
         );
     }
 
-    showPointAndTooltip(value: Array<number>, selected: Array<any>) {
+    showPointAndTooltip(value: number[], selected: any[]) {
         // const index = Math.floor(selected.length / 2);
         const index = selected.length - 1;
         const selectedItem = selected[index];
@@ -378,7 +304,7 @@ export class BasicLineSeries extends SeriesBase {
 
     // TODO: tooltip에 시리즈 아이디를 부여하여 시리즈 마다 tooltip을 컨트롤 할 수 있도록 한다.
     // multi tooltip도 구현해야 하기 때문에 이방법이 가장 좋음. 현재 중복으로 발생해서 왔다갔다 함.
-    private setChartTooltip(seriesData: any, geometry: ContainerSize, mouseEvent: Array<number>) {
+    private setChartTooltip(seriesData: any, geometry: ContainerSize, mouseEvent: number[]) {
         if (this.chartBase.isTooltipDisplay) {
             return;
         }
@@ -403,7 +329,7 @@ export class BasicLineSeries extends SeriesBase {
         const textHeight = Math.floor(parseTextNode.height) + 5;
 
         let xPosition = mouseEvent[0] + this.chartBase.chartMargin.left + this.radius;
-        let yPosition = mouseEvent[1];
+        const yPosition = mouseEvent[1];
 
         if (xPosition + textWidth > geometry.width + 5) {
             xPosition = xPosition - textWidth;
@@ -417,8 +343,8 @@ export class BasicLineSeries extends SeriesBase {
     }
 
     private drawTooltipPoint(
-        geometry: ContainerSize, 
-        position: Array<number>, 
+        geometry: ContainerSize,
+        position: number[],
         style:{radius: number, strokeColor: string, strokeWidth: number}
     ) {
         this.selectionGroup.selectAll('.selection-point')

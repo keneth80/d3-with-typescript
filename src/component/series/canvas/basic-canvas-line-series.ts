@@ -110,8 +110,8 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
         }
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
-                  mainGroup: Selection<BaseType, any, HTMLElement, any>, 
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
+                  mainGroup: Selection<BaseType, any, HTMLElement, any>,
                   index: number) {
         this.svg = svg;
 
@@ -121,7 +121,7 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
 
         this.parentElement = select((this.svg.node() as HTMLElement).parentNode as any);
 
-        if (!this.canvas) {            
+        if (!this.canvas) {
             this.canvas = this.parentElement
                 .append('canvas')
                 .datum({
@@ -148,7 +148,7 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
         }
     }
 
-    drawSeries(chartData: Array<T>, scales: Array<Scale>, geometry: ContainerSize, option: DisplayOption) {
+    drawSeries(chartData: T[], scales: Scale[], geometry: ContainerSize, option: DisplayOption) {
         const xScale: Scale = scales.find((scale: Scale) => scale.field === this.xField);
         const yScale: Scale = scales.find((scale: Scale) => scale.field === this.yField);
         const x: any = xScale.scale;
@@ -171,18 +171,6 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
 
         const space: number = (radius + lineStroke) * 4;
 
-        // if (this.config.crossFilter) {
-        //     this.crossFilterDimension = this.chartBase.crossFilter(chartData).dimension((item: T) => item[this.config.crossFilter.filerField]);
-        // } else {
-        //     if (this.crossFilterDimension) {
-        //         this.crossFilterDimension.dispose();
-        //     }
-        //     this.crossFilterDimension = undefined;
-        // }
-
-        // const lineData = this.crossFilterDimension ? this.crossFilterDimension.filter(this.config.crossFilter.filterValue).top(Infinity) : 
-        // !this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item));
-
         const lineData = !this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item));
 
         this.canvas
@@ -203,11 +191,11 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
             .defined(data => data[this.yField])
             .x((data: any) => {
                 const xposition = x(data[this.xField]) + padding + space / 4;
-                return xposition; 
+                return xposition;
             }) // set the x values for the line generator
             .y((data: any) => {
                 const yposition = y(data[this.yField]) + space / 4;
-                return yposition; 
+                return yposition;
             })
             .context(context); // set the y values for the line generator
 
@@ -257,7 +245,7 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
             // POINT: element 에 data 반영.
             this.canvas.data([{
                 colorData,
-                memoryCanvasContext: memoryCanvasContext
+                memoryCanvasContext
             }]);
 
             // 머지한 데이터를 canvas에 저장한다.
@@ -310,7 +298,7 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
         this.pointerCanvas.remove();
     }
 
-    private onClickItem(geometry: ContainerSize, radius: number, mouseEvent: Array<number>) {
+    private onClickItem(geometry: ContainerSize, radius: number, mouseEvent: number[]) {
         const selectedItem: any = this.drawTooltipPoint(geometry, radius, mouseEvent);
         if (selectedItem) {
             this.itemClickSubject.next({
@@ -327,12 +315,13 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
         }
     }
 
-    private drawTooltipPoint(geometry: ContainerSize, radius: number, mouseEvent: Array<number>) {
+    private drawTooltipPoint(geometry: ContainerSize, radius: number, mouseEvent: number[]) {
         const pointerContext = (this.pointerCanvas.node() as any).getContext('2d');
         pointerContext.fillStyle = '#fff';
         pointerContext.lineWidth = this.strokeWidth;
         pointerContext.clearRect(0, 0, geometry.width, geometry.height);
-        const filterTargetCanvas = this.parentElement.selectAll('.drawing-canvas').filter((d: any, i: number, node: any) => parseInt(select(node[i]).style('opacity')) === 1);
+        pointerContext.beginPath();
+        const filterTargetCanvas = this.parentElement.selectAll('.drawing-canvas').filter((d: any, i: number, node: any) => parseInt(select(node[i]).style('opacity'), 16) === 1);
         const nodes = filterTargetCanvas.nodes().reverse();
         let selected = null;
         for (let i = 0; i < nodes.length; i++) {
@@ -346,34 +335,25 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
             if (selected) {
                 pointerContext.strokeStyle = selected.color;
                 this.drawPoint(selected.x, selected.y, radius * 2, pointerContext);
-    
                 this.tooltipGroup = this.chartBase.showTooltip();
-    
                 const textElement: any = this.tooltipGroup.select('text').attr('dy', '0em').text(
                     this.chartBase.tooltip.tooltipTextParser(selected.data)
                 );
-    
                 textBreak(textElement, '\n');
-    
-                // const parseTextNode = textElement.node().getBoundingClientRect();
                 const parseTextNode = textElement.node().getBBox();
-    
                 const textWidth = parseTextNode.width + 5;
                 const textHeight = parseTextNode.height + 5;
-                
+
                 const padding = radius * 2;
                 let xPosition = selected.x + padding + this.chartBase.chartMargin.left;
-                
                 let yPosition = selected.y + padding + this.chartBase.chartMargin.top;
-                
                 if (xPosition + textWidth > geometry.width) {
                     xPosition = xPosition - textWidth;
                 }
-
                 if (yPosition + textHeight > geometry.height) {
                     yPosition = yPosition - textHeight - radius * 2;
                 }
-    
+
                 this.tooltipGroup.attr('transform', `translate(${xPosition}, ${yPosition})`)
                     .selectAll('rect')
                     .attr('width', textWidth)

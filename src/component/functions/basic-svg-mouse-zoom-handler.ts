@@ -30,11 +30,7 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
 
     private isZoom: boolean = true;
 
-    private isMouseMove: boolean = false;
-
     private delayTime = 100;
-
-    private isRestore: boolean = false;
 
     private xMinValue: number = NaN;
 
@@ -56,7 +52,7 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
             if (configuration.hasOwnProperty('xDirection')) {
                 this.xDirection = configuration.xDirection;
             }
-    
+
             if (configuration.hasOwnProperty('yDirection')) {
                 this.yDirection = configuration.yDirection;
             }
@@ -75,8 +71,8 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
         }
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
-                  mainGroup: Selection<BaseType, any, HTMLElement, any>, 
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
+                  mainGroup: Selection<BaseType, any, HTMLElement, any>,
                   index: number) {
         this.svg = svg;
         this.mainGroup = mainGroup;
@@ -98,7 +94,7 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
         }
     }
 
-    drawFunctions(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
+    drawFunctions(chartData: any[], scales: Scale[], geometry: ContainerSize) {
         const xScale: Scale = scales.find((scale: Scale) => scale.orient === this.xDirection);
         const yScale: Scale = scales.find((scale: Scale) => scale.orient === this.yDirection);
         const x: any = xScale.scale;
@@ -113,7 +109,7 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
         if (!this.xMinValue) {
             this.xMaxValue = xScale.min;
         }
-        
+
         if (!this.xMaxValue) {
             this.xMaxValue = xScale.max;
         }
@@ -139,22 +135,14 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
         };
 
         if (this.isMoveEvent) {
-            // this.pointerGroup.on('mousemove', () => {
-            //     const mouseEvent = mouse(this.pointerGroup.node() as any);
-            //     this.chartBase.mouseEventSubject.next({
-            //         type: 'mousemove',
-            //         position: mouseEvent,
-            //         target: this.pointerGroup
-            //     });
-            // });
-
             this.subscription.add(
                 fromEvent(this.pointerGroup.node() as any, 'mousemove')
                     .pipe(debounceTime(this.delayTime))
                     .subscribe((e: MouseEvent) => {
-                        const x = e.offsetX - this.chartBase.chartMargin.left - 1;
-                        const y = e.offsetY - this.chartBase.chartMargin.top - 1;
-                        const mouseEvent: [number, number] = [x, y];
+                        const mouseEvent: [number, number] = [
+                            e.offsetX - this.chartBase.chartMargin.left - 1,
+                            e.offsetY - this.chartBase.chartMargin.top - 1
+                        ];
                         this.chartBase.mouseEventSubject.next({
                             type: 'mousemove',
                             position: mouseEvent,
@@ -200,7 +188,7 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
                 target: this.pointerGroup
             });
         });
-        
+
         this.pointerGroup.call(
             drag()
             .on('start', () => {
@@ -219,10 +207,8 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
             })
             .on('drag', () => {
                 const mouseEvent = mouse(this.pointerGroup.node() as any);
-            
                 const moveX = mouseEvent[0];
                 const moveY = mouseEvent[1];
-                
                 if (this.direction === Direction.HORIZONTAL) {
                     start.x = min([startX, moveX]);
                     start.y = 0;
@@ -258,7 +244,7 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
                 if (end.y > geometry.height) {
                     end.y = geometry.height - 1;
                 }
-                
+
                 this.drawZoomBox(
                     this.zoomBox,
                     start,
@@ -277,7 +263,7 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
                 const mouseEvent = mouse(this.pointerGroup.node() as any);
                 endX = mouseEvent[0];
                 endY = mouseEvent[1];
-                
+
                 this.dragElementClear(this.zoomBox, this.tempZoomBox);
                 this.tempZoomBox = undefined;
 
@@ -318,30 +304,20 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
                                 }
                             }
                         });
-                        
                     } else {
-                        
                         if (this.xMaxValue === xmax && this.yMaxValue === ymax) {
-                            if (console && console.log) {
-                                console.log('zoom not ! ');
-                                this.chartBase.zoomEventSubject.next({
-                                    type: 'not',
-                                    position: [endX, endY],
-                                    target: this.pointerGroup
-                                });
-                            }
+                            this.chartBase.zoomEventSubject.next({
+                                type: 'not',
+                                position: [endX, endY],
+                                target: this.pointerGroup
+                            });
                             return;
                         }
-                        
                         this.chartBase.zoomEventSubject.next({
                             type: 'zoomout',
                             position: [endX, endY],
                             target: this.pointerGroup
                         });
-
-                        // delayExcute(5, () => {
-                        //     this.chartBase.updateAxisForZoom([]);
-                        // });
                     }
                 }
             })

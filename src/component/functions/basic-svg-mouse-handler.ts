@@ -31,26 +31,17 @@ export class BasicSvgMouseHandler extends FunctionsBase {
         }
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
-                  mainGroup: Selection<BaseType, any, HTMLElement, any>, 
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
+                  mainGroup: Selection<BaseType, any, HTMLElement, any>,
                   index: number) {
         this.svg = svg;
         this.mainGroup = mainGroup;
         this.pointerGroup = this.svg.select('.' + ChartBase.ZOOM_SVG);
     }
 
-    drawFunctions(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
+    drawFunctions(chartData: any[], scales: Scale[], geometry: ContainerSize) {
         this.setContainerPosition(geometry, this.chartBase);
         if (this.isMoveEvent) {
-            // this.pointerGroup.on('mousemove', () => {
-            //     const mouseEvent = mouse(this.pointerGroup.node() as any);
-            //     this.chartBase.mouseEventSubject.next({
-            //         type: 'mousemove',
-            //         position: mouseEvent,
-            //         target: this.pointerGroup
-            //     });
-            // });
-
             this.subscription.add(
                 fromEvent(this.pointerGroup.node() as any, 'mousemove')
                     .pipe(debounceTime(this.delayTime))
@@ -108,7 +99,6 @@ export class BasicSvgMouseHandler extends FunctionsBase {
                 target: this.pointerGroup
             });
         });
-        
     }
 
     destroy() {

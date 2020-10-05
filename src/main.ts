@@ -79,7 +79,7 @@ class SalesModel {
     }
 }
 
-const data: Array<SalesModel> = [
+const data: SalesModel[] = [
     new SalesModel('Bob', 33, 180, '1-May-12'),
     new SalesModel('Robin', 12, 140, '29-Apr-12'),
     new SalesModel('Anne', 41, null, '27-Apr-12'),
@@ -163,29 +163,21 @@ const buttonMapping = () => {
     });
 }
 
-const setSeriesColor = (data: any) => {
-    const seriesFaultType = data.referenceYn === 'Y' ? '' : data.segmentStatus;
-    // console.log('setSeriesColor : ', data.referenceYn, data.fdtaFaultYn, seriesFaultType, data.primeYn);
-    if (data.referenceYn === 'N' && data.fdtaFaultYn === 'Y' && seriesFaultType === 'F' && data.primeYn === 'N') { // selectedAlarm
-        // console.log('selectedAlarm');
+const setSeriesColor = (item: any) => {
+    const seriesFaultType = item.referenceYn === 'Y' ? '' : item.segmentStatus;
+    if (item.referenceYn === 'N' && item.fdtaFaultYn === 'Y' && seriesFaultType === 'F' && item.primeYn === 'N') { // selectedAlarm
         return '#EA3010';
-    } else if (data.referenceYn === 'N' && data.fdtaFaultYn === 'N' && seriesFaultType === 'F' && data.primeYn === 'N') { //Fault
-        // console.log('Fault');
+    } else if (item.referenceYn === 'N' && item.fdtaFaultYn === 'N' && seriesFaultType === 'F' && item.primeYn === 'N') { //Fault
         return '#f57416';
-    } else if (data.referenceYn === 'N' && data.fdtaFaultYn === 'N' && seriesFaultType === 'W' && data.primeYn === 'N') { // Warning
-        // console.log('Warning');
+    } else if (item.referenceYn === 'N' && item.fdtaFaultYn === 'N' && seriesFaultType === 'W' && item.primeYn === 'N') { // Warning
         return '#f7ba00';
-    } else if (data.referenceYn === 'N' && data.fdtaFaultYn === 'N' && seriesFaultType === 'S' && data.primeYn === 'N') { // Safe
-        // console.log('Safe');
+    } else if (item.referenceYn === 'N' && item.fdtaFaultYn === 'N' && seriesFaultType === 'S' && item.primeYn === 'N') { // Safe
         return '#0dac09';
-    } else if (data.referenceYn === 'Y' && data.fdtaFaultYn === 'Y' && seriesFaultType === '' && data.primeYn === 'N') { // referenceAlarm
-        // console.log('referenceAlarm');
+    } else if (item.referenceYn === 'Y' && item.fdtaFaultYn === 'Y' && seriesFaultType === '' && item.primeYn === 'N') { // referenceAlarm
         return '#970f94';
-    } else if (data.referenceYn === 'Y' && data.fdtaFaultYn === 'N' && seriesFaultType === '' && data.primeYn === 'N') { // referenceNonAlarm
-        // console.log('referenceNonAlarm');
+    } else if (item.referenceYn === 'Y' && item.fdtaFaultYn === 'N' && seriesFaultType === '' && item.primeYn === 'N') { // referenceNonAlarm
         return '#3766c7';
-    } else if (data.referenceYn === 'Y' && data.fdtaFaultYn === 'N' && seriesFaultType === '' && data.primeYn === 'Y') { // primeReference
-        // console.log('primeReference');
+    } else if (item.referenceYn === 'Y' && item.fdtaFaultYn === 'N' && seriesFaultType === '' && item.primeYn === 'Y') { // primeReference
         return '#3766c7';
     } else {
         return '#EA3010';
@@ -555,7 +547,7 @@ const simpleCanvasLineSeriesExample = () => {
         xField: 'x',
         yField: 'y',
         dot: {
-            radius: 3
+            radius: 5
         },
         displayName: 'y-series'
     };
@@ -565,7 +557,7 @@ const simpleCanvasLineSeriesExample = () => {
         xField: 'x',
         yField: 'z',
         dot: {
-            radius: 3
+            radius: 5
         },
         displayName: 'z-series'
     }
@@ -575,7 +567,7 @@ const simpleCanvasLineSeriesExample = () => {
         xField: 'x',
         yField: 'x',
         dot: {
-            radius: 3
+            radius: 5
         },
         displayName: 'x-series'
     }
@@ -666,16 +658,14 @@ const webGLBigDataLineSeriesSample = () => {
 
         for (let i = 0; i < tracePoints.length; i++) {
             const tempData = tracePoints[i];
-            const seriesData = tempData.data.rows.map((row: Array<any>) => {
+            const seriesData = tempData.data.rows.map((row: any[]) => {
                 const rowData: any = {};
                 for (let j = 0; j < tempData.data.columns.length; j++) {
                     const columnName = tempData.data.columns[j];
                     rowData[columnName] = row[j];
                 }
-    
                 const x = rowData['count_slot'];
                 const y = rowData['VALUE'];
-    
                 if (xmin > x) {
                     xmin = x;
                 }
@@ -688,7 +678,7 @@ const webGLBigDataLineSeriesSample = () => {
                 if (ymax < y) {
                     ymax = y;
                 }
-    
+
                 return new BasicCanvasWebglLineSeriesOneModel(
                     x,
                     y,
@@ -696,25 +686,20 @@ const webGLBigDataLineSeriesSample = () => {
                     rowData
                 );
             });
-    
             // test data 늘리기
             const tempRow: BasicCanvasWebglLineSeriesOneModel = seriesData[seriesData.length - 1];
             for (let index = 1; index < 50000; index++) {
                 const x = tempRow.x + index;
                 const y = tempRow.y;
-    
                 if (xmax < x) {
                     xmax = x;
                 }
-    
                 seriesData.push(
                     new BasicCanvasWebglLineSeriesOneModel(x, y, i, tempRow)
                 );
             }
-    
             // type별 컬러 지정.
             const seriesColor = setSeriesColor(tempData);
-    
             const configuration: BasicCanvasWebglLineSeriesOneConfiguration = {
                 type: 'series',
                 selector: (seriesColor === '#EA3010' ? 'webgl-trace-alarm' : 'webgl-trace')  + i,
@@ -729,7 +714,7 @@ const webGLBigDataLineSeriesSample = () => {
                 },
                 data: seriesData
             }
-            
+
             if (seriesColor === '#EA3010') {
                 alarmSeriesList.push(configuration);
             } else {
@@ -846,7 +831,7 @@ const canvasBigDataLineSeriesSample = () => {
                 data: [stepData[2]]
             }
         };
-    
+
         const basicStepLine: OptionConfiguration = {
             name: 'BasicStepLine',
             configuration: {
@@ -855,7 +840,7 @@ const canvasBigDataLineSeriesSample = () => {
                 data: stepData
             }
         };
-        
+
         const basicStepArea: OptionConfiguration = {
             name: 'BasicStepArea',
             configuration: {
@@ -865,11 +850,10 @@ const canvasBigDataLineSeriesSample = () => {
                 data: stepData
             }
         };
-    
+
         optionList.push(basicSpecArea);
         optionList.push(basicStepArea);
         optionList.push(basicStepLine);
-        
 
         xmin = 0;
         xmax = 0;
@@ -884,10 +868,10 @@ const canvasBigDataLineSeriesSample = () => {
                     const columnName = tempData.data.columns[j];
                     rowData[columnName] = row[j];
                 }
-    
+
                 const x = rowData['count_slot'];
                 const y = rowData['VALUE'];
-    
+
                 if (xmin > x) {
                     xmin = x;
                 }
@@ -900,7 +884,7 @@ const canvasBigDataLineSeriesSample = () => {
                 if (ymax < y) {
                     ymax = y;
                 }
-    
+
                 return new BasicCanvasTraceModel(
                     x,
                     y,
@@ -908,17 +892,17 @@ const canvasBigDataLineSeriesSample = () => {
                     rowData
                 );
             });
-    
+
             // test data 늘리기
             const tempRow: BasicCanvasTraceModel = seriesData[seriesData.length - 1];
             for (let index = 1; index < 50000; index++) {
                 const x = tempRow.x + index;
                 const y = tempRow.y;
-    
+
                 if (xmax < x) {
                     xmax = x;
                 }
-    
+
                 seriesData.push(new BasicCanvasTraceModel(
                     x,
                     y,
@@ -926,10 +910,9 @@ const canvasBigDataLineSeriesSample = () => {
                     tempRow
                 ));
             }
-    
+
             // type별 컬러 지정.
             const seriesColor = setSeriesColor(tempData);
-    
             const configuration: BasicCanvasTraceConfiguration = {
                 type: 'series',
                 selector: (seriesColor === '#EA3010' ? 'canvas-trace-alarm' : 'canvas-trace')  + i,
@@ -944,7 +927,7 @@ const canvasBigDataLineSeriesSample = () => {
                 },
                 data: seriesData
             }
-            
+
             if (seriesColor === '#EA3010') {
                 alarmSeriesList.push(configuration);
                 // alarmSeriesList.push(new BasicCanvasTrace(configuration));
@@ -966,7 +949,6 @@ const canvasBigDataLineSeriesSample = () => {
         },
         tooltip: {
             tooltipTextParser: (d: any) => {
-                console.log('d : ', d);
                 return 'd : ' + d;
             }
         },
@@ -999,43 +981,8 @@ const canvasBigDataLineSeriesSample = () => {
 
     console.time('canvaslinedraw');
     chart = MiChart.CanvasTraceChart(commonConfiguration, seriesList.concat(alarmSeriesList), optionList).draw();
-    // const canvasLineChart = new BasicChart<BasicCanvasTraceModel>({
-    //     selector: '#chart',
-    //     data: [],
-    //     calcField: 'y',
-    //     title: {
-    //         placement: Placement.TOP,
-    //         content: 'DFD Concept Canvas'
-    //     },
-    //     isResize: true,
-    //     axes: [
-    //         {
-    //             field: 'x',
-    //             type: ScaleType.NUMBER,
-    //             placement: 'bottom',
-    //             min: xmin - (xmax * 0.01),
-    //             max: xmax + (xmax * 0.01)
-    //         },
-    //         {
-    //             field: 'y',
-    //             type: ScaleType.NUMBER,
-    //             placement: 'left',
-    //             min: ymin,
-    //             max: ymax
-    //         }
-    //     ],
-    //     series: seriesList.concat(alarmSeriesList),
-    //     options: optionList,
-    //     functions: [
-    //         new BasicCanvasMouseZoomHandler({
-    //             xDirection: 'bottom',
-    //             yDirection: 'left',
-    //             direction: Direction.BOTH
-    //         })
-    //     ]
-    // }).draw();
     console.timeEnd('canvaslinedraw');
-} 
+};
 
 const canvasTraceChart = () => {
     const randomX = randomNormal(0, 9);
@@ -1044,13 +991,13 @@ const canvasTraceChart = () => {
     let xmax = 0;
     let ymin = 0;
     let ymax = 0;
- 
+
     const numberPoints = 100; // 1000000
 
     const startDt = new Date().getTime();
     let endDt = 0;
     const term = 1000;
-    const data = range(numberPoints).map((d: number) => {
+    const traceData = range(numberPoints).map((d: number) => {
         const x = startDt + (term * d);
         const y = parseFloat(randomY().toFixed(2));
         // const i = index;
@@ -1105,7 +1052,7 @@ const canvasTraceChart = () => {
     const dtFmt = timeFormat('%m-%d %H:%M:%S');
     const scatterChart = new BasicChart<BasicCanvasTraceModel>({
         selector: '#canvastracechart',
-        data,
+        data: traceData,
         title: {
             placement: Placement.TOP,
             content: 'Canvas Trace Chart'
@@ -1153,7 +1100,7 @@ const canvasScatter = (id: string) => {
     let ymax = 0;
     const numberPoints = 110000;
     console.time('dataparse');
-    const data = range(numberPoints).map((d: number) => {
+    const scatterData = range(numberPoints).map((d: number) => {
         const x = parseFloat(randomX().toFixed(2));
         const y = parseFloat(randomX().toFixed(2));
         const z = parseFloat(randomX().toFixed(2));
@@ -1191,7 +1138,7 @@ const canvasScatter = (id: string) => {
     // console.log('max : ', ymax, ymax);
     const scatterChart = new BasicChart<BasicCanvasScatterPlotModel>({
         selector: id,
-        data,
+        data: scatterData,
         title: {
             placement: Placement.TOP,
             content: 'Canvas Scatter Plot'
@@ -1236,7 +1183,7 @@ const canvasLineChart = () => {
     const fields = lineData.map((item: any) => item.member);
     const members = Array.from(new Set(fields));
     const series = [];
-    
+
     members.map((member: string) => {
         const filter = (d: any) => {
             return d.member === member;
@@ -1262,14 +1209,12 @@ const canvasLineChart = () => {
 
         currnetLineSeries.$currentItem.subscribe((item: any) => {
             console.log('select : ', item.event);
-            let x = item.event.offsetX;
-            let y = item.event.offsetY;
-            select('#canvaslinechart').select('.event-pointer').attr('transform', `translate(${x}, ${y})`);
+            select('#canvaslinechart').select('.event-pointer').attr('transform', `translate(${item.event.offsetX}, ${item.event.offsetY})`);
         });
     });
 
     const parseTime = timeFormat('%H:%M:%S %m-%d');
-    let basicChart: BasicChart = new BasicChart({
+    new BasicChart({
         selector: '#canvaslinechart',
         // margin: {
         //     top: 60,
@@ -1300,7 +1245,7 @@ const canvasLineChart = () => {
         data: lineData.map((item: any) => {
             const newDate = new Date();
             newDate.setFullYear(item.time.substring(0,4));
-            newDate.setMonth(parseInt(item.time.substring(5,7)) - 1);
+            newDate.setMonth(parseInt(item.time.substring(5,7), 16) - 1);
             newDate.setDate(item.time.substring(8,10));
             newDate.setHours(item.time.substring(11,13));
             newDate.setMinutes(item.time.substring(14,16));
@@ -1360,7 +1305,7 @@ const svgTraceChart = () => {
     const startDt = new Date().getTime();
 
     let endDt = 0;
-    const data = range(numberPoints).map((d: number, i: number) => {
+    const traceData = range(numberPoints).map((d: number, i: number) => {
         const x = startDt + (1000 * i);
         const y = parseFloat(randomY().toFixed(2));
         // const y = i%10 === 0 ? parseFloat(randomX().toFixed(2)) : i;
@@ -1403,7 +1348,7 @@ const svgTraceChart = () => {
     // console.log('max : ', ymax, ymax);
     const scatterChart = new BasicChart<BasicCanvasTraceModel>({
         selector: '#svgtrace',
-        data,
+        data: traceData,
         calcField: 'y',
         title: {
             placement: Placement.TOP,
@@ -1441,7 +1386,7 @@ const svgLineSeriesExample = () => {
     const fields = lineData.map((item: any) => item.member);
     const members = Array.from(new Set(fields));
     const series = [];
-    
+
     members.map((member: string) => {
         const filter = (d: any) => {
             return d.member === member;
@@ -1467,14 +1412,12 @@ const svgLineSeriesExample = () => {
 
         currnetLineSeries.$currentItem.subscribe((item: any) => {
             console.log('select : ', item.event);
-            let x = item.event.offsetX;
-            let y = item.event.offsetY;
-            select('#linechart').select('.event-pointer').attr('transform', `translate(${x}, ${y})`);
+            select('#linechart').select('.event-pointer').attr('transform', `translate(${item.event.offsetX}, ${item.event.offsetY})`);
         });
     });
 
     const parseTime = timeFormat('%H:%M:%S %m-%d');
-    let basicChart: BasicChart = new BasicChart({
+    new BasicChart({
         selector: '#chart',
         title: {
             placement: Placement.TOP,
@@ -1494,7 +1437,7 @@ const svgLineSeriesExample = () => {
         data: lineData.map((item: any) => {
             const newDate = new Date();
             newDate.setFullYear(item.time.substring(0,4));
-            newDate.setMonth(parseInt(item.time.substring(5,7)) - 1);
+            newDate.setMonth(parseInt(item.time.substring(5,7), 16) - 1);
             newDate.setDate(item.time.substring(8,10));
             newDate.setHours(item.time.substring(11,13));
             newDate.setMinutes(item.time.substring(14,16));
@@ -1603,10 +1546,7 @@ const excute = () => {
     basicLineSeries.$currentItem.subscribe((item: any) => {
         console.log('basicLineSeries.item : ', item);
         console.log('select : ', item.event);
-        let x = item.event.offsetX;
-        let y = item.event.offsetY;
-        select('#chart').select('.event-pointer').attr('transform', `translate(${x}, ${y})`);
-        
+        select('#chart').select('.event-pointer').attr('transform', `translate(${item.event.offsetX}, ${item.event.offsetY})`);
     });
 
     const basicLineSeries2 = new BasicLineSeries({
@@ -1782,9 +1722,9 @@ const boxplot = () => {
             globalCounts.push(entry);
         }
     }
-
+ 
     // Sort group counts so quantile methods work
-    for(let key in groupCounts) {
+    for(const key in groupCounts) {
         const groupCount = groupCounts[key];
         groupCounts[key] = groupCount.sort((a: number, b: number) => {
             return a - b;
@@ -1797,14 +1737,14 @@ const boxplot = () => {
 
     // Prepare the data for the box plots
     const boxPlotData = [];
-    for (let [key, groupCount] of Object.entries(groupCounts)) {
-        const tempCounts: Array<string> = (groupCount as Array<number>).map((num) => num + '');
+    for (const [key, groupCount] of Object.entries(groupCounts)) {
+        const tempCounts: string[] = (groupCount as number[]).map((num) => num + '');
         const localMin = min(tempCounts);
         const localMax = max(tempCounts);
 
         const obj: BoxplotModel = {
             key,
-            counts: (groupCount as Array<number>),
+            counts: (groupCount as number[]),
             quartile: boxQuartiles(groupCount),
             whiskers: [parseFloat(localMin), parseFloat(localMax)],
             color: colorScale(key)
@@ -1897,20 +1837,20 @@ const bollinger = () => {
 }
 
 // test 용
-const getBollingerBands = (n: number, k: number, data: Array<any>) => {
-    const bands = []; //{ ma: 0, low: 0, high: 0 }
-    for (let i = n - 1, len = data.length; i < len; i++) {
-        const slice = data.slice(i + 1 - n , i);
-        let meanData = mean(slice, (d: any) => { return d.close; });
+const getBollingerBands = (n: number, k: number, rowData: any[]) => {
+    const bands = []; // { ma: 0, low: 0, high: 0 }
+    for (let i = n - 1, len = rowData.length; i < len; i++) {
+        const slice = rowData.slice(i + 1 - n , i);
+        const meanData = mean(slice, (d: any) => { return d.close; });
         const stdDev = Math.sqrt(mean(slice.map((d: any) =>{
             return Math.pow(d.close - meanData, 2);
         })));
-        bands.push({ 
-            key: data[i].date,
+        bands.push({
+            key: rowData[i].date,
             ma: meanData,
             low: meanData - (k * stdDev),
             high: meanData + (k * stdDev) ,
-            close: data[i].close
+            close: rowData[i].close
         });
     }
     return bands;
@@ -1919,9 +1859,9 @@ const getBollingerBands = (n: number, k: number, data: Array<any>) => {
 const violin = () => {
     // https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/iris.csv
     // ./component/mock-data/iris.csv
-    csv('./component/mock-data/iris.csv', (data: any) => {
-        return data;
-    }).then((data: any) => {
+    csv('./component/mock-data/iris.csv', (rowData: any) => {
+        return rowData;
+    }).then((result: any) => {
         const violinSeries = new BasicViolinSeries({
             selector: 'basic-violin',
             xField: 'Species',
@@ -1930,7 +1870,7 @@ const violin = () => {
 
         const violinChart = new BasicChart({
             selector: '#violin',
-            data: data,
+            data: result,
             isResize: true,
             min: 0,
             max: 10,
@@ -1956,27 +1896,27 @@ const violin = () => {
 }
 
 const stackedBar = () => {
-    csv('./component/mock-data/age-groups.csv', (d: any, index: number, columns: Array<string>) => {
+    csv('./component/mock-data/age-groups.csv', (d: any, index: number, columns: string[]) => {
         for (let i = 1, t = 0; i < columns.length; ++i) {
             t += d[columns[i]] = +d[columns[i]];
             d.total = t;
         }
         return d;
     })
-    .then((data) => {
-        data.sort((a, b) => { return b.total - a.total; });
+    .then((result: any) => {
+        result.sort((a, b) => { return b.total - a.total; });
 
         const stackedVerticalBarSeries = new StackedVerticalBarSeries({
             xField: 'State',
             yField: 'total',
-            columns: data.columns
+            columns: result.columns
         });
 
         const stackedBarChart = new BasicChart({
             selector: '#stackedBar',
-            data: data,
+            data: result,
             min: 0,
-            max: max(data, (d: any) => d.total),
+            max: max(result, (d: any) => +d.total),
             margin: {
                 left: 65
             },
@@ -2007,22 +1947,22 @@ const stackedBar = () => {
 }
 
 const groupedBar = () => {
-    csv('./component/mock-data/grouped-bar-data.csv', (d: any, index: number, columns: Array<string>) => {
+    csv('./component/mock-data/grouped-bar-data.csv', (d: any, index: number, columns: string[]) => {
         for (let i = 1, t = 0; i < columns.length; ++i) {
             t += d[columns[i]] = +d[columns[i]];
             d.total = t;
         }
         return d;
     })
-    .then((data) => {
+    .then((result) => {
         const groupedVerticalBarSeries = new GroupedVerticalBarSeries({
             xField: 'State',
-            columns: data.columns
+            columns: result.columns
         });
 
         const groupedBarChart = new BasicChart({
             selector: '#groupedBar',
-            data: data,
+            data: result,
             margin: {
                 left: 65
             },
@@ -2041,7 +1981,7 @@ const groupedBar = () => {
                     tickFormat: 's',
                     isRound: true,
                     min: -2000000, // 여러개의 field를 참조해야할 경우에는 min, max를 지정해야 정상작동을 한다.
-                    max: max(data, d => max(data.columns.slice(1), key => d[key])),
+                    max: max(data, d => max(result.columns.slice(1), key => d[key])),
                 }
             ],
             series: [
@@ -2079,7 +2019,6 @@ const pieChart = () => {
     const pieSeries = new BasicPieSeries({
         categoryField: 'name',
         valueField: 'value',
-        
     });
 
     const basicPieChart = new BasicChart({
@@ -2107,7 +2046,7 @@ const pieChart = () => {
 const donutChart = () => {
     const labels = ['Lorem ipsum', 'dolor sit', 'amet', 'consectetur', 'adipisicing', 'elit', 'sed', 'do', 'eiusmod', 'tempor', 'incididunt'];
 	const pieData = labels.map((label) => {
-		return { label: label, value: Math.random() }
+		return { label, value: Math.random() }
 	});
 
     const donutSeries = new BasicDonutSeries({
@@ -2143,13 +2082,13 @@ const areaChart = () => {
         d.close = +d.close;
         return d;
     })
-    .then((data) => {
+    .then((result) => {
         const basicAreaSeries = new BasicAreaSeries({
             xField: 'date',
             yField: 'close'
         });
 
-        const areaChart = new BasicChart({
+        new BasicChart({
             selector: '#area',
             data: data.map((d: any, i: number) => d),
             margin: {
@@ -2191,7 +2130,7 @@ const gaugeChart = () => {
         transitionMs: 1000
     });
 
-    const gaugeChart = new BasicChart({
+    new BasicChart({
         selector: '#gauge',
         data: [37],
         margin: {

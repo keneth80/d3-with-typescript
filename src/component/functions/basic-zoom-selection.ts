@@ -63,7 +63,7 @@ export class BasicZoomSelection extends FunctionsBase {
         }
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
                   mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
         this.mainGroup = mainGroup;
@@ -72,10 +72,10 @@ export class BasicZoomSelection extends FunctionsBase {
                 .style('fill', 'none')
                 .style('pointer-events', 'all');
             this.zoomTarget.lower();
-        }   
+        }
     }
 
-    drawFunctions(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
+    drawFunctions(chartData: any[], scales: Scale[], geometry: ContainerSize) {
         const x: any = scales.find((scale: Scale) => scale.orient === this.xDirection).scale;
         const y: any = scales.find((scale: Scale) => scale.orient === this.yDirection).scale;
 
