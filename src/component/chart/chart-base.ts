@@ -25,6 +25,7 @@ import { guid, delayExcute, textWrapping,
          drawSvgCheckBox, drawLegendColorItemByRect, drawLegendColorItemByCircle, drawLegendColorItemByLine,
          getAxisByPlacement, getTransformByArray, getTextWidth, getMaxText
 } from './util/d3-svg-util';
+import { ChartAxis } from './axis/axis';
 
 
 // TODO: 모든 참조되는 함수들은 subject로 바꾼다.
@@ -443,7 +444,6 @@ export class ChartBase<T = any> implements IChart {
         return this;
     }
 
-    // TODO: clear 로직 구현.
     clear() {
         this.svg.selectAll('*').remove();
 
@@ -520,12 +520,11 @@ export class ChartBase<T = any> implements IChart {
             series.unSelectItem();
         }
         
-        delayExcute(100, () => {
+        delayExcute(50, () => {
             if (!this.tooltipItems.length) {
                 this.tooltipGroup.select('#' + selector).style('display', 'none');
             }
             // TODO: 지우거나 this.tooltipItems로 다시 그리거나 할 것.
-
         });
         return this.tooltipGroup;
     }
@@ -619,7 +618,6 @@ export class ChartBase<T = any> implements IChart {
 
     updateSeries(displayType: DisplayType = DisplayType.NORMAL) {
         try {
-            // TODO: subject next 로 변경할 것
             if (this.seriesList && this.seriesList.length) {
                 if (!this.config.displayDelay) {
                     // this.execute();
@@ -1143,26 +1141,6 @@ export class ChartBase<T = any> implements IChart {
             })
         );
 
-        // this.subscription.add(
-        //     this.move$.subscribe((value: any) => {
-        //         console.log('move debounce');
-        //         if (this.config.tooltip && (!isDragStart && !isMouseLeave)) {
-        //             let max = this.seriesList.length;
-        //             while(max--) {
-        //                 const positionData = this.seriesList[max].getSeriesDataByPosition(value);
-        //                 // TODO: 시리즈 루프 돌면서 해당 포지션에 데이터가 있는지 찾되
-        //                 // 툴팁을 보여줄 때면 멀티인지 싱글인지 체크 해서 break 여부를 판단하고 해당 시리즈의 메서드 실행.
-        //                 // multi tooltip이면 break 걸지 않는다.
-        //                 if (positionData.length) {
-        //                     this.seriesList[max].showPointAndTooltip(value, positionData);
-        //                     // TODO: tooltip show event 발생.
-        //                     break;
-        //                 }
-        //             }   
-        //         }
-        //     })
-        // );
-
         this.subscription.add(
             this.zoomEvent$.subscribe((event: ChartZoomEvent) => {
                 if (event.type === 'dragstart') {
@@ -1196,7 +1174,7 @@ export class ChartBase<T = any> implements IChart {
                     this.updateRescaleAxis(false);
                     this.updateFunctions();
                     this.updateSeries(DisplayType.ZOOMOUT);
-                    this.updateOptions()
+                    this.updateOptions();
                 } else {
                     isDragStart = false;
                 }
@@ -1669,129 +1647,11 @@ export class ChartBase<T = any> implements IChart {
         // zoom out 했을 경우에 초기화.
         if (!reScaleAxes || (reScaleAxes && !reScaleAxes.length)) {
             this.currentScale.length = 0;
+        } else {
+            this.currentScale = [...reScaleAxes];
         }
 
-        const returnAxes: Array<Scale> = [];
-        axes.map((axis: Axis) => {
-            let range = <any>[];
-            if (axis.placement === Placement.BOTTOM || axis.placement === Placement.TOP) {
-                range = [0, width];
-            } else {
-                range = [height, 0];
-            }
-
-            let scale = null;
-            let minValue = 0;
-            let maxValue = 0;
-            if (axis.type === ScaleType.STRING) {
-                scale = scaleBand().range(range).padding(axis.padding ? +axis.padding : 0).paddingOuter(0.1);
-                if (axis.domain) {
-                    scale.domain(axis.domain);
-                } else {
-                    scale.domain(
-                        this.data.map((item: T) => item[axis.field])
-                    );
-                }
-            } else if (axis.type === ScaleType.POINT) {
-                scale = scalePoint().range(range).padding(axis.padding ? +axis.padding : 0.1);
-                if (axis.domain) {
-                    scale.domain(axis.domain);
-                } else {
-                    scale.domain(
-                        this.data.map((item: T) => item[axis.field])
-                    );
-                }
-            } else { 
-                if (axis.type === ScaleType.TIME) {
-                    // TODO: interval option 추가
-                    // 참고 http://jsfiddle.net/sarathsaleem/8tmLrb9t/7/
-                    scale = scaleTime().range(range);
-                } else {
-                    // ScaleType.NUMBER => numeric type
-                    // TODO: interval option 추가 (interval 일 경우에는 argument가 3개: start, end, step)
-                    scale = scaleLinear().range(range);
-                }
-                
-                // POINT: zoom 시 현재 scale을 유지하기 위함.
-                // min max setup
-                if (this.currentScale.length) {
-                    const tempScale = this.currentScale.find((scale: any) => scale.field === axis.field);
-                    minValue = tempScale ? tempScale.min : 0;
-                    maxValue = tempScale ? tempScale.max : 0;
-                } else {
-                    if (!axis.hasOwnProperty('max')) {
-                        if (axis.type === ScaleType.TIME) {
-                            axis.max = max(this.data.map((item: T) => new Date(item[axis.field]).getTime()));
-                        } else {
-                            axis.max = max(this.data.map((item: T) => parseFloat(item[axis.field])));
-                            axis.max += Math.round(axis.max * 0.05);
-                        }
-                    }
-    
-                    if (!axis.hasOwnProperty('min')) {
-                        if (axis.type === ScaleType.TIME) {
-                            axis.min = min(this.data.map((item: T) => new Date(item[axis.field]).getTime()));
-                        } else {
-                            axis.min = min(this.data.map((item: T) => parseFloat(item[axis.field])));
-                            axis.min -= Math.round(axis.min * 0.05);
-                        }
-                    }
-    
-                    minValue = axis.min;
-                    maxValue = axis.max;
-                }
-
-                // axis domain label setup
-                if (axis.domain) {
-                    scale.domain(axis.domain);
-                } else {
-                    // POINT: zoom 시 적용될 scale
-                    if (reScaleAxes && reScaleAxes.length) {
-                        this.currentScale = [...reScaleAxes];
-                        const reScale = this.currentScale.find((d: any) => d.field === axis.field);
-                        minValue = reScale.min;
-                        maxValue = reScale.max;
-                    } else {
-                        // POINT: zoom 시 현재 scale을 유지하기 위함.
-                        if (this.currentScale.length) {
-                            const reScale = this.currentScale.find((d: any) => d.field === axis.field);
-                            minValue = reScale.min;
-                            maxValue = reScale.max;
-                        }
-                    }
-
-                    if (axis.type === ScaleType.NUMBER) {
-                        // TODO : index string domain 지정.
-                        scale.domain(
-                            [minValue, maxValue]
-                        );
-
-                        if (axis.isRound === true) {
-                            scale.nice();
-                        }
-                    } else {
-                        scale.domain([new Date(minValue), new Date(maxValue)]);
-                    }
-                }
-            }
-
-            returnAxes.push({
-                field: axis.field,
-                orient: axis.placement,
-                scale,
-                type: axis.type,
-                visible: axis.visible === false ? false : true,
-                tickFormat: axis.tickFormat ? axis.tickFormat : undefined,
-                tickTextParser: axis.tickTextParser ? axis.tickTextParser : undefined,
-                tickSize: axis.tickSize ? axis.tickSize : undefined,
-                isGridLine: axis.isGridLine === true ? true : false,
-                isZoom: axis.isZoom === true ? true : false,
-                min: minValue,
-                max: maxValue,
-                title: axis.title
-            });
-        });
-        return returnAxes;
+        return ChartAxis.generateScaleByAxis(axes, this.data, {width, height}, this.currentScale);
     }
 
     protected updateBrushHandler(orient: string = 'bottom', brush: any) {

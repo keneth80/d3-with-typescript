@@ -808,9 +808,6 @@ const webGLBigDataLineSeriesSample = () => {
             xDirection: Placement.BOTTOM,
             yDirection: Placement.LEFT,
             direction: Direction.BOTH
-        },
-        displayDelay: {
-            delayTime: 500
         }
     };
 
