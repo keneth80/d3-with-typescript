@@ -14,7 +14,7 @@ export class SeriesBase implements ISeries {
 
     displayName: string; // legend 출력시 출력 명칭
 
-    displayNames: Array<string>; // legend 출력시 출력 명칭
+    displayNames: string[]; // legend 출력시 출력 명칭
 
     shape: string; // legend 출력 시 색상아이템의 type
 
@@ -36,7 +36,7 @@ export class SeriesBase implements ISeries {
 
     protected scaleValue: ScaleValue;
 
-    protected originQuadTree: Quadtree<Array<any>> = undefined;
+    protected originQuadTree: Quadtree<any[]> = undefined;
 
     private chart: ChartBase;
 
@@ -74,30 +74,18 @@ export class SeriesBase implements ISeries {
         return this.itemClickSubject.asObservable();
     }
 
-    changeConfiguration(configuration: SeriesConfiguration) {
+    changeConfiguration(configuration: SeriesConfiguration) {}
 
-    }
+    select(displayName: string, isSelected: boolean) {}
 
-    select(displayName: string, isSelected: boolean) {
+    hide(displayName: string, isHide: boolean) {}
 
-    };
-
-    hide(displayName: string, isHide: boolean) {
-
-    }
-
-    unSelectItem() {
-
-    }
+    unSelectItem() {}
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
-        mainGroup: Selection<BaseType, any, HTMLElement, any>, index: number) {
+        mainGroup: Selection<BaseType, any, HTMLElement, any>, index: number) {}
 
-    }
-
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize, displayOption: DisplayOption) {
-
-    }
+    drawSeries(chartData: any[], scales: Scale[], geometry: ContainerSize, displayOption: DisplayOption) {}
 
     setTooltipCanvas(svg: Selection<BaseType, any, HTMLElement, any>) {
         // return this.svg.select('.tooltip-group');
@@ -106,7 +94,9 @@ export class SeriesBase implements ISeries {
             const targetSvg = parentElement.append('svg')
                 .attr('class', 'tooltip-canvas')
                 .style('z-index', 3)
-                .style('position', 'absolute');
+                .style('position', 'absolute')
+                .style('width', '100%')
+                .style('height', '100%');
 
             if (!this.clipPath) {
                 this.maskId = guid();
