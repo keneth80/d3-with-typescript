@@ -11,7 +11,8 @@
         "prefer-for-of": false,
         "no-string-literal": false,
         "no-console": false,
-        "forin": false
+        "forin": false,
+        "no-bitwise": false
     },
     "rulesDirectory": []
 }
