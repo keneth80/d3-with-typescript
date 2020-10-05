@@ -1,4 +1,4 @@
-import { Selection, select, BaseType, mouse, event } from 'd3-selection';
+import { Selection, BaseType, } from 'd3-selection';
 import { scaleOrdinal, scaleBand } from 'd3-scale';
 import { format } from 'd3-format';
 import { quadtree } from 'd3-quadtree';

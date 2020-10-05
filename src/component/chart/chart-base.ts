@@ -1,8 +1,5 @@
 // import './chart.css';
-
-import { min, max } from 'd3-array';
 import { timeFormat } from 'd3-time-format';
-import { scaleBand, scaleLinear, scaleTime, scalePoint } from 'd3-scale';
 import { schemeCategory10 } from 'd3-scale-chromatic';
 import { select, Selection, BaseType, event } from 'd3-selection';
 import { axisBottom, axisLeft, axisTop, axisRight } from 'd3-axis';

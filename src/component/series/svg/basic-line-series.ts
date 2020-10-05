@@ -1,16 +1,14 @@
-import { Selection, BaseType, select, event, mouse } from 'd3-selection';
+import { Selection, BaseType, event } from 'd3-selection';
 import { line, curveMonotoneX } from 'd3-shape';
 import { format } from 'd3-format';
 import { transition } from 'd3-transition';
-import { easeLinear, easeCircle } from 'd3-ease';
-import { quadtree, Quadtree } from 'd3-quadtree';
+import { easeLinear } from 'd3-ease';
+import { quadtree } from 'd3-quadtree';
 
-import { Subject, Observable } from 'rxjs';
-
-import { Scale, ContainerSize, DisplayOption, ChartMouseEvent } from '../../chart/chart.interface';
+import { Scale, ContainerSize, DisplayOption } from '../../chart/chart.interface';
 import { SeriesBase } from '../../chart/series-base';
 import { SeriesConfiguration } from '../../chart/series.interface';
-import { textBreak, isIE, getTextWidth, delayExcute } from '../../chart/util/d3-svg-util';
+import { textBreak, delayExcute } from '../../chart/util/d3-svg-util';
 import { Placement } from '../../chart/chart-configuration';
 import { ChartBase } from '../../chart';
 

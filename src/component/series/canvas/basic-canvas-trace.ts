@@ -1,8 +1,8 @@
-import { Selection, BaseType, select, mouse } from 'd3-selection';
+import { Selection, BaseType, select } from 'd3-selection';
 import { line, curveMonotoneX } from 'd3-shape';
-import { quadtree, Quadtree } from 'd3-quadtree';
+import { quadtree } from 'd3-quadtree';
 
-import { Scale, ContainerSize, DisplayOption, ChartMouseEvent, DisplayType } from '../../chart/chart.interface';
+import { Scale, ContainerSize, DisplayOption, DisplayType } from '../../chart/chart.interface';
 import { SeriesBase } from '../../chart/series-base';
 import { SeriesConfiguration } from '../../chart/series.interface';
 import { textBreak, delayExcute } from '../../chart/util/d3-svg-util';

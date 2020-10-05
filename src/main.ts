@@ -7,7 +7,7 @@ import { randomUniform, randomNormal } from 'd3-random';
 import { scaleOrdinal } from 'd3-scale';
 import { timeParse, timeFormat } from 'd3-time-format';
 import { schemeCategory10 } from 'd3-scale-chromatic';
-import { csv, json } from 'd3-fetch';
+import { csv } from 'd3-fetch';
 
 import { highlightBlock } from 'highlight.js';
 
@@ -27,8 +27,7 @@ import { BasicDonutSeries } from './component/series/svg/basic-donut-series';
 import { BasicAreaSeries } from './component/series/svg/basic-area-series';
 import { BasicCanvasScatterPlotModel, BasicCanvasScatterPlot } from './component/series/canvas/basic-canvas-scatter-plot';
 import { BasicGaugeSeries } from './component/series/svg/basic-gauge-series';
-import { BasicZoomSelection } from './component/functions/basic-zoom-selection';
-import { topologyData, topologyData2 } from './component/mock-data/topology-data';
+import { topologyData } from './component/mock-data/topology-data';
 import { tracePoints, stepInfo } from './component/mock-data/trace-data';
 import { BasicTopology, TopologyGroupElement, TopologyData } from './component/series/svg/basic-topology';
 
@@ -36,19 +35,13 @@ import { Placement, Align, Shape, ScaleType, Direction } from './component/chart
 
 import { lineData } from './component/mock-data/line-one-field-data';
 import { BasicCanvasLineSeries, BasicCanvasLineSeriesConfiguration } from './component/series/canvas/basic-canvas-line-series';
-import { ExampleSeries } from './component/series/example-series';
-import { BasicCanvasWebgLineSeriesOne, BasicCanvasWebglLineSeriesOneConfiguration, BasicCanvasWebglLineSeriesOneModel } from './component/series/webgl/basic-canvas-webgl-line-series-one';
+
+import { BasicCanvasWebglLineSeriesOneConfiguration, BasicCanvasWebglLineSeriesOneModel } from './component/series/webgl/basic-canvas-webgl-line-series-one';
 import { BasicCanvasTrace, BasicCanvasTraceModel, BasicCanvasTraceConfiguration } from './component/series/canvas/basic-canvas-trace';
 import { BasicCanvasMouseZoomHandler } from './component/functions/basic-canvas-mouse-zoom-handler';
-import { BasicCanvasMouseHandler } from './component/functions';
-import { BasicSpecArea } from './component/options/basic-svg-spec-area';
-import { BasicStepArea } from './component/options/basic-svg-step-area';
-import { BasicStepLine } from './component/options/basic-svg-step-line';
 
 import { delayExcute } from './component/chart/util/d3-svg-util';
 import { MiChart, OptionConfiguration, MiccBaseConfiguration } from './component/mi-chart';
-import { GroupedHorizontalBarSeriesConfiguration } from './component/series/svg/grouped-horizontal-bar-series';
-import { StackedHorizontalBarSeriesConfiguration } from './component/series/svg/stacked-horizontal-bar-series';
 import { ChartItemSelectEvent } from './component/chart';
 
 

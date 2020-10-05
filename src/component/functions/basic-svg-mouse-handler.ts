@@ -1,12 +1,8 @@
-import { Selection, BaseType, select, event, mouse } from 'd3-selection';
-import { drag } from 'd3-drag';
-import { zoom } from 'd3-zoom';
-import { min, max } from 'd3-array';
+import { Selection, BaseType, mouse } from 'd3-selection';
 
 import { Scale, ContainerSize } from '../chart/chart.interface';
 import { FunctionsBase } from '../chart/functions-base';
 import { ChartBase } from '../chart/chart-base';
-import { Direction, ScaleType, Placement } from '../chart/chart-configuration';
 import { fromEvent } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 

@@ -1,15 +1,14 @@
-import { Selection, BaseType, select, event, mouse } from 'd3-selection';
+import { Selection, BaseType, select, mouse } from 'd3-selection';
 import { drag } from 'd3-drag';
-import { zoom } from 'd3-zoom';
 import { min, max } from 'd3-array';
+import { Subject } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 
 import { Scale, ContainerSize } from '../chart/chart.interface';
 import { FunctionsBase } from '../chart/functions-base';
 import { ChartBase } from '../chart/chart-base';
 import { Direction, ScaleType, Placement } from '../chart/chart-configuration';
-import { delayExcute } from '../chart/util/d3-svg-util';
-import { fromEvent, Subject } from 'rxjs';
-import { debounceTime } from 'rxjs/operators';
+
 
 export interface BasicCanvasMouseZoomHandlerConfiguration {
     xDirection?: string; // bottom or top

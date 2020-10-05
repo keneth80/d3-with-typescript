@@ -143,7 +143,7 @@ export class MiChart {
     // svg 시리즈 출력 설정정보 맵핑.
     static SvgGroupedBarChart(
         configuration: MiccBaseConfiguration, 
-        series: GroupedVerticalBarSeriesConfiguration,
+        series: GroupedVerticalBarSeriesConfiguration | GroupedHorizontalBarSeriesConfiguration,
         options: Array<OptionConfiguration> = [],
         direction: String = Direction.VERTICAL): BasicChart {
 
@@ -162,7 +162,7 @@ export class MiChart {
 
     static SvgStackedBarChart(
         configuration: MiccBaseConfiguration, 
-        series: StackedVerticalBarSeriesConfiguration,
+        series: StackedVerticalBarSeriesConfiguration | StackedHorizontalBarSeriesConfiguration,
         options: Array<OptionConfiguration> = [],
         direction: String = Direction.VERTICAL): BasicChart {
 

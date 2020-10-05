@@ -1,6 +1,6 @@
 import { Selection, BaseType } from 'd3-selection';
 import { ChartBase } from './chart-base';
-import { Scale, DisplayOption, ContainerSize, ChartMouseEvent } from './chart.interface';
+import { Scale, DisplayOption, ContainerSize } from './chart.interface';
 
 export interface SeriesConfiguration {
     type?: string; // default: series, or option

@@ -1,4 +1,4 @@
-import { Selection, select, BaseType, mouse } from 'd3-selection';
+import { Selection, BaseType } from 'd3-selection';
 import { scaleOrdinal } from 'd3-scale';
 import { stack } from 'd3-shape';
 import { format } from 'd3-format';
