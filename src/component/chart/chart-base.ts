@@ -386,16 +386,17 @@ export class ChartBase<T = any> implements IChart {
             return;
         }
 
+        // TODO: 100% 적용해야함.
         const styleWidth = this.selector.style('width');
         const styleHeight = this.selector.style('height');
-        const divWidth = this.selector.style('width').substring(0, styleWidth.indexOf('.'));
-        const divHeight = this.selector.style('height').substring(0, styleHeight.indexOf('.'));
+        // const divWidth = this.selector.style('width').substring(0, styleWidth.indexOf('.'));
+        // const divHeight = this.selector.style('height').substring(0, styleHeight.indexOf('.'));
 
         this.svg = this.selector.append('svg')
             .style('position', 'absolute')
             .style('display', 'block')
-            .style('width', divWidth + 'px')
-            .style('height', divHeight + 'px');
+            .style('width', styleWidth)
+            .style('height', styleHeight);
 
         if (configuration.style) {
             // background color 설정.

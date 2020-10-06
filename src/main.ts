@@ -43,6 +43,7 @@ import { BasicCanvasMouseZoomHandler } from './component/functions/basic-canvas-
 import { delayExcute } from './component/chart/util/d3-svg-util';
 import { MiChart, OptionConfiguration, MiccBaseConfiguration } from './component/mi-chart';
 import { ChartItemSelectEvent } from './component/chart';
+import { SvgTraceChart } from './component/chart-generator';
 
 
 class SalesModel {
@@ -436,7 +437,7 @@ const simpleSvgLineSeriesExample = () => {
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
     highlightBlock((select('#json-configuration').node() as any));
 
-    chart = MiChart.SvgTraceChart(commonConfiguration, seriesList).draw();
+    chart = SvgTraceChart(commonConfiguration, seriesList).draw();
 }
 
 const simpleSvgColumnSeriesExample = () => {
