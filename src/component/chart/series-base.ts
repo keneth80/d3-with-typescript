@@ -89,9 +89,8 @@ export class SeriesBase implements ISeries {
 
     setTooltipCanvas(svg: Selection<BaseType, any, HTMLElement, any>) {
         // return this.svg.select('.tooltip-group');
-        const parentElement = select((svg.node() as HTMLElement).parentNode as any);
-        if(!parentElement.select('.tooltip-canvas').node()) {
-            const targetSvg = parentElement.append('svg')
+        if(!this.chartBase.chartContainer.select('.tooltip-canvas').node()) {
+            const targetSvg = this.chartBase.chartContainer.append('svg')
                 .attr('class', 'tooltip-canvas')
                 .style('z-index', 3)
                 .style('position', 'absolute')
@@ -114,7 +113,7 @@ export class SeriesBase implements ISeries {
 
             return targetSvg;
         } else {
-            return parentElement.select('.tooltip-canvas');
+            return this.chartBase.chartContainer.select('.tooltip-canvas');
         }
     }
 

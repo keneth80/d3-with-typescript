@@ -76,25 +76,24 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
                   index: number) {
         this.svg = svg;
         this.mainGroup = mainGroup;
-        const parentElement = select((this.svg.node() as HTMLElement).parentNode as any);
-        if (!parentElement.select('.zoom-canvas').node()) {
-            this.zoomCanvas = parentElement
+        if (!this.chartBase.chartContainer.select('.zoom-canvas').node()) {
+            this.zoomCanvas = this.chartBase.chartContainer
                 .append('canvas')
                 .attr('class', 'zoom-canvas')
                 .style('z-index', index + 10)
                 .style('position', 'absolute');
         } else {
-            this.zoomCanvas = parentElement.select('.zoom-canvas');
+            this.zoomCanvas = this.chartBase.chartContainer.select('.zoom-canvas');
         }
 
-        if (!parentElement.select('.' + ChartBase.POINTER_CANVAS).node()) {
-            this.pointerCanvas = parentElement
+        if (!this.chartBase.chartContainer.select('.' + ChartBase.POINTER_CANVAS).node()) {
+            this.pointerCanvas = this.chartBase.chartContainer
                 .append('canvas')
                 .attr('class', ChartBase.POINTER_CANVAS)
                 .style('z-index', 99)
                 .style('position', 'absolute');
         } else {
-            this.pointerCanvas = parentElement.select('.' + ChartBase.POINTER_CANVAS);
+            this.pointerCanvas = this.chartBase.chartContainer.select('.' + ChartBase.POINTER_CANVAS);
         }
     }
 

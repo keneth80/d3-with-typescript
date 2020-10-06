@@ -40,15 +40,14 @@ export class BasicCanvasMouseHandler extends FunctionsBase {
                   index: number) {
         this.svg = svg;
         this.mainGroup = mainGroup;
-        const parentElement = select((this.svg.node() as HTMLElement).parentNode as any);
-        if (!parentElement.select('.' + ChartBase.POINTER_CANVAS).node()) {
-            this.pointerCanvas = parentElement
+        if (!this.chartBase.chartContainer.select('.' + ChartBase.POINTER_CANVAS).node()) {
+            this.pointerCanvas = this.chartBase.chartContainer
                 .append('canvas')
                 .attr('class', ChartBase.POINTER_CANVAS)
                 .style('z-index', index + 20)
                 .style('position', 'absolute');
         } else {
-            this.pointerCanvas = parentElement.select('.' + ChartBase.POINTER_CANVAS);
+            this.pointerCanvas = this.chartBase.chartContainer.select('.' + ChartBase.POINTER_CANVAS);
         }
     }
 

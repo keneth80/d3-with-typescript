@@ -77,8 +77,6 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
 
     // private isAnimation: boolean = false;
 
-    private parentElement: Selection<BaseType, any, HTMLElement, any>;
-
     private move$: Subject<any> = new Subject();
 
     private seriesData: T[];
@@ -139,14 +137,12 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         this.svg = svg;
         this.svg.style('position', 'absolute');
         this.setTooltipCanvas(this.svg);
-        this.parentElement = select((this.svg.node() as HTMLElement).parentNode as any);
-
         if (
-            !this.parentElement
+            !this.chartBase.chartContainer
                 .select('.' + ChartBase.DRAWING_CANVAS)
                 .node()
         ) {
-            this.canvas = this.parentElement
+            this.canvas = this.chartBase.chartContainer
                 .append('canvas')
                 .datum({
                     index
@@ -156,15 +152,15 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
                 .style('z-index', 2)
                 .style('position', 'absolute');
         } else {
-            this.canvas = this.parentElement.select('.' + ChartBase.DRAWING_CANVAS);
+            this.canvas = this.chartBase.chartContainer.select('.' + ChartBase.DRAWING_CANVAS);
         }
 
         if (
-            !this.parentElement
+            !this.chartBase.chartContainer
                 .select('.' + ChartBase.SELECTION_CANVAS)
                 .node()
         ) {
-            this.parentElement
+            this.chartBase.chartContainer
                 .append('canvas')
                 .datum({
                     index
@@ -225,7 +221,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
                 `translate(${this.chartBase.chartMargin.left + 1}px, ${this.chartBase.chartMargin.top}px)`
             );
 
-        this.parentElement
+        this.chartBase.chartContainer
             .select('.' + ChartBase.SELECTION_CANVAS)
             .attr('width', geometry.width)
             .attr('height', geometry.height)
@@ -272,8 +268,8 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         }
         this.subscription.unsubscribe();
         this.canvas.remove();
-        this.parentElement.select('.tooltip-canvas').remove();
-        this.parentElement.select('.' + ChartBase.SELECTION_CANVAS).remove();
+        this.chartBase.chartContainer.select('.' + ChartBase.TOOLTIP_CANVAS).remove();
+        this.chartBase.chartContainer.select('.' + ChartBase.SELECTION_CANVAS).remove();
 
     }
 
@@ -772,15 +768,15 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         selectedItem: [number, number, any][],
         style: { radius: number; strokeColor: string; strokeWidth: number }
     ) {
-        const selectionCanvas = this.parentElement.select('.' + ChartBase.SELECTION_CANVAS);
+        const selectionCanvas = this.chartBase.chartContainer.select('.' + ChartBase.SELECTION_CANVAS);
         const context = (selectionCanvas.node() as any).getContext('2d');
         context.clearRect(0, 0, geometry.width, geometry.height);
         context.fillStyle = style.strokeColor;
         context.lineWidth = style.strokeWidth;
         context.strokeStyle = '#000000';
         // cx, cy과 해당영역에 출력이 되는지? 좌표가 마이너스면 출력 안하는 로직을 넣어야 함.
-        const cx = parseInt(selectedItem[0] + '', 16);
-        const cy = parseInt(selectedItem[1] + '', 16);
+        const cx = +selectedItem[0];
+        const cy = +selectedItem[1];
         if (cx < 0 || cy < 0) {
             return;
         }

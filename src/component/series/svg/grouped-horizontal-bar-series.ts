@@ -9,7 +9,7 @@ import { SeriesConfiguration } from '../../chart/series.interface';
 
 export interface GroupedHorizontalBarSeriesConfiguration extends SeriesConfiguration {
     xField: string;
-    columns: Array<string>;
+    columns: string[];
 }
 
 export class GroupedHorizontalBarSeries extends SeriesBase {
@@ -17,7 +17,7 @@ export class GroupedHorizontalBarSeries extends SeriesBase {
 
     private yField: string;
 
-    private columns: Array<string>;
+    private columns: string[];
 
     private rootGroup: Selection<BaseType, any, HTMLElement, any>;
 
@@ -42,7 +42,7 @@ export class GroupedHorizontalBarSeries extends SeriesBase {
         this.numberFmt = format(',d');
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
                   mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
         this.rootGroup = mainGroup;
@@ -59,7 +59,7 @@ export class GroupedHorizontalBarSeries extends SeriesBase {
         }
     }
 
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
+    drawSeries(chartData: any[], scales: Scale[], geometry: ContainerSize) {
         const x: any = scales.find((scale: Scale) => scale.orient === 'bottom').scale;
         const y: any = scales.find((scale: Scale) => scale.orient === 'left').scale;
 
@@ -85,10 +85,10 @@ export class GroupedHorizontalBarSeries extends SeriesBase {
                 return `translate( ${x(d[this.xField])} ,0)`;
             })
             .selectAll('.grouped-horizontal-item')
-                .data((data: any) => { 
+                .data((data: any) => {
                     return this.columns.map(
-                        (key: string, index: number) => { return {key: key, value: data[key], data, index}; }
-                    ); 
+                        (key: string, index: number) => { return {key, value: data[key], data, index}; }
+                    );
                 })
                 .join(
                     (enter) => {
@@ -99,7 +99,7 @@ export class GroupedHorizontalBarSeries extends SeriesBase {
                                     .style('fill', () => colorDarker(z(d.key), 2)) // point
                                     // .style('stroke', '#f5330c')
                                     // .style('stroke-width', 2);
-            
+
                                 this.tooltipGroup = this.chartBase.showTooltip();
                                 select(nodeList[i]).classed('tooltip', true);
                             })
@@ -108,16 +108,16 @@ export class GroupedHorizontalBarSeries extends SeriesBase {
                                     .style('fill', () => z(d.key) + '') // point
                                     // .style('stroke', null)
                                     // .style('stroke-width', null);
-            
+
                                 this.chartBase.hideTooltip();
                                 select(nodeList[i]).classed('tooltip', false);
                             })
                             .on('mousemove', (d: any, i: number, nodeList: any) => {
                                 const textElement: any = this.tooltipGroup.select('text').text(`${d.key}: ${this.numberFmt(d.value)}`);
                                 const textWidth = textElement.node().getComputedTextLength() + 10;
-                                
+
                                 let xPosition = x(d.data[this.xField]) + (d.index * barx.bandwidth());
-                                let yPosition = event.offsetY -30;
+                                const yPosition = event.offsetY -30;
                                 if (xPosition + textWidth > geometry.width) {
                                     xPosition = xPosition - textWidth;
                                 }
@@ -140,7 +140,6 @@ export class GroupedHorizontalBarSeries extends SeriesBase {
                 .attr('height', (d: any) => { return Math.abs(y(d.value) - y(0)); })
                 .attr('width', barx.bandwidth())
                 .attr('fill', (d: any) => z(d.key) + '');
-        
         // this.drawLegend(this.columns, z, geometry.width);
     }
 
@@ -157,7 +156,7 @@ export class GroupedHorizontalBarSeries extends SeriesBase {
     //             (exit) => exit.remove()
     //         )
     //         .attr('transform', (d: any, i: number) => { return 'translate(0,' + i * 20 + ')'; });
-      
+
     //     legend.append('rect')
     //         .attr('x', width - 19)
     //         .attr('width', 19)
@@ -165,7 +164,7 @@ export class GroupedHorizontalBarSeries extends SeriesBase {
     //         .attr('fill', (d) => {
     //             return z(d) + '';
     //         });
-      
+
     //     legend.append('text')
     //         .attr('x', width - 24)
     //         .attr('y', 9.5)

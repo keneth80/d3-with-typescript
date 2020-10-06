@@ -40,7 +40,7 @@ export interface BasicCanvasTraceConfiguration extends SeriesConfiguration {
         radius?: number;
     };
     filter?: any;
-    data?: Array<any>;
+    data?: any[];
     // animation?: boolean;
 }
 
@@ -65,9 +65,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
     private strokeOpacity = 1;
 
-    private parentElement: Selection<BaseType, any, HTMLElement, any>;
-
-    private seriesData: Array<T>;
+    private seriesData: T[];
 
     // ================= style 관련 변수 =============== //
     private radius = 4;
@@ -106,11 +104,11 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         }
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
-                  mainGroup: Selection<BaseType, any, HTMLElement, any>, 
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
+                  mainGroup: Selection<BaseType, any, HTMLElement, any>,
                   index: number) {
         this.svg = svg;
-        
+
         if (!this.tooltipGroup) {
             this.tooltipGroup = this.setTooltipCanvas(this.svg);
             this.tooltipGroup.style('z-index', index + 2);
@@ -122,10 +120,8 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
             .style('z-index', index + 2)
             .style('position', 'absolute');
 
-        this.parentElement = select((this.svg.node() as HTMLElement).parentNode as any);
-
-        if (!this.canvas) {            
-            this.canvas = this.parentElement
+        if (!this.canvas) {
+            this.canvas = this.chartBase.chartContainer
                 .append('canvas')
                 .datum({
                     index
@@ -136,18 +132,18 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                 .style('position', 'absolute');
         }
 
-        if (!this.parentElement.select('.' + ChartBase.SELECTION_CANVAS).node()) {
-            this.parentElement
+        if (!this.chartBase.chartContainer.select('.' + ChartBase.SELECTION_CANVAS).node()) {
+            this.chartBase.chartContainer
                 .append('canvas')
                 .attr('class', ChartBase.SELECTION_CANVAS)
                 .style('z-index', index + 2)
                 .style('position', 'absolute');
         } else {
-            this.parentElement.select('.' + ChartBase.SELECTION_CANVAS).style('z-index', index + 3)
+            this.chartBase.chartContainer.select('.' + ChartBase.SELECTION_CANVAS).style('z-index', index + 3)
         }
     }
 
-    drawSeries(chartBaseData: Array<T>, scales: Array<Scale>, geometry: ContainerSize, option: DisplayOption) {
+    drawSeries(chartBaseData: T[], scales: Scale[], geometry: ContainerSize, option: DisplayOption) {
         const chartData = this.seriesData ? this.seriesData : chartBaseData;
 
         this.geometry = geometry;
@@ -177,13 +173,13 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         if (option.displayType === DisplayType.RESIZE) {
             this.restoreCanvas = undefined;
         }
-        
+
         this.canvas
             .attr('width', geometry.width)
             .attr('height', geometry.height)
             .style('transform', `translate(${(this.chartBase.chartMargin.left)}px, ${(this.chartBase.chartMargin.top)}px)`);
 
-        this.parentElement.select('.' + ChartBase.SELECTION_CANVAS)
+        this.chartBase.chartContainer.select('.' + ChartBase.SELECTION_CANVAS)
             .attr('width', geometry.width)
             .attr('height', geometry.height)
             .style('transform', `translate(${(this.chartBase.chartMargin.left + 1)}px, ${(this.chartBase.chartMargin.top)}px)`);
@@ -199,18 +195,16 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         // ctx.fillStyle = "rgba(0, 0, 0, 0)";
         // ctx.fillRect(left, top, width, height);
 
-        let generateData: Array<any>;
+        let generateData: any[];
         delayExcute(100, () => {
-            const lineData: Array<any> = (!this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item)))
+            const lineData: any[] = (!this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item)))
             .filter((d: T) => d[this.xField] >= (xmin - xmin * 0.02) && d[this.xField] <= (xmax + xmax * 0.02) && d[this.yField] >= ymin && d[this.yField] <= ymax);
 
-            
             if (option.displayType === DisplayType.ZOOMOUT && this.restoreCanvas) {
                 generateData = lineData
                     .map((d: BasicCanvasTraceModel, i: number) => {
                         const xposition = x(d[this.xField]) + padding;
                         const yposition = y(d[this.yField]);
-                        
                         return [xposition, yposition, d];
                     });
                 context.drawImage(this.restoreCanvas.node(), 0, 0);
@@ -219,11 +213,11 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                     .map((d: BasicCanvasTraceModel, i: number) => {
                         const xposition = x(d[this.xField]) + padding;
                         const yposition = y(d[this.yField]);
-                        
                         // POINT: data 만들면서 포인트 찍는다.
                         // if (this.config.dot) {
-                        const rectSize = this.config.dot.radius / 2;
-                        context.fillRect(xposition - rectSize, yposition - rectSize, this.config.dot.radius, this.config.dot.radius);
+                        const rectSize = this.config.dot.radius;
+                        context.fillRect(xposition - rectSize, yposition - rectSize, this.config.dot.radius * 2, this.config.dot.radius * 2);
+                        // context.arc(xposition, yposition, this.config.dot.radius, 0, 2 * Math.PI, false);
                         // }
 
                         return [xposition, yposition, d];
@@ -231,10 +225,10 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                 // 사이즈가 변경이 되면서 zoom out 경우에는 초기 사이즈를 업데이트 해준다.
                 this.line = line()
                     .x((data: any) => {
-                        return data[0]; 
+                        return data[0];
                     }) // set the x values for the line generator
                     .y((data: any) => {
-                        return data[1]; 
+                        return data[1];
                     })
                     .context(context); // set the y values for the line generator
 
@@ -243,7 +237,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                 }
 
                 this.line(generateData);
-                
+                // context.fill();
                 context.stroke();
             }
 
@@ -253,8 +247,8 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         });
 
         delayExcute(300, () => {
-            if ((option.displayType === DisplayType.NORMAL || option.displayType === DisplayType.ZOOMOUT && !this.restoreCanvas)) 
-            {
+            if ((option.displayType === DisplayType.NORMAL ||
+                 option.displayType === DisplayType.ZOOMOUT && !this.restoreCanvas)) {
                 this.restoreCanvas = select(document.createElement('CANVAS'));
                 this.restoreCanvas
                     .attr('width', geometry.width)
@@ -266,10 +260,6 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                 .extent([[0, 0], [geometry.width, geometry.height]])
                 .addAll(generateData);
         });
-
-        // (this.canvas.node() as any).addEventListener('DOMNodeRemoved', () => {
-        //     console.log('remove canvas');
-        // });
     }
 
     select(displayName: string, isSelected: boolean) {
@@ -283,11 +273,11 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
     destroy() {
         this.subscription.unsubscribe();
         this.canvas.remove();
-        this.parentElement.select('.tooltip-canvas').remove();
-        this.parentElement.select('.' + ChartBase.SELECTION_CANVAS).remove();
+        this.chartBase.chartContainer.select('.tooltip-canvas').remove();
+        this.chartBase.chartContainer.select('.' + ChartBase.SELECTION_CANVAS).remove();
     }
 
-    getSeriesDataByPosition(value: Array<number>) {
+    getSeriesDataByPosition(value: number[]) {
         return this.search(
             this.originQuadTree,
             value[0] - this.config.dot.radius,
@@ -297,7 +287,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         );
     }
 
-    showPointAndTooltip(value: Array<number>, selected: Array<any>) {
+    showPointAndTooltip(value: number[], selected: any[]) {
         // const index = Math.floor(selected.length / 2);
         const index = selected.length - 1;
         const selectedItem = selected[index];
@@ -327,7 +317,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
     //     );
     // }
 
-    private onClickItem(selectedItem: any, geometry: ContainerSize, mouseEvent: Array<number>) {
+    private onClickItem(selectedItem: any, geometry: ContainerSize, mouseEvent: number[]) {
         if (selectedItem) {
             this.itemClickSubject.next({
                 data: selectedItem[2],
@@ -343,12 +333,12 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         }
     }
 
-    private setChartTooltip(d: any, geometry: ContainerSize, mouseEvent: Array<number>) {
+    private setChartTooltip(d: any, geometry: ContainerSize, mouseEvent: number[]) {
         this.tooltipGroup = this.chartBase.showTooltip();
-    
+
         const textElement: any = this.tooltipGroup.select('text').attr('dy', '.1em').text(
-            this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser ? 
-                this.chartBase.tooltip.tooltipTextParser(d[2]) : 
+            this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser ?
+                this.chartBase.tooltip.tooltipTextParser(d[2]) :
                 `${this.xField}: ${d[2][this.xField]} \n ${this.yField}: ${d[2][this.yField]}`
         );
 
@@ -357,21 +347,21 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         // const parseTextNode = textElement.node().getBoundingClientRect();
         const parseTextNode = textElement.node().getBBox();
 
-        const textWidth = parseTextNode.width + 7;
-        const textHeight = parseTextNode.height + 5;
-        
-        let xPosition = mouseEvent[0] + this.chartBase.chartMargin.left + 10;
-        let yPosition = mouseEvent[1] + this.chartBase.chartMargin.top + 10;
-        
-        if (xPosition + textWidth > geometry.width) {
+        const textWidth = Math.floor(parseTextNode.width) + 7;
+        const textHeight = Math.floor(parseTextNode.height) + 5;
+
+        let xPosition = mouseEvent[0] + this.chartBase.chartMargin.left + this.radius * 2;
+        let yPosition = mouseEvent[1] + this.chartBase.chartMargin.top + this.radius * 2;
+
+        if (xPosition + textWidth > geometry.width + this.chartBase.chartMargin.left) {
             xPosition = xPosition - textWidth;
         }
 
-        if (yPosition + textHeight > geometry.height) {
+        if (yPosition + textHeight > geometry.height + this.chartBase.chartMargin.top) {
             yPosition = yPosition - textHeight;
         }
 
-        this.tooltipGroup.attr('transform', `translate(${xPosition}, ${yPosition})`)
+        this.tooltipGroup.attr('transform', `translate(${xPosition + this.radius}, ${yPosition + this.radius})`)
             .selectAll('rect')
             .attr('width', textWidth)
             .attr('height', textHeight);
@@ -379,11 +369,11 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
     }
 
     private drawTooltipPoint(
-        geometry: ContainerSize, 
-        position: Array<number>, 
+        geometry: ContainerSize,
+        position: number[],
         style:{radius: number, strokeColor: string, lineWidth: number}
     ) {
-        const selectionCanvas = select((this.svg.node() as HTMLElement).parentElement).select('.' + ChartBase.SELECTION_CANVAS);
+        const selectionCanvas = this.chartBase.chartContainer.select('.' + ChartBase.SELECTION_CANVAS);
         const context = (selectionCanvas.node() as any).getContext('2d');
         context.clearRect(0, 0, geometry.width, geometry.height);
         context.fillStyle = style.strokeColor;
@@ -396,11 +386,11 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         if (cx < 0 || cy < 0) {
             return;
         }
-        
+
         context.beginPath();
         context.fillRect(cx - style.radius, cy - style.radius, style.radius * 2, style.radius * 2);
         // context.strokeRect(cx - style.radius, cy - style.radius, style.radius * 2, style.radius * 2);
-        // context.arc(pointer.cx, pointer.cy, pointer.r, 0, 2 * Math.PI);
+        // context.arc(cx, cy, style.radius, 0, 2 * Math.PI);
         context.closePath();
         context.fill();
         context.stroke();

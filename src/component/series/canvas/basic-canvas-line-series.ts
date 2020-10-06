@@ -76,8 +76,6 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
 
     // private isAnimation: boolean = false;
 
-    private parentElement: Selection<BaseType, any, HTMLElement, any>;
-
     private memoryCanvas: Selection<BaseType, any, HTMLElement, any>;
 
     private move$: Subject<any> = new Subject();
@@ -119,10 +117,8 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
             .style('z-index', 1)
             .style('position', 'absolute');
 
-        this.parentElement = select((this.svg.node() as HTMLElement).parentNode as any);
-
         if (!this.canvas) {
-            this.canvas = this.parentElement
+            this.canvas = this.chartBase.chartContainer
                 .append('canvas')
                 .datum({
                     index
@@ -137,14 +133,14 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
         }
 
         // pointer canvas는 단 한개만 존재한다. 이벤트를 받는 canvas 임.
-        if (!this.parentElement.select('.' + ChartBase.POINTER_CANVAS).node()) {
-            this.pointerCanvas = this.parentElement
+        if (!this.chartBase.chartContainer.select('.' + ChartBase.POINTER_CANVAS).node()) {
+            this.pointerCanvas = this.chartBase.chartContainer
                 .append('canvas')
                 .attr('class', ChartBase.POINTER_CANVAS)
                 .style('z-index', index + 4)
                 .style('position', 'absolute');
         } else {
-            this.pointerCanvas = this.parentElement.select('.' + ChartBase.POINTER_CANVAS).style('z-index', index + 4);
+            this.pointerCanvas = this.chartBase.chartContainer.select('.' + ChartBase.POINTER_CANVAS).style('z-index', index + 4);
         }
     }
 
@@ -321,7 +317,7 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
         pointerContext.lineWidth = this.strokeWidth;
         pointerContext.clearRect(0, 0, geometry.width, geometry.height);
         pointerContext.beginPath();
-        const filterTargetCanvas = this.parentElement.selectAll('.drawing-canvas').filter((d: any, i: number, node: any) => parseInt(select(node[i]).style('opacity'), 16) === 1);
+        const filterTargetCanvas = this.chartBase.chartContainer.selectAll('.drawing-canvas').filter((d: any, i: number, node: any) => parseInt(select(node[i]).style('opacity'), 16) === 1);
         const nodes = filterTargetCanvas.nodes().reverse();
         let selected = null;
         for (let i = 0; i < nodes.length; i++) {

@@ -47,10 +47,6 @@ export interface BasicCanvasScatterPlotConfiguration extends SeriesConfiguration
 export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
     protected canvas: Selection<BaseType, any, HTMLElement, any>;
 
-    private parentElement: Selection<BaseType, any, HTMLElement, any>;
-
-    // private indexing: any = {};
-
     private xField: string = 'x';
 
     private yField: string = 'y';
@@ -77,7 +73,7 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
 
     private strokeColor: string = '#fff';
 
-    private originData: Array<Array<number>> = [];
+    private originData: number[][] = [];
 
     private mouseSubscription: Subscription;
 
@@ -102,13 +98,12 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
-        this.parentElement = select((this.svg.node() as HTMLElement).parentNode as any);
-        this.parentElement
+        this.chartBase.chartContainer
             .select('svg')
             .style('z-index', 1)
             .style('position', 'absolute');
-        if (!this.canvas) {            
-            this.canvas = this.parentElement
+        if (!this.canvas) {
+            this.canvas = this.chartBase.chartContainer
                 .append('canvas')
                 .attr('class', 'drawing-canvas')
                 .style('z-index', 2)
@@ -116,7 +111,7 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
         }
     }
 
-    drawSeries(chartData: Array<T>, scales: Array<Scale>, geometry: ContainerSize) {
+    drawSeries(chartData: T[], scales: Scale[], geometry: ContainerSize) {
         this.originQuadTree = undefined;
         this.setContainerPosition(geometry, this.chartBase);
 
@@ -129,7 +124,7 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
         if (!this.xMinValue) {
             this.xMaxValue = xScale.min;
         }
-        
+
         if (!this.xMaxValue) {
             this.xMaxValue = xScale.max;
         }
@@ -141,7 +136,7 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
         if (!this.yMaxValue) {
             this.yMaxValue = yScale.max;
         }
-        
+
         const xmin = xScale.min;
         const xmax = xScale.max;
         const ymin = yScale.min;
@@ -194,17 +189,17 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
             // 갯수를 끊어 그리기
             const totalCount = generateData.length;
             if (!this.isZoom && totalCount >= 100000) {
-                const svgWidth = parseInt(this.svg.style('width'));
-                const svgHeight = parseInt(this.svg.style('height'));
-                const progressSvg = this.parentElement
+                const svgWidth = +this.svg.style('width').replace('px', '');
+                const svgHeight = +this.svg.style('height').replace('px', '');
+                const progressSvg = this.chartBase.chartContainer
                     .append('svg')
                     .style('z-index', 4)
                     .style('position', 'absolute')
                     .style('background-color', 'none')
-                    .attr('width', svgWidth - 2)
-                    .attr('height', svgHeight - 2)
+                    .style('width', this.svg.style('width'))
+                    .style('height', this.svg.style('height'))
                     .lower();
-                            
+
                 const shareCount = Math.ceil(totalCount / 20000);
 
                 const arrayAsObservable = of(null).pipe(
@@ -214,19 +209,19 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
                     }),
                     switchMap(val => from(val))
                 );
-        
+
                 const eachElementAsObservable = arrayAsObservable.pipe(
                     concatMap(value => timer(400).pipe(mapTo(value))), // Not working : we want to wait 500ms for each value
                     map(val => {
                         return val;
                     })
                 );
-                
+
                 eachElementAsObservable.subscribe(val => {
-                    const currentIndex = parseInt(val + '');
+                    const currentIndex = +val;
                     const start = Math.round(currentIndex * (totalCount / shareCount));
                     const end = (currentIndex + 1) * (totalCount / shareCount) > totalCount ? totalCount : Math.round((currentIndex + 1) * (totalCount / shareCount));
-                    
+
                     console.time('pointdraw');
                     for (let j = start; j < end; j++ ) {
                         // this.drawPoint(chartData[j], this.pointerRadius, x, y, context);
@@ -235,11 +230,11 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
                     console.timeEnd('pointdraw');
 
                     this.drawProgress(
-                        totalCount, 
-                        (currentIndex + 1) * (totalCount / shareCount), 
+                        totalCount,
+                        (currentIndex + 1) * (totalCount / shareCount),
                         {
-                            width: svgWidth, 
-                            height: svgHeight, 
+                            width: svgWidth,
+                            height: svgHeight,
                             target: progressSvg
                         }
                     );
@@ -278,7 +273,7 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
                     .addAll(generateData);
             });
         }
-        
+
         this.subscription.unsubscribe();
         this.subscription = new Subscription();
         delayExcute(100, () => {
@@ -304,9 +299,8 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
                 endY = event.position[1];
 
                 const selected = this.search(this.originQuadTree, endX - this.pointerRadius, endY - this.pointerRadius, endX + this.pointerRadius, endY + this.pointerRadius);
-            
+
                 if (selected.length) {
-                    
                     const selectedItem = selected[0];
                     const selectX = selectedItem[0];
                     const selectY = selectedItem[1];
@@ -364,7 +358,7 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
             .style('transform', `translate(${(chartBase.chartMargin.left + 1)}px, ${(chartBase.chartMargin.top + 1)}px)`);
     }
 
-    private getObjectWithArrayInPromise(list: Array<any>) {
+    private getObjectWithArrayInPromise(list: any[]) {
 		const data = list.map((item: any, index: number) => index);
         return new Promise(resolve => {
             setTimeout(() => resolve({

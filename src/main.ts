@@ -312,7 +312,7 @@ const simpleWebglLineSeriesExample = () => {
     ];
 
     const commonConfiguration: MiccBaseConfiguration = {
-        selector: '#chart',
+        selector: '#chart-div',
         data: simpleData,
         title: {
             placement: Placement.TOP,
@@ -396,7 +396,7 @@ const simpleSvgLineSeriesExample = () => {
     ];
 
     const commonConfiguration: MiccBaseConfiguration = {
-        selector: '#chart',
+        selector: '#chart-div',
         tooltip: {
             eventType: 'mouseover',
             tooltipTextParser: (d:any) => {
@@ -449,7 +449,7 @@ const simpleSvgColumnSeriesExample = () => {
     };
 
     const commonConfiguration: MiccBaseConfiguration = {
-        selector: '#chart',
+        selector: '#chart-div',
         data: simpleData,
         title: {
             placement: Placement.TOP,
@@ -500,7 +500,7 @@ const simpleSvgStackedColumnSeriesExample = () => {
     };
 
     const commonConfiguration = {
-        selector: '#chart',
+        selector: '#chart-div',
         data: simpleData,
         isResize: true,
         legend: {
@@ -547,7 +547,7 @@ const simpleCanvasLineSeriesExample = () => {
         xField: 'x',
         yField: 'y',
         dot: {
-            radius: 5
+            radius: 3
         },
         displayName: 'y-series'
     };
@@ -557,7 +557,7 @@ const simpleCanvasLineSeriesExample = () => {
         xField: 'x',
         yField: 'z',
         dot: {
-            radius: 5
+            radius: 3
         },
         displayName: 'z-series'
     }
@@ -567,7 +567,7 @@ const simpleCanvasLineSeriesExample = () => {
         xField: 'x',
         yField: 'x',
         dot: {
-            radius: 5
+            radius: 3
         },
         displayName: 'x-series'
     }
@@ -579,7 +579,7 @@ const simpleCanvasLineSeriesExample = () => {
     ];
 
     const commonConfiguration: MiccBaseConfiguration = {
-        selector: '#chart',
+        selector: '#chart-div',
         style: {
             backgroundColor: '#fff'
         },
@@ -759,7 +759,7 @@ const webGLBigDataLineSeriesSample = () => {
     optionList.push(basicStepLine);
 
     const commonConfiguration: MiccBaseConfiguration = {
-        selector: '#chart',
+        selector: '#chart-div',
         data: [],
         title: {
             placement: Placement.TOP,
@@ -941,7 +941,7 @@ const canvasBigDataLineSeriesSample = () => {
     parseData();
 
     const commonConfiguration: MiccBaseConfiguration = {
-        selector: '#chart',
+        selector: '#chart-div',
         data: [],
         title: {
             placement: Placement.TOP,
@@ -1418,7 +1418,7 @@ const svgLineSeriesExample = () => {
 
     const parseTime = timeFormat('%H:%M:%S %m-%d');
     new BasicChart({
-        selector: '#chart',
+        selector: '#chart-div',
         title: {
             placement: Placement.TOP,
             content: 'SVG Line Chart',
@@ -1618,7 +1618,7 @@ const excute = () => {
     */
 
     const basicChart: BasicChart = new BasicChart({
-        selector: '#chart',
+        selector: '#chart-div',
         title: {
             placement: Placement.TOP,
             content: 'Multi Series Chart',

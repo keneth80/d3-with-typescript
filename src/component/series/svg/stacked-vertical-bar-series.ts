@@ -13,8 +13,8 @@ import { ChartBase } from '../../chart';
 export interface StackedVerticalBarSeriesConfiguration extends SeriesConfiguration {
     xField: string;
     yField: string;
-    columns: Array<string>;
-    displayNames?: Array<string>;
+    columns: string[];
+    displayNames?: string[];
 }
 
 export class StackedVerticalBarSeries extends SeriesBase {
@@ -22,7 +22,7 @@ export class StackedVerticalBarSeries extends SeriesBase {
 
     private yField: string;
 
-    private columns: Array<string>;
+    private columns: string[];
 
     private rootGroup: Selection<BaseType, any, HTMLElement, any>;
 
@@ -63,18 +63,18 @@ export class StackedVerticalBarSeries extends SeriesBase {
         this.numberFmt = format(',d');
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
                   mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
         this.rootGroup = mainGroup;
         this.selectionGroup = this.svg.select('.' + ChartBase.SELECTION_SVG);
-        
+
         if (!mainGroup.select(`.${this.selector}-group`).node()) {
             this.mainGroup = this.rootGroup.append('g').attr('class', `${this.selector}-group`);
         }
     }
 
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
+    drawSeries(chartData: any[], scales: Scale[], geometry: ContainerSize) {
         const x: any = scales.find((scale: Scale) => scale.orient === 'bottom').scale;
         const y: any = scales.find((scale: Scale) => scale.orient === 'left').scale;
 
@@ -114,7 +114,7 @@ export class StackedVerticalBarSeries extends SeriesBase {
                         //     const target: any = nodeList[i];
                         //     const column: string = target.parentNode.getAttribute('column');
                         //     const fill: string = z(column) + '';
-                            
+
                         //     select(nodeList[i])
                         //         .style('fill', () => colorDarker(fill, 2)) // point
                         //         // .style('stroke', '#f5330c')
@@ -122,7 +122,7 @@ export class StackedVerticalBarSeries extends SeriesBase {
 
                         //     this.tooltipGroup = this.chartBase.showTooltip();
                         //     select(nodeList[i]).classed('tooltip', true);
-                            
+
                         // })
                         // .on('mouseout', (d: any, i, nodeList: any) => {
                         //     const target: any = nodeList[i];
@@ -161,31 +161,30 @@ export class StackedVerticalBarSeries extends SeriesBase {
                     (exit) => exit.remove()
                 )
                 .attr('x', (d: any) => {
-                    return x(d.data[this.xField]); 
+                    return x(d.data[this.xField]);
                 })
                 .attr('height', (d: any) => {
-                    return y(d[0]) - y(d[1]); 
+                    return y(d[0]) - y(d[1]);
                 })
                 .attr('y', (d: any) => {
-                    return (d[1] < 0 ? y(0) : y(d[1])); 
+                    return (d[1] < 0 ? y(0) : y(d[1]));
                 })
                 // TODO: 계산 적용해 볼 것.
                 // .attr('height', (d: any) => { return Math.abs(y(d[0]) - y(d[1]) - y(0)); })
                 .attr('width', x.bandwidth());
-        
+
         // this.drawLegend(keys, z, geometry.width);
 
         delayExcute(300, () => {
-            let i, j = 0;
             const size = generateChartData.length;
-            
-            const generateData: Array<any> = [];
-            for ( i = 0; i < size; i++) {
+
+            const generateData: any[] = [];
+            for (let i = 0; i < size; i++) {
                 const d: any = generateChartData[i];
                 const key = d.key;
                 const fill = z(key) + '';
                 const columnSize = d.length;
-                for (j = 0; j < columnSize; j++) {
+                for (let j = 0; j < columnSize; j++) {
                     const item = d[j];
                     const data = d[j].data;
                     const itemx = x(data[this.xField]);
@@ -217,7 +216,7 @@ export class StackedVerticalBarSeries extends SeriesBase {
         this.mainGroup.selectAll(`[index="${targetIndex}"]`).style('opacity', !isHide ? null : 0);
     }
 
-    onSelectItem(value: Array<number>, selected: Array<any>) {
+    onSelectItem(value: number[], selected: any[]) {
         const index = this.retriveColumnIndex(value, selected);
 
         if (index < 0) {
@@ -238,11 +237,11 @@ export class StackedVerticalBarSeries extends SeriesBase {
             {
                 width: selectedItem[5],
                 height: selectedItem[6]
-            }, 
+            },
             [
                 selectedItem[0],
                 selectedItem[1]
-            ], 
+            ],
             {
                 fill: selectedItem[7]
             }
@@ -256,7 +255,7 @@ export class StackedVerticalBarSeries extends SeriesBase {
         // }
     }
 
-    getSeriesDataByPosition(value: Array<number>) {
+    getSeriesDataByPosition(value: number[]) {
         return this.search(
             this.originQuadTree,
             value[0] - this.currentBarWidth,
@@ -266,9 +265,9 @@ export class StackedVerticalBarSeries extends SeriesBase {
         );
     }
 
-    showPointAndTooltip(value: Array<number>, selected: Array<any>) {
+    showPointAndTooltip(value: number[], selected: any[]) {
         // const index = Math.floor(selected.length / 2);
-        //TODO: y좌표보다 작은 아이템을 골라야함.
+        // TODO: y좌표보다 작은 아이템을 골라야함.
         const index = this.retriveColumnIndex(value, selected);
 
         if (index < 0) {
@@ -287,7 +286,7 @@ export class StackedVerticalBarSeries extends SeriesBase {
         );
     }
 
-    private retriveColumnIndex(value: Array<number>, selected: Array<any>) {
+    private retriveColumnIndex(value: number[], selected: any[]) {
         let index = -1;
         for (let i = 0; i < selected.length; i++) {
             if (value[1] > selected[i][1] && value[1] < (selected[i][6] + selected[i][1])) { // y좌표보다 작아야하고, 막대 크기보다 커야함.
@@ -301,7 +300,7 @@ export class StackedVerticalBarSeries extends SeriesBase {
 
     // TODO: tooltip에 시리즈 아이디를 부여하여 시리즈 마다 tooltip을 컨트롤 할 수 있도록 한다.
     // multi tooltip도 구현해야 하기 때문에 이방법이 가장 좋음. 현재 중복으로 발생해서 왔다갔다 함.
-    private setChartTooltip(seriesData: any, geometry: ContainerSize, mouseEvent: Array<number>) {
+    private setChartTooltip(seriesData: any, geometry: ContainerSize, mouseEvent: number[]) {
         if (this.chartBase.isTooltipDisplay) {
             return;
         }
@@ -318,11 +317,11 @@ export class StackedVerticalBarSeries extends SeriesBase {
             {
                 width: seriesData[5],
                 height: seriesData[6]
-            }, 
+            },
             [
                 seriesData[0],
                 seriesData[1]
-            ], 
+            ],
             {
                 fill: seriesData[7]
             }
@@ -348,7 +347,7 @@ export class StackedVerticalBarSeries extends SeriesBase {
         const textHeight = Math.floor(parseTextNode.height) + 5;
 
         let xPosition = seriesData[0] + this.chartBase.chartMargin.left + this.currentBarWidth;
-        let yPosition = seriesData[1] + this.chartBase.chartMargin.top - textHeight;
+        const yPosition = seriesData[1] + this.chartBase.chartMargin.top - textHeight;
 
         if (xPosition + textWidth > geometry.width + 5) {
             xPosition = xPosition - textWidth;
@@ -362,8 +361,8 @@ export class StackedVerticalBarSeries extends SeriesBase {
     }
 
     private drawTooltipPoint(
-        geometry: ContainerSize, 
-        position: Array<number>, 
+        geometry: ContainerSize,
+        position: number[],
         style:{fill: string}
     ) {
         this.selectionGroup.selectAll('.tooltip-point')
@@ -381,8 +380,8 @@ export class StackedVerticalBarSeries extends SeriesBase {
     }
 
     private drawSelectionPoint(
-        geometry: ContainerSize, 
-        position: Array<number>, 
+        geometry: ContainerSize,
+        position: number[],
         style:{fill: string}
     ) {
         this.selectionGroup.selectAll('.selection-point')
@@ -414,7 +413,7 @@ export class StackedVerticalBarSeries extends SeriesBase {
     //             (exit) => exit.remove()
     //         )
     //         .attr('transform', (d: any, i: number) => { return 'translate(0,' + i * 20 + ')'; });
-      
+
     //     legend.append('rect')
     //         .attr('x', width - 19)
     //         .attr('width', 19)
@@ -422,7 +421,7 @@ export class StackedVerticalBarSeries extends SeriesBase {
     //         .attr('fill', (d) => {
     //             return z(d) + '';
     //         });
-      
+
     //     legend.append('text')
     //         .attr('x', width - 24)
     //         .attr('y', 9.5)

@@ -328,11 +328,15 @@ export class BasicLineSeries extends SeriesBase {
         const textWidth = Math.floor(parseTextNode.width) + 7;
         const textHeight = Math.floor(parseTextNode.height) + 5;
 
-        let xPosition = mouseEvent[0] + this.chartBase.chartMargin.left + this.radius;
-        const yPosition = mouseEvent[1];
+        let xPosition = mouseEvent[0] + this.chartBase.chartMargin.left + this.radius * 2;
+        let yPosition = mouseEvent[1] + this.chartBase.chartMargin.top + this.radius * 2;
 
-        if (xPosition + textWidth > geometry.width + 5) {
+        if (xPosition + textWidth > geometry.width + this.chartBase.chartMargin.left) {
             xPosition = xPosition - textWidth;
+        }
+
+        if (yPosition + textHeight > geometry.height + this.chartBase.chartMargin.top) {
+            yPosition = yPosition - textHeight;
         }
 
         this.tooltipGroup
@@ -357,8 +361,8 @@ export class BasicLineSeries extends SeriesBase {
             .style('stroke-width', this.radius * 1.7)
             .style('stroke', this.lineColor)
             .style('fill', '#fff')
-            .attr('cx', (data: any, i) => { return position[0]; })
-            .attr('cy', (data: any) => { return position[1]; })
+            .attr('cx', position[0])
+            .attr('cy', position[1])
             .attr('r', this.radius);
     }
 }

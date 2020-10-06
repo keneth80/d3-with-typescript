@@ -11,7 +11,7 @@ import { SeriesConfiguration } from '../../chart/series.interface';
 export interface StackedHorizontalBarSeriesConfiguration extends SeriesConfiguration {
     xField: string;
     yField: string;
-    columns: Array<string>;
+    columns: string[];
 }
 
 export class StackedHorizontalBarSeries extends SeriesBase {
@@ -19,7 +19,7 @@ export class StackedHorizontalBarSeries extends SeriesBase {
 
     private yField: string;
 
-    private columns: Array<string>;
+    private columns: string[];
 
     private rootGroup: Selection<BaseType, any, HTMLElement, any>;
 
@@ -48,7 +48,7 @@ export class StackedHorizontalBarSeries extends SeriesBase {
         this.numberFmt = format(',d');
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
                   mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
         this.rootGroup = mainGroup;
@@ -65,7 +65,7 @@ export class StackedHorizontalBarSeries extends SeriesBase {
         }
     }
 
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
+    drawSeries(chartData: any[], scales: Scale[], geometry: ContainerSize) {
         const x: any = scales.find((scale: Scale) => scale.orient === 'bottom').scale;
         const y: any = scales.find((scale: Scale) => scale.orient === 'left').scale;
 
@@ -74,7 +74,7 @@ export class StackedHorizontalBarSeries extends SeriesBase {
         .range(['#98abc5', '#8a89a6', '#7b6888', '#6b486b', '#a05d56', '#d0743c', '#ff8c00']);
 
         const keys = this.columns;
-        
+
         z.domain(keys);
 
         this.mainGroup.selectAll('.stacked-horizontal-group')
@@ -95,7 +95,7 @@ export class StackedHorizontalBarSeries extends SeriesBase {
                             const target: any = nodeList[i];
                             const column: string = target.parentNode.getAttribute('column');
                             const fill: string = z(column) + '';
-                            
+
                             select(nodeList[i])
                                 .style('fill', () => colorDarker(fill, 2)) // point
                                 // .style('stroke', '#f5330c')
@@ -103,7 +103,7 @@ export class StackedHorizontalBarSeries extends SeriesBase {
 
                             this.tooltipGroup = this.chartBase.showTooltip();
                             select(nodeList[i]).classed('tooltip', true);
-                            
+
                         })
                         .on('mouseout', (d: any, i, nodeList: any) => {
                             const target: any = nodeList[i];
@@ -146,7 +146,6 @@ export class StackedHorizontalBarSeries extends SeriesBase {
                 // TODO: 계산 적용해 볼 것.
                 // .attr('height', (d: any) => { return Math.abs(y(d[0]) - y(d[1]) - y(0)); })
                 .attr('width', x.bandwidth());
-        
         // this.drawLegend(keys, z, geometry.width);
     }
 
@@ -163,7 +162,7 @@ export class StackedHorizontalBarSeries extends SeriesBase {
     //             (exit) => exit.remove()
     //         )
     //         .attr('transform', (d: any, i: number) => { return 'translate(0,' + i * 20 + ')'; });
-      
+
     //     legend.append('rect')
     //         .attr('x', width - 19)
     //         .attr('width', 19)
@@ -171,7 +170,7 @@ export class StackedHorizontalBarSeries extends SeriesBase {
     //         .attr('fill', (d) => {
     //             return z(d) + '';
     //         });
-      
+
     //     legend.append('text')
     //         .attr('x', width - 24)
     //         .attr('y', 9.5)

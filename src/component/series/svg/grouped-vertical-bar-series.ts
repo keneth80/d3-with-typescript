@@ -11,8 +11,8 @@ import { ChartBase } from '../../chart';
 
 export interface GroupedVerticalBarSeriesConfiguration extends SeriesConfiguration {
     xField: string;
-    columns: Array<string>;
-    displayNames?: Array<string>;
+    columns: string[];
+    displayNames?: string[];
 }
 
 export class GroupedVerticalBarSeries extends SeriesBase {
@@ -20,7 +20,7 @@ export class GroupedVerticalBarSeries extends SeriesBase {
 
     private yField = '';
 
-    private columns: Array<string>;
+    private columns: string[];
 
     private rootGroup: Selection<BaseType, any, HTMLElement, any>;
 
@@ -57,7 +57,7 @@ export class GroupedVerticalBarSeries extends SeriesBase {
         this.numberFmt = format(',d');
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
                   mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
         this.rootGroup = mainGroup;
@@ -68,7 +68,7 @@ export class GroupedVerticalBarSeries extends SeriesBase {
         }
     }
 
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
+    drawSeries(chartData: any[], scales: Scale[], geometry: ContainerSize) {
         const x: any = scales.find((scale: Scale) => scale.orient === 'bottom').scale;
         const y: any = scales.find((scale: Scale) => scale.orient === 'left').scale;
 
@@ -102,10 +102,10 @@ export class GroupedVerticalBarSeries extends SeriesBase {
                 return `translate( ${x(d[this.xField])} ,0)`;
             })
             .selectAll('.grouped-bar-item')
-                .data((data: any) => { 
+                .data((data: any) => {
                     return this.columns.map(
-                        (key: string, index: number) => { return {key: key, value: data[key], data, index}; }
-                    ); 
+                        (key: string, index: number) => { return {key, value: data[key], data, index}; }
+                    );
                 })
                 .join(
                     (enter) => enter.append('rect').attr('class', 'grouped-bar-item'),
@@ -119,7 +119,7 @@ export class GroupedVerticalBarSeries extends SeriesBase {
                 .attr('height', (d: any) => { return Math.abs(y(d.value) - y(0)); })
                 .attr('width', barx.bandwidth())
                 .attr('fill', (d: any) => z(d.key) + '');
-        
+
         // this.drawLegend(this.columns, z, geometry.width);
 
         // TODO: quadtree setup
@@ -128,14 +128,13 @@ export class GroupedVerticalBarSeries extends SeriesBase {
         }
 
         delayExcute(300, () => {
-            let i, j = 0;
             const size = chartData.length;
             const columnSize = this.columns.length;
-            const generateData: Array<any> = [];
-            for ( i = 0; i < size; i++) {
+            const generateData: any[] = [];
+            for (let i = 0; i < size; i++) {
                 const d = chartData[i];
                 const groupx = x(d[this.xField]);
-                for (j = 0; j < columnSize; j++) {
+                for (let j = 0; j < columnSize; j++) {
                     const key = this.columns[j];
                     const itemx = groupx + barx(key);
                     const itemy = d[key] < 0 ? y(0) : y(d[key]);
@@ -173,7 +172,7 @@ export class GroupedVerticalBarSeries extends SeriesBase {
         // }
     }
 
-    getSeriesDataByPosition(value: Array<number>) {
+    getSeriesDataByPosition(value: number[]) {
         return this.search(
             this.originQuadTree,
             value[0] - this.currentBarWidth,
@@ -183,7 +182,7 @@ export class GroupedVerticalBarSeries extends SeriesBase {
         );
     }
 
-    showPointAndTooltip(value: Array<number>, selected: Array<any>) {
+    showPointAndTooltip(value: number[], selected: any[]) {
         // const index = Math.floor(selected.length / 2);
         const index = selected.length - 1;
         const selectedItem = selected[index];
@@ -200,7 +199,7 @@ export class GroupedVerticalBarSeries extends SeriesBase {
 
     // TODO: tooltip에 시리즈 아이디를 부여하여 시리즈 마다 tooltip을 컨트롤 할 수 있도록 한다.
     // multi tooltip도 구현해야 하기 때문에 이방법이 가장 좋음. 현재 중복으로 발생해서 왔다갔다 함.
-    private setChartTooltip(seriesData: any, geometry: ContainerSize, mouseEvent: Array<number>) {
+    private setChartTooltip(seriesData: any, geometry: ContainerSize, mouseEvent: number[]) {
         if (this.chartBase.isTooltipDisplay) {
             return;
         }
@@ -217,11 +216,11 @@ export class GroupedVerticalBarSeries extends SeriesBase {
             {
                 width: seriesData[5],
                 height: seriesData[6]
-            }, 
+            },
             [
                 seriesData[0],
                 seriesData[1]
-            ], 
+            ],
             {
                 fill: seriesData[7]
             }
@@ -244,10 +243,10 @@ export class GroupedVerticalBarSeries extends SeriesBase {
         const parseTextNode = textElement.node().getBBox();
 
         const textWidth = Math.floor(parseTextNode.width) + 9;
-        const textHeight = Math.floor(parseTextNode.height) + 5;
+        const textHeight = Math.floor(parseTextNode.height) + 9;
 
         let xPosition = seriesData[0] + this.chartBase.chartMargin.left + this.currentBarWidth;
-        let yPosition = seriesData[1] + this.chartBase.chartMargin.top - textHeight;
+        const yPosition = seriesData[1] + this.chartBase.chartMargin.top - textHeight;
 
         if (xPosition + textWidth > geometry.width + 5) {
             xPosition = xPosition - textWidth;
@@ -261,8 +260,8 @@ export class GroupedVerticalBarSeries extends SeriesBase {
     }
 
     private drawTooltipPoint(
-        geometry: ContainerSize, 
-        position: Array<number>, 
+        geometry: ContainerSize,
+        position: number[],
         style:{fill: string}
     ) {
         this.selectionGroup.append('rect')

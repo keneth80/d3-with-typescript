@@ -41,6 +41,8 @@ export class ChartBase<T = any> implements IChart {
 
     static DRAWING_CANVAS = 'drawing-canvas';
 
+    static TOOLTIP_CANVAS = 'tooltip-canvas';
+
     isResize = false;
 
     mouseEventSubject: Subject<ChartMouseEvent> = new Subject();
@@ -51,21 +53,23 @@ export class ChartBase<T = any> implements IChart {
 
     isTooltipDisplay = false; // 현재 툴팁이 열려있는지 판단여부.
 
-    protected data: Array<T> = [];
+    protected data: T[] = [];
 
     protected svgWidth = 0;
 
     protected svgHeight = 0;
 
-    protected scales: Array<Scale> = [];
-    
+    protected scales: Scale[] = [];
+
     protected width = Infinity;
 
     protected height = Infinity;
 
-    protected originalData: Array<any> = [];
+    protected originalData: any[] = [];
 
     protected svg: Selection<BaseType, any, HTMLElement, any>;
+
+    protected selector: Selection<BaseType, any, HTMLElement, any>;
 
     protected mainGroup: Selection<BaseType, any, HTMLElement, any>;
 
@@ -81,11 +85,11 @@ export class ChartBase<T = any> implements IChart {
 
     protected legendGroup: Selection<BaseType, any, BaseType, any>;
 
-    protected seriesList: Array<ISeries> = [];
+    protected seriesList: ISeries[] = [];
 
-    protected functionList: Array<IFunctions> = [];
+    protected functionList: IFunctions[] = [];
 
-    protected optionList: Array<IOptions> = [];
+    protected optionList: IOptions[] = [];
 
     protected subscription: Subscription;
 
@@ -145,7 +149,7 @@ export class ChartBase<T = any> implements IChart {
 
     private maskId = '';
 
-    private colors: Array<string>;
+    private colors: string[];
 
     private isCustomMargin = false;
 
@@ -180,7 +184,7 @@ export class ChartBase<T = any> implements IChart {
     // ===================== Legend configuration start ===================== //
     private isLegend = false;
 
-    private legendItemList: Array<LegendItem> = [];
+    private legendItemList: LegendItem[] = [];
 
     private legendPlacement = 'right';
 
@@ -212,24 +216,20 @@ export class ChartBase<T = any> implements IChart {
 
     private totalLegendWidth = 0;
 
-    private legendRowBreakCount: Array<number> = [];
+    private legendRowBreakCount: number[] = [];
 
-    private legendTextWidthList: Array<number> = [];
+    private legendTextWidthList: number[] = [];
     // ===================== Legend configuration end ===================== //
 
     // ===================== current min max start ===================== //
-    private currentScale: Array<{field:string, min: number, max: number}> = [];
+    private currentScale: {field:string, min: number, max: number}[] = [];
     // ===================== current min max start ===================== //
 
     // multi tooltip 및 series 별 tooltip을 구분할 수 있는 저장소.
-    private tooltipItems: Array<{selector: string}> = [];
+    private tooltipItems: {selector: string}[] = [];
 
     // series delay display observable
     private eachElementAsObservableSubscription: Subscription = new Subscription();
-
-    private reScale$: Subject<Array<any>> = new Subject(); 
-
-    private move$: Subject<any> = new Subject();
 
     private webglCanvas: Selection<BaseType, any, HTMLElement, any>;
 
@@ -242,13 +242,17 @@ export class ChartBase<T = any> implements IChart {
         this.bootstrap(this.config);
     }
 
-    get chartData(): Array<T> {
+    get chartData(): T[] {
         return this.data;
     }
 
-    set chartData(value: Array<T>) {
+    set chartData(value: T[]) {
         this.data = value;
         this.draw();
+    }
+
+    get chartContainer(): Selection<BaseType, any, HTMLElement, any> {
+        return this.selector;
     }
 
     // 이 함수는 보류 (미구현)
@@ -293,12 +297,12 @@ export class ChartBase<T = any> implements IChart {
     }
 
     get chartMargin(): any {
-        const transform: Array<string> = getTransformByArray(this.mainGroup.attr('transform'));
+        const transform: string[] = getTransformByArray(this.mainGroup.attr('transform'));
         const left = +transform[0];
         const top = +transform[1];
         const right = this.svgWidth - (left + this.width);
         const bottom = this.svgHeight - (top + this.height);
-        
+
         return {
             left, top, right, bottom
         };
@@ -312,11 +316,11 @@ export class ChartBase<T = any> implements IChart {
         return this.config.tooltip;
     }
 
-    get series(): Array<ISeries> {
+    get series(): ISeries[] {
         return this.seriesList;
     }
 
-    get functions(): Array<IFunctions> {
+    get functions(): IFunctions[] {
         return this.functions;
     }
 
@@ -371,17 +375,31 @@ export class ChartBase<T = any> implements IChart {
             })
         }
 
-        this.svg = select(configuration.selector);
+        // this.svg = select(configuration.selector);
 
-        if (!this.svg.node()) {
+        this.selector = select(configuration.selector);
+
+        if (!this.selector.node()) {
             if (console && console.log) {
-                console.log('is not svg!');
+                console.log('is not html element!');
             }
+            return;
         }
 
+        const styleWidth = this.selector.style('width');
+        const styleHeight = this.selector.style('height');
+        const divWidth = this.selector.style('width').substring(0, styleWidth.indexOf('.'));
+        const divHeight = this.selector.style('height').substring(0, styleHeight.indexOf('.'));
+
+        this.svg = this.selector.append('svg')
+            .style('position', 'absolute')
+            .style('display', 'block')
+            .style('width', divWidth + 'px')
+            .style('height', divHeight + 'px');
+
         if (configuration.style) {
-            select((this.svg.node() as HTMLElement).parentNode as any)
-                .style('background-color', configuration.style.backgroundColor || '#fff')
+            // background color 설정.
+            this.selector.style('background-color', configuration.style.backgroundColor || '#fff')
         }
 
         // data setup origin data 와 분리.
@@ -426,7 +444,6 @@ export class ChartBase<T = any> implements IChart {
         this.maskId = guid();
 
         this.setRootSize();
-        
         this.initContainer();
         this.addEventListner();
     }
@@ -442,7 +459,8 @@ export class ChartBase<T = any> implements IChart {
     }
 
     clear() {
-        this.svg.selectAll('*').remove();
+        this.selector.selectAll('*').remove();
+        // this.svg.selectAll('*').remove();
 
         this.seriesList.forEach((series: ISeries) => {
             series.destroy();
@@ -516,7 +534,7 @@ export class ChartBase<T = any> implements IChart {
             const series: ISeries = this.seriesList[targetIndex];
             series.unSelectItem();
         }
-        
+
         delayExcute(50, () => {
             if (!this.tooltipItems.length) {
                 this.tooltipGroup.select('#' + selector).style('display', 'none');
@@ -564,8 +582,13 @@ export class ChartBase<T = any> implements IChart {
         this.subscription.unsubscribe();
         if (this.svg) {
             this.svg.on('click', null);
-            this.svg.selectAll('*').remove();
+            // this.svg.selectAll('*').remove();
         }
+
+        if (this.selector) {
+            this.selector.selectAll('svg').remove();
+        }
+
         this.seriesList.forEach((series: ISeries) => series.destroy());
         this.functionList.forEach((functions: IFunctions) => functions.destroy());
         this.originDomains = null;
@@ -719,7 +742,7 @@ export class ChartBase<T = any> implements IChart {
         }
     }
 
-    getObjectWithArrayInPromise(list: Array<ISeries>) {
+    getObjectWithArrayInPromise(list: ISeries[]) {
 		const data = list.map((series: ISeries, index: number) => index);
         return new Promise(resolve => {
             delayExcute(20, () => resolve({
@@ -733,7 +756,7 @@ export class ChartBase<T = any> implements IChart {
         for (index = 0; index < this.scales.length; index++) {
             const scale = this.scales[index];
             const orientedAxis: any = this.axisSetupByScale(scale);
-            
+
             if (scale.visible) {
                 this.axisGroups[scale.orient].call(
                     orientedAxis
@@ -931,7 +954,7 @@ export class ChartBase<T = any> implements IChart {
                 .attr('class', 'x-top-grid-group')
         }
         this.gridLineGroups.top.attr('transform', `translate(0, 0)`);
-        
+
         if (!this.gridLineGroups.left) {
             this.gridLineGroups.left = this.mainGroup.append('g')
             .attr('class', 'y-grid-group')
@@ -1058,7 +1081,7 @@ export class ChartBase<T = any> implements IChart {
                 .attr('class', 'x-top-axis-group')
         }
         this.axisGroups.top.attr('transform', `translate(0, 0)`);
-        
+
         if (!this.axisGroups.left) {
             this.axisGroups.left = this.mainGroup.append('g')
             .attr('class', 'y-axis-group')
@@ -1086,38 +1109,38 @@ export class ChartBase<T = any> implements IChart {
         let isMouseLeave = false;
 
         this.subscription.add(
-            this.mouseEvent$.subscribe((event: ChartMouseEvent) => {
-                if (event.type === 'mousemove') {
+            this.mouseEvent$.subscribe((chartEvent: ChartMouseEvent) => {
+                if (chartEvent.type === 'mousemove') {
                     isMouseLeave = false;
                     this.pointerClear();
                     if (this.config.tooltip && (!isDragStart && !isMouseLeave)) {
                         let max = this.seriesList.length;
                         while(max--) {
-                            const positionData = this.seriesList[max].getSeriesDataByPosition(event.position);
+                            const positionData = this.seriesList[max].getSeriesDataByPosition(chartEvent.position);
                             // TODO: 시리즈 루프 돌면서 해당 포지션에 데이터가 있는지 찾되
                             // 툴팁을 보여줄 때면 멀티인지 싱글인지 체크 해서 break 여부를 판단하고 해당 시리즈의 메서드 실행.
                             // multi tooltip이면 break 걸지 않는다.
                             if (positionData.length && !this.isTooltipDisplay) {
-                                this.seriesList[max].showPointAndTooltip(event.position, positionData);
+                                this.seriesList[max].showPointAndTooltip(chartEvent.position, positionData);
                                 // TODO: tooltip show event 발생.
                                 break;
                             } else {
                                 this.selectionClear();
                             }
-                        }   
+                        }
                     }
-                } else if (event.type === 'mouseleave') {
+                } else if (chartEvent.type === 'mouseleave') {
                     isMouseLeave = true;
                     this.pointerClear();
                     this.selectionClear();
-                } else if (event.type === 'mouseup') {
+                } else if (chartEvent.type === 'mouseup') {
                     isDragStart = false;
                     let max = this.seriesList.length;
                     while(max--) {
-                        const positionData = this.seriesList[max].getSeriesDataByPosition(event.position);
+                        const positionData = this.seriesList[max].getSeriesDataByPosition(chartEvent.position);
                         if (positionData.length) {
                             this.selectionClear();
-                            this.seriesList[max].onSelectItem(event.position, positionData);
+                            this.seriesList[max].onSelectItem(chartEvent.position, positionData);
                             // TODO: selectitem event dispatch
                             // this.chartItemClickSubject.next({
                             //     position: {
@@ -1130,33 +1153,32 @@ export class ChartBase<T = any> implements IChart {
                         }
                     }
 
-                } else if (event.type === 'mousedown') {
-                    
+                } else if (chartEvent.type === 'mousedown') {
+
                 } else {
-                    
+
                 }
             })
         );
 
         this.subscription.add(
-            this.zoomEvent$.subscribe((event: ChartZoomEvent) => {
-                if (event.type === 'dragstart') {
+            this.zoomEvent$.subscribe((chartEvent: ChartZoomEvent) => {
+                if (chartEvent.type === 'dragstart') {
                     isDragStart = true;
                     this.pointerClear();
-                } else if (event.type === 'zoomin') {
+                } else if (chartEvent.type === 'zoomin') {
                     isDragStart = false;
-                    
                     // this.viewClear();
                     const reScale = [
                         {
-                            field: event.zoom.field.x,
-                            min: event.zoom.start.x,
-                            max: event.zoom.end.x
+                            field: chartEvent.zoom.field.x,
+                            min: chartEvent.zoom.start.x,
+                            max: chartEvent.zoom.end.x
                         },
                         {
-                            field: event.zoom.field.y,
-                            min: event.zoom.start.y,
-                            max: event.zoom.end.y
+                            field: chartEvent.zoom.field.y,
+                            min: chartEvent.zoom.start.y,
+                            max: chartEvent.zoom.end.y
                         }
                     ];
                     this.scales = this.setupScale(this.config.axes, this.width, this.height, reScale);
@@ -1164,7 +1186,7 @@ export class ChartBase<T = any> implements IChart {
                     this.updateFunctions();
                     this.updateSeries(DisplayType.ZOOMIN);
                     this.updateOptions();
-                } else if (event.type === 'zoomout') {
+                } else if (chartEvent.type === 'zoomout') {
                     isDragStart = false;
                     // this.viewClear();
                     this.scales = this.setupScale(this.config.axes, this.width, this.height, []);
@@ -1206,8 +1228,7 @@ export class ChartBase<T = any> implements IChart {
                 } else {
                     titleY = padding;
                 }
-                const rotate = 
-                    d.placement === Placement.LEFT || d.placement === Placement.RIGHT ? -90 : 0;
+                const rotate = d.placement === Placement.LEFT || d.placement === Placement.RIGHT ? -90 : 0;
                 return `translate(${titleX}, ${titleY}) rotate(${rotate})`;
             });
 
@@ -1231,10 +1252,10 @@ export class ChartBase<T = any> implements IChart {
                 })
                 .text((d: ChartTitle) => d.content)
                 .attr('dy', '0em')
-                .attr('transform', (d: ChartTitle, index: number, nodeList: Array<any>) => {
+                .attr('transform', (d: ChartTitle, index: number, nodeList: any[]) => {
                     const textNode = nodeList[index].getBoundingClientRect();
                     const textHeight = textNode.height;
-                    
+
                     let x = 0;
                     let y = 0;
                     if (d.placement === Placement.TOP || d.placement === Placement.BOTTOM) {
@@ -1253,7 +1274,7 @@ export class ChartBase<T = any> implements IChart {
     protected updateAxis() {
         const maxTextWidth = {};
         const padding = 10; // 10 는 axis 여백.
-        
+
         let isAxisUpdate: boolean = false;
 
         this.originDomains = {};
@@ -1262,13 +1283,13 @@ export class ChartBase<T = any> implements IChart {
 
         this.scales.forEach((scale: Scale) => {
             const orientedAxis: any = this.axisSetupByScale(scale);
-            
+
             let bandWidth: number = -1;
 
             if (scale.type === ScaleType.STRING) {
                 bandWidth = scale.scale.bandwidth();
             }
-            
+
             if (scale.visible) {
                 this.axisGroups[scale.orient].call(
                     orientedAxis
@@ -1325,7 +1346,7 @@ export class ChartBase<T = any> implements IChart {
                 let textLength = 0;
                 let longTextNode: any = null;
                 if (scale.orient === Placement.LEFT || scale.orient === Placement.RIGHT) {
-                    this.axisGroups[scale.orient].selectAll('.tick').each((d: any, index: number, node: Array<any>) => {
+                    this.axisGroups[scale.orient].selectAll('.tick').each((d: any, index: number, node: any[]) => {
                         const currentTextSize = (d + '').length;
                         if (textLength < currentTextSize) {
                             textLength = currentTextSize;
@@ -1340,7 +1361,7 @@ export class ChartBase<T = any> implements IChart {
                         }
                     }
                 } else {
-                    this.axisGroups[scale.orient].selectAll('.tick').each((d: any, index: number, node: Array<any>) => {
+                    this.axisGroups[scale.orient].selectAll('.tick').each((d: any, index: number, node: any[]) => {
                         // string일 때 bandWidth 보다 텍스트 사이즈가 더 크면 wordrap한다.
                         if (bandWidth > 0) {
                             const textNode: any = select(node[index]).select('text');
@@ -1630,7 +1651,7 @@ export class ChartBase<T = any> implements IChart {
             });
     }
 
-    protected setupData(data: Array<T>) {
+    protected setupData(data: T[]) {
         // this.originalData = [...data];
         return data;
     }
@@ -1639,8 +1660,8 @@ export class ChartBase<T = any> implements IChart {
         axes: Array<Axis> = [],
         width: number = 0,
         height: number = 0,
-        reScaleAxes?: Array<any>
-    ): Array<Scale> {
+        reScaleAxes?: any[]
+    ): Scale[] {
         // zoom out 했을 경우에 초기화.
         if (!reScaleAxes || (reScaleAxes && !reScaleAxes.length)) {
             this.currentScale.length = 0;
@@ -1785,7 +1806,7 @@ export class ChartBase<T = any> implements IChart {
     }
 
     private pointerClear() {
-        const selectionCanvas = select((this.svg.node() as HTMLElement).parentNode as any).select('.' + ChartBase.SELECTION_CANVAS);
+        const selectionCanvas = this.selector.select('.' + ChartBase.SELECTION_CANVAS);
         if (selectionCanvas && selectionCanvas.node()) {
             const context = (selectionCanvas.node() as any).getContext('2d');
             context.clearRect(0, 0, this.width, this.height);
@@ -1803,8 +1824,8 @@ export class ChartBase<T = any> implements IChart {
         this.hideTooltip();
     }
 
-    private idled = () => { 
-        this.idleTimeout = null; 
+    private idled = () => {
+        this.idleTimeout = null;
     }
 
     // 범례 아이템 체크박스 클릭 이벤트
