@@ -167,7 +167,7 @@ const setSeriesColor = (item: any) => {
     const seriesFaultType = item.referenceYn === 'Y' ? '' : item.segmentStatus;
     if (item.referenceYn === 'N' && item.fdtaFaultYn === 'Y' && seriesFaultType === 'F' && item.primeYn === 'N') { // selectedAlarm
         return '#EA3010';
-    } else if (item.referenceYn === 'N' && item.fdtaFaultYn === 'N' && seriesFaultType === 'F' && item.primeYn === 'N') { //Fault
+    } else if (item.referenceYn === 'N' && item.fdtaFaultYn === 'N' && seriesFaultType === 'F' && item.primeYn === 'N') { // Fault
         return '#f57416';
     } else if (item.referenceYn === 'N' && item.fdtaFaultYn === 'N' && seriesFaultType === 'W' && item.primeYn === 'N') { // Warning
         return '#f7ba00';
@@ -743,7 +743,7 @@ const webGLBigDataLineSeriesSample = () => {
             data: stepData
         }
     };
-    
+
     const basicStepArea: OptionConfiguration = {
         name: 'BasicStepArea',
         configuration: {
@@ -862,7 +862,7 @@ const canvasBigDataLineSeriesSample = () => {
 
         for (let i = 0; i < tracePoints.length; i++) {
             const tempData = tracePoints[i];
-            const seriesData = tempData.data.rows.map((row: Array<any>) => {
+            const seriesData = tempData.data.rows.map((row: any[]) => {
                 const rowData: any = {};
                 for (let j = 0; j < tempData.data.columns.length; j++) {
                     const columnName = tempData.data.columns[j];
@@ -1722,7 +1722,7 @@ const boxplot = () => {
             globalCounts.push(entry);
         }
     }
- 
+
     // Sort group counts so quantile methods work
     for(const key in groupCounts) {
         const groupCount = groupCounts[key];
@@ -2077,7 +2077,7 @@ const donutChart = () => {
 
 const areaChart = () => {
     const parseTime = timeParse("%d-%b-%y");
-    csv('./component/mock-data/area-data.csv', (d: any, index: number, columns: Array<string>) => {
+    csv('./component/mock-data/area-data.csv', (d: any, index: number, columns: string[]) => {
         d.date = parseTime(d.date);
         d.close = +d.close;
         return d;
