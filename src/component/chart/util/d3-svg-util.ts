@@ -7,13 +7,13 @@ import { LegendItem } from '../chart.interface';
 import { Observable, Observer } from 'rxjs';
 import { delay } from 'rxjs/operators';
 
-export const getTransformByArray = (transform: string = 'translate(0, 0)'): Array<string> => {
+export const getTransformByArray = (transform: string = 'translate(0, 0)'): string[] => {
     const translateString = transform.substring(transform.indexOf('translate('), transform.indexOf(')') + 1);
     let translate = ['0', '0'];
     const agent = navigator.userAgent.toLowerCase();
-    if ((navigator.appName == 'Netscape' && agent.indexOf('trident') != -1) || 
-        (agent.indexOf('msie') != -1) ||
-        (agent.indexOf('edge') != -1)) {
+    if ((navigator.appName === 'Netscape' && agent.indexOf('trident') !== -1) ||
+        (agent.indexOf('msie') !== -1) ||
+        (agent.indexOf('edge') !== -1)) {
         // ie일 경우
         const parseTranslate = translateString.replace('translate(', '').replace(')', '');
         translate = parseTranslate.split(/\s+/);
@@ -37,9 +37,9 @@ export const getTransformByArray = (transform: string = 'translate(0, 0)'): Arra
 export const isIE = (): boolean => {
     let returnValue: boolean = false;
     const agent = navigator.userAgent.toLowerCase();
-    if ((navigator.appName == 'Netscape' && agent.indexOf('trident') != -1) || 
-        (agent.indexOf('msie') != -1) ||
-        (agent.indexOf('edge') != -1)) {
+    if ((navigator.appName === 'Netscape' && agent.indexOf('trident') !== -1) ||
+        (agent.indexOf('msie') !== -1) ||
+        (agent.indexOf('edge') !== -1)) {
         // ie일 경우
         returnValue = true;
     }
@@ -62,9 +62,9 @@ export const guid = () => {
 
 export const textWrapping = (text: any, width: number) => {
     text.each((d: any, index: number, node: any) => {
-        
-        const text = select(node[index]);
-        let line = [];
+
+        const targetText = select(node[index]);
+        let lines = [];
         // const words = text.text().split(/\s+/).reverse();
         const words = text.text().split('').reverse();
         let word = null;
@@ -79,12 +79,12 @@ export const textWrapping = (text: any, width: number) => {
                         .attr('y', y)
                         .attr('dy', dy + 'em');
         while (word = words.pop()) {
-            line.push(word);
-            tspan.text(line.join(''));
+            lines.push(word);
+            tspan.text(lines.join(''));
             if (tspan.node().getComputedTextLength() > width) {
-                line.pop();
-                tspan.text(line.join(''));
-                line = [word];
+                lines.pop();
+                tspan.text(lines.join(''));
+                lines = [word];
                 // line.length = 0;
                 // line.concat([word]);
                 tspan = text.append('tspan')
@@ -99,9 +99,9 @@ export const textWrapping = (text: any, width: number) => {
 
 export const textBreak = (target: any, pattern: any = /\s+/) => { // /(\n|\r\n)/g
     target.each((d: any, index: number, node: any) => {
-        
+
         const text = select(node[index]);
-        let line = [];
+        let lines = [];
         const words = text.text().split(pattern).reverse();
         // const words = text.text().split('').reverse();
         let word = null;
@@ -116,11 +116,11 @@ export const textBreak = (target: any, pattern: any = /\s+/) => { // /(\n|\r\n)/
                         .attr('y', y)
                         .attr('dy', dy + 'em');
         while (word = words.pop()) {
-            line.push(word);
-            tspan.text(line.join(''));
-            line.pop();
-            tspan.text(line.join(''));
-            line = [word];
+            lines.push(word);
+            tspan.text(lines.join(''));
+            lines.pop();
+            tspan.text(lines.join(''));
+            lines = [word];
             // line.length = 0;
             // line.concat([word]);
             tspan = text.append('tspan')
@@ -143,10 +143,10 @@ export const getOsName = () => {
     // if (window.navigator.userAgent.indexOf('Mac')            != -1) OSName='Mac/iOS';
     // if (window.navigator.userAgent.indexOf('X11')            != -1) OSName='UNIX';
     // if (window.navigator.userAgent.indexOf('Linux')          != -1) OSName='Linux';
-    if (window.navigator.userAgent.indexOf('Windows') != -1) OSName='Windows';
-    if (window.navigator.userAgent.indexOf('Mac') != -1) OSName='Mac/iOS';
-    if (window.navigator.userAgent.indexOf('X11') != -1) OSName='UNIX';
-    if (window.navigator.userAgent.indexOf('Linux') != -1) OSName='Linux';
+    if (window.navigator.userAgent.indexOf('Windows') !== -1) OSName='Windows';
+    if (window.navigator.userAgent.indexOf('Mac') !== -1) OSName='Mac/iOS';
+    if (window.navigator.userAgent.indexOf('X11') !== -1) OSName='UNIX';
+    if (window.navigator.userAgent.indexOf('Linux') !== -1) OSName='Linux';
     return OSName;
 }
 
@@ -159,25 +159,26 @@ export const wrapTextByRowLimit = (text: any, width: number, limitRowCount: numb
     }
 
     const compare = osName.indexOf('Windows') > -1 ? (isIE() ? 0 : 4) : 3;
-    
-    let words: Array<string> = text.text().split('').reverse(),
-        word: string,
-        line = [],
-        lineNumber = 0,
-        lineHeight = 1.1, // ems
-        y = text.attr('y') || 0,
-        dy = parseFloat(text.attr('dy')) || 0,
-        lineCount = 1;
+
+    const words: string[] = text.text().split('').reverse();
+    const lineHeight = 1.1; // ems
+    const y = text.attr('y') || 0;
+    const dy = parseFloat(text.attr('dy')) || 0;
+
+    let word: string;
+    let lines = [];
+    let lineNumber = 0;
+    let lineCount = 1;
     let tspan = text.text(null).append('tspan').attr('x', 2).attr('y', y).attr('dy', dy + 'em');
     let isOver = false;
     while ((word = words.pop()) && !isOver) {
-        line.push(word);
-        tspan.text(line.join(''));
+        lines.push(word);
+        tspan.text(lines.join(''));
         if (tspan.node().getComputedTextLength() > width - compare) { // OS에 따라 ...의 사이즈 차이가 있음.
             lineCount++;
-            line.pop();
-            tspan.text(line.join(''));
-            line = [word];
+            lines.pop();
+            tspan.text(lines.join(''));
+            lines = [word];
             tspan = text.append('tspan').attr('x', 2).attr('y', y).attr('dy', ++lineNumber * lineHeight + dy + 'em').text(word);
             if (lineCount > limitRowCount) {
                 isOver = true;
@@ -241,7 +242,7 @@ export const drawSvgCheckBox = <T = any>(
             (update) => update,
             (exit) => exit.remove()
         );
-    
+
     const box = g.selectAll('.checkbox-background')
         .data((d: any) => [d])
         .join(
@@ -260,7 +261,7 @@ export const drawSvgCheckBox = <T = any>(
         .style('stroke', 'black')
         .style('shape-rendering', 'crispEdges');
 
-    const coordinates: Array<any> = [
+    const coordinates: any[] = [
         [x + (size / 8), y + (size / 3)],
         [x + (size / 2.2), (y + size) - (size / 4)],
         [(x + size) - (size / 8), (y + (size / 10))]
@@ -310,10 +311,10 @@ export const getAxisByPlacement = (placement: string, scale: any) => {
 };
 
 export const drawLegendColorItemByRect = (
-    targetGroup: Selection<BaseType, LegendItem, BaseType, any>, 
+    targetGroup: Selection<BaseType, LegendItem, BaseType, any>,
     legendItemSize: {width: number, height: number},
-    keys: Array<LegendItem> = [], 
-    colors: Array<string> = []
+    keys: LegendItem[] = [],
+    colors: string[] = []
 ) => {
     return targetGroup.selectAll('.legend-item')
             .data((d: LegendItem) => [d])
@@ -331,10 +332,10 @@ export const drawLegendColorItemByRect = (
 };
 
 export const drawLegendColorItemByCircle = (
-    targetGroup: Selection<BaseType, LegendItem, BaseType, any>, 
+    targetGroup: Selection<BaseType, LegendItem, BaseType, any>,
     legendItemSize: {width: number, height: number},
-    keys: Array<LegendItem> = [], 
-    colors: Array<string> = []
+    keys: LegendItem[] = [],
+    colors: string[] = []
 ) => {
     return targetGroup.selectAll('.legend-item')
             .data((d: LegendItem) => [d])
@@ -353,10 +354,10 @@ export const drawLegendColorItemByCircle = (
 };
 
 export const drawLegendColorItemByLine = (
-    targetGroup: Selection<BaseType, LegendItem, BaseType, any>, 
+    targetGroup: Selection<BaseType, LegendItem, BaseType, any>,
     legendItemSize: {width: number, height: number},
-    keys: Array<LegendItem> = [], 
-    colors: Array<string> = []
+    keys: LegendItem[] = [],
+    colors: string[] = []
 ) => {
     return targetGroup.selectAll('.legend-item')
             .data((d: LegendItem) => [d])
