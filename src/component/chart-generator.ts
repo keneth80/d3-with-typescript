@@ -1,8 +1,6 @@
 import { BasicChart } from './basic-chart';
 import { ChartConfiguration,
-         ChartTooltip, ChartTitle, ChartLegend,
-         Direction,
-         Margin, Axis, ChartStyle,  } from './chart/chart-configuration';
+         Direction, } from './chart/chart-configuration';
 
 import { IFunctions } from './chart/functions.interface';
 
@@ -22,59 +20,7 @@ import { GroupedVerticalBarSeriesConfiguration, GroupedVerticalBarSeries } from 
 import { GroupedHorizontalBarSeriesConfiguration, GroupedHorizontalBarSeries } from './series/svg/grouped-horizontal-bar-series';
 import { StackedHorizontalBarSeriesConfiguration, StackedHorizontalBarSeries } from './series/svg/stacked-horizontal-bar-series';
 import { StackedVerticalBarSeriesConfiguration, StackedVerticalBarSeries } from './series/svg/stacked-vertical-bar-series';
-
-export interface OptionConfiguration {
-    name: any;
-    configuration: any;
-}
-
-export interface ZoomConfiguration {
-    xDirection?: string; // bottom or top, default: bottom
-    yDirection?: string; // left or right, default: left
-    direction?: string; // horizontal or vertical or both, default: both
-}
-
-export interface MiccBaseConfiguration {
-    selector: string;
-
-    style?: ChartStyle;
-
-    tooltip?: ChartTooltip;
-
-    title?: ChartTitle; // chart title
-
-    isResize?: boolean; // default: true
-
-    legend?: ChartLegend; // legend display
-
-    margin?: Margin; // custom margin
-
-    axes?: Axis[]; // axis list
-
-    // functions?: any[]; // function list
-
-    // options?: any[]; // function list
-
-    data: any[]; // data
-
-    colors?: string[]; // custom color (default: d3.schemeCategory10, size: 10)
-
-    zoom?: ZoomConfiguration;
-
-    options?: OptionConfiguration;
-
-    displayDelay?: {
-        delayTime: number;
-    }
-}
-
-export interface CanvasTraceChartConfiguration extends MiccBaseConfiguration {
-    series: BasicCanvasTraceConfiguration[];
-}
-
-export interface WebglTraceChartConfiguration extends MiccBaseConfiguration {
-    series: BasicCanvasWebglLineSeriesOneConfiguration[];
-}
+import { MiccBaseConfiguration, OptionConfiguration, ZoomConfiguration } from './mi-chart';
 
 /*
 * desc: 캔버스 시리즈 출력 설정정보 맵핑.
