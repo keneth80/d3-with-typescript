@@ -1,5 +1,5 @@
 import { BasicChart } from './basic-chart';
-import { ChartConfiguration, 
+import { ChartConfiguration,
          ChartTooltip, ChartTitle, ChartLegend,
          Direction,
          Margin, Axis, ChartStyle,  } from './chart/chart-configuration';
@@ -49,15 +49,15 @@ export interface MiccBaseConfiguration {
 
     margin?: Margin; // custom margin
 
-    axes?: Array<Axis>; // axis list
-    
-    // functions?: Array<any>; // function list
+    axes?: Axis[]; // axis list
 
-    // options?: Array<any>; // function list
+    // functions?: any[]; // function list
 
-    data: Array<any>; // data
+    // options?: any[]; // function list
 
-    colors?: Array<string>; // custom color (default: d3.schemeCategory10, size: 10)
+    data: any[]; // data
+
+    colors?: string[]; // custom color (default: d3.schemeCategory10, size: 10)
 
     zoom?: ZoomConfiguration;
 
@@ -69,25 +69,25 @@ export interface MiccBaseConfiguration {
 }
 
 export interface CanvasTraceChartConfiguration extends MiccBaseConfiguration {
-    series: Array<BasicCanvasTraceConfiguration>;
+    series: BasicCanvasTraceConfiguration[];
 }
 
 export interface WebglTraceChartConfiguration extends MiccBaseConfiguration {
-    series: Array<BasicCanvasWebglLineSeriesOneConfiguration>;
+    series: BasicCanvasWebglLineSeriesOneConfiguration[];
 }
 
 export class MiChart {
     /*
     * desc: 캔버스 시리즈 출력 설정정보 맵핑.
-    * argument: 
+    * argument:
     * 1. configuration: chart 설정정보
     * 2. series: 출력되는 시리즈 설정정보
     * 3. options: 시리즈 외에 출력되는 시리즈 설정정보
     */
     static CanvasTraceChart(
-        configuration: MiccBaseConfiguration, 
-        series: Array<BasicCanvasTraceConfiguration> = [],
-        options: Array<OptionConfiguration> = []): BasicChart {
+        configuration: MiccBaseConfiguration,
+        series: BasicCanvasTraceConfiguration[] = [],
+        options: OptionConfiguration[] = []): BasicChart {
 
         const chartConfiguration: ChartConfiguration = MiChart.generatorCommomConfiguration(configuration);
 
@@ -104,9 +104,9 @@ export class MiChart {
 
     // webgl 시리즈 출력 설정정보 맵핑.
     static WebglTraceChart(
-        configuration: MiccBaseConfiguration, 
-        series: Array<BasicCanvasWebglLineSeriesOneConfiguration> = [],
-        options: Array<OptionConfiguration> = []): BasicChart {
+        configuration: MiccBaseConfiguration,
+        series: BasicCanvasWebglLineSeriesOneConfiguration[] = [],
+        options: OptionConfiguration[] = []): BasicChart {
 
         const chartConfiguration: ChartConfiguration = MiChart.generatorCommomConfiguration(configuration);
 
@@ -117,15 +117,15 @@ export class MiChart {
         chartConfiguration.options = MiChart.generatorOptions(options);
 
         chartConfiguration.functions = MiChart.generatorCanvasFunctions(configuration.zoom);
-        
+
         return new BasicChart(chartConfiguration);
     }
 
     // svg 시리즈 출력 설정정보 맵핑.
     static SvgTraceChart(
-        configuration: MiccBaseConfiguration, 
-        series: Array<BasicCanvasWebglLineSeriesOneConfiguration> = [],
-        options: Array<OptionConfiguration> = []): BasicChart {
+        configuration: MiccBaseConfiguration,
+        series: BasicCanvasWebglLineSeriesOneConfiguration[] = [],
+        options: OptionConfiguration[] = []): BasicChart {
 
         const chartConfiguration: ChartConfiguration = MiChart.generatorCommomConfiguration(configuration);
 
@@ -136,16 +136,16 @@ export class MiChart {
         chartConfiguration.options = MiChart.generatorOptions(options);
 
         chartConfiguration.functions = MiChart.generatorFunctions(configuration.zoom);
-        
+
         return new BasicChart(chartConfiguration);
     }
 
     // svg 시리즈 출력 설정정보 맵핑.
     static SvgGroupedBarChart(
-        configuration: MiccBaseConfiguration, 
+        configuration: MiccBaseConfiguration,
         series: GroupedVerticalBarSeriesConfiguration | GroupedHorizontalBarSeriesConfiguration,
-        options: Array<OptionConfiguration> = [],
-        direction: String = Direction.VERTICAL): BasicChart {
+        options: OptionConfiguration[] = [],
+        direction = Direction.VERTICAL): BasicChart {
 
         const chartConfiguration: ChartConfiguration = MiChart.generatorCommomConfiguration(configuration);
 
@@ -156,15 +156,15 @@ export class MiChart {
         chartConfiguration.options = MiChart.generatorOptions(options);
 
         chartConfiguration.functions = MiChart.generatorFunctions(configuration.zoom);
-        
+
         return new BasicChart(chartConfiguration);
     }
 
     static SvgStackedBarChart(
-        configuration: MiccBaseConfiguration, 
+        configuration: MiccBaseConfiguration,
         series: StackedVerticalBarSeriesConfiguration | StackedHorizontalBarSeriesConfiguration,
-        options: Array<OptionConfiguration> = [],
-        direction: String = Direction.VERTICAL): BasicChart {
+        options: OptionConfiguration[] = [],
+        direction = Direction.VERTICAL): BasicChart {
 
         const chartConfiguration: ChartConfiguration = MiChart.generatorCommomConfiguration(configuration);
 
@@ -175,15 +175,15 @@ export class MiChart {
         chartConfiguration.options = MiChart.generatorOptions(options);
 
         chartConfiguration.functions = MiChart.generatorFunctions(configuration.zoom);
-        
+
         return new BasicChart(chartConfiguration);
     }
 
     // 마우스 이벤트 같은 이벤트 함수설정 정보 맵핑.
     static generatorCanvasFunctions(
         zoom?: ZoomConfiguration
-    ): Array<IFunctions> {
-        const functions: Array<IFunctions> = [];
+    ): IFunctions[] {
+        const functions: IFunctions[] = [];
         if (zoom) {
             functions.push(new BasicCanvasMouseZoomHandler(zoom));
         } else {
@@ -195,8 +195,8 @@ export class MiChart {
     // 마우스 이벤트 같은 이벤트 함수설정 정보 맵핑.
     static generatorFunctions(
         zoom?: ZoomConfiguration
-    ): Array<IFunctions> {
-        const functions: Array<IFunctions> = [];
+    ): IFunctions[] {
+        const functions: IFunctions[] = [];
         if (zoom) {
             functions.push(new BasicSvgMouseZoomHandler(zoom));
         } else {
@@ -209,10 +209,10 @@ export class MiChart {
 
     // external 기능 출력 설정정보 맵핑.
     static generatorOptions(
-        optionConfiguraions: Array<OptionConfiguration>
-    ): Array<IOptions> {
+        optionConfiguraions: OptionConfiguration[]
+    ): IOptions[] {
 
-        const options: Array<IOptions> = optionConfiguraions.map((option: OptionConfiguration) => {
+        const options: IOptions[] = optionConfiguraions.map((option: OptionConfiguration) => {
             return MiChart.retriveOptionClass(option.name, option.configuration)
         }).filter((option: IOptions) => option);
 
@@ -237,7 +237,7 @@ export class MiChart {
     }
 
     static retriveOptionClass(className: string, configuration: any): IOptions {
-        let optionItem: IOptions = undefined;
+        let optionItem: IOptions;
         if (className === 'BasicSpecArea') {
             optionItem = new BasicSpecArea(configuration);
         } else if (className === 'BasicStepLine') {
