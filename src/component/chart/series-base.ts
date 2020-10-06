@@ -89,7 +89,7 @@ export class SeriesBase implements ISeries {
 
     setTooltipCanvas(svg: Selection<BaseType, any, HTMLElement, any>) {
         // return this.svg.select('.tooltip-group');
-        if(!this.chartBase.chartContainer.select('.tooltip-canvas').node()) {
+        if(!this.chartBase.chartContainer.select('.' + ChartBase.TOOLTIP_CANVAS).node()) {
             const targetSvg = this.chartBase.chartContainer.append('svg')
                 .attr('class', 'tooltip-canvas')
                 .style('z-index', 3)

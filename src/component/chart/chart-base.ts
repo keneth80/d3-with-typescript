@@ -10,15 +10,15 @@ import { fromEvent, Subscription, Subject, of, Observable, from, timer } from 'r
 import { debounceTime, switchMap, map, concatMap, mapTo } from 'rxjs/operators';
 
 import { IChart, Scale, ContainerSize, LegendItem, ChartMouseEvent, ChartZoomEvent, DisplayType, ChartItemSelectEvent } from './chart.interface';
-import { ChartConfiguration, Axis, Margin, Placement, ChartTitle, ScaleType, 
-         Align, AxisTitle, ChartTooltip, Shape, PlacementByElement 
+import { ChartConfiguration, Axis, Margin, Placement, ChartTitle, ScaleType,
+         Align, AxisTitle, ChartTooltip, Shape, PlacementByElement
 } from './chart-configuration';
 import { ISeries } from './series.interface';
 import { IFunctions } from './functions.interface';
 import { IOptions } from './options.interface';
 
 import { baseTooltipTemplate } from '../chart/util/tooltip-template';
-import { guid, delayExcute, textWrapping, 
+import { guid, delayExcute, textWrapping,
          drawSvgCheckBox, drawLegendColorItemByRect, drawLegendColorItemByCircle, drawLegendColorItemByLine,
          getAxisByPlacement, getTransformByArray, getTextWidth, getMaxText
 } from './util/d3-svg-util';
@@ -611,15 +611,15 @@ export class ChartBase<T = any> implements IChart {
             series.chartBase = this;
             series.setSvgElement(this.svg, this.seriesGroup, index);
             series.drawSeries(
-                this.data, 
+                this.data,
                 this.scales,
                 {
-                    width: this.width, 
+                    width: this.width,
                     height: this.height
-                }, 
+                },
                 {
-                    index, 
-                    color: this.colors[index], 
+                    index,
+                    color: this.colors[index],
                     displayType: DisplayType.NORMAL
                 }
             );
@@ -645,15 +645,15 @@ export class ChartBase<T = any> implements IChart {
                         series.chartBase = this;
                         series.setSvgElement(this.svg, this.seriesGroup, index);
                         series.drawSeries(
-                            this.data, 
-                            this.scales, 
+                            this.data,
+                            this.scales,
                             {
-                                width: this.width, 
+                                width: this.width,
                                 height: this.height
                             },
                             {
-                                index, 
-                                color: this.colors[index], 
+                                index,
+                                color: this.colors[index],
                                 displayType
                             }
                         );
@@ -666,24 +666,23 @@ export class ChartBase<T = any> implements IChart {
                             series.chartBase = this;
                             series.setSvgElement(this.svg, this.seriesGroup, index);
                             series.drawSeries(
-                                this.data, 
-                                this.scales, 
+                                this.data,
+                                this.scales,
                                 {
-                                    width: this.width, 
+                                    width: this.width,
                                     height: this.height
-                                }, 
+                                },
                                 {
-                                    index, 
-                                    color: this.colors[index], 
+                                    index,
+                                    color: this.colors[index],
                                     displayType: DisplayType.NORMAL
                                 }
                             );
                         });
-
                         return;
                     }
                 }
-                
+
                 // 시간차로 그리기.
                 const arrayAsObservable = of(null).pipe(
                     // delay(this.config.displayDelay.delayTime),
@@ -693,7 +692,6 @@ export class ChartBase<T = any> implements IChart {
                     }),
                     switchMap(val => from(val))
                 );
-        
                 const eachElementAsObservable = arrayAsObservable.pipe(
                     concatMap(value => timer(this.config.displayDelay.delayTime).pipe(mapTo(value))), // Not working : we want to wait 500ms for each value
                     map(val => {
@@ -703,22 +701,21 @@ export class ChartBase<T = any> implements IChart {
 
                 this.eachElementAsObservableSubscription.unsubscribe();
                 this.eachElementAsObservableSubscription = new Subscription();
-            
                 this.eachElementAsObservableSubscription.add(
                     eachElementAsObservable.subscribe(index => {
-                        const currentIndex = parseInt(index + '');
+                        const currentIndex = +index;
                         this.seriesList[currentIndex].chartBase = this;
                         this.seriesList[currentIndex].setSvgElement(this.svg, this.seriesGroup, currentIndex);
                         this.seriesList[currentIndex].drawSeries(
-                            this.data, 
-                            this.scales, 
+                            this.data,
+                            this.scales,
                             {
-                                width: this.width, 
+                                width: this.width,
                                 height: this.height
-                            }, 
+                            },
                             {
-                                index: currentIndex, 
-                                color: this.colors[currentIndex], 
+                                index: currentIndex,
+                                color: this.colors[currentIndex],
                                 displayType: DisplayType.NORMAL
                             }
                         );
@@ -848,7 +845,7 @@ export class ChartBase<T = any> implements IChart {
                             isHide: false
                         });
                     });
-                    getMaxText(this.seriesList[0].displayNames.map((displayName: string) => displayName));
+                    targetText = getMaxText(this.seriesList[0].displayNames.map((displayName: string) => displayName));
                 } else {
                     // 일반 시리즈의 경우 범례 설정.
                     this.seriesList.forEach((series: ISeries) => {
@@ -861,7 +858,7 @@ export class ChartBase<T = any> implements IChart {
                             isHide: false
                         });
                     });
-                    getMaxText(this.seriesList.map((series: ISeries) => series.displayName || series.selector));
+                    targetText = getMaxText(this.seriesList.map((series: ISeries) => series.displayName || series.selector));
                 }
 
                 targetTextWidth = getTextWidth(targetText, this.defaultLegendStyle.font.size, this.defaultLegendStyle.font.family);
@@ -872,9 +869,8 @@ export class ChartBase<T = any> implements IChart {
                 this.legendTextWidthList.push(this.totalLegendWidth);
             }
             this.totalLegendWidth += this.legendPadding;
-            
+
             let compareWidth = this.totalLegendWidth;
-            let pointWidth = 0;
 
             for (let i = 0; i < this.legendItemList.length; i++) {
                 const currentText = this.legendItemList[i].label;
@@ -893,15 +889,15 @@ export class ChartBase<T = any> implements IChart {
 
             this.legendRowCount = Math.ceil(this.totalLegendWidth / this.width);
 
-            this.legendContainerSize.width = 
-            this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ? 
-                this.legendPadding * 2 + this.legendItemSize.width + this.legendPadding + Math.round(targetTextWidth) + (this.isCheckBox ? this.checkBoxWidth : 0) : 
+            this.legendContainerSize.width =
+            this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ?
+                this.legendPadding * 2 + this.legendItemSize.width + this.legendPadding + Math.round(targetTextWidth) + (this.isCheckBox ? this.checkBoxWidth : 0) :
                 (this.legendRowCount > 1 ? this.width : this.totalLegendWidth);
-            this.legendContainerSize.height = 
-                this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ? 
-                this.height : 
+            this.legendContainerSize.height =
+                this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ?
+                this.height :
                 (this.legendPadding + titleTextHeight) * this.legendRowCount;
-            
+
             this.width = this.width - (this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ? this.legendContainerSize.width : 0);
             this.height = this.height - (this.legendPlacement === Placement.TOP || this.legendPlacement === Placement.BOTTOM ? this.legendContainerSize.height : 0);
         }
@@ -1213,7 +1209,7 @@ export class ChartBase<T = any> implements IChart {
                 let titleY = 0;
                 const padding = 5;
                 if (d.placement === Placement.RIGHT) {
-                    titleX = 
+                    titleX =
                         this.width + this.margin.left + this.margin.right + this.titleContainerSize.width +
                         (this.isLegend && (this.legendPlacement === Placement.RIGHT || this.legendPlacement === Placement.LEFT)? this.legendContainerSize.width : 0);
                     titleY = this.height;
@@ -1221,8 +1217,8 @@ export class ChartBase<T = any> implements IChart {
                     titleX = this.titleContainerSize.width;
                     titleY = this.height;
                 } else if (d.placement === Placement.BOTTOM) {
-                    titleY = 
-                        this.height + (this.margin.top + this.margin.bottom) + (this.axisTitleMargin.top + this.axisTitleMargin.bottom) + 
+                    titleY =
+                        this.height + (this.margin.top + this.margin.bottom) + (this.axisTitleMargin.top + this.axisTitleMargin.bottom) +
                         (this.isLegend && (this.legendPlacement === Placement.TOP || this.legendPlacement === Placement.BOTTOM)? this.legendContainerSize.height : 0) -
                         padding;
                 } else {
@@ -1259,11 +1255,11 @@ export class ChartBase<T = any> implements IChart {
                     let x = 0;
                     let y = 0;
                     if (d.placement === Placement.TOP || d.placement === Placement.BOTTOM) {
-                        x = (this.width + this.margin.left + this.margin.right) / 2 - 
+                        x = (this.width + this.margin.left + this.margin.right) / 2 -
                             (this.isLegend && (this.legendPlacement === Placement.LEFT)? this.legendContainerSize.width : 0);
                         y = textHeight / 2 + 3;
                     } else {
-                        x = (this.height + this.margin.top + this.margin.bottom) / 2 - textHeight / 2;;
+                        x = (this.height + this.margin.top + this.margin.bottom) / 2 - textHeight / 2;
                     }
                     const translate = `translate(${x}, ${y})`;
                     return translate;
@@ -1377,7 +1373,7 @@ export class ChartBase<T = any> implements IChart {
                             }
                         }
                     });
-                    
+
                     if (longTextNode) {
                         const textHeight = Math.round(longTextNode.getBoundingClientRect().height);
                         if (maxTextWidth[scale.orient] < textHeight) {
@@ -1422,16 +1418,16 @@ export class ChartBase<T = any> implements IChart {
                         return scale.orient === Placement.LEFT || scale.orient === Placement.RIGHT ? 'rotate(-90)': '';
                     })
                     .attr('y', (d: AxisTitle, index: number, node: any) => {
-                        const padding = 5;
+                        const titlePadding = 5;
                         let y = 0;
                         if (scale.orient === Placement.LEFT) {
-                            y = 0 - (this.margin.left + this.axisTitleMargin.left - padding);
+                            y = 0 - (this.margin.left + this.axisTitleMargin.left - titlePadding);
                         } else if (scale.orient === Placement.RIGHT) {
-                            y = this.margin.right - padding;
+                            y = this.margin.right - titlePadding;
                         } else if (scale.orient === Placement.BOTTOM) {
-                            y = this.margin.bottom - padding;
+                            y = this.margin.bottom - titlePadding;
                         } else {
-                            y = -this.axisTitleMargin.top - padding;
+                            y = -this.axisTitleMargin.top - titlePadding;
                         }
                         return y;
                     })
@@ -1499,7 +1495,7 @@ export class ChartBase<T = any> implements IChart {
                 shape: Shape.NONE
             });
         }
-        
+
         const legendItemGroup = this.legendGroup.selectAll('.legend-item-group')
             .data(this.legendItemList)
             .join(
@@ -1532,7 +1528,7 @@ export class ChartBase<T = any> implements IChart {
                         currentRow = this.legendRowBreakCount.indexOf(index) + 1;
                         currentX = 0;
                     }
-                    
+
                     x = currentX;
                     y = (this.legendItemTextHeight + this.legendPadding) * currentRow;
                 }
@@ -1568,7 +1564,7 @@ export class ChartBase<T = any> implements IChart {
                 drawLegendColorItemByRect(select(nodeList[i]), this.legendItemSize, distictKeys, this.colors);
             }
         });
-      
+
         legendLabelGroup.selectAll('.legend-label')
             .data((d: LegendItem) => [d])
             .join(
@@ -1657,7 +1653,7 @@ export class ChartBase<T = any> implements IChart {
     }
 
     protected setupScale(
-        axes: Array<Axis> = [],
+        axes: Axis[] = [],
         width: number = 0,
         height: number = 0,
         reScaleAxes?: any[]
@@ -1674,7 +1670,7 @@ export class ChartBase<T = any> implements IChart {
 
     protected updateBrushHandler(orient: string = 'bottom', brush: any) {
         const extent = event.selection;
-        const scale: Scale = this.scales.find((scale: Scale) => scale.orient === orient);
+        const scale: Scale = this.scales.find((scaleItem: Scale) => scaleItem.orient === orient);
         const currentScale: any = scale.scale;
 
         if (!extent) {
@@ -1704,7 +1700,7 @@ export class ChartBase<T = any> implements IChart {
             );
         }
 
-        let currnetAxis: any = this.axisSetupByScale(scale);
+        const currnetAxis: any = this.axisSetupByScale(scale);
 
         this.axisGroups[orient]
         .call(currnetAxis)
@@ -1723,7 +1719,7 @@ export class ChartBase<T = any> implements IChart {
                 });
             });
         }
-        
+
         if (scale.isGridLine) {
             const targetScale = getAxisByPlacement(scale.orient, currentScale);
             if (scale.tickSize) {
@@ -1754,7 +1750,7 @@ export class ChartBase<T = any> implements IChart {
 
     // TODO: 해상도에 최적화중입니다. 팝업 표시 추가.
     protected resizeEventHandler = () => {
-        
+
         if (!this.svg) return;
 
         this.isResize = true;
@@ -1867,7 +1863,7 @@ export class ChartBase<T = any> implements IChart {
         this.hideTooltip();
         d.isHide = !d.isHide;
         if (this.seriesList && this.seriesList.length) {
-            let target: ISeries = undefined;
+            let target: ISeries;
             if (this.seriesList[0].displayNames && this.seriesList[0].displayNames.length) {
                 target = this.seriesList[0];
             } else {
@@ -1879,10 +1875,10 @@ export class ChartBase<T = any> implements IChart {
                 if (!d.isHide && !d.selected) {
                     target.select(d.label, d.selected);
                 }
-    
+
                 if (this.isAll) {
-                    let isCheckedAll = (this.legendGroup.selectAll('#legend-all-group').selectAll('.checkbox-mark').data()[0] as any).checked;
-                    
+                    const isCheckedAll = (this.legendGroup.selectAll('#legend-all-group').selectAll('.checkbox-mark').data()[0] as any).checked;
+
                     let checkCount = 0;
                     let uncheckCount = 0;
                     let allCount = 0;
@@ -1894,7 +1890,7 @@ export class ChartBase<T = any> implements IChart {
                         }
                         allCount++;
                     });
-    
+
                     if (isCheckedAll && uncheckCount > 0) {
                         // all check 해제
                         this.legendGroup.selectAll('#legend-all-group').selectAll('.checkbox-mark').each((item: any, i: number, node: any) => {
@@ -1933,7 +1929,7 @@ export class ChartBase<T = any> implements IChart {
 
         select(nodeList[index]).style('opacity', d.selected === false ? 0.5 : null);
 
-        let target: ISeries = undefined;
+        let target: ISeries;
         if (this.seriesList[0].displayNames && this.seriesList[0].displayNames.length) {
             target = this.seriesList[0];
         } else {
@@ -1949,14 +1945,14 @@ export class ChartBase<T = any> implements IChart {
     private onLegendAllLabelItemSelect = (d: LegendItem, index: number, nodeList: any) => {
         this.currentLegend = null;
         d.selected = !d.selected;
-        
+
         select(nodeList[index]).style('opacity', d.selected === false ? 0.5 : null);
         this.legendGroup.selectAll('.legend-label-group')
             .style('opacity', d.selected === false ? 0.5 : null)
             .each((item: LegendItem) => {
                 item.selected = d.selected;
             });
-        
+
         this.seriesList.forEach((series: ISeries) => {
             if (series.displayNames && series.displayNames.length) {
                 series.displayNames.forEach((displayName: string) => {
