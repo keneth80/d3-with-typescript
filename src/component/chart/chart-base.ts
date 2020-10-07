@@ -386,17 +386,11 @@ export class ChartBase<T = any> implements IChart {
             return;
         }
 
-        // TODO: 100% 적용해야함.
-        const styleWidth = this.selector.style('width');
-        const styleHeight = this.selector.style('height');
-        // const divWidth = this.selector.style('width').substring(0, styleWidth.indexOf('.'));
-        // const divHeight = this.selector.style('height').substring(0, styleHeight.indexOf('.'));
-
         this.svg = this.selector.append('svg')
             .style('position', 'absolute')
             .style('display', 'block')
-            .style('width', styleWidth)
-            .style('height', styleHeight);
+            .style('width', '100%')
+            .style('height', '100%');
 
         if (configuration.style) {
             // background color 설정.
@@ -461,7 +455,6 @@ export class ChartBase<T = any> implements IChart {
 
     clear() {
         this.selector.selectAll('*').remove();
-        // this.svg.selectAll('*').remove();
 
         this.seriesList.forEach((series: ISeries) => {
             series.destroy();
@@ -474,6 +467,8 @@ export class ChartBase<T = any> implements IChart {
         this.functionList.forEach((functions: IFunctions) => {
             functions.destroy();
         });
+
+        this.subscription.unsubscribe();
     }
 
     showTooltip(): Selection<BaseType, any, HTMLElement, any> {
@@ -587,11 +582,12 @@ export class ChartBase<T = any> implements IChart {
         }
 
         if (this.selector) {
-            this.selector.selectAll('svg').remove();
+            this.selector.selectAll('*').remove();
         }
 
         this.seriesList.forEach((series: ISeries) => series.destroy());
         this.functionList.forEach((functions: IFunctions) => functions.destroy());
+        this.optionList.forEach((options: IOptions) => options.destroy());
         this.originDomains = null;
         this.originalData.length = 0;
         this.data.length = 0;
@@ -798,8 +794,10 @@ export class ChartBase<T = any> implements IChart {
 
     protected setRootSize() {
         const titleTextHeight = 16;
-        this.svgWidth = parseFloat(this.svg.style('width'));
-        this.svgHeight = parseFloat(this.svg.style('height'));
+        this.svgWidth = (this.svg.node() as HTMLElement).clientWidth;
+        this.svgHeight = (this.svg.node() as HTMLElement).clientHeight;
+        // this.svgWidth = parseFloat(this.svg.style('width'));
+        // this.svgHeight = parseFloat(this.svg.style('height'));
 
         // axis title check
         if (this.config.axes && this.config.axes.length) {
@@ -1272,7 +1270,7 @@ export class ChartBase<T = any> implements IChart {
         const maxTextWidth = {};
         const padding = 10; // 10 는 axis 여백.
 
-        let isAxisUpdate: boolean = false;
+        let isAxisUpdate = false;
 
         this.originDomains = {};
 
@@ -1281,7 +1279,7 @@ export class ChartBase<T = any> implements IChart {
         this.scales.forEach((scale: Scale) => {
             const orientedAxis: any = this.axisSetupByScale(scale);
 
-            let bandWidth: number = -1;
+            let bandWidth = -1;
 
             if (scale.type === ScaleType.STRING) {
                 bandWidth = scale.scale.bandwidth();
