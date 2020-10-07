@@ -11,7 +11,7 @@ import { ChartBase } from '../../chart/chart-base';
 import { delayExcute } from '../../chart/util/d3-svg-util';
 import { Placement } from '../../chart/chart-configuration';
 import { createProgramFromSources, hexToRgb } from '../../chart/util/webgl-util';
-import { ChartSelector } from 'src/component/chart/chart-selector-variable';
+import { ChartSelector } from '../../chart';
 
 export class BasicCanvasWebglLineSeriesOneModel {
     x: number;

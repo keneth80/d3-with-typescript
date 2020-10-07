@@ -7,8 +7,7 @@ import { Scale, ContainerSize } from '../../chart/chart.interface';
 import { SeriesBase } from '../../chart/series-base';
 import { colorDarker, delayExcute, textBreak } from '../../chart/util/d3-svg-util';
 import { SeriesConfiguration } from '../../chart/series.interface';
-import { ChartBase } from '../../chart';
-import { ChartSelector } from 'src/component/chart/chart-selector-variable';
+import { ChartSelector } from '../../chart';
 
 export interface GroupedVerticalBarSeriesConfiguration extends SeriesConfiguration {
     xField: string;

@@ -4,8 +4,7 @@ import { debounceTime } from 'rxjs/operators';
 
 import { Scale, ContainerSize } from '../chart/chart.interface';
 import { FunctionsBase } from '../chart/functions-base';
-import { ChartBase } from '../chart/chart-base';
-import { ChartSelector } from '../chart/chart-selector-variable';
+import { ChartBase, ChartSelector } from '../chart';
 
 export interface BasicCanvasMouseHandlerConfiguration {
     isMoveEvent?: boolean;

@@ -7,3 +7,4 @@ export * from './options-base';
 export * from './options.interface';
 export * from './series-base';
 export * from './series.interface';
+export * from './chart-selector-variable';

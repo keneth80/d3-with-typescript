@@ -6,9 +6,8 @@ import { debounceTime } from 'rxjs/operators';
 
 import { Scale, ContainerSize } from '../chart/chart.interface';
 import { FunctionsBase } from '../chart/functions-base';
-import { ChartBase } from '../chart/chart-base';
+import { ChartBase, ChartSelector } from '../chart';
 import { Direction, ScaleType, Placement } from '../chart/chart-configuration';
-import { ChartSelector } from '../chart/chart-selector-variable';
 
 
 export interface BasicCanvasMouseZoomHandlerConfiguration {

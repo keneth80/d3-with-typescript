@@ -23,26 +23,11 @@ import { guid, delayExcute, textWrapping,
          getAxisByPlacement, getTransformByArray, getTextWidth, getMaxText
 } from './util/d3-svg-util';
 import { ChartAxis } from './axis/axis';
+import { ChartSelector } from './chart-selector-variable';
 
 
 // TODO: 모든 참조되는 함수들은 subject로 바꾼다.
 export class ChartBase<T = any> implements IChart {
-    static ZOOM_SVG = 'zoom-group';
-
-    static SELECTION_SVG = 'selection-group';
-
-    static SERIES_SVG = 'series-group';
-
-    static POINTER_CANVAS = 'pointer-canvas';
-
-    static ZOOM_CANVAS = 'zoom-canvas';
-
-    static SELECTION_CANVAS = 'selection-canvas';
-
-    static DRAWING_CANVAS = 'drawing-canvas';
-
-    static TOOLTIP_CANVAS = 'tooltip-canvas';
-
     isResize = false;
 
     mouseEventSubject: Subject<ChartMouseEvent> = new Subject();
@@ -1006,16 +991,16 @@ export class ChartBase<T = any> implements IChart {
         // 이전에 있던 순서
         // if (!this.zoomGroup) {
         //     this.zoomGroup = this.svg.append('g')
-        //         .attr('class', ChartBase.ZOOM_SVG)
+        //         .attr('class', ChartSelector.ZOOM_SVG)
         //     this.zoomGroup.append('rect')
-        //         .attr('class', ChartBase.ZOOM_SVG + '-background')
+        //         .attr('class', ChartSelector.ZOOM_SVG + '-background')
         //         .style('fill', 'none')
         //         .style('pointer-events', 'all');
         // }
         // this.zoomGroup
         //     .attr('transform', `translate(${x}, ${y})`);
 
-        // this.zoomGroup.select('.' + ChartBase.ZOOM_SVG + '-background')
+        // this.zoomGroup.select('.' + ChartSelector.ZOOM_SVG + '-background')
         //     .attr('width', this.width)
         //     .attr('height', this.height);
 
@@ -1029,7 +1014,7 @@ export class ChartBase<T = any> implements IChart {
 
         if (!this.seriesGroup) {
             this.seriesGroup = this.svg.append('g')
-                .attr('class', ChartBase.SERIES_SVG)
+                .attr('class', ChartSelector.SERIES_SVG)
         }
         this.seriesGroup
             .attr('transform', `translate(${x}, ${y})`)
@@ -1037,7 +1022,7 @@ export class ChartBase<T = any> implements IChart {
 
         if (!this.selectionGroup) {
             this.selectionGroup = this.svg.append('g')
-                .attr('class', ChartBase.SELECTION_SVG)
+                .attr('class', ChartSelector.SELECTION_SVG)
         }
         this.selectionGroup
             .attr('transform', `translate(${x}, ${y})`);
@@ -1051,16 +1036,16 @@ export class ChartBase<T = any> implements IChart {
         // zoom을 canvas와 webgl과 통일하기위한 순서.
         if (!this.zoomGroup) {
             this.zoomGroup = this.svg.append('g')
-                .attr('class', ChartBase.ZOOM_SVG)
+                .attr('class', ChartSelector.ZOOM_SVG)
             this.zoomGroup.append('rect')
-                .attr('class', ChartBase.ZOOM_SVG + '-background')
+                .attr('class', ChartSelector.ZOOM_SVG + '-background')
                 .style('fill', 'none')
                 .style('pointer-events', 'all');
         }
         this.zoomGroup
             .attr('transform', `translate(${x}, ${y})`);
 
-        this.zoomGroup.select('.' + ChartBase.ZOOM_SVG + '-background')
+        this.zoomGroup.select('.' + ChartSelector.ZOOM_SVG + '-background')
             .attr('width', this.width)
             .attr('height', this.height);
 
@@ -1803,7 +1788,7 @@ export class ChartBase<T = any> implements IChart {
     }
 
     private pointerClear() {
-        const selectionCanvas = this.selector.select('.' + ChartBase.SELECTION_CANVAS);
+        const selectionCanvas = this.selector.select('.' + ChartSelector.SELECTION_CANVAS);
         if (selectionCanvas && selectionCanvas.node()) {
             const context = (selectionCanvas.node() as any).getContext('2d');
             context.clearRect(0, 0, this.width, this.height);

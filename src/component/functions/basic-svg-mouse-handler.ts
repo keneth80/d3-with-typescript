@@ -2,10 +2,9 @@ import { Selection, BaseType, mouse } from 'd3-selection';
 
 import { Scale, ContainerSize } from '../chart/chart.interface';
 import { FunctionsBase } from '../chart/functions-base';
-import { ChartBase } from '../chart/chart-base';
+import { ChartBase, ChartSelector } from '../chart';
 import { fromEvent } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
-import { ChartSelector } from '../chart/chart-selector-variable';
 
 export interface BasicSvgMouseHandlerConfiguration {
     isMoveEvent?: boolean;

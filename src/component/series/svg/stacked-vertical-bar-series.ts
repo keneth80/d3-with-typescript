@@ -8,8 +8,7 @@ import { Scale, ContainerSize } from '../../chart/chart.interface';
 import { SeriesBase } from '../../chart/series-base';
 import { colorDarker, textBreak, delayExcute } from '../../chart/util/d3-svg-util';
 import { SeriesConfiguration } from '../../chart/series.interface';
-import { ChartBase } from '../../chart';
-import { ChartSelector } from 'src/component/chart/chart-selector-variable';
+import { ChartSelector } from '../../chart';
 
 export interface StackedVerticalBarSeriesConfiguration extends SeriesConfiguration {
     xField: string;
