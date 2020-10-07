@@ -8,6 +8,7 @@ import { Scale, ContainerSize } from '../chart/chart.interface';
 import { FunctionsBase } from '../chart/functions-base';
 import { ChartBase } from '../chart/chart-base';
 import { Direction, ScaleType, Placement } from '../chart/chart-configuration';
+import { ChartSelector } from '../chart/chart-selector-variable';
 
 
 export interface BasicCanvasMouseZoomHandlerConfiguration {
@@ -86,14 +87,14 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
             this.zoomCanvas = this.chartBase.chartContainer.select('.zoom-canvas');
         }
 
-        if (!this.chartBase.chartContainer.select('.' + ChartBase.POINTER_CANVAS).node()) {
+        if (!this.chartBase.chartContainer.select('.' + ChartSelector.POINTER_CANVAS).node()) {
             this.pointerCanvas = this.chartBase.chartContainer
                 .append('canvas')
-                .attr('class', ChartBase.POINTER_CANVAS)
+                .attr('class', ChartSelector.POINTER_CANVAS)
                 .style('z-index', 99)
                 .style('position', 'absolute');
         } else {
-            this.pointerCanvas = this.chartBase.chartContainer.select('.' + ChartBase.POINTER_CANVAS);
+            this.pointerCanvas = this.chartBase.chartContainer.select('.' + ChartSelector.POINTER_CANVAS);
         }
     }
 

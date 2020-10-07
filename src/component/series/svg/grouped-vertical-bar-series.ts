@@ -8,6 +8,7 @@ import { SeriesBase } from '../../chart/series-base';
 import { colorDarker, delayExcute, textBreak } from '../../chart/util/d3-svg-util';
 import { SeriesConfiguration } from '../../chart/series.interface';
 import { ChartBase } from '../../chart';
+import { ChartSelector } from 'src/component/chart/chart-selector-variable';
 
 export interface GroupedVerticalBarSeriesConfiguration extends SeriesConfiguration {
     xField: string;
@@ -61,7 +62,7 @@ export class GroupedVerticalBarSeries extends SeriesBase {
                   mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
         this.rootGroup = mainGroup;
-        this.selectionGroup = this.svg.select('.' + ChartBase.SELECTION_SVG);
+        this.selectionGroup = this.svg.select('.' + ChartSelector.SELECTION_SVG);
 
         if (!mainGroup.select(`.${this.selector}-group`).node()) {
             this.mainGroup = this.rootGroup.append('g').attr('class', `${this.selector}-group`);

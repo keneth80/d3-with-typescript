@@ -5,6 +5,7 @@ import { debounceTime } from 'rxjs/operators';
 import { Scale, ContainerSize } from '../chart/chart.interface';
 import { FunctionsBase } from '../chart/functions-base';
 import { ChartBase } from '../chart/chart-base';
+import { ChartSelector } from '../chart/chart-selector-variable';
 
 export interface BasicCanvasMouseHandlerConfiguration {
     isMoveEvent?: boolean;
@@ -40,14 +41,14 @@ export class BasicCanvasMouseHandler extends FunctionsBase {
                   index: number) {
         this.svg = svg;
         this.mainGroup = mainGroup;
-        if (!this.chartBase.chartContainer.select('.' + ChartBase.POINTER_CANVAS).node()) {
+        if (!this.chartBase.chartContainer.select('.' + ChartSelector.POINTER_CANVAS).node()) {
             this.pointerCanvas = this.chartBase.chartContainer
                 .append('canvas')
-                .attr('class', ChartBase.POINTER_CANVAS)
+                .attr('class', ChartSelector.POINTER_CANVAS)
                 .style('z-index', index + 20)
                 .style('position', 'absolute');
         } else {
-            this.pointerCanvas = this.chartBase.chartContainer.select('.' + ChartBase.POINTER_CANVAS);
+            this.pointerCanvas = this.chartBase.chartContainer.select('.' + ChartSelector.POINTER_CANVAS);
         }
     }
 

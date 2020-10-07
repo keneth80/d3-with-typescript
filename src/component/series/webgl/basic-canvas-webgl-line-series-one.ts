@@ -11,6 +11,7 @@ import { ChartBase } from '../../chart/chart-base';
 import { delayExcute } from '../../chart/util/d3-svg-util';
 import { Placement } from '../../chart/chart-configuration';
 import { createProgramFromSources, hexToRgb } from '../../chart/util/webgl-util';
+import { ChartSelector } from 'src/component/chart/chart-selector-variable';
 
 export class BasicCanvasWebglLineSeriesOneModel {
     x: number;
@@ -139,7 +140,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         this.setTooltipCanvas(this.svg);
         if (
             !this.chartBase.chartContainer
-                .select('.' + ChartBase.DRAWING_CANVAS)
+                .select('.' + ChartSelector.DRAWING_CANVAS)
                 .node()
         ) {
             this.canvas = this.chartBase.chartContainer
@@ -147,17 +148,17 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
                 .datum({
                     index
                 })
-                .attr('class', ChartBase.DRAWING_CANVAS)
+                .attr('class', ChartSelector.DRAWING_CANVAS)
                 .style('opacity', this.strokeOpacity)
                 .style('z-index', 2)
                 .style('position', 'absolute');
         } else {
-            this.canvas = this.chartBase.chartContainer.select('.' + ChartBase.DRAWING_CANVAS);
+            this.canvas = this.chartBase.chartContainer.select('.' + ChartSelector.DRAWING_CANVAS);
         }
 
         if (
             !this.chartBase.chartContainer
-                .select('.' + ChartBase.SELECTION_CANVAS)
+                .select('.' + ChartSelector.SELECTION_CANVAS)
                 .node()
         ) {
             this.chartBase.chartContainer
@@ -165,7 +166,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
                 .datum({
                     index
                 })
-                .attr('class', ChartBase.SELECTION_CANVAS)
+                .attr('class', ChartSelector.SELECTION_CANVAS)
                 .style('z-index', 98)
                 .style('position', 'absolute');
         }
@@ -222,7 +223,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
             );
 
         this.chartBase.chartContainer
-            .select('.' + ChartBase.SELECTION_CANVAS)
+            .select('.' + ChartSelector.SELECTION_CANVAS)
             .attr('width', geometry.width)
             .attr('height', geometry.height)
             .style(
@@ -268,8 +269,8 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         }
         this.subscription.unsubscribe();
         this.canvas.remove();
-        this.chartBase.chartContainer.select('.' + ChartBase.TOOLTIP_CANVAS).remove();
-        this.chartBase.chartContainer.select('.' + ChartBase.SELECTION_CANVAS).remove();
+        this.chartBase.chartContainer.select('.' + ChartSelector.TOOLTIP_CANVAS).remove();
+        this.chartBase.chartContainer.select('.' + ChartSelector.SELECTION_CANVAS).remove();
 
     }
 
@@ -768,7 +769,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         selectedItem: [number, number, any][],
         style: { radius: number; strokeColor: string; strokeWidth: number }
     ) {
-        const selectionCanvas = this.chartBase.chartContainer.select('.' + ChartBase.SELECTION_CANVAS);
+        const selectionCanvas = this.chartBase.chartContainer.select('.' + ChartSelector.SELECTION_CANVAS);
         const context = (selectionCanvas.node() as any).getContext('2d');
         context.clearRect(0, 0, geometry.width, geometry.height);
         context.fillStyle = style.strokeColor;

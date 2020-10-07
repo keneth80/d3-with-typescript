@@ -8,6 +8,7 @@ import { SeriesConfiguration } from '../../chart/series.interface';
 import { textBreak, delayExcute } from '../../chart/util/d3-svg-util';
 import { ChartBase } from '../../chart/chart-base';
 import { Placement } from '../../chart/chart-configuration';
+import { ChartSelector } from 'src/component/chart/chart-selector-variable';
 
 export class BasicCanvasTraceModel {
     x: number;
@@ -126,20 +127,20 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                 .datum({
                     index
                 })
-                .attr('class', 'drawing-canvas')
+                .attr('class', ChartSelector.DRAWING_CANVAS)
                 .style('opacity', 1)
                 .style('z-index', index + 1)
                 .style('position', 'absolute');
         }
 
-        if (!this.chartBase.chartContainer.select('.' + ChartBase.SELECTION_CANVAS).node()) {
+        if (!this.chartBase.chartContainer.select('.' + ChartSelector.SELECTION_CANVAS).node()) {
             this.chartBase.chartContainer
                 .append('canvas')
-                .attr('class', ChartBase.SELECTION_CANVAS)
+                .attr('class', ChartSelector.SELECTION_CANVAS)
                 .style('z-index', index + 2)
                 .style('position', 'absolute');
         } else {
-            this.chartBase.chartContainer.select('.' + ChartBase.SELECTION_CANVAS).style('z-index', index + 3)
+            this.chartBase.chartContainer.select('.' + ChartSelector.SELECTION_CANVAS).style('z-index', index + 3)
         }
     }
 
@@ -179,7 +180,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
             .attr('height', geometry.height)
             .style('transform', `translate(${(this.chartBase.chartMargin.left)}px, ${(this.chartBase.chartMargin.top)}px)`);
 
-        this.chartBase.chartContainer.select('.' + ChartBase.SELECTION_CANVAS)
+        this.chartBase.chartContainer.select('.' + ChartSelector.SELECTION_CANVAS)
             .attr('width', geometry.width)
             .attr('height', geometry.height)
             .style('transform', `translate(${(this.chartBase.chartMargin.left + 1)}px, ${(this.chartBase.chartMargin.top)}px)`);
@@ -273,8 +274,8 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
     destroy() {
         this.subscription.unsubscribe();
         this.canvas.remove();
-        this.chartBase.chartContainer.select('.tooltip-canvas').remove();
-        this.chartBase.chartContainer.select('.' + ChartBase.SELECTION_CANVAS).remove();
+        this.chartBase.chartContainer.select('.' + ChartSelector.TOOLTIP_CANVAS).remove();
+        this.chartBase.chartContainer.select('.' + ChartSelector.SELECTION_CANVAS).remove();
     }
 
     getSeriesDataByPosition(value: number[]) {
@@ -317,22 +318,6 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
     //     );
     // }
 
-    private onClickItem(selectedItem: any, geometry: ContainerSize, mouseEvent: number[]) {
-        if (selectedItem) {
-            this.itemClickSubject.next({
-                data: selectedItem[2],
-                event: {
-                    offsetX: mouseEvent[0] + this.chartBase.chartMargin.left,
-                    offsetY: mouseEvent[1] + this.chartBase.chartMargin.top
-                },
-                target: {
-                    width: 1,
-                    height: 1
-                }
-            });
-        }
-    }
-
     private setChartTooltip(d: any, geometry: ContainerSize, mouseEvent: number[]) {
         this.tooltipGroup = this.chartBase.showTooltip();
 
@@ -373,7 +358,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         position: number[],
         style:{radius: number, strokeColor: string, lineWidth: number}
     ) {
-        const selectionCanvas = this.chartBase.chartContainer.select('.' + ChartBase.SELECTION_CANVAS);
+        const selectionCanvas = this.chartBase.chartContainer.select('.' + ChartSelector.SELECTION_CANVAS);
         const context = (selectionCanvas.node() as any).getContext('2d');
         context.clearRect(0, 0, geometry.width, geometry.height);
         context.fillStyle = style.strokeColor;
@@ -388,7 +373,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         }
 
         context.beginPath();
-        context.fillRect(cx - style.radius, cy - style.radius, style.radius * 2, style.radius * 2);
+        context.fillRect(cx - style.radius * 2, cy - style.radius * 2, style.radius * 4, style.radius * 4);
         // context.strokeRect(cx - style.radius, cy - style.radius, style.radius * 2, style.radius * 2);
         // context.arc(cx, cy, style.radius, 0, 2 * Math.PI);
         context.closePath();

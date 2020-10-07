@@ -438,6 +438,9 @@ const simpleSvgLineSeriesExample = () => {
     highlightBlock((select('#json-configuration').node() as any));
 
     chart = SvgTraceChart(commonConfiguration, seriesList).draw();
+    chart.selectedChartItem.subscribe((item: ChartItemSelectEvent) => {
+        alert('click =>' + JSON.stringify(item.data));
+    });
 }
 
 const simpleSvgColumnSeriesExample = () => {

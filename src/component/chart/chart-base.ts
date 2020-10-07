@@ -1108,6 +1108,7 @@ export class ChartBase<T = any> implements IChart {
                 if (chartEvent.type === 'mousemove') {
                     isMouseLeave = false;
                     this.pointerClear();
+                    this.selectionClear();
                     if (this.config.tooltip && (!isDragStart && !isMouseLeave)) {
                         let max = this.seriesList.length;
                         while(max--) {
@@ -1128,26 +1129,27 @@ export class ChartBase<T = any> implements IChart {
                     isMouseLeave = true;
                     this.pointerClear();
                     this.selectionClear();
-                } else if (chartEvent.type === 'mouseup') {
+                } else if (chartEvent.type === 'click' || chartEvent.type === 'mouseup') {
                     isDragStart = false;
                     let max = this.seriesList.length;
                     while(max--) {
                         const positionData = this.seriesList[max].getSeriesDataByPosition(chartEvent.position);
                         if (positionData.length) {
-                            this.selectionClear();
+                            // TODO: select mode 적용 어떻게 할까?
+                            // this.selectionClear();
                             this.seriesList[max].onSelectItem(chartEvent.position, positionData);
-                            // TODO: selectitem event dispatch
-                            // this.chartItemClickSubject.next({
-                            //     position: {
-                            //         x: positionData[0],
-                            //         y: positionData[1]
-                            //     },
-                            //     data: positionData[2]
-                            // });
+                            positionData.forEach(element => {
+                                this.chartItemClickSubject.next({
+                                    position: {
+                                        x: element[0],
+                                        y: element[1]
+                                    },
+                                    data: element[2]
+                                });
+                            });
                             break;
                         }
                     }
-
                 } else if (chartEvent.type === 'mousedown') {
 
                 } else {

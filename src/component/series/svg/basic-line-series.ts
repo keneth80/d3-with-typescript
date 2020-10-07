@@ -11,6 +11,7 @@ import { SeriesConfiguration } from '../../chart/series.interface';
 import { textBreak, delayExcute } from '../../chart/util/d3-svg-util';
 import { Placement } from '../../chart/chart-configuration';
 import { ChartBase } from '../../chart';
+import { ChartSelector } from 'src/component/chart/chart-selector-variable';
 
 export interface BasicLineSeriesConfiguration extends SeriesConfiguration {
     dotSelector?: string;
@@ -106,7 +107,7 @@ export class BasicLineSeries extends SeriesBase {
                   mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
         this.seriespGroup = mainGroup;
-        this.selectionGroup = this.svg.select('.' + ChartBase.SELECTION_SVG);
+        this.selectionGroup = this.svg.select('.' + ChartSelector.SELECTION_SVG);
         if (!mainGroup.select(`.${this.selector}-group`).node()) {
             this.mainGroup = mainGroup.append('g').attr('class', `${this.selector}-group`);
         }

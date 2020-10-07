@@ -5,6 +5,7 @@ import { FunctionsBase } from '../chart/functions-base';
 import { ChartBase } from '../chart/chart-base';
 import { fromEvent } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
+import { ChartSelector } from '../chart/chart-selector-variable';
 
 export interface BasicSvgMouseHandlerConfiguration {
     isMoveEvent?: boolean;
@@ -36,7 +37,7 @@ export class BasicSvgMouseHandler extends FunctionsBase {
                   index: number) {
         this.svg = svg;
         this.mainGroup = mainGroup;
-        this.pointerGroup = this.svg.select('.' + ChartBase.ZOOM_SVG);
+        this.pointerGroup = this.svg.select('.' + ChartSelector.ZOOM_SVG);
     }
 
     drawFunctions(chartData: any[], scales: Scale[], geometry: ContainerSize) {

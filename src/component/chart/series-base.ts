@@ -1,11 +1,12 @@
-import { select, Selection, BaseType } from 'd3-selection';
+import { Selection, BaseType } from 'd3-selection';
 import { Subject, Observable, Subscription } from 'rxjs';
 
-import { ChartBase } from './chart-base';
+import { ChartSelector } from './chart-selector-variable';
 import { ISeries, SeriesConfiguration } from './series.interface';
 import { Scale, ContainerSize, ScaleValue, DisplayOption } from './chart.interface';
 import { guid } from './util/d3-svg-util';
 import { Quadtree } from 'd3-quadtree';
+import { ChartBase } from './chart-base';
 
 export class SeriesBase implements ISeries {
     type: string = 'series';
@@ -89,9 +90,9 @@ export class SeriesBase implements ISeries {
 
     setTooltipCanvas(svg: Selection<BaseType, any, HTMLElement, any>) {
         // return this.svg.select('.tooltip-group');
-        if(!this.chartBase.chartContainer.select('.' + ChartBase.TOOLTIP_CANVAS).node()) {
+        if(!this.chartBase.chartContainer.select('.' + ChartSelector.TOOLTIP_CANVAS).node()) {
             const targetSvg = this.chartBase.chartContainer.append('svg')
-                .attr('class', 'tooltip-canvas')
+                .attr('class', ChartSelector.TOOLTIP_CANVAS)
                 .style('z-index', 3)
                 .style('position', 'absolute')
                 .style('width', '100%')
@@ -113,7 +114,7 @@ export class SeriesBase implements ISeries {
 
             return targetSvg;
         } else {
-            return this.chartBase.chartContainer.select('.tooltip-canvas');
+            return this.chartBase.chartContainer.select('.' + ChartSelector.TOOLTIP_CANVAS);
         }
     }
 
