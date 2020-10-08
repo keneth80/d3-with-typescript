@@ -1133,15 +1133,15 @@ export class ChartBase<T = any> implements IChart {
                             return;
                         }
 
-                        const positionData = this.seriesList[this.currentSeriesIndex].getSeriesDataByPosition(chartEvent.position);
-                        if (positionData.length) {
+                        const positionDataList = this.seriesList[this.currentSeriesIndex].getSeriesDataByPosition(chartEvent.position);
+                        if (positionDataList.length) {
                             // TODO: select mode 적용 어떻게 할까?
-                            this.seriesList[this.currentSeriesIndex].onSelectItem(chartEvent.position, positionData);
+                            this.seriesList[this.currentSeriesIndex].onSelectItem(chartEvent.position, positionDataList);
                             this.chartItemEventSubject.next({
                                 type: chartEvent.type,
-                                position: [positionData[this.currentChartItemIndex][0], positionData[this.currentChartItemIndex][1]],
-                                data: positionData[this.currentChartItemIndex][2],
-                                etc: positionData[this.currentChartItemIndex]
+                                position: [positionDataList[this.currentChartItemIndex][0], positionDataList[this.currentChartItemIndex][1]],
+                                data: positionDataList[this.currentChartItemIndex][2],
+                                etc: positionDataList[this.currentChartItemIndex]
                             });
                             // positionData.forEach((element: any[]) => {
                             //     this.chartItemEventSubject.next({
