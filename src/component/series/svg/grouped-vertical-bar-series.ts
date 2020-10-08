@@ -195,6 +195,8 @@ export class GroupedVerticalBarSeries extends SeriesBase {
             },
             value
         );
+
+        return index;
     }
 
     // TODO: tooltip에 시리즈 아이디를 부여하여 시리즈 마다 tooltip을 컨트롤 할 수 있도록 한다.

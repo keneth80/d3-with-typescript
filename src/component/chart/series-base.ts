@@ -122,7 +122,9 @@ export class SeriesBase implements ISeries {
         return null;
     }
 
-    showPointAndTooltip(value: number[], selected: any[]) {}
+    showPointAndTooltip(value: number[], selected: any[]): number {
+        return 0;
+    }
 
     onSelectItem(value: number[], selected: any[]) {}
 

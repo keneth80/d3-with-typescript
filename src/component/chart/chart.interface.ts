@@ -25,19 +25,18 @@ export interface ScaleValue {
     }
 }
 
-export interface ChartItemSelectEvent {
-    position: {
-        x: number,
-        y: number
-    };
+export interface ChartItemEvent {
+    type: string;
+    position: [number, number];
     data: any;
+    etc?: any;
     target?: Selection<BaseType, any, HTMLElement, any>;
 }
 
 export interface ChartMouseEvent {
     type: string;
     position: [number, number];
-    target: Selection<BaseType, any, HTMLElement, any>
+    target: Selection<BaseType, any, HTMLElement, any>;
 }
 
 export interface ChartZoomEvent extends ChartMouseEvent {

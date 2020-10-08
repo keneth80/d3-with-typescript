@@ -83,13 +83,13 @@ export class BasicSvgMouseHandler extends FunctionsBase {
             });
         })
         .on('mouseup', () => {
-            const mouseEvent = mouse(this.pointerGroup.node() as any);
+            // const mouseEvent = mouse(this.pointerGroup.node() as any);
 
-            this.chartBase.mouseEventSubject.next({
-                type: 'mouseup',
-                position: mouseEvent,
-                target: this.pointerGroup
-            });
+            // this.chartBase.mouseEventSubject.next({
+            //     type: 'mouseup',
+            //     position: mouseEvent,
+            //     target: this.pointerGroup
+            // });
         }).on('click', () => {
             const mouseEvent = mouse(this.pointerGroup.node() as any);
 

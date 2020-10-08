@@ -109,54 +109,7 @@ export class StackedVerticalBarSeries extends SeriesBase {
             .selectAll('.stacked-bar-item')
                 .data((d: any) => { return d; })
                 .join(
-                    (enter) => enter.append('rect').attr('class', 'stacked-bar-item')
-                        // .on('mouseover', (d: any, i, nodeList: any) => {
-                        //     const target: any = nodeList[i];
-                        //     const column: string = target.parentNode.getAttribute('column');
-                        //     const fill: string = z(column) + '';
-
-                        //     select(nodeList[i])
-                        //         .style('fill', () => colorDarker(fill, 2)) // point
-                        //         // .style('stroke', '#f5330c')
-                        //         // .style('stroke-width', 2);
-
-                        //     this.tooltipGroup = this.chartBase.showTooltip();
-                        //     select(nodeList[i]).classed('tooltip', true);
-
-                        // })
-                        // .on('mouseout', (d: any, i, nodeList: any) => {
-                        //     const target: any = nodeList[i];
-                        //     const column: string = target.parentNode.getAttribute('column');
-                        //     const fill: string = z(column) + '';
-
-                        //     select(nodeList[i])
-                        //         .style('fill', () => fill) // point
-                        //         // .style('stroke', null)
-                        //         // .style('stroke-width', null);
-
-                        //     this.chartBase.hideTooltip();
-                        //     select(nodeList[i]).classed('tooltip', false);
-                        // })
-                        // .on('mousemove', (d: any, i, nodeList: any) => {
-                        //     const target: any = nodeList[i];
-                        //     const column: string = target.parentNode.getAttribute('column');
-                        //     const xPosition = mouse(target)[0] + 10;
-                        //     const yPosition = mouse(target)[1] - 10;
-                        //     const textElement: any = this.tooltipGroup.select('text')
-                        //         .text(`${column}: ${this.numberFmt(d.data[column])}`);
-
-                        //     this.tooltipGroup.attr('transform', `translate(${this.chartBase.chartMargin.left + xPosition}, ${yPosition})`);
-                        //     this.tooltipGroup.selectAll('rect')
-                        //         .attr('width', textElement.node().getComputedTextLength() + 10);
-                        //     // this.tooltipGroup.select('text').text(`${d[1] - d[0]}`);
-                        //     // console.log('d : ', d, target, parent);
-                        // })
-                        // .on('click', (data: any) => {
-                        //     event.preventDefault();
-                        //     event.stopPropagation();
-                        //     this.itemClickSubject.next(data);
-                        // })
-                        ,
+                    (enter) => enter.append('rect').attr('class', 'stacked-bar-item'),
                     (update) => update,
                     (exit) => exit.remove()
                 )
@@ -177,7 +130,6 @@ export class StackedVerticalBarSeries extends SeriesBase {
 
         delayExcute(300, () => {
             const size = generateChartData.length;
-
             const generateData: any[] = [];
             for (let i = 0; i < size; i++) {
                 const d: any = generateChartData[i];
@@ -223,14 +175,6 @@ export class StackedVerticalBarSeries extends SeriesBase {
             return;
         }
 
-        this.chartBase.chartItemClickSubject.next({
-            position: {
-                x: value[0],
-                y: value[1]
-            },
-            data: selected[2]
-        });
-
         const selectedItem = selected[index];
 
         this.drawSelectionPoint(
@@ -268,25 +212,25 @@ export class StackedVerticalBarSeries extends SeriesBase {
     showPointAndTooltip(value: number[], selected: any[]) {
         // const index = Math.floor(selected.length / 2);
         // TODO: y좌표보다 작은 아이템을 골라야함.
-        const index = this.retriveColumnIndex(value, selected);
+        const index: number = this.retriveColumnIndex(value, selected);
 
-        if (index < 0) {
-            return;
+        if (index > -1) {
+            const selectedItem = selected[index];
+
+            this.setChartTooltip(
+                selectedItem,
+                {
+                    width: this.geometry.width,
+                    height: this.geometry.height
+                },
+                value
+            );
         }
 
-        const selectedItem = selected[index];
-
-        this.setChartTooltip(
-            selectedItem,
-            {
-                width: this.geometry.width,
-                height: this.geometry.height
-            },
-            value
-        );
+        return index;
     }
 
-    private retriveColumnIndex(value: number[], selected: any[]) {
+    private retriveColumnIndex(value: number[], selected: any[]): number {
         let index = -1;
         for (let i = 0; i < selected.length; i++) {
             if (value[1] > selected[i][1] && value[1] < (selected[i][6] + selected[i][1])) { // y좌표보다 작아야하고, 막대 크기보다 커야함.

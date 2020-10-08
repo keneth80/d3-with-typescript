@@ -304,6 +304,8 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
             },
             value
         );
+
+        return index;
     }
 
     // onSelectItem(selectedItem: Array<any>, event: ChartMouseEvent) {

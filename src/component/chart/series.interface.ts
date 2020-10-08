@@ -34,7 +34,7 @@ export interface ISeries<T = any> {
 
     getSeriesDataByPosition(value: number[]): any;
 
-    showPointAndTooltip(value: number[], selected: any[]): void;
+    showPointAndTooltip(value: number[], selected: any[]): number;
 
     onSelectItem(value: number[], selected: any[]): void;
 

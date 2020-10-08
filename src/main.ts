@@ -42,7 +42,7 @@ import { BasicCanvasMouseZoomHandler } from './component/functions/basic-canvas-
 
 import { delayExcute } from './component/chart/util/d3-svg-util';
 import { MiChart, OptionConfiguration, MiccBaseConfiguration } from './component/mi-chart';
-import { ChartItemSelectEvent } from './component/chart';
+import { ChartItemEvent } from './component/chart';
 import { SvgTraceChart } from './component/chart-generator';
 
 
@@ -438,8 +438,10 @@ const simpleSvgLineSeriesExample = () => {
     highlightBlock((select('#json-configuration').node() as any));
 
     chart = SvgTraceChart(commonConfiguration, seriesList).draw();
-    chart.selectedChartItem.subscribe((item: ChartItemSelectEvent) => {
-        alert('click =>' + JSON.stringify(item.data));
+    chart.chartItemEvent.subscribe((item: ChartItemEvent) => {
+        if (item.type === 'click') {
+            alert('click =>' + JSON.stringify(item.data));
+        }
     });
 }
 
@@ -540,7 +542,7 @@ const simpleSvgStackedColumnSeriesExample = () => {
     highlightBlock((select('#json-configuration').node() as any));
 
     chart = MiChart.SvgStackedBarChart(commonConfiguration, stackedVerticalColumnSeries).draw();
-    chart.selectedChartItem.subscribe((item: ChartItemSelectEvent) => {
+    chart.chartItemEvent.subscribe((item: ChartItemEvent) => {
         console.log('selected item : ', item);
     })
 }

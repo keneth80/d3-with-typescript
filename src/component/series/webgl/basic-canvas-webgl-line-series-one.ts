@@ -303,6 +303,8 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
             },
             value
         );
+
+        return index;
     }
 
     // onSelectItem(selectedItem: Array<any>, event: ChartMouseEvent) {

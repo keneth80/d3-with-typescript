@@ -328,6 +328,8 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
             },
             value
         );
+
+        return index;
     }
 
     onSelectItem(selectedItem: any[], position: any[]) {

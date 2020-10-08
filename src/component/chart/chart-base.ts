@@ -9,7 +9,9 @@ import { format } from 'd3-format';
 import { fromEvent, Subscription, Subject, of, Observable, from, timer } from 'rxjs';
 import { debounceTime, switchMap, map, concatMap, mapTo } from 'rxjs/operators';
 
-import { IChart, Scale, ContainerSize, LegendItem, ChartMouseEvent, ChartZoomEvent, DisplayType, ChartItemSelectEvent } from './chart.interface';
+import { sha1 } from 'object-hash';
+
+import { IChart, Scale, ContainerSize, LegendItem, ChartMouseEvent, ChartZoomEvent, DisplayType, ChartItemEvent } from './chart.interface';
 import { ChartConfiguration, Axis, Margin, Placement, ChartTitle, ScaleType,
          Align, AxisTitle, ChartTooltip, Shape, PlacementByElement
 } from './chart-configuration';
@@ -34,7 +36,7 @@ export class ChartBase<T = any> implements IChart {
 
     zoomEventSubject: Subject<ChartZoomEvent> = new Subject();
 
-    chartItemClickSubject: Subject<ChartItemSelectEvent> = new Subject();
+    chartItemEventSubject: Subject<ChartItemEvent> = new Subject();
 
     isTooltipDisplay = false; // 현재 툴팁이 열려있는지 판단여부.
 
@@ -220,6 +222,12 @@ export class ChartBase<T = any> implements IChart {
 
     private webglContext: any;
 
+    private currentChartItem = [];
+
+    private currentSeriesIndex = -1;
+
+    private currentChartItemIndex = -1;
+
     constructor(
         configuration: ChartConfiguration
     ) {
@@ -313,15 +321,11 @@ export class ChartBase<T = any> implements IChart {
         return this.clipPath;
     }
 
-    // get crossFilter(): any{
-    //     return crossfilter;
-    // }
-
     get updateSeries$(): Observable<any> {
         return this.updateSeriesSubject.asObservable();
     }
 
-    get mouseEvent$(): Observable<any> {
+    get mouseEvent$(): Observable<ChartMouseEvent> {
         return this.mouseEventSubject.asObservable();
     }
 
@@ -333,8 +337,8 @@ export class ChartBase<T = any> implements IChart {
         return this.colors;
     }
 
-    get selectedChartItem(): Observable<ChartItemSelectEvent> {
-        return this.chartItemClickSubject.asObservable();
+    get chartItemEvent(): Observable<ChartItemEvent> {
+        return this.chartItemEventSubject.asObservable();
     }
 
     getColorBySeriesIndex(index: number): string {
@@ -359,8 +363,6 @@ export class ChartBase<T = any> implements IChart {
                 }
             })
         }
-
-        // this.svg = select(configuration.selector);
 
         this.selector = select(configuration.selector);
 
@@ -413,8 +415,10 @@ export class ChartBase<T = any> implements IChart {
         if (configuration.legend) {
             this.isLegend = true;
             this.legendPlacement = configuration.legend.placement;
-            this.isCheckBox = configuration.legend.isCheckBox === false ? configuration.legend.isCheckBox : true;
-            this.isAll = configuration.legend.isAll === false ? configuration.legend.isAll : true;
+            // this.isCheckBox = configuration.legend.isCheckBox === false ? configuration.legend.isCheckBox : true;
+            // this.isAll = configuration.legend.isAll === false ? configuration.legend.isAll : true;
+            this.isCheckBox = configuration.legend.isCheckBox || true;
+            this.isAll = configuration.legend.isAll || true;
         }
 
         if (configuration.tooltip) {
@@ -988,22 +992,6 @@ export class ChartBase<T = any> implements IChart {
             });
         }
 
-        // 이전에 있던 순서
-        // if (!this.zoomGroup) {
-        //     this.zoomGroup = this.svg.append('g')
-        //         .attr('class', ChartSelector.ZOOM_SVG)
-        //     this.zoomGroup.append('rect')
-        //         .attr('class', ChartSelector.ZOOM_SVG + '-background')
-        //         .style('fill', 'none')
-        //         .style('pointer-events', 'all');
-        // }
-        // this.zoomGroup
-        //     .attr('transform', `translate(${x}, ${y})`);
-
-        // this.zoomGroup.select('.' + ChartSelector.ZOOM_SVG + '-background')
-        //     .attr('width', this.width)
-        //     .attr('height', this.height);
-
         if (!this.optionGroup) {
             this.optionGroup = this.svg.append('g')
                 .attr('class', 'option-group')
@@ -1090,55 +1078,83 @@ export class ChartBase<T = any> implements IChart {
 
         this.subscription.add(
             this.mouseEvent$.subscribe((chartEvent: ChartMouseEvent) => {
-                if (chartEvent.type === 'mousemove') {
-                    isMouseLeave = false;
-                    this.pointerClear();
-                    this.selectionClear();
-                    if (this.config.tooltip && (!isDragStart && !isMouseLeave)) {
-                        let max = this.seriesList.length;
-                        while(max--) {
-                            const positionData = this.seriesList[max].getSeriesDataByPosition(chartEvent.position);
-                            // TODO: 시리즈 루프 돌면서 해당 포지션에 데이터가 있는지 찾되
-                            // 툴팁을 보여줄 때면 멀티인지 싱글인지 체크 해서 break 여부를 판단하고 해당 시리즈의 메서드 실행.
-                            // multi tooltip이면 break 걸지 않는다.
-                            if (positionData.length && !this.isTooltipDisplay) {
-                                this.seriesList[max].showPointAndTooltip(chartEvent.position, positionData);
-                                // TODO: tooltip show event 발생.
-                                break;
-                            } else {
-                                this.selectionClear();
+                switch(chartEvent.type) {
+                    case 'mousemove':
+                        isMouseLeave = false;
+                        this.mouseleaveEventHandler();
+                        if (this.config.tooltip && (!isDragStart && !isMouseLeave)) {
+                            let maxLength = this.seriesList.length;
+                            while(maxLength--) {
+                                const positionData = this.seriesList[maxLength].getSeriesDataByPosition(chartEvent.position);
+                                // TODO: 시리즈 루프 돌면서 해당 포지션에 데이터가 있는지 찾되
+                                // 툴팁을 보여줄 때면 멀티인지 싱글인지 체크 해서 break 여부를 판단하고 해당 시리즈의 메서드 실행.
+                                // multi tooltip이면 break 걸지 않는다.
+                                if (positionData.length && !this.isTooltipDisplay) {
+                                    this.currentSeriesIndex = maxLength;
+                                    this.currentChartItemIndex = this.seriesList[maxLength].showPointAndTooltip(chartEvent.position, positionData);
+                                    // TODO: tooltip show event and mouse over 발생.
+                                    if (this.currentChartItemIndex > -1) {
+                                        const newHash = sha1(positionData[this.currentChartItemIndex]);
+                                        if (sha1(this.currentChartItem) !== newHash) {
+                                            // 전에 오버했던 아이템 아웃 이벤트 발생.
+                                            this.mouseoutEventHandler();
+                                            // 오버 이벤트 발생.
+                                            this.mouseoverEventHandler(positionData[this.currentChartItemIndex]);
+                                        }
+                                    } else {
+                                        this.mouseoutEventHandler();
+                                        this.mousemoveDataClear();
+                                    }
+                                    break;
+                                } else {
+                                    this.mousemoveDataClear();
+                                    // this.selectionClear();
+                                }
                             }
                         }
-                    }
-                } else if (chartEvent.type === 'mouseleave') {
-                    isMouseLeave = true;
-                    this.pointerClear();
-                    this.selectionClear();
-                } else if (chartEvent.type === 'click' || chartEvent.type === 'mouseup') {
-                    isDragStart = false;
-                    let max = this.seriesList.length;
-                    while(max--) {
-                        const positionData = this.seriesList[max].getSeriesDataByPosition(chartEvent.position);
+                    break;
+
+                    case 'mouseleave':
+                        isMouseLeave = true;
+                        this.mouseleaveEventHandler();
+                        this.mouseoutEventHandler();
+                    break;
+
+                    case 'click':
+                    case 'mouseup':
+                        isDragStart = false;
+                        if (this.currentSeriesIndex < 0) {
+                            this.selectionClear();
+                            this.chartItemEventSubject.next({
+                                type: 'backgroundclick',
+                                position: [0, 0],
+                                data: null,
+                                etc: [0, 0]
+                            });
+                            return;
+                        }
+
+                        const positionData = this.seriesList[this.currentSeriesIndex].getSeriesDataByPosition(chartEvent.position);
                         if (positionData.length) {
                             // TODO: select mode 적용 어떻게 할까?
-                            // this.selectionClear();
-                            this.seriesList[max].onSelectItem(chartEvent.position, positionData);
-                            positionData.forEach(element => {
-                                this.chartItemClickSubject.next({
-                                    position: {
-                                        x: element[0],
-                                        y: element[1]
-                                    },
-                                    data: element[2]
-                                });
+                            this.seriesList[this.currentSeriesIndex].onSelectItem(chartEvent.position, positionData);
+                            this.chartItemEventSubject.next({
+                                type: chartEvent.type,
+                                position: [positionData[this.currentChartItemIndex][0], positionData[this.currentChartItemIndex][1]],
+                                data: positionData[this.currentChartItemIndex][2],
+                                etc: positionData[this.currentChartItemIndex]
                             });
+                            // positionData.forEach((element: any[]) => {
+                            //     this.chartItemEventSubject.next({
+                            //         type: chartEvent.type,
+                            //         position: [element[0], element[1]],
+                            //         data: element[2],
+                            //         etc: element
+                            //     });
+                            // });
                             break;
                         }
-                    }
-                } else if (chartEvent.type === 'mousedown') {
-
-                } else {
-
+                    break;
                 }
             })
         );
@@ -1150,32 +1166,10 @@ export class ChartBase<T = any> implements IChart {
                     this.pointerClear();
                 } else if (chartEvent.type === 'zoomin') {
                     isDragStart = false;
-                    // this.viewClear();
-                    const reScale = [
-                        {
-                            field: chartEvent.zoom.field.x,
-                            min: chartEvent.zoom.start.x,
-                            max: chartEvent.zoom.end.x
-                        },
-                        {
-                            field: chartEvent.zoom.field.y,
-                            min: chartEvent.zoom.start.y,
-                            max: chartEvent.zoom.end.y
-                        }
-                    ];
-                    this.scales = this.setupScale(this.config.axes, this.width, this.height, reScale);
-                    this.updateRescaleAxis(false);
-                    this.updateFunctions();
-                    this.updateSeries(DisplayType.ZOOMIN);
-                    this.updateOptions();
+                    this.zoominEventHandler(chartEvent);
                 } else if (chartEvent.type === 'zoomout') {
                     isDragStart = false;
-                    // this.viewClear();
-                    this.scales = this.setupScale(this.config.axes, this.width, this.height, []);
-                    this.updateRescaleAxis(false);
-                    this.updateFunctions();
-                    this.updateSeries(DisplayType.ZOOMOUT);
-                    this.updateOptions();
+                    this.zoomoutEventHandler();
                 } else {
                     isDragStart = false;
                 }
@@ -1183,9 +1177,75 @@ export class ChartBase<T = any> implements IChart {
         );
     }
 
+    protected zoominEventHandler(chartEvent: ChartZoomEvent) {
+        const reScale = [
+            {
+                field: chartEvent.zoom.field.x,
+                min: chartEvent.zoom.start.x,
+                max: chartEvent.zoom.end.x
+            },
+            {
+                field: chartEvent.zoom.field.y,
+                min: chartEvent.zoom.start.y,
+                max: chartEvent.zoom.end.y
+            }
+        ];
+        this.scales = this.setupScale(this.config.axes, this.width, this.height, reScale);
+        this.updateRescaleAxis(false);
+        this.updateFunctions();
+        this.updateSeries(DisplayType.ZOOMIN);
+        this.updateOptions();
+    }
+
+    protected zoomoutEventHandler() {
+        this.scales = this.setupScale(this.config.axes, this.width, this.height, []);
+        this.updateRescaleAxis(false);
+        this.updateFunctions();
+        this.updateSeries(DisplayType.ZOOMOUT);
+        this.updateOptions();
+    }
+
+    protected mouseleaveEventHandler() {
+        this.pointerClear();
+        // this.selectionClear();
+    }
+
+    protected mousemoveDataClear() {
+        this.currentChartItem.length = 0;
+        this.currentSeriesIndex = -1;
+        this.currentChartItemIndex = -1;
+    }
+
+    protected mouseoutEventHandler() {
+        if (this.currentChartItem.length) {
+            this.chartItemEventSubject.next({
+                type: 'mouseout',
+                position: [this.currentChartItem[0], this.currentChartItem[1]],
+                data: this.currentChartItem[2],
+                etc: this.currentChartItem
+            });
+
+            this.currentChartItem.length = 0;
+        }
+    }
+
+    protected mouseoverEventHandler(positionData: any[]) {
+        // this.currentChartItem = positionData;
+        positionData.forEach((pdata: any) => {
+            this.currentChartItem.push(pdata);
+        });
+        this.chartItemEventSubject.next({
+            type: 'mouseover',
+            position: [this.currentChartItem[0], this.currentChartItem[1]],
+            data: this.currentChartItem[2],
+            etc: this.currentChartItem
+        });
+    }
+
     protected chartCanvasClick = () => {
         this.chartClickSubject.next();
         this.hideTooltip();
+        // this.selectionClear();
     }
 
     protected updateTitle() {
@@ -1469,6 +1529,8 @@ export class ChartBase<T = any> implements IChart {
         const checkboxPadding = this.isCheckBox ? this.legendItemSize.width + this.legendPadding : 0;
         const addTitleWidth = this.isTitle && this.titlePlacement === Placement.LEFT ? this.titleContainerSize.width : 0;
         const addAllWidth = this.isAll ? this.allWidth : 0;
+        const legendPlacement = this.legendPlacement;
+        const legendPadding = this.legendPadding;
 
         let currentRow = 0;
         let currentX = 0;
@@ -1497,17 +1559,17 @@ export class ChartBase<T = any> implements IChart {
             })
             .attr('transform', (d: any, index: number) => {
                 let x = 0;
-                let y = this.legendPadding;
-                if (this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT) {
-                    if (this.legendPlacement === Placement.LEFT) {
-                        x = this.legendPadding;
+                let y = legendPadding;
+                if (legendPlacement === Placement.LEFT || legendPlacement === Placement.RIGHT) {
+                    if (legendPlacement === Placement.LEFT) {
+                        x = legendPadding;
                     }
                     x = x + addTitleWidth;
                     y = index * 20 + addAllWidth;
                 }
-                if (this.legendPlacement === Placement.TOP || this.legendPlacement === Placement.BOTTOM) {
+                if (legendPlacement === Placement.TOP || legendPlacement === Placement.BOTTOM) {
                     if (index > 0) {
-                        currentX += this.legendTextWidthList[index - 1] + this.legendPadding;
+                        currentX += this.legendTextWidthList[index - 1] + legendPadding;
                     }
 
                     if (this.legendRowBreakCount.indexOf(index) > -1) {
@@ -1516,7 +1578,7 @@ export class ChartBase<T = any> implements IChart {
                     }
 
                     x = currentX;
-                    y = (this.legendItemTextHeight + this.legendPadding) * currentRow;
+                    y = (this.legendItemTextHeight + legendPadding) * currentRow;
                 }
                 return `translate(${x}, ${y})`;
             });
@@ -1942,10 +2004,10 @@ export class ChartBase<T = any> implements IChart {
         this.seriesList.forEach((series: ISeries) => {
             if (series.displayNames && series.displayNames.length) {
                 series.displayNames.forEach((displayName: string) => {
-                    series.hide(displayName, d.selected);
+                    series.select(displayName, d.selected);
                 });
             } else {
-                series.hide((series.displayName ? series.displayName : series.selector), d.selected);
+                series.select((series.displayName ? series.displayName : series.selector), d.selected);
             }
             // series.select((series.displayName ? series.displayName : series.selector), d.selected);
         });

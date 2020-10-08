@@ -181,18 +181,7 @@ export class BasicLineSeries extends SeriesBase {
             const dots = this.dotGroup.selectAll(`.${this.dotClass}`)
                 .data(lineData)
                     .join(
-                        (enter) => enter.append('circle').attr('class', this.dotClass)
-                            .on('click', (data: any, index: number, nodeList: any) => {
-                                event.preventDefault();
-                                event.stopPropagation();
-                                this.chartBase.chartItemClickSubject.next({
-                                    position: {
-                                        x: x(data[this.xField]),
-                                        y: y(data[this.yField])
-                                    },
-                                    data
-                                });
-                            }),
+                        (enter) => enter.append('circle').attr('class', this.dotClass),
                         (update) => update,
                         (exit) => exit.remove
                     )
@@ -284,6 +273,8 @@ export class BasicLineSeries extends SeriesBase {
             },
             value
         );
+
+        return index;
     }
 
     // onSelectItem(selectedItem: Array<any>, event: ChartMouseEvent) {

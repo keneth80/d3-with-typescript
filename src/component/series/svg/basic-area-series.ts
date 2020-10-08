@@ -32,7 +32,7 @@ export class BasicAreaSeries extends SeriesBase {
         }
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
                   mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
         if (!mainGroup.select(`.${this.selector}-group`).node()) {
@@ -40,17 +40,17 @@ export class BasicAreaSeries extends SeriesBase {
         }
     }
 
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
+    drawSeries(chartData: any[], scales: Scale[], geometry: ContainerSize) {
         const x: any = scales.find((scale: Scale) => scale.orient === 'bottom').scale;
         const y: any = scales.find((scale: Scale) => scale.orient === 'left').scale;
-        
+
         this.area = area()
             .x((d: any) => {
-                return x(d[this.xField]) + 1; 
+                return x(d[this.xField]) + 1;
             })
             .y0(geometry.height)
             .y1((d: any) => {
-                return y(d[this.yField]); 
+                return y(d[this.yField]);
             });
 
         this.line = line()
