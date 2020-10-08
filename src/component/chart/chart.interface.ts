@@ -85,7 +85,7 @@ export interface ContainerSize {
 }
 
 export interface LegendItem {
-    label: string; 
+    label: string;
     selected: boolean;
     isHide: boolean;
     shape: string;

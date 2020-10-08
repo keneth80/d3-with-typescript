@@ -1108,7 +1108,6 @@ export class ChartBase<T = any> implements IChart {
                                     break;
                                 } else {
                                     this.mousemoveDataClear();
-                                    // this.selectionClear();
                                 }
                             }
                         }
