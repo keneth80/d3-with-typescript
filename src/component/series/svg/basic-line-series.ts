@@ -44,7 +44,7 @@ export class BasicLineSeries extends SeriesBase {
 
     private line: any;
 
-    private dotClass: string = 'basic-line-dot';
+    private dotClass = 'basic-line-dot';
 
     private xField: string;
 
@@ -54,19 +54,19 @@ export class BasicLineSeries extends SeriesBase {
 
     private dataFilter: any;
 
-    private strokeWidth: number = 2;
+    private strokeWidth = 2;
 
     private numberFmt: any;
 
-    private isAnimation: boolean = false;
+    private isAnimation = false;
 
     private currentSelector: any;
 
-    private isHide: boolean = false;
+    private isHide = false;
 
     private radius = 4;
 
-    private lineColor: string = '';
+    private lineColor = '';
 
     constructor(configuration: BasicLineSeriesConfiguration) {
         super(configuration);
@@ -117,8 +117,10 @@ export class BasicLineSeries extends SeriesBase {
     }
 
     drawSeries(chartData: any[], scales: Scale[], geometry: ContainerSize, option: DisplayOption) {
-        const x: any = scales.find((scale: Scale) => scale.orient === Placement.BOTTOM).scale;
-        const y: any = scales.find((scale: Scale) => scale.orient === Placement.LEFT).scale;
+        const xScale = scales.find((scale: Scale) => scale.orient === Placement.BOTTOM);
+        const x: any = xScale.scale;
+        const yScale: any = scales.find((scale: Scale) => scale.orient === Placement.LEFT);
+        const y: any = yScale.scale;
 
         let padding = 0;
 
@@ -188,8 +190,8 @@ export class BasicLineSeries extends SeriesBase {
                     .style('stroke-width', this.radius / 2)
                     .style('stroke', this.lineColor)
                     .style('fill', '#fff')
-                    .attr('cx', (data: any, i) => { return x(data[this.xField]) + padding; })
-                    .attr('cy', (data: any) => { return y(data[this.yField]); })
+                    .attr('cx', (data: any) => x(data[this.xField]) + padding)
+                    .attr('cy', (data: any) => y(data[this.yField]))
                     .attr('r', this.radius);
         }
 
@@ -202,10 +204,10 @@ export class BasicLineSeries extends SeriesBase {
                 .map((d: any, i: number) => {
                     const xposition = x(d[this.xField]) + padding;
                     const yposition = y(d[this.yField]);
-                    return [xposition, yposition, d];
+                    return [xposition, yposition, d, this.radius];
                 });
             this.originQuadTree = quadtree()
-                .extent([[0, 0], [geometry.width, geometry.height]])
+                .extent([[xScale.min, yScale.min], [geometry.width, geometry.height]])
                 .addAll(generateData);
         });
     }
@@ -290,22 +292,6 @@ export class BasicLineSeries extends SeriesBase {
 
         return index;
     }
-
-    // onSelectItem(selectedItem: Array<any>, event: ChartMouseEvent) {
-    //     if (selectedItem && selectedItem.length) {
-    //         this.itemClickSubject.next({
-    //             data: selectedItem[2],
-    //             event: {
-    //                 offsetX: event.position[0] + this.chartBase.chartMargin.left,
-    //                 offsetY: event.position[1] + this.chartBase.chartMargin.top
-    //             },
-    //             target: {
-    //                 width: 1,
-    //                 height: 1
-    //             }
-    //         });
-    //     }
-    // }
 
     // TODO: tooltip에 시리즈 아이디를 부여하여 시리즈 마다 tooltip을 컨트롤 할 수 있도록 한다.
     // multi tooltip도 구현해야 하기 때문에 이방법이 가장 좋음. 현재 중복으로 발생해서 왔다갔다 함.

@@ -146,7 +146,8 @@ export const generatorFunctions = (
         functions.push(new BasicSvgMouseZoomHandler(zoom));
     } else {
         functions.push(new BasicSvgMouseHandler({
-            isMoveEvent: true
+            isMoveEvent: true,
+            delayTime: 10
         }));
     }
     return functions;
