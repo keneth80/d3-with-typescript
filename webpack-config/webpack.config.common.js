@@ -68,19 +68,6 @@ module.exports = {
             filename: './index.html'
         }),
 
-        // new HtmlWebPackPlugin({
-        //     template: './src/component/series/canvas/canvas-trace.html',
-        //     filename: './series/canvas/canvas-trace.html'
-        // }),
-
-        // new htmlWebpackInjectStringPlugin({
-        //     // String to search for
-        //     search: "</body>",
-        //     // String to inject
-        //     inject: "<script>alert('injected')</script>"
-        //     // Defaults to prepending injection before search string
-        // }),
-
         new CopyWebpackPlugin([
             { from: './src/component/mock-data/**', to: './component/mock-data', flatten: true },
             { from: './src/assets/image/**', to: './assets/image', flatten: true },

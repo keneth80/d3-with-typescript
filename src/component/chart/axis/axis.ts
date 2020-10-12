@@ -6,16 +6,16 @@ import { Axis, Placement, ScaleType } from '../chart-configuration';
 
 export class ChartAxis {
     static generateScaleByAxis<T = any>(
-        axes: Array<Axis> = [],
-        data: Array<T> = [],
+        axes: Axis[] = [],
+        data: T[] = [],
         size: ContainerSize = {
             width: 0, height: 0
         },
-        currentScale: Array<{field:string, min: number, max: number}>
-    ): Array<Scale> {
-        const returnAxes: Array<Scale> = [];
+        currentScale: {field:string, min: number, max: number}[]
+    ): Scale[] {
+        const returnAxes: Scale[] = [];
         axes.map((axis: Axis) => {
-            let range = <any>[];
+            let range: any = [];
             if (axis.placement === Placement.BOTTOM || axis.placement === Placement.TOP) {
                 range = [0, size.width];
             } else {
@@ -53,7 +53,7 @@ export class ChartAxis {
                     // TODO: interval option 추가 (interval 일 경우에는 argument가 3개: start, end, step)
                     scale = scaleLinear().range(range);
                 }
-                
+
                 // POINT: zoom 시 현재 scale을 유지하기 위함.
                 // min max setup
                 if (currentScale.length) {
@@ -69,7 +69,7 @@ export class ChartAxis {
                             axis.max += Math.round(axis.max * 0.05);
                         }
                     }
-    
+
                     if (!axis.hasOwnProperty('min')) {
                         if (axis.type === ScaleType.TIME) {
                             axis.min = min(data.map((item: T) => new Date(item[axis.field]).getTime()));
@@ -78,7 +78,7 @@ export class ChartAxis {
                             axis.min -= Math.round(axis.min * 0.05);
                         }
                     }
-    
+
                     minValue = axis.min;
                     maxValue = axis.max;
                 }
