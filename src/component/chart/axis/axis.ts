@@ -43,7 +43,7 @@ export class ChartAxis {
                         data.map((item: T) => item[axis.field])
                     );
                 }
-            } else { 
+            } else {
                 if (axis.type === ScaleType.TIME) {
                     // TODO: interval option 추가
                     // 참고 http://jsfiddle.net/sarathsaleem/8tmLrb9t/7/
@@ -57,7 +57,7 @@ export class ChartAxis {
                 // POINT: zoom 시 현재 scale을 유지하기 위함.
                 // min max setup
                 if (currentScale.length) {
-                    const tempScale = currentScale.find((scale: any) => scale.field === axis.field);
+                    const tempScale = currentScale.find((scaleItem: any) => scaleItem.field === axis.field);
                     minValue = tempScale ? tempScale.min : 0;
                     maxValue = tempScale ? tempScale.max : 0;
                 } else {

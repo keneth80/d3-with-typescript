@@ -58,7 +58,7 @@ export class BasicPieSeries extends SeriesBase {
             .value((d: any) => d[this.valueField]);
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
                   mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
         if (!mainGroup.select(`.${this.selector}-group`).node()) {
@@ -66,7 +66,7 @@ export class BasicPieSeries extends SeriesBase {
         }
     }
 
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
+    drawSeries(chartData: any[], scales: Scale[], geometry: ContainerSize) {
         const radius = Math.min(geometry.width, geometry.height) / 2 - 40;
 
         const color = scaleOrdinal()
@@ -105,9 +105,9 @@ export class BasicPieSeries extends SeriesBase {
                 .text((d: any) => `${d.data[this.categoryField]}: ${d.data[this.valueField].toLocaleString()}`);
 
         if (this.isLabel) {
-            const radius = Math.min(geometry.width, geometry.height) / 2 * 0.8;
-            const arcLabel = arc().innerRadius(radius).outerRadius(radius);
-    
+            const labelRadius = Math.min(geometry.width, geometry.height) / 2 * 0.8;
+            const arcLabel = arc().innerRadius(labelRadius).outerRadius(labelRadius);
+
             const texts = this.mainGroup.selectAll(`.${this.selector}-label`)
                 .data(arcs)
                 .join(
@@ -116,9 +116,8 @@ export class BasicPieSeries extends SeriesBase {
                     (exit) => exit.remove()
                 )
                 .attr('transform', (d: any) => `translate(${arcLabel.centroid(d)})`)
-                .attr('dy', '0.35em')
-    
-                
+                .attr('dy', '0.35em');
+
             texts.selectAll('tspan.label')
                 .data((d: any) => [d])
                 .join(
@@ -131,7 +130,7 @@ export class BasicPieSeries extends SeriesBase {
                 .style('font-size', 13)
                 .style('font-weight', 'bold')
                 .text((d: any) => d.data[this.categoryField]);
-            
+
             texts.filter((d: any) => (d.endAngle - d.startAngle) > 0.25)
                 .selectAll('tspan.value')
                 .data((d: any) => [d])

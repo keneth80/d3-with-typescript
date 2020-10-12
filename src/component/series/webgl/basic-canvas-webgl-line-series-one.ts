@@ -268,7 +268,9 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
             this.seriesData.length = 0;
         }
         this.subscription.unsubscribe();
-        this.canvas.remove();
+        if (this.canvas) {
+            this.canvas.remove();
+        }
         this.chartBase.chartContainer.select('.' + ChartSelector.TOOLTIP_CANVAS).remove();
         this.chartBase.chartContainer.select('.' + ChartSelector.SELECTION_CANVAS).remove();
 
