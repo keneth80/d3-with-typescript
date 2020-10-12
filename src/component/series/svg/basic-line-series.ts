@@ -238,7 +238,6 @@ export class BasicLineSeries extends SeriesBase {
     }
 
     onSelectItem(value: number[], selected: any[]) {
-        console.log('onSelectItem : ', value, selected);
         const selectedItem = selected[0];
         this.drawSelectionPoint(
             [
