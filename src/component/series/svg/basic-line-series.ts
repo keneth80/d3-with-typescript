@@ -8,7 +8,7 @@ import { quadtree } from 'd3-quadtree';
 import { Scale, ContainerSize, DisplayOption } from '../../chart/chart.interface';
 import { SeriesBase } from '../../chart/series-base';
 import { SeriesConfiguration } from '../../chart/series.interface';
-import { textBreak, delayExcute } from '../../chart/util/d3-svg-util';
+import { textBreak, delayExcute, colorDarker } from '../../chart/util/d3-svg-util';
 import { Placement } from '../../chart/chart-configuration';
 import { ChartSelector } from '../../chart';
 
@@ -237,6 +237,21 @@ export class BasicLineSeries extends SeriesBase {
         }
     }
 
+    onSelectItem(value: number[], selected: any[]) {
+        console.log('onSelectItem : ', value, selected);
+        const selectedItem = selected[0];
+        this.drawSelectionPoint(
+            [
+                selectedItem[0],
+                selectedItem[1]
+            ],
+            {
+                fill: this.lineColor,
+                radius: this.radius * 2
+            }
+        );
+    }
+
     unSelectItem() {
         if (this.currentSelector) {
             this.currentSelector.attr('r', this.radius);
@@ -342,10 +357,10 @@ export class BasicLineSeries extends SeriesBase {
         position: number[],
         style:{radius: number, strokeColor: string, strokeWidth: number}
     ) {
-        this.selectionGroup.selectAll('.selection-point')
+        this.selectionGroup.selectAll('.tooltip-point')
             .data([geometry])
             .join(
-                (enter) => enter.append('circle').attr('class', 'selection-point'),
+                (enter) => enter.append('circle').attr('class', 'tooltip-point'),
                 (update) => update,
                 (exit) => exit.remove()
             )
@@ -355,5 +370,24 @@ export class BasicLineSeries extends SeriesBase {
             .attr('cx', position[0])
             .attr('cy', position[1])
             .attr('r', this.radius);
+    }
+
+    private drawSelectionPoint(
+        position: number[],
+        style:{fill: string, radius: number}
+    ) {
+        this.selectionGroup.selectAll('.selection-point')
+            .data([style])
+            .join(
+                (enter) => enter.append('circle').attr('class', 'selection-point'),
+                (update) => update,
+                (exit) => exit.remove()
+            )
+            .style('stroke-width', 3)
+            .style('stroke', colorDarker(style.fill, 2))
+            .attr('fill', colorDarker(style.fill, 1))
+            .attr('cx', position[0])
+            .attr('cy', position[1])
+            .attr('r', style.radius);
     }
 }

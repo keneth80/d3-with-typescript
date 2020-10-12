@@ -1210,6 +1210,7 @@ export class ChartBase<T = any> implements IChart {
     }
 
     protected mousemoveDataClear() {
+        this.pointerClear();
         this.currentChartItem.length = 0;
         this.currentSeriesIndex = -1;
         this.currentChartItemIndex = -1;
