@@ -113,7 +113,9 @@ export class SeriesBase implements ISeries {
             this.chartBase.toolTipTarget = toolTipGroup;
 
             // tooltip 용 svg가 겹치므로 legend group을 상위에 있는 svg로 옮긴다.
-            (targetSvg.node() as any).appendChild(this.svg.select('g.legend-group').node())
+            if (this.svg.select('g.legend-group').node()) {
+                (targetSvg.node() as any).appendChild(this.svg.select('g.legend-group').node());
+            }
 
             return targetSvg;
         } else {

@@ -170,13 +170,11 @@ export class StackedVerticalBarSeries extends SeriesBase {
 
     onSelectItem(value: number[], selected: any[]) {
         const index = this.retriveColumnIndex(value, selected);
-
         if (index < 0) {
             return;
         }
 
         const selectedItem = selected[index];
-
         this.drawSelectionPoint(
             {
                 width: selectedItem[5],

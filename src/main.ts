@@ -344,9 +344,6 @@ const simpleWebglLineSeriesExample = () => {
         ],
         zoom: {
             direction: Direction.BOTH
-        },
-        displayDelay: {
-            delayTime: 500
         }
     };
 

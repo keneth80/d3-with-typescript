@@ -13,20 +13,19 @@ import { sha1 } from 'object-hash';
 
 import { IChart, Scale, ContainerSize, LegendItem, ChartMouseEvent, ChartZoomEvent, DisplayType, ChartItemEvent } from './chart.interface';
 import { ChartConfiguration, Axis, Margin, Placement, ChartTitle, ScaleType,
-         Align, AxisTitle, ChartTooltip, Shape, PlacementByElement
+         Align, AxisTitle, ChartTooltip, PlacementByElement
 } from './chart-configuration';
 import { ISeries } from './series.interface';
 import { IFunctions } from './functions.interface';
 import { IOptions } from './options.interface';
 
-import { baseTooltipTemplate } from '../chart/util/tooltip-template';
+import { baseTooltipTemplate } from './tooltip/tooltip-template';
 import { guid, delayExcute, textWrapping,
-         drawSvgCheckBox, drawLegendColorItemByRect, drawLegendColorItemByCircle, drawLegendColorItemByLine,
-         getAxisByPlacement, getTransformByArray, getTextWidth, getMaxText
+         getAxisByPlacement, getTransformByArray
 } from './util/d3-svg-util';
 import { ChartAxis } from './axis/axis';
 import { ChartSelector } from './chart-selector-variable';
-import { ChartLegend, legendItemListByGrouped, legendItemListByNormal } from './legend/chart-legend';
+import { ChartLegend } from './legend/chart-legend';
 
 
 // TODO: 모든 참조되는 함수들은 subject로 바꾼다.
