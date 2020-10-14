@@ -6,6 +6,7 @@ import { Scale, ContainerSize } from '../../chart/chart.interface';
 import { SeriesBase } from '../../chart/series-base';
 import { getTransformByArray, wrapTextByRowLimit } from '../../chart/util/d3-svg-util';
 import { SeriesConfiguration } from '../../chart/series.interface';
+import { ChartSelector } from 'src/component/chart';
 
 export class Geometry {
     id: string = '';
@@ -112,7 +113,11 @@ export class BasicTopology extends SeriesBase {
             this.linkGroup = mainGroup.append('g').attr('class', `${this.selector}-link-group`);
         }
 
-        // TODO: svg tooltip group을 삭제 한다? 아니면 mouse handler 연결
+        // TODO: svg zoom group을 삭제 한다? 아니면 mouse handler 연결
+        // 우선 zoom group 삭제.
+        if (this.svg.select('g.zoom-group').node()) {
+            this.svg.select('g.zoom-group').remove();
+        }
     }
 
     drawSeries(chartData: TopologyData[], scales: Scale[], geometry: ContainerSize) {
