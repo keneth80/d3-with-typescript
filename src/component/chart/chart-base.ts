@@ -26,6 +26,7 @@ import { guid, delayExcute, textWrapping,
 } from './util/d3-svg-util';
 import { ChartAxis } from './axis/axis';
 import { ChartSelector } from './chart-selector-variable';
+import { ChartLegend, legendItemListByGrouped, legendItemListByNormal } from './legend/chart-legend';
 
 
 // TODO: 모든 참조되는 함수들은 subject로 바꾼다.
@@ -206,6 +207,8 @@ export class ChartBase<T = any> implements IChart {
     private legendRowBreakCount: number[] = [];
 
     private legendTextWidthList: number[] = [];
+
+    private chartLegend: ChartLegend;
     // ===================== Legend configuration end ===================== //
 
     // ===================== current min max start ===================== //
@@ -809,82 +812,88 @@ export class ChartBase<T = any> implements IChart {
 
         // 범례 적용 시 사이즈 계산.
         if (this.isLegend) {
-            // 초기화.
-            this.legendItemList.length = 0;
-            this.legendTextWidthList.length = 0;
-            this.legendRowBreakCount.length = 0;
-            this.totalLegendWidth = 0;
+            // // 초기화.
+            // this.legendItemList.length = 0;
+            // this.legendTextWidthList.length = 0;
+            // this.legendRowBreakCount.length = 0;
+            // this.totalLegendWidth = 0;
 
-            // legend row 한개의 길이
-            const checkWidth = this.margin.left + this.margin.right + this.width - this.legendPadding * 4;
+            // // legend row 한개의 길이
+            // const checkWidth = this.margin.left + this.margin.right + this.width - this.legendPadding * 4;
 
-            let targetText = null;
-            let targetTextWidth = 0;
-            if (this.seriesList && this.seriesList.length) {
-                // stacked, group bar 의 경우 범례 설정.
-                if (this.seriesList[0].displayNames && this.seriesList[0].displayNames.length) {
-                    this.seriesList[0].displayNames.forEach((displayName: string) => {
-                        const label: string = displayName;
-                        const shape: string = Shape.RECT;
-                        this.legendItemList.push({
-                            label,
-                            shape,
-                            selected: true,
-                            isHide: false
-                        });
-                    });
-                    targetText = getMaxText(this.seriesList[0].displayNames.map((displayName: string) => displayName));
-                } else {
-                    // 일반 시리즈의 경우 범례 설정.
-                    this.seriesList.forEach((series: ISeries) => {
-                        const label: string = series.displayName ? series.displayName : series.selector;
-                        const shape: string = series.shape ? series.shape : Shape.RECT;
-                        this.legendItemList.push({
-                            label,
-                            shape,
-                            selected: true,
-                            isHide: false
-                        });
-                    });
-                    targetText = getMaxText(this.seriesList.map((series: ISeries) => series.displayName || series.selector));
-                }
+            // let targetText = null;
+            // let targetTextWidth = 0;
+            // if (this.seriesList && this.seriesList.length) {
+            //     // stacked, group bar 의 경우 범례 설정.
+            //     if (this.seriesList[0].displayNames && this.seriesList[0].displayNames.length) {
+            //         legendItemListByGrouped(this.seriesList).forEach((legendItem: LegendItem) => {
+            //             this.legendItemList.push(legendItem);
+            //         });
+            //         targetText = getMaxText(this.seriesList[0].displayNames.map((displayName: string) => displayName));
+            //     } else {
+            //         // 일반 시리즈의 경우 범례 설정.
+            //         legendItemListByNormal(this.seriesList).forEach((legendItem: LegendItem) => {
+            //             this.legendItemList.push(legendItem);
+            //         });
+            //         targetText = getMaxText(this.seriesList.map((series: ISeries) => series.displayName || series.selector));
+            //     }
 
-                targetTextWidth = getTextWidth(targetText, this.defaultLegendStyle.font.size, this.defaultLegendStyle.font.family);
-            }
+            //     targetTextWidth = getTextWidth(targetText, this.defaultLegendStyle.font.size, this.defaultLegendStyle.font.family);
+            // }
 
-            if (this.isAll) {
-                this.totalLegendWidth = this.allWidth - (this.isCheckBox ? 0 : 10);
-                this.legendTextWidthList.push(this.totalLegendWidth);
-            }
-            this.totalLegendWidth += this.legendPadding;
+            // if (this.isAll) {
+            //     this.totalLegendWidth = this.allWidth - (this.isCheckBox ? 0 : 10);
+            //     this.legendTextWidthList.push(this.totalLegendWidth);
+            // }
+            // this.totalLegendWidth += this.legendPadding;
 
-            let compareWidth = this.totalLegendWidth;
+            // let compareWidth = this.totalLegendWidth;
 
-            for (let i = 0; i < this.legendItemList.length; i++) {
-                const currentText = this.legendItemList[i].label;
-                const currentTextWidth = ((this.isCheckBox ? this.checkBoxWidth : 0) + getTextWidth(currentText, this.defaultLegendStyle.font.size, this.defaultLegendStyle.font.family));
-                const currentItemWidth = currentTextWidth + this.legendItemSize.width + this.legendPadding;
-                this.legendTextWidthList.push(currentItemWidth);
-                this.totalLegendWidth += currentItemWidth;
-                compareWidth += currentItemWidth;
-                if (compareWidth > checkWidth) {
-                    compareWidth = currentItemWidth;
-                    this.legendRowBreakCount.push(i + (this.isAll ? 1 : 0));
-                }
-            }
+            // for (let i = 0; i < this.legendItemList.length; i++) {
+            //     const currentText = this.legendItemList[i].label;
+            //     const currentTextWidth = ((this.isCheckBox ? this.checkBoxWidth : 0) + getTextWidth(currentText, this.defaultLegendStyle.font.size, this.defaultLegendStyle.font.family));
+            //     const currentItemWidth = currentTextWidth + this.legendItemSize.width + this.legendPadding;
+            //     this.legendTextWidthList.push(currentItemWidth);
+            //     this.totalLegendWidth += currentItemWidth;
+            //     compareWidth += currentItemWidth;
+            //     if (compareWidth > checkWidth) {
+            //         compareWidth = currentItemWidth;
+            //         this.legendRowBreakCount.push(i + (this.isAll ? 1 : 0));
+            //     }
+            // }
 
-            this.totalLegendWidth += (this.legendPadding * (this.seriesList.length - 1)) + ((this.legendItemSize.width + this.legendPadding) * this.seriesList.length);
+            // this.totalLegendWidth += (this.legendPadding * (this.seriesList.length - 1)) + ((this.legendItemSize.width + this.legendPadding) * this.seriesList.length);
 
-            this.legendRowCount = Math.ceil(this.totalLegendWidth / this.width);
+            // this.legendRowCount = Math.ceil(this.totalLegendWidth / this.width);
 
-            this.legendContainerSize.width =
-            this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ?
-                this.legendPadding * 2 + this.legendItemSize.width + this.legendPadding + Math.round(targetTextWidth) + (this.isCheckBox ? this.checkBoxWidth : 0) :
-                (this.legendRowCount > 1 ? this.width : this.totalLegendWidth);
-            this.legendContainerSize.height =
-                this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ?
-                this.height :
-                (this.legendPadding + titleTextHeight) * this.legendRowCount;
+            // this.legendContainerSize.width =
+            // this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ?
+            //     this.legendPadding * 2 + this.legendItemSize.width + this.legendPadding + Math.round(targetTextWidth) + (this.isCheckBox ? this.checkBoxWidth : 0) :
+            //     (this.legendRowCount > 1 ? this.width : this.totalLegendWidth);
+            // this.legendContainerSize.height =
+            //     this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ?
+            //     this.height :
+            //     (this.legendPadding + titleTextHeight) * this.legendRowCount;
+
+            this.chartLegend = new ChartLegend({
+                isCheckBox: this.isCheckBox,
+                isAll: this.isAll,
+                addTitleWidth: this.isTitle && this.titlePlacement === Placement.LEFT ? this.titleContainerSize.width : 0,
+                legendPlacement: this.legendPlacement,
+                colors: this.colors,
+                defaultLegendStyle: this.defaultLegendStyle,
+                seriesList: this.seriesList,
+                margin: this.margin,
+                svgGeometry: {
+                    width: this.width,
+                    height: this.height
+                },
+                onLegendCheckBoxClickHandler: this.onLegendCheckBoxClick,
+                onLegendLabelItemClickHandler: this.onLegendLabelItemClick
+            });
+
+            this.legendContainerSize.width = this.chartLegend.init().width;
+            this.legendContainerSize.height = this.chartLegend.init().height;
 
             this.width = this.width - (this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ? this.legendContainerSize.width : 0);
             this.height = this.height - (this.legendPlacement === Placement.TOP || this.legendPlacement === Placement.BOTTOM ? this.legendContainerSize.height : 0);
@@ -1526,109 +1535,126 @@ export class ChartBase<T = any> implements IChart {
         if (!this.isLegend) {
             return;
         }
-        const checkboxPadding = this.isCheckBox ? this.legendItemSize.width + this.legendPadding : 0;
-        const addTitleWidth = this.isTitle && this.titlePlacement === Placement.LEFT ? this.titleContainerSize.width : 0;
-        const addAllWidth = this.isAll ? this.allWidth : 0;
-        const legendPlacement = this.legendPlacement;
-        const legendPadding = this.legendPadding;
 
-        let currentRow = 0;
-        let currentX = 0;
-
-        if (this.isAll) {
-            this.legendItemList.unshift({
-                label: 'All',
-                selected: true,
-                isHide: false,
-                shape: Shape.NONE
-            });
-        }
-
-        const legendItemGroup = this.legendGroup.selectAll('.legend-item-group')
-            .data(this.legendItemList)
-            .join(
-                (enter) => enter.append('g').attr('class', 'legend-item-group'),
-                (update) => {
-                    update.selectAll('*').remove();
-                    return update;
-                },
-                (exit) => exit.remove()
-            )
-            .attr('id', (d: LegendItem) => {
-                return d.label === 'All' ? 'legend-all-group' : null;
-            })
-            .attr('transform', (d: any, index: number) => {
-                let x = 0;
-                let y = legendPadding;
-                if (legendPlacement === Placement.LEFT || legendPlacement === Placement.RIGHT) {
-                    if (legendPlacement === Placement.LEFT) {
-                        x = legendPadding;
-                    }
-                    x = x + addTitleWidth;
-                    y = index * 20 + addAllWidth;
-                }
-                if (legendPlacement === Placement.TOP || legendPlacement === Placement.BOTTOM) {
-                    if (index > 0) {
-                        currentX += this.legendTextWidthList[index - 1] + legendPadding;
-                    }
-
-                    if (this.legendRowBreakCount.indexOf(index) > -1) {
-                        currentRow = this.legendRowBreakCount.indexOf(index) + 1;
-                        currentX = 0;
-                    }
-
-                    x = currentX;
-                    y = (this.legendItemTextHeight + legendPadding) * currentRow;
-                }
-                return `translate(${x}, ${y})`;
-            });
-
-        if (this.isCheckBox) {
-            legendItemGroup.each((d: LegendItem, index: number, nodeList: any) => {
-                drawSvgCheckBox(select(nodeList[index]), this.onLegendCheckBoxClick);
-            });
-        }
-
-        const legendLabelGroup: Selection<BaseType, any, BaseType, any> = legendItemGroup.selectAll('.legend-label-group')
-            .data((d: any) =>[d])
-            .join(
-                (enter) => enter.append('g').attr('class', 'legend-label-group'),
-                (update) => update,
-                (exit) => exit.remove()
-            )
-            .attr('id', (d: LegendItem) => {
-                return d.label === 'All' ? 'legend-all-label' : null;
-            })
-            .attr('transform', `translate(${checkboxPadding}, 0)`)
-            .on('click', this.onLegendLabelItemClick);
-
-        legendLabelGroup.each((d: LegendItem, i: number, nodeList: any) => {
-            const distictKeys = this.isAll ? this.legendItemList.filter((key: LegendItem) => key.label !== 'All') : this.legendItemList;
-            if (d.shape === Shape.LINE) {
-                drawLegendColorItemByLine(select(nodeList[i]), this.legendItemSize, distictKeys, this.colors);
-            } else if (d.shape === Shape.CIRCLE) {
-                drawLegendColorItemByCircle(select(nodeList[i]), this.legendItemSize, distictKeys, this.colors);
-            } else if (d.shape === Shape.RECT) {
-                drawLegendColorItemByRect(select(nodeList[i]), this.legendItemSize, distictKeys, this.colors);
-            }
-        });
-
-        legendLabelGroup.selectAll('.legend-label')
-            .data((d: LegendItem) => [d])
-            .join(
-                (enter) => enter.append('text').attr('class', 'legend-label'),
-                (update) => update,
-                (exit) => exit.remove()
-            )
-            .style('font-family', this.defaultLegendStyle.font.family)
-            .style('font-size', this.defaultLegendStyle.font.size)
-            .attr('dy', '.35em')
-            .attr('transform', (d: LegendItem, index: number) => {
-                const x = (d.shape === Shape.NONE ? 0 : this.legendPadding + this.legendItemSize.width);
-                return `translate(${x}, 5)`;
-            })
-            .text((d: LegendItem) => { return d.label; });
+        this.chartLegend.drawLegend(this.legendGroup);
     }
+
+    // protected updateLegend() {
+    //     if (!this.isLegend) {
+    //         return;
+    //     }
+    //     const isCheckBox = this.isCheckBox;
+    //     const isAll = this.isAll;
+    //     const checkboxPadding = isCheckBox ? this.legendItemSize.width + this.legendPadding : 0;
+    //     const addTitleWidth = this.isTitle && this.titlePlacement === Placement.LEFT ? this.titleContainerSize.width : 0;
+    //     const addAllWidth = isAll ? this.allWidth : 0;
+    //     const legendPlacement = this.legendPlacement;
+    //     const legendPadding = this.legendPadding;
+    //     const legendTextWidthList = this.legendTextWidthList;
+    //     const legendRowBreakCount = this.legendRowBreakCount;
+    //     const legendItemTextHeight = this.legendItemTextHeight;
+    //     const legendItemSize = this.legendItemSize;
+    //     const legendItemList = this.legendItemList;
+    //     const colors = this.colors;
+    //     const defaultLegendStyle = this.defaultLegendStyle;
+
+    //     let currentRow = 0;
+    //     let currentX = 0;
+
+    //     if (isAll) {
+    //         legendItemList.unshift({
+    //             label: 'All',
+    //             selected: true,
+    //             isHide: false,
+    //             shape: Shape.NONE
+    //         });
+    //     }
+
+    //     const legendItemGroup = this.legendGroup.selectAll('.legend-item-group')
+    //         .data(legendItemList)
+    //         .join(
+    //             (enter) => enter.append('g').attr('class', 'legend-item-group'),
+    //             (update) => {
+    //                 update.selectAll('*').remove();
+    //                 return update;
+    //             },
+    //             (exit) => exit.remove()
+    //         )
+    //         .attr('id', (d: LegendItem) => {
+    //             return d.label === 'All' ? 'legend-all-group' : null;
+    //         })
+    //         .attr('transform', (d: any, index: number) => {
+    //             let x = 0;
+    //             let y = legendPadding;
+    //             if (legendPlacement === Placement.LEFT || legendPlacement === Placement.RIGHT) {
+    //                 if (legendPlacement === Placement.LEFT) {
+    //                     x = legendPadding;
+    //                 }
+    //                 x = x + addTitleWidth;
+    //                 y = index * 20 + addAllWidth;
+    //             }
+    //             if (legendPlacement === Placement.TOP || legendPlacement === Placement.BOTTOM) {
+    //                 if (index > 0) {
+    //                     currentX += legendTextWidthList[index - 1] + legendPadding;
+    //                 }
+
+    //                 if (legendRowBreakCount.indexOf(index) > -1) {
+    //                     currentRow = legendRowBreakCount.indexOf(index) + 1;
+    //                     currentX = 0;
+    //                 }
+
+    //                 x = currentX;
+    //                 y = (legendItemTextHeight + legendPadding) * currentRow;
+    //             }
+    //             return `translate(${x}, ${y})`;
+    //         });
+
+    //     if (isCheckBox) {
+    //         legendItemGroup.each((d: LegendItem, index: number, nodeList: any) => {
+    //             drawSvgCheckBox(select(nodeList[index]), this.onLegendCheckBoxClick);
+    //         });
+    //     }
+
+    //     const legendLabelGroup: Selection<BaseType, any, BaseType, any> = legendItemGroup.selectAll('.legend-label-group')
+    //         .data((d: any) =>[d])
+    //         .join(
+    //             (enter) => enter.append('g').attr('class', 'legend-label-group'),
+    //             (update) => update,
+    //             (exit) => exit.remove()
+    //         )
+    //         .attr('id', (d: LegendItem) => {
+    //             return d.label === 'All' ? 'legend-all-label' : null;
+    //         })
+    //         .attr('transform', `translate(${checkboxPadding}, 0)`)
+    //         .on('click', this.onLegendLabelItemClick);
+
+    //     legendLabelGroup.each((d: LegendItem, i: number, nodeList: any) => {
+    //         const distictKeys = isAll ? legendItemList.filter((key: LegendItem) => key.label !== 'All') : legendItemList;
+    //         if (d.shape === Shape.LINE) {
+    //             drawLegendColorItemByLine(select(nodeList[i]), legendItemSize, distictKeys, colors);
+    //         } else if (d.shape === Shape.CIRCLE) {
+    //             drawLegendColorItemByCircle(select(nodeList[i]), legendItemSize, distictKeys, colors);
+    //         } else if (d.shape === Shape.RECT) {
+    //             drawLegendColorItemByRect(select(nodeList[i]), legendItemSize, distictKeys, colors);
+    //         }
+    //     });
+
+    //     legendLabelGroup.selectAll('.legend-label')
+    //         .data((d: LegendItem) => [d])
+    //         .join(
+    //             (enter) => enter.append('text').attr('class', 'legend-label'),
+    //             (update) => update,
+    //             (exit) => exit.remove()
+    //         )
+    //         .style('font-family', defaultLegendStyle.font.family)
+    //         .style('font-size', defaultLegendStyle.font.size)
+    //         .attr('dy', '.35em')
+    //         .attr('transform', (d: LegendItem, index: number) => {
+    //             const x = (d.shape === Shape.NONE ? 0 : legendPadding + legendItemSize.width);
+    //             return `translate(${x}, 5)`;
+    //         })
+    //         .text((d: LegendItem) => { return d.label; });
+    // }
 
     protected setupBrush(scale: any) {
         let brush = null;

@@ -249,7 +249,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
                         const xposition = x(d[this.xField]);
                         const yposition = y(d[this.yField]);
 
-                        return [xposition, yposition, d];
+                        return [xposition, yposition, d, this.radius];
                     })
                 );
         });

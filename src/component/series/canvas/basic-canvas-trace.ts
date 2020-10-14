@@ -220,7 +220,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                         // context.arc(xposition, yposition, this.config.dot.radius, 0, 2 * Math.PI, false);
                         // }
 
-                        return [xposition, yposition, d];
+                        return [xposition, yposition, d, this.radius];
                     });
                 // 사이즈가 변경이 되면서 zoom out 경우에는 초기 사이즈를 업데이트 해준다.
                 this.line = line()

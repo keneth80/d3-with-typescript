@@ -45,7 +45,7 @@ export class BasicPlotSeries extends SeriesBase {
         }
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
                   mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
         if (!mainGroup.select(`.${this.selector}-group`).node()) {
@@ -53,15 +53,14 @@ export class BasicPlotSeries extends SeriesBase {
         }
     }
 
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize, option: DisplayOption) {
+    drawSeries(chartData: any[], scales: Scale[], geometry: ContainerSize, option: DisplayOption) {
         const x: any = scales.find((scale: Scale) => scale.orient === 'top').scale;
         const y: any = scales.find((scale: Scale) => scale.orient === 'left').scale;
-        
         let padding = 0;
         if (x.bandwidth) {
             padding = x.bandwidth() / 2;
         }
-        
+
         const elements = this.mainGroup.selectAll(`.${this.selector}`)
             .data(chartData)
                 .join(
