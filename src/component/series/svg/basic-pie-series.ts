@@ -25,9 +25,9 @@ export class BasicPieSeries extends SeriesBase {
 
     private pieShape: any;
 
-    private innerRadius: number = 0;
+    private innerRadius = 0;
 
-    private isLabel: boolean = true;
+    private isLabel = true;
 
     constructor(configuration: BasicPieSeriesConfiguration) {
         super(configuration);

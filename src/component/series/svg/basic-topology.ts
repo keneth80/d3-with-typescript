@@ -30,10 +30,10 @@ export class Geometry {
         });
     }
 }
-  
+
 export class TopologyGroupElement extends Geometry {
     data: any;
-    members: Array<any> = [];
+    members: any[] = [];
 
     constructor(
         id: string = '',
@@ -44,7 +44,7 @@ export class TopologyGroupElement extends Geometry {
         rx: number = 0,
         ry: number = 0,
         data: any = {},
-        members: Array<any> = []
+        members: any[] = []
     ) {
         super();
         Object.assign(this, {
@@ -72,12 +72,12 @@ export class GeometryLink {
 }
 
 export class TopologyData {
-    groups: Array<TopologyGroupElement> = [];
-    machines: Array<TopologyGroupElement> = [];
+    groups: TopologyGroupElement[] = [];
+    machines: TopologyGroupElement[] = [];
 
     constructor(
-        groups: Array<TopologyGroupElement> = [],
-        machines: Array<TopologyGroupElement> = []
+        groups: TopologyGroupElement[] = [],
+        machines: TopologyGroupElement[] = []
     ) {
         Object.assign(this, {
             groups,
@@ -87,7 +87,7 @@ export class TopologyData {
 }
 
 export interface BasicTopologyConfiguration extends SeriesConfiguration {
-    
+    memberSelectedHandler?: any;
 }
 
 export class BasicTopology extends SeriesBase {
@@ -101,7 +101,7 @@ export class BasicTopology extends SeriesBase {
         super(configuration);
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
                   mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
         if (!mainGroup.select(`.${this.selector}-group`).node()) {
@@ -111,10 +111,12 @@ export class BasicTopology extends SeriesBase {
         if (!mainGroup.select(`.${this.selector}-link-group`).node()) {
             this.linkGroup = mainGroup.append('g').attr('class', `${this.selector}-link-group`);
         }
+
+        // TODO: svg tooltip group을 삭제 한다? 아니면 mouse handler 연결
     }
 
-    drawSeries(chartData: Array<TopologyData>, scales: Array<Scale>, geometry: ContainerSize) {
-        const groups: Array<TopologyGroupElement> = chartData[0].groups;
+    drawSeries(chartData: TopologyData[], scales: Scale[], geometry: ContainerSize) {
+        const groups: TopologyGroupElement[] = chartData[0].groups;
         const SECTOR_PADDING = 10;
         const MEMBER_PADDING = 5;
         const MACHINE_PADDING = 10;
@@ -126,7 +128,7 @@ export class BasicTopology extends SeriesBase {
         const memberCountList = groups.map((item: TopologyGroupElement, index: number) => {
             return item.members.length;
         });
-        const memberSize = memberCountList.reduce((prev: Number, current: number) => +prev + +current);
+        const memberSize = memberCountList.reduce((prev: number, current: number) => +prev + +current);
         for (let i = 0; i < memberCountList.length; i++) {
             currentMemberCount += memberCountList[i];
             // console.log(`MemberCount ${i}: ${memberCountList[i]} => ${currentMemberCount}`);
@@ -165,14 +167,13 @@ export class BasicTopology extends SeriesBase {
             .attr('height', geometry.height)
             .style('fill', 'none');
 
-        const sectorPositions: Array<Array<number>> = [];
-        
+        const sectorPositions: number[][] = [];
         const topSectors = groups.filter((data: TopologyGroupElement, index: number) => index < topSectorSize);
         const bottomSectors = groups.filter((data: TopologyGroupElement, index: number) => index >= topSectorSize);
         const machineSectors = chartData[0].machines;
 
         // 상단 그리기
-        const topSectorGroup: Selection<BaseType, TopologyGroupElement, BaseType, any> = 
+        const topSectorGroup: Selection<BaseType, TopologyGroupElement, BaseType, any> =
             this.mainGroup.selectAll(`.${this.selector}-sector-top-group`)
                 .data(topSectors)
                 .join(
@@ -201,10 +202,10 @@ export class BasicTopology extends SeriesBase {
                     sectorPositions.push([data.x, data.y, data.width, data.height]);
                     return `translate(${data.x}, ${data.y})`;
                 });
-        
+
         // top sector background
         this.drawSectorBackground(topSectorGroup, `${this.selector}-sector-top-group-background`, '#e1e1e3');
-        
+
         // top sector title
         this.drawSectorTitle(topSectorGroup, `${this.selector}-sector-top-group-title`, 'top');
 
@@ -215,25 +216,25 @@ export class BasicTopology extends SeriesBase {
         const topGroupTotalWidth = sectorPositions[topSectorSize - 1][0] + sectorPositions[topSectorSize - 1][2];
         if (sectorPositions.length && geometry.width > topGroupTotalWidth) {
             // 상단 center 정렬
-            const movex = geometry.width / 2 - topGroupTotalWidth / 2;
+            const moveX = geometry.width / 2 - topGroupTotalWidth / 2;
             topSectorGroup.attr('transform', (data: TopologyGroupElement) => {
-                data.x = data.x + movex;
+                data.x = data.x + moveX;
                 // sector가 하나일 경우에만 예외로 가운데 정렬.
                 if (sectorSize < 2) {
-                    const movey = sectorPoint / 2 - data.height / 2;
-                    data.y = data.y + movey;
+                    const moveY = sectorPoint / 2 - data.height / 2;
+                    data.y = data.y + moveY;
                 }
                 return `translate(${data.x}, ${data.y})`
             });
         }
-        
+
         // member draw start
         this.drawMember(topSectorGroup, this.selector, {width: memberWidth, height: memberHeight, limitWidth: MAX_MEMBER_WIDTH}, MEMBER_PADDING, 'top')
             .on('mouseover', this.onMemberMouseOver)
             .on('mouseout', this.onMemberMouseOut);
 
-        //하단 그리기
-        const bottomSectorGroup: Selection<BaseType, TopologyGroupElement, BaseType, any> = 
+        // 하단 그리기
+        const bottomSectorGroup: Selection<BaseType, TopologyGroupElement, BaseType, any> =
             this.mainGroup.selectAll(`.${this.selector}-sector-bottom-group`)
                 .data(bottomSectors)
                 .join(
@@ -246,7 +247,7 @@ export class BasicTopology extends SeriesBase {
                 })
                 .attr('transform', (data: TopologyGroupElement, index: number) => {
                     let x = 0;
-                    let y = sectorPoint * 2 + (sectorPoint - sectorHeight);
+                    const y = sectorPoint * 2 + (sectorPoint - sectorHeight);
                     if (index > 0) {
                         const prevData = bottomSectors[index - 1];
                         const prevDataMemberSize = prevData.members.length;
@@ -262,7 +263,7 @@ export class BasicTopology extends SeriesBase {
                 });
         // bottom sector background
         this.drawSectorBackground(bottomSectorGroup, `${this.selector}-sector-bottom-group-background`);
-        
+
         // bottom sector title
         this.drawSectorTitle(bottomSectorGroup, `${this.selector}-sector-bottom-group-title`, 'bottom');
 
@@ -271,28 +272,28 @@ export class BasicTopology extends SeriesBase {
         bottomSectorGroup
             .on('mouseover', this.onSectorMouseOver)
             .on('mouseout', this.onSectorMouseOut);
-        
+
         const bottomGroupTotalWidth = sectorPositions[sectorPositions.length - 1][0] + sectorPositions[sectorPositions.length - 1][2];
         if (sectorPositions.length && geometry.width > bottomGroupTotalWidth) {
             // 하단 center 정렬
-            const movex = geometry.width / 2 - bottomGroupTotalWidth / 2;
+            const moveX = geometry.width / 2 - bottomGroupTotalWidth / 2;
             bottomSectorGroup.attr('transform', (data: TopologyGroupElement) => {
-                data.x = data.x + movex;
+                data.x = data.x + moveX;
                 return `translate(${data.x}, ${data.y})`
             });
         }
 
         this.drawMember(bottomSectorGroup, this.selector, {width: memberWidth, height: memberHeight, limitWidth: MAX_MEMBER_WIDTH}, MEMBER_PADDING, 'bottom')
             .on('mouseover', this.onMemberMouseOver)
-            .on('mouseout', this.onMemberMouseOut);;
+            .on('mouseout', this.onMemberMouseOut);
 
         // machine 그리기
-        const machinePosition: Array<Array<number>> = [];
+        const machinePosition: number[][] = [];
         const calcMachineWidth = (geometry.width - MACHINE_PADDING * (machineSectors.length - 1)) / machineSectors.length;
         const machineWidth = Math.min(Math.min(sectorHeight, MAX_MACHINE_WIDTH), calcMachineWidth);
         const machineTotalWidth = MACHINE_PADDING * (machineSectors.length - 1) + machineWidth * machineSectors.length;
         const movex = geometry.width / 2 - machineTotalWidth / 2;
-        const machineGroup: Selection<BaseType, TopologyGroupElement, BaseType, any> = 
+        const machineGroup: Selection<BaseType, TopologyGroupElement, BaseType, any> =
             this.mainGroup.selectAll(`.${this.selector}-sector-machine-group`)
                 .data(machineSectors)
                 .join(
@@ -306,7 +307,7 @@ export class BasicTopology extends SeriesBase {
                 .attr('transform', (data: TopologyGroupElement, index: number) => {
                     const x = index * (machineWidth + MACHINE_PADDING) + movex;
                     const y = sectorPoint + (sectorPoint - machineWidth) / 2;
-                    
+
                     data.x = x;
                     data.y = y;
                     data.width = machineWidth;
@@ -323,7 +324,7 @@ export class BasicTopology extends SeriesBase {
             .on('mouseover', this.onMachineOver)
             .on('mouseout', this.onMachineOut);
 
-        const positions = 
+        const positions =
         this.getPositionFromTarget(
             this.mainGroup, topSectors, machineSectors, {width: memberWidth, height: memberHeight}, {width: machineWidth, height: machineWidth}, 'top'
         ).concat(
@@ -337,10 +338,10 @@ export class BasicTopology extends SeriesBase {
             .source((d) => d[0])
             .target((d) => d[1])
             .x((d: any) => {
-                return d.x; 
+                return d.x;
             })
-            .y((d: any) => { 
-                return d.y; 
+            .y((d: any) => {
+                return d.y;
             });
 
         this.linkGroup.selectAll(`.${this.selector}-machine-link`)
@@ -361,12 +362,12 @@ export class BasicTopology extends SeriesBase {
         this.currentSector = select(nodeList[index]).style('stroke', this.boldColor);
         const machineAlias = data.data.machineAlias.toLowerCase();
         const links = this.linkGroup.selectAll(`path.${this.selector}-machine-link`).data();
-        
+
         // member opacity 조정
         this.mainGroup.selectAll(`g.${this.selector}-member-group`)
             .filter((item: TopologyGroupElement, i: number, node: any) => {
                 const memeberId = select(node[i]).attr('id');
-                return links.findIndex((link: Array<any>) => {
+                return links.findIndex((link: any[]) => {
                     return link[0].data === memeberId && link[1].data === machineAlias
                 }) === -1;
             }).style('opacity', 0.5);
@@ -375,7 +376,7 @@ export class BasicTopology extends SeriesBase {
         this.mainGroup.selectAll(`g.${this.selector}-member-group`)
             .filter((item: TopologyGroupElement, i: number, node: any) => {
                 const memeberId = select(node[i]).attr('id');
-                return links.findIndex((link: Array<any>) => {
+                return links.findIndex((link: any[]) => {
                     return link[0].data === memeberId && link[1].data === machineAlias
                 }) > -1;
             }).style('stroke', this.boldColor);
@@ -396,7 +397,6 @@ export class BasicTopology extends SeriesBase {
         this.currentSector = select(nodeList[index]).style('stroke', '');
         this.mainGroup.selectAll(`g.${this.selector}-sector-machine-group`).style('opacity', '');
         this.mainGroup.selectAll(`g.${this.selector}-member-group`).style('stroke', '').style('opacity', '');
-        
         this.initStyle();
 
         event.stopPropagation();
@@ -412,7 +412,7 @@ export class BasicTopology extends SeriesBase {
                 currentIp = member.machineIP;
             }
         });
-        
+
         // machine filter
         this.mainGroup.selectAll(`g.${this.selector}-sector-machine-group`)
             .filter((item: TopologyGroupElement) => selectIps.indexOf(item.data.machineID) > -1)
@@ -427,11 +427,11 @@ export class BasicTopology extends SeriesBase {
 
         this.mainGroup.selectAll(`g.${this.selector}-sector-bottom-group`).filter((item: TopologyGroupElement) => data.id !== item.id).style('opacity', 0.5);
 
-        this.linkGroup.selectAll(`.${this.selector}-machine-link`).filter((item: Array<any>) => {
+        this.linkGroup.selectAll(`.${this.selector}-machine-link`).filter((item: any[]) => {
             return data.members.findIndex((member: any) => member.memberID.toLowerCase() === item[0].data) > -1;
         }).style('stroke', this.boldColor);
 
-        this.linkGroup.selectAll(`.${this.selector}-machine-link`).filter((item: Array<any>) => {
+        this.linkGroup.selectAll(`.${this.selector}-machine-link`).filter((item: any[]) => {
             return data.members.findIndex((member: any) => member.memberID.toLowerCase() === item[0].data) === -1;
         }).style('opacity', 0.5);
 
@@ -440,7 +440,6 @@ export class BasicTopology extends SeriesBase {
 
     private onSectorMouseOut = (data: TopologyGroupElement, index: number, nodeList: any) => {
         this.currentSector = select(nodeList[index]).style('stroke', '');
-        
         this.initStyle();
 
         event.stopPropagation();
@@ -451,7 +450,7 @@ export class BasicTopology extends SeriesBase {
 
         const machineData: any = this.mainGroup.selectAll(`g.${this.selector}-sector-machine-group`)
             .filter((item: TopologyGroupElement) => memberData.machineIP === item.data.machineID).data()[0];
-        
+
         // machine filter
         this.mainGroup.selectAll(`g.${this.selector}-sector-machine-group`)
             .filter((item: TopologyGroupElement) => memberData.machineIP === item.data.machineID)
@@ -475,14 +474,14 @@ export class BasicTopology extends SeriesBase {
                 .filter((item: TopologyGroupElement, i: number) => {
                     return i !== index;
                 }).style('opacity', 0.5);
-        
+
         this.mainGroup.selectAll(`g.${this.selector}-sector-bottom-group`)
             .filter((item: TopologyGroupElement) => item.data.frameworkID === memberData.frameworkID)
             .selectAll(`g.${this.selector}-member-group`)
                 .filter((item: TopologyGroupElement, i: number) => {
                     return i !== index;
                 }).style('opacity', 0.5);
-        
+
         // 선택된 맴버가 속하지 않는 framework opacity 조정.
         this.mainGroup.selectAll(`g.${this.selector}-sector-top-group`).filter((item: TopologyGroupElement) => data.id !== item.id).style('opacity', 0.5);
 
@@ -490,7 +489,7 @@ export class BasicTopology extends SeriesBase {
         this.mainGroup.selectAll(`g.${this.selector}-sector-bottom-group`).filter((item: TopologyGroupElement) => data.id !== item.id).style('opacity', 0.5);
 
         // 다른 라인들의 opacity 조정.
-        this.linkGroup.selectAll(`.${this.selector}-machine-link`).filter((item: Array<any>) => {
+        this.linkGroup.selectAll(`.${this.selector}-machine-link`).filter((item: any[]) => {
             return memberData.memberID.toLowerCase() !== item[0].data;
         }).style('opacity', 0.5);
 
@@ -499,9 +498,7 @@ export class BasicTopology extends SeriesBase {
 
     private onMemberMouseOut = (data: TopologyGroupElement, index: number, nodeList: any) => {
         this.currentSector = select(nodeList[index]).style('stroke', '');
-
         this.initStyleByMember(data, index);
-        
         this.initStyle();
 
         event.stopPropagation();
@@ -528,13 +525,13 @@ export class BasicTopology extends SeriesBase {
     }
 
     private getPositionFromTarget(
-        targetGroup: Selection<BaseType, TopologyGroupElement, BaseType, any>, 
-        sectors: Array<TopologyGroupElement>, 
-        machines: Array<TopologyGroupElement>, 
-        memberSize: {width: number, height: number}, 
-        machineSize: {width: number, height: number}, 
+        targetGroup: Selection<BaseType, TopologyGroupElement, BaseType, any>,
+        sectors: TopologyGroupElement[],
+        machines: TopologyGroupElement[],
+        memberSize: {width: number, height: number},
+        machineSize: {width: number, height: number},
         placement: string
-    ): Array<any> {
+    ): any[] {
         const positions = [];
         sectors.forEach((item: TopologyGroupElement) => {
             const currentSector = targetGroup.select(`#${item.data.frameworkID.toLowerCase()}`);
@@ -641,7 +638,7 @@ export class BasicTopology extends SeriesBase {
         const r = (imageWidth * 0.7) / 2;
 
         // member draw start
-        const memberGroup: Selection<BaseType, any, BaseType, any> = 
+        const memberGroup: Selection<BaseType, any, BaseType, any> =
             targetGroup.selectAll(`.${selector}-member-group`)
                 .data((d: TopologyGroupElement) => d.members)
                 .join(
@@ -686,7 +683,7 @@ export class BasicTopology extends SeriesBase {
             .attr('xlink:href', (d: any) => {
                 return 'assets/image/topology_container_stopped.svg';
             });
-        
+
         const texts = memberGroup.selectAll(`.${selector}-member-title`)
             .data((d: any) => [d])
             .join(
@@ -757,7 +754,7 @@ export class BasicTopology extends SeriesBase {
             .attr('xlink:href', (d: any) => {
                 return 'assets/image/topology_machine_connected.svg';
             });
-        
+
         const texts = targetGroup.selectAll(`.${selector}-machine-title`)
             .data((d: TopologyGroupElement) => [d])
             .join(
