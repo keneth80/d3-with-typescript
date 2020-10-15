@@ -1900,7 +1900,7 @@ export class ChartBase<T = any> implements IChart {
     // 범례 아이템 체크박스 클릭 이벤트
     private onLegendCheckBoxClick = (d: LegendItem, index: number, nodeList: any) => {
         if (d.label === 'All') {
-            this.onLegendAllCheckBoxItemClick(d, index, nodeList)
+            this.onLegendAllCheckBoxItemClick(d, index, nodeList);
         } else {
             this.onLegendCheckBoxItemClick(d, index, nodeList);
         }
@@ -1921,13 +1921,18 @@ export class ChartBase<T = any> implements IChart {
             }
         });
 
+        // TODO: 아이템 클릭 시 전체 선택 해제하면 풀려버림. 어떻게 할지 해결책 찾아야 함.
         this.legendGroup.selectAll('.legend-label-group').filter((item: LegendItem) => item.label !== 'All').each((item: LegendItem, i: number, node: any) => {
             item.isHide = d.isHide;
+            // TODO: All 도 같이 해제 해야함.
+            // if (!d.isHide) {
+            //     select(node[i]).style('opacity', 1);
+            // }
         });
 
         this.legendGroup.selectAll('.legend-item-group').filter((item: LegendItem) => item.label !== 'All').selectAll('.checkbox-mark').each((item: any, i: number, node: any) => {
             item.checked = !d.isHide;
-            select(node[i]).style('opacity', item.checked? 1 : 0)
+            select(node[i]).style('opacity', item.checked? 1 : 0);
         });
     }
 
@@ -1950,12 +1955,19 @@ export class ChartBase<T = any> implements IChart {
                 }
 
                 if (this.isAll) {
-                    const isCheckedAll = (this.legendGroup.selectAll('#legend-all-group').selectAll('.checkbox-mark').data()[0] as any).checked;
+                    const isCheckedAll = (
+                        this.legendGroup
+                        .selectAll('#legend-all-group')
+                        .selectAll('.checkbox-mark').data()[0] as any
+                    ).checked;
 
                     let checkCount = 0;
                     let uncheckCount = 0;
                     let allCount = 0;
-                    this.legendGroup.selectAll('.legend-item-group').filter((item: LegendItem) => item.label !== 'All').selectAll('.checkbox-mark').each((item: any, i: number, node: any) => {
+                    this.legendGroup.selectAll('.legend-item-group')
+                    .filter((item: LegendItem) => item.label !== 'All')
+                    .selectAll('.checkbox-mark')
+                    .each((item: any, i: number, node: any) => {
                         if (item.checked) {
                             checkCount++;
                         } else {
@@ -1966,7 +1978,10 @@ export class ChartBase<T = any> implements IChart {
 
                     if (isCheckedAll && uncheckCount > 0) {
                         // all check 해제
-                        this.legendGroup.selectAll('#legend-all-group').selectAll('.checkbox-mark').each((item: any, i: number, node: any) => {
+                        this.legendGroup
+                        .selectAll('#legend-all-group')
+                        .selectAll('.checkbox-mark')
+                        .each((item: any, i: number, node: any) => {
                             item.checked = false;
                             item.data.isHide = true;
                             select(node[i]).style('opacity', item.checked? 1 : 0);
@@ -1974,7 +1989,10 @@ export class ChartBase<T = any> implements IChart {
                     } else {
                         if (checkCount === allCount) {
                             // all check 설정.
-                            this.legendGroup.selectAll('#legend-all-group').selectAll('.checkbox-mark').each((item: any, i: number, node: any) => {
+                            this.legendGroup
+                            .selectAll('#legend-all-group')
+                            .selectAll('.checkbox-mark')
+                            .each((item: any, i: number, node: any) => {
                                 item.checked = true;
                                 item.data.isHide = false;
                                 select(node[i]).style('opacity', item.checked? 1 : 0);
@@ -1988,8 +2006,9 @@ export class ChartBase<T = any> implements IChart {
 
     // 범례 라벨 아이템 클릭 이벤트
     private onLegendLabelItemClick = (d: LegendItem, index: number, nodeList: any) => {
+        // TODO: All이 체크박스 해제 상태 즉 전부 안보이는 상태이면 다른 액션이 안되어야 함.
         if (d.label === 'All') {
-            this.onLegendAllLabelItemSelect(d, index, nodeList)
+            this.onLegendAllLabelItemSelect(d, index, nodeList);
         } else {
             this.onLegendLabelItemSelect(d, index, nodeList);
         }

@@ -147,7 +147,7 @@ export const generatorFunctions = (
     } else {
         functions.push(new BasicSvgMouseHandler({
             isMoveEvent: true,
-            delayTime: 10
+            delayTime: 5
         }));
     }
     return functions;
