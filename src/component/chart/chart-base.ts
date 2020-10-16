@@ -715,7 +715,17 @@ export class ChartBase<T = any> implements IChart {
             }
 
             if (isZoom && scale.isZoom === true) {
-                this.setupBrush(scale);
+                // this.setupBrush(scale);
+                ChartAxis.setupBrush(
+                    {
+                        width: this.width,
+                        height: this.height
+                    },
+                    this.margin,
+                    scale,
+                    this.axisGroups[scale.orient],
+                    this.updateBrushHandler
+                );
             }
         }
     }
@@ -1224,177 +1234,6 @@ export class ChartBase<T = any> implements IChart {
                 this.axisTitleMargin,
                 this.updateBrushHandler
             )
-            // const orientedAxis: any = ChartAxis.axisSetupByScale(scale);
-            // const targetGroup: Selection<BaseType, any, HTMLElement, any> = this.axisGroups[scale.orient];
-            // let bandWidth = -1;
-
-            // if (scale.type === ScaleType.STRING) {
-            //     bandWidth = scale.scale.bandwidth();
-            // }
-
-            // if (scale.visible) {
-            //     targetGroup.call(orientedAxis)
-            //         .selectAll('text')
-            //         .style('font-size', this.defaultAxisLabelStyle.font.size + 'px')
-            //         .style('font-family', this.defaultAxisLabelStyle.font.family);
-            //         // .style('font-weight', 100)
-            //         // .style('stroke-width', 0.5)
-            //         // .style('stroke', this.defaultAxisLabelStyle.font.color);
-            // }
-
-            // if (scale.tickTextParser) {
-            //     delayExcute(50, () => {
-            //         targetGroup.selectAll('text')
-            //             .text((d: string) => {
-            //                 return scale.tickTextParser(d);
-            //             });
-            //     })
-            // }
-
-            // if (scale.isGridLine) {
-            //     const targetScale = getAxisByPlacement(scale.orient, scale.scale);
-            //     if (scale.tickSize) {
-            //         targetScale.ticks(scale.tickSize);
-            //     }
-            //     const tickFmt: any = ' ';
-            //     if (scale.orient === Placement.RIGHT || scale.orient === Placement.LEFT) {
-            //         targetScale.tickSize(-this.width).tickFormat(tickFmt);
-            //     } else {
-            //         targetScale.tickSize(-this.height).tickFormat(tickFmt);
-            //     }
-
-            //     targetGroup
-            //         .style('stroke', '#ccc')
-            //         .style('stroke-opacity', 0.3)
-            //         .style('shape-rendering', 'crispEdges');
-
-            //     targetGroup.call(targetScale);
-            // }
-
-            // if (scale.isZoom === true) {
-            //     this.setupBrush(scale);
-            // }
-
-            // // axis의 텍스트가 길어지면 margin도 덩달아 늘어나야함. 단, config.margin이 없을 때
-            // if (!this.isCustomMargin) {
-            //     // 가장 긴 텍스트를 찾아서 사이즈를 저장하고 margin에 더해야함
-            //     if (!maxTextWidth[scale.orient]) {
-            //         maxTextWidth[scale.orient] = 0;
-            //     }
-            //     let textLength = 0;
-            //     let longTextNode: any = null;
-            //     if (scale.orient === Placement.LEFT || scale.orient === Placement.RIGHT) {
-            //         targetGroup.selectAll('.tick').each((d: any, index: number, node: any[]) => {
-            //             const currentTextSize = (d + '').length;
-            //             if (textLength < currentTextSize) {
-            //                 textLength = currentTextSize;
-            //                 longTextNode = node[index];
-            //             }
-            //         });
-
-            //         if (longTextNode) {
-            //             const textWidth = Math.round(longTextNode.getBoundingClientRect().width);
-            //             if (maxTextWidth[scale.orient] < textWidth) {
-            //                 maxTextWidth[scale.orient] = textWidth;
-            //             }
-            //         }
-            //     } else {
-            //         targetGroup.selectAll('.tick').each((d: any, index: number, node: any[]) => {
-            //             // string일 때 bandWidth 보다 텍스트 사이즈가 더 크면 wordrap한다.
-            //             if (bandWidth > 0) {
-            //                 const textNode: any = select(node[index]).select('text');
-            //                 const textNodeWidth = textNode.node().getComputedTextLength();
-            //                 const currentTextSize = (d + '').length;
-            //                 if (textNodeWidth > bandWidth) {
-            //                     textWrapping(textNode, bandWidth);
-            //                 }
-
-            //                 if (textLength < currentTextSize) {
-            //                     textLength = currentTextSize;
-            //                     longTextNode = node[index];
-            //                 }
-            //             }
-            //         });
-
-            //         if (longTextNode) {
-            //             const textHeight = Math.round(longTextNode.getBoundingClientRect().height);
-            //             if (maxTextWidth[scale.orient] < textHeight) {
-            //                 maxTextWidth[scale.orient] = textHeight;
-            //             }
-            //         }
-            //     }
-            // }
-
-            // if (scale.title) {
-            //     targetGroup.selectAll(`.axis-${scale.orient}-title`)
-            //         .data([
-            //             scale.title
-            //         ])
-            //         .join(
-            //             (enter) => enter.append('text').attr('class', `axis-${scale.orient}-title`),
-            //             (update) => update,
-            //             (exit) => exit.remove()
-            //         )
-            //         .attr('dy', () => {
-            //             return scale.orient === Placement.TOP ? '0em' : '1em';
-            //         })
-            //         .style('text-anchor', (d: AxisTitle) => {
-            //             let anchor = '';
-            //             if (d.align === Align.TOP) {
-            //                 anchor = 'end';
-            //             } else if (d.align === Align.BOTTOM) {
-            //                 anchor = 'start';
-            //             } else {
-            //                 anchor = 'middle';
-            //             }
-            //             return anchor;
-            //         })
-            //         .style('font-weight', 100)
-            //         .style('fill', this.defaultAxisTitleStyle.font.color)
-            //         .style('font-size', this.defaultAxisTitleStyle.font.size)
-            //         .style('font-family', this.defaultAxisTitleStyle.font.family)
-            //         .text((d: AxisTitle) => {
-            //             return d.content;
-            //         })
-            //         .attr('transform', (d: AxisTitle) => {
-            //             return scale.orient === Placement.LEFT || scale.orient === Placement.RIGHT ? 'rotate(-90)': '';
-            //         })
-            //         .attr('y', (d: AxisTitle, index: number, node: any) => {
-            //             const titlePadding = 5;
-            //             let y = 0;
-            //             if (scale.orient === Placement.LEFT) {
-            //                 y = 0 - (this.margin.left + this.axisTitleMargin.left - titlePadding);
-            //             } else if (scale.orient === Placement.RIGHT) {
-            //                 y = this.margin.right - titlePadding;
-            //             } else if (scale.orient === Placement.BOTTOM) {
-            //                 y = this.margin.bottom - titlePadding;
-            //             } else {
-            //                 y = -this.axisTitleMargin.top - titlePadding;
-            //             }
-            //             return y;
-            //         })
-            //         .attr('x', (d: AxisTitle) => {
-            //             let x = 0;
-            //             if (scale.orient === Placement.LEFT || scale.orient === Placement.RIGHT) {
-            //                 if (d.align === Align.TOP) {
-            //                     x = 0;
-            //                 } else if (d.align === Align.BOTTOM) {
-            //                     x = 0 - this.height;
-            //                 } else {
-            //                     x = 0 - (this.height / 2);
-            //                 }
-            //             } else if (scale.orient === Placement.BOTTOM || scale.orient === Placement.TOP) {
-            //                 if (d.align === Align.LEFT) {
-            //                     x = padding;
-            //                 } else if (d.align === Align.RIGHT) {
-            //                     x = this.width - padding;
-            //                 } else {
-            //                     x = this.width / 2;
-            //                 }
-            //             }
-            //             return x;
-            //         });
-            // }
         });
 
         // margin 설정이 따로 없으면 자동으로 계산해서 margin을 갱신한다.
