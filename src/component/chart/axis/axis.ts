@@ -1,8 +1,14 @@
 import { min, max } from 'd3-array';
 import { scaleBand, scaleLinear, scaleTime, scalePoint } from 'd3-scale';
+import { axisBottom, axisLeft, axisTop, axisRight } from 'd3-axis';
+import { format } from 'd3-format';
+import { timeFormat } from 'd3-time-format';
+import { brushX, brushY } from 'd3-brush';
 
 import { Scale, ContainerSize } from '../chart.interface';
-import { Axis, Placement, ScaleType } from '../chart-configuration';
+import { Align, Axis, AxisTitle, Margin, Placement, ScaleType } from '../chart-configuration';
+import { BaseType, select, Selection } from 'd3';
+import { delayExcute, getAxisByPlacement, textWrapping } from '../util';
 
 export class ChartAxis {
     static generateScaleByAxis<T = any>(
@@ -127,5 +133,273 @@ export class ChartAxis {
         });
 
         return returnAxes;
+    }
+
+    static axisSetupByScale(scale: Scale) {
+        let orientedAxis: any = null;
+
+        if (scale.orient === Placement.RIGHT) {
+            orientedAxis = axisRight(scale.scale);
+        } else if (scale.orient === Placement.LEFT) {
+            orientedAxis = axisLeft(scale.scale);
+        } else if (scale.orient === Placement.TOP) {
+            orientedAxis = axisTop(scale.scale);
+        } else {
+            orientedAxis = axisBottom(scale.scale);
+        }
+
+        if (scale.type === ScaleType.NUMBER) {
+            if (scale.tickFormat) {
+                orientedAxis.ticks(null, scale.tickFormat);
+            } else {
+                orientedAxis.tickFormat(format(',.0f'));
+            }
+        } else if (scale.type === ScaleType.TIME) {
+            if (scale.tickFormat) {
+                orientedAxis.tickFormat(timeFormat(scale.tickFormat));
+            }
+        }
+
+        if (scale.tickSize) {
+            orientedAxis.ticks(scale.tickSize);
+        }
+
+        return orientedAxis;
+    }
+
+    static drawAxisByScale(
+        svgGeometry: ContainerSize,
+        margin: Margin,
+        isCustomMargin: boolean,
+        scale: Scale,
+        targetGroup: Selection<BaseType, any, HTMLElement, any>,
+        defaultAxisLabelStyle: any,
+        defaultAxisTitleStyle: any,
+        axisTitleMargin: Margin,
+        updateBrushHandler: any
+    ) {
+        const padding = 10; // 10 는 axis 여백.
+        const orientedAxis: any = ChartAxis.axisSetupByScale(scale);
+
+        let maxTextWidth = 0;
+        let bandWidth = -1;
+
+        if (scale.type === ScaleType.STRING) {
+            bandWidth = scale.scale.bandwidth();
+        }
+
+        if (scale.visible) {
+            targetGroup.call(orientedAxis)
+                .selectAll('text')
+                .style('font-size', defaultAxisLabelStyle.font.size + 'px')
+                .style('font-family', defaultAxisLabelStyle.font.family);
+                // .style('font-weight', 100)
+                // .style('stroke-width', 0.5)
+                // .style('stroke', this.defaultAxisLabelStyle.font.color);
+        }
+
+        if (scale.tickTextParser) {
+            delayExcute(50, () => {
+                targetGroup.selectAll('text')
+                    .text((d: string) => {
+                        return scale.tickTextParser(d);
+                    });
+            })
+        }
+
+        if (scale.isGridLine) {
+            const targetScale = getAxisByPlacement(scale.orient, scale.scale);
+            if (scale.tickSize) {
+                targetScale.ticks(scale.tickSize);
+            }
+            const tickFmt: any = ' ';
+            if (scale.orient === Placement.RIGHT || scale.orient === Placement.LEFT) {
+                targetScale.tickSize(-svgGeometry.width).tickFormat(tickFmt);
+            } else {
+                targetScale.tickSize(-svgGeometry.height).tickFormat(tickFmt);
+            }
+
+            targetGroup
+                .style('stroke', '#ccc')
+                .style('stroke-opacity', 0.3)
+                .style('shape-rendering', 'crispEdges');
+
+            targetGroup.call(targetScale);
+        }
+
+        if (scale.isZoom === true) {
+            ChartAxis.setupBrush(svgGeometry, margin, scale, targetGroup, updateBrushHandler);
+        }
+
+        // axis의 텍스트가 길어지면 margin도 덩달아 늘어나야함. 단, config.margin이 없을 때
+        if (!isCustomMargin) {
+            // 가장 긴 텍스트를 찾아서 사이즈를 저장하고 margin에 더해야함
+            let textLength = 0;
+            let longTextNode: any = null;
+            if (scale.orient === Placement.LEFT || scale.orient === Placement.RIGHT) {
+                targetGroup.selectAll('.tick').each((d: any, index: number, node: any[]) => {
+                    const currentTextSize = (d + '').length;
+                    if (textLength < currentTextSize) {
+                        textLength = currentTextSize;
+                        longTextNode = node[index];
+                    }
+                });
+
+                if (longTextNode) {
+                    const textWidth = Math.round(longTextNode.getBoundingClientRect().width);
+                    if (maxTextWidth < textWidth) {
+                        maxTextWidth = textWidth;
+                    }
+                }
+            } else {
+                targetGroup.selectAll('.tick').each((d: any, index: number, node: any[]) => {
+                    // string일 때 bandWidth 보다 텍스트 사이즈가 더 크면 wordrap한다.
+                    if (bandWidth > 0) {
+                        const textNode: any = select(node[index]).select('text');
+                        const textNodeWidth = textNode.node().getComputedTextLength();
+                        const currentTextSize = (d + '').length;
+                        if (textNodeWidth > bandWidth) {
+                            textWrapping(textNode, bandWidth);
+                        }
+
+                        if (textLength < currentTextSize) {
+                            textLength = currentTextSize;
+                            longTextNode = node[index];
+                        }
+                    }
+                });
+
+                if (longTextNode) {
+                    const textHeight = Math.round(longTextNode.getBoundingClientRect().height);
+                    if (maxTextWidth < textHeight) {
+                        maxTextWidth = textHeight;
+                    }
+                }
+            }
+        }
+
+        if (scale.title) {
+            targetGroup.selectAll(`.axis-${scale.orient}-title`)
+                .data([
+                    scale.title
+                ])
+                .join(
+                    (enter) => enter.append('text').attr('class', `axis-${scale.orient}-title`),
+                    (update) => update,
+                    (exit) => exit.remove()
+                )
+                .attr('dy', () => {
+                    return scale.orient === Placement.TOP ? '0em' : '1em';
+                })
+                .style('text-anchor', (d: AxisTitle) => {
+                    let anchor = '';
+                    if (d.align === Align.TOP) {
+                        anchor = 'end';
+                    } else if (d.align === Align.BOTTOM) {
+                        anchor = 'start';
+                    } else {
+                        anchor = 'middle';
+                    }
+                    return anchor;
+                })
+                .style('font-weight', 100)
+                .style('fill', defaultAxisTitleStyle.font.color)
+                .style('font-size', defaultAxisTitleStyle.font.size)
+                .style('font-family', defaultAxisTitleStyle.font.family)
+                .text((d: AxisTitle) => {
+                    return d.content;
+                })
+                .attr('transform', (d: AxisTitle) => {
+                    return scale.orient === Placement.LEFT || scale.orient === Placement.RIGHT ? 'rotate(-90)': '';
+                })
+                .attr('y', (d: AxisTitle, index: number, node: any) => {
+                    const titlePadding = 5;
+                    let y = 0;
+                    if (scale.orient === Placement.LEFT) {
+                        y = 0 - (margin.left + axisTitleMargin.left - titlePadding);
+                    } else if (scale.orient === Placement.RIGHT) {
+                        y = margin.right - titlePadding;
+                    } else if (scale.orient === Placement.BOTTOM) {
+                        y = margin.bottom - titlePadding;
+                    } else {
+                        y = -axisTitleMargin.top - titlePadding;
+                    }
+                    return y;
+                })
+                .attr('x', (d: AxisTitle) => {
+                    let x = 0;
+                    if (scale.orient === Placement.LEFT || scale.orient === Placement.RIGHT) {
+                        if (d.align === Align.TOP) {
+                            x = 0;
+                        } else if (d.align === Align.BOTTOM) {
+                            x = 0 - svgGeometry.height;
+                        } else {
+                            x = 0 - (svgGeometry.height / 2);
+                        }
+                    } else if (scale.orient === Placement.BOTTOM || scale.orient === Placement.TOP) {
+                        if (d.align === Align.LEFT) {
+                            x = padding;
+                        } else if (d.align === Align.RIGHT) {
+                            x = svgGeometry.width - padding;
+                        } else {
+                            x = svgGeometry.width / 2;
+                        }
+                    }
+                    return x;
+                });
+        }
+
+        return maxTextWidth;
+    }
+
+    static setupBrush(
+        svgGeometry: ContainerSize,
+        margin: Margin,
+        scale: Scale,
+        targetGroup: Selection<BaseType, any, HTMLElement, any>,
+        updateBrushHandler: any
+    ) {
+        let brush = null;
+        if (scale.type === ScaleType.NUMBER || scale.type === ScaleType.TIME) {
+            if (scale.orient === Placement.RIGHT || scale.orient === Placement.LEFT) {
+                let left = 0;
+                let width = 0;
+
+                if (scale.orient === Placement.LEFT) {
+                    left = -1 * margin.left;
+                } else {
+                    width = svgGeometry.width;
+                }
+
+                brush = brushY()
+                    .extent([ [left, 0], [width, svgGeometry.height] ]);
+            } else {
+                let top = 0;
+                let height = 0;
+
+                // top margin 때문에 처리.
+                if (scale.orient === Placement.TOP) {
+                    top = margin.top * -1;
+                } else {
+                    height = margin.bottom;
+                }
+
+                brush = brushX()
+                    .extent([ [0, top], [svgGeometry.width, height] ]);
+            }
+            brush.on('end', () => {
+                updateBrushHandler(scale.orient, brush);
+            });
+        }
+
+        if (brush) {
+            if (!targetGroup.select('.brush' + scale.orient).node()) {
+                targetGroup.append('g')
+                    .attr('class', 'brush' + scale.orient);
+            }
+            targetGroup.select('.brush' + scale.orient).call(
+                brush
+            );
+        }
     }
 }

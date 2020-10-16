@@ -1,10 +1,7 @@
 // import './chart.css';
-import { timeFormat } from 'd3-time-format';
 import { schemeCategory10 } from 'd3-scale-chromatic';
 import { select, Selection, BaseType, event } from 'd3-selection';
-import { axisBottom, axisLeft, axisTop, axisRight } from 'd3-axis';
 import { brushX, brushY } from 'd3-brush';
-import { format } from 'd3-format';
 
 import { fromEvent, Subscription, Subject, of, Observable, from, timer } from 'rxjs';
 import { debounceTime, switchMap, map, concatMap, mapTo } from 'rxjs/operators';
@@ -26,6 +23,7 @@ import { guid, delayExcute, textWrapping,
 import { ChartAxis } from './axis/axis';
 import { ChartSelector } from './chart-selector-variable';
 import { ChartLegend } from './legend/chart-legend';
+import { setupWebglContext } from './util/webgl-util';
 
 
 // TODO: 모든 참조되는 함수들은 subject로 바꾼다.
@@ -81,8 +79,6 @@ export class ChartBase<T = any> implements IChart {
     protected subscription: Subscription;
 
     protected chartClickSubject: Subject<any> = new Subject();
-
-    protected updateSeriesSubject: Subject<any> = new Subject();
 
     protected tooltipGroup: Selection<BaseType, any, HTMLElement, any>;
 
@@ -149,10 +145,6 @@ export class ChartBase<T = any> implements IChart {
         top: null, left: null, bottom: null, right: null
     };
 
-    private tickSize = 6;
-
-    private tickPadding = 2;
-
     private axisTitleMargin: Margin = {
         top: 0, left: 0, bottom: 0, right: 0
     }; // axis title margin
@@ -171,19 +163,11 @@ export class ChartBase<T = any> implements IChart {
     // ===================== Legend configuration start ===================== //
     private isLegend = false;
 
-    private legendItemList: LegendItem[] = [];
-
     private legendPlacement = 'right';
-
-    private legendItemSize: ContainerSize = {
-        width: 10, height: 10
-    };
 
     private legendContainerSize: ContainerSize = {
         width: 0, height: 0
     };
-
-    private legendRowCount = 1;
 
     private legendPadding = 5;
 
@@ -191,23 +175,13 @@ export class ChartBase<T = any> implements IChart {
 
     private currentLegendNode: any = null;
 
-    private isCheckBox = true;
+    private isLegendCheckBox = true;
 
-    private checkBoxWidth = 15;
-
-    private legendItemTextHeight = 15;
-
-    private isAll = true;
-
-    private allWidth = 30;
-
-    private totalLegendWidth = 0;
-
-    private legendRowBreakCount: number[] = [];
-
-    private legendTextWidthList: number[] = [];
+    private isLegendAll = true;
 
     private chartLegend: ChartLegend;
+
+    private isLegendAllHide = false;
     // ===================== Legend configuration end ===================== //
 
     // ===================== current min max start ===================== //
@@ -259,24 +233,7 @@ export class ChartBase<T = any> implements IChart {
                 .attr('height', this.height);
 
             if (!this.webglContext) {
-                const webglOption = {
-                    alpha: true, // 캔버스에 알파 버퍼가 포함되어 있는지 를 나타내는 부울입니다.
-                    antialias: true, // 항별칭을 수행할지 여부를 나타내는 부울
-                    // preserveDrawingBuffer: true, // 값이 true인 경우 버퍼가 지워지지 않으며 작성자가 지우거나 덮어쓸 때까지 해당 값을 보존합니다.
-                    powerPreference: 'high-performance',
-                    // depth: false, // 도면 버퍼에 최소 16비트의 깊이 버퍼가 있음을 나타내는 부울입니다.
-                    // /**
-                    //  * 웹GL 컨텍스트에 적합한 GPU 구성을 나타내는 사용자 에이전트에 대한 힌트입니다. 가능한 값은 다음과 같습니다.
-                    // "default": 사용자 에이전트가 가장 적합한 GPU 구성을 결정하도록 합니다. 기본 값입니다.
-                    // "high-performance": 전력 소비보다 렌더링 성능의 우선 순위를 지정합니다.
-                    // "low-power": 렌더링 성능보다 절전의 우선 순위를 지정합니다.
-                    //  */
-                    premultipliedAlpha: true, // 페이지 작성자가 드로잉 버퍼에 미리 곱한 알파가 있는 색상이 포함되어 있다고 가정한다는 것을 나타내는 부울입니다.
-                    stencil: true, // 도면 버퍼에 최소 8비트의 스텐실 버퍼가 있음을 나타내는 부울입니다.
-                    // desynchronized: true, // 이벤트 루프에서 캔버스 페인트 주기의 비동기화를 해제하여 사용자 에이전트가 대기 시간을 줄이도록 힌트하는 부울
-                    failIfMajorPerformanceCaveat: true // 시스템 성능이 낮거나 하드웨어 GPU를 사용할 수 없는 경우 컨텍스트가 생성될지 를 나타내는 부울수입니다.
-                };
-                this.webglContext = (this.webglCanvas.node() as any).getContext('webgl', webglOption) || (this.webglCanvas.node() as any).getContext('experimental-webgl', webglOption);
+                this.webglContext = setupWebglContext(this.webglCanvas);
             }
         }
         this.webglContext.imageSmoothingQuality = 'high'; // "low|medium|high"
@@ -321,10 +278,6 @@ export class ChartBase<T = any> implements IChart {
 
     get clipPathSelector(): any {
         return this.clipPath;
-    }
-
-    get updateSeries$(): Observable<any> {
-        return this.updateSeriesSubject.asObservable();
     }
 
     get mouseEvent$(): Observable<ChartMouseEvent> {
@@ -417,10 +370,10 @@ export class ChartBase<T = any> implements IChart {
         if (configuration.legend) {
             this.isLegend = true;
             this.legendPlacement = configuration.legend.placement;
-            // this.isCheckBox = configuration.legend.isCheckBox === false ? configuration.legend.isCheckBox : true;
-            // this.isAll = configuration.legend.isAll === false ? configuration.legend.isAll : true;
-            this.isCheckBox = configuration.legend.isCheckBox || true;
-            this.isAll = configuration.legend.isAll || true;
+            // this.isLegendCheckBox = configuration.legend.isLegendCheckBox === false ? configuration.legend.isLegendCheckBox : true;
+            // this.isLegendAll = configuration.legend.isLegendAll === false ? configuration.legend.isLegendAll : true;
+            this.isLegendCheckBox = configuration.legend.isCheckBox || true;
+            this.isLegendAll = configuration.legend.isAll || true;
         }
 
         if (configuration.tooltip) {
@@ -740,7 +693,7 @@ export class ChartBase<T = any> implements IChart {
         let index = 0;
         for (index = 0; index < this.scales.length; index++) {
             const scale = this.scales[index];
-            const orientedAxis: any = this.axisSetupByScale(scale);
+            const orientedAxis: any = ChartAxis.axisSetupByScale(scale);
 
             if (scale.visible) {
                 this.axisGroups[scale.orient].call(
@@ -811,72 +764,9 @@ export class ChartBase<T = any> implements IChart {
 
         // 범례 적용 시 사이즈 계산.
         if (this.isLegend) {
-            // // 초기화.
-            // this.legendItemList.length = 0;
-            // this.legendTextWidthList.length = 0;
-            // this.legendRowBreakCount.length = 0;
-            // this.totalLegendWidth = 0;
-
-            // // legend row 한개의 길이
-            // const checkWidth = this.margin.left + this.margin.right + this.width - this.legendPadding * 4;
-
-            // let targetText = null;
-            // let targetTextWidth = 0;
-            // if (this.seriesList && this.seriesList.length) {
-            //     // stacked, group bar 의 경우 범례 설정.
-            //     if (this.seriesList[0].displayNames && this.seriesList[0].displayNames.length) {
-            //         legendItemListByGrouped(this.seriesList).forEach((legendItem: LegendItem) => {
-            //             this.legendItemList.push(legendItem);
-            //         });
-            //         targetText = getMaxText(this.seriesList[0].displayNames.map((displayName: string) => displayName));
-            //     } else {
-            //         // 일반 시리즈의 경우 범례 설정.
-            //         legendItemListByNormal(this.seriesList).forEach((legendItem: LegendItem) => {
-            //             this.legendItemList.push(legendItem);
-            //         });
-            //         targetText = getMaxText(this.seriesList.map((series: ISeries) => series.displayName || series.selector));
-            //     }
-
-            //     targetTextWidth = getTextWidth(targetText, this.defaultLegendStyle.font.size, this.defaultLegendStyle.font.family);
-            // }
-
-            // if (this.isAll) {
-            //     this.totalLegendWidth = this.allWidth - (this.isCheckBox ? 0 : 10);
-            //     this.legendTextWidthList.push(this.totalLegendWidth);
-            // }
-            // this.totalLegendWidth += this.legendPadding;
-
-            // let compareWidth = this.totalLegendWidth;
-
-            // for (let i = 0; i < this.legendItemList.length; i++) {
-            //     const currentText = this.legendItemList[i].label;
-            //     const currentTextWidth = ((this.isCheckBox ? this.checkBoxWidth : 0) + getTextWidth(currentText, this.defaultLegendStyle.font.size, this.defaultLegendStyle.font.family));
-            //     const currentItemWidth = currentTextWidth + this.legendItemSize.width + this.legendPadding;
-            //     this.legendTextWidthList.push(currentItemWidth);
-            //     this.totalLegendWidth += currentItemWidth;
-            //     compareWidth += currentItemWidth;
-            //     if (compareWidth > checkWidth) {
-            //         compareWidth = currentItemWidth;
-            //         this.legendRowBreakCount.push(i + (this.isAll ? 1 : 0));
-            //     }
-            // }
-
-            // this.totalLegendWidth += (this.legendPadding * (this.seriesList.length - 1)) + ((this.legendItemSize.width + this.legendPadding) * this.seriesList.length);
-
-            // this.legendRowCount = Math.ceil(this.totalLegendWidth / this.width);
-
-            // this.legendContainerSize.width =
-            // this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ?
-            //     this.legendPadding * 2 + this.legendItemSize.width + this.legendPadding + Math.round(targetTextWidth) + (this.isCheckBox ? this.checkBoxWidth : 0) :
-            //     (this.legendRowCount > 1 ? this.width : this.totalLegendWidth);
-            // this.legendContainerSize.height =
-            //     this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ?
-            //     this.height :
-            //     (this.legendPadding + titleTextHeight) * this.legendRowCount;
-
             this.chartLegend = new ChartLegend({
-                isCheckBox: this.isCheckBox,
-                isAll: this.isAll,
+                isCheckBox: this.isLegendCheckBox,
+                isAll: this.isLegendAll,
                 addTitleWidth: this.isTitle && this.titlePlacement === Placement.LEFT ? this.titleContainerSize.width : 0,
                 legendPlacement: this.legendPlacement,
                 colors: this.colors,
@@ -983,12 +873,10 @@ export class ChartBase<T = any> implements IChart {
                     legendX = (this.isTitle && this.titlePlacement === Placement.LEFT ? this.titleContainerSize.width : 0);
                     translate = `translate(${legendX}, ${legendY})`;
                 } else if (this.legendPlacement === Placement.TOP) {
-                    // legendX = this.legendRowCount > 1 ? this.legendPadding * 2 : this.totalLegendWidth - this.width + this.margin.left + this.margin.right;
                     legendX = this.legendPadding * 2;
                     legendY = (this.isTitle && this.titlePlacement === Placement.TOP ? this.titleContainerSize.height : 0) + this.legendPadding * 2;
                     translate = `translate(${legendX}, ${legendY})`;
                 } else if (this.legendPlacement === Placement.BOTTOM) {
-                    // legendX = this.legendRowCount > 1 ? this.legendPadding * 2 : this.totalLegendWidth - this.width + this.margin.left + this.margin.right;
                     legendX = this.legendPadding * 2;
                     legendY = (this.margin.top + this.margin.bottom) + (this.axisTitleMargin.top + this.axisTitleMargin.bottom) + height;
                     if (this.isTitle && this.titlePlacement === Placement.TOP) {
@@ -1143,7 +1031,6 @@ export class ChartBase<T = any> implements IChart {
 
                         const positionDataList = this.seriesList[this.currentSeriesIndex].getSeriesDataByPosition(chartEvent.position);
                         if (positionDataList.length) {
-                            // TODO: select mode 적용 어떻게 할까?
                             this.seriesList[this.currentSeriesIndex].onSelectItem(chartEvent.position, positionDataList);
                             this.chartItemEventSubject.next({
                                 type: chartEvent.type,
@@ -1151,14 +1038,6 @@ export class ChartBase<T = any> implements IChart {
                                 data: positionDataList[this.currentChartItemIndex][2],
                                 etc: positionDataList[this.currentChartItemIndex]
                             });
-                            // positionData.forEach((element: any[]) => {
-                            //     this.chartItemEventSubject.next({
-                            //         type: chartEvent.type,
-                            //         position: [element[0], element[1]],
-                            //         data: element[2],
-                            //         etc: element
-                            //     });
-                            // });
                             break;
                         }
                     break;
@@ -1232,7 +1111,6 @@ export class ChartBase<T = any> implements IChart {
                 data: this.currentChartItem[2],
                 etc: this.currentChartItem
             });
-
             this.currentChartItem.length = 0;
         }
     }
@@ -1332,181 +1210,191 @@ export class ChartBase<T = any> implements IChart {
         this.scales = this.setupScale(this.config.axes, this.width, this.height, this.currentScale);
 
         this.scales.forEach((scale: Scale) => {
-            const orientedAxis: any = this.axisSetupByScale(scale);
+            maxTextWidth[scale.orient] = ChartAxis.drawAxisByScale(
+                {
+                    width: this.width,
+                    height: this.height
+                },
+                this.margin,
+                this.isCustomMargin,
+                scale,
+                this.axisGroups[scale.orient],
+                this.defaultAxisLabelStyle,
+                this.defaultAxisTitleStyle,
+                this.axisTitleMargin,
+                this.updateBrushHandler
+            )
+            // const orientedAxis: any = ChartAxis.axisSetupByScale(scale);
+            // const targetGroup: Selection<BaseType, any, HTMLElement, any> = this.axisGroups[scale.orient];
+            // let bandWidth = -1;
 
-            let bandWidth = -1;
+            // if (scale.type === ScaleType.STRING) {
+            //     bandWidth = scale.scale.bandwidth();
+            // }
 
-            if (scale.type === ScaleType.STRING) {
-                bandWidth = scale.scale.bandwidth();
-            }
+            // if (scale.visible) {
+            //     targetGroup.call(orientedAxis)
+            //         .selectAll('text')
+            //         .style('font-size', this.defaultAxisLabelStyle.font.size + 'px')
+            //         .style('font-family', this.defaultAxisLabelStyle.font.family);
+            //         // .style('font-weight', 100)
+            //         // .style('stroke-width', 0.5)
+            //         // .style('stroke', this.defaultAxisLabelStyle.font.color);
+            // }
 
-            if (scale.visible) {
-                this.axisGroups[scale.orient].call(
-                    orientedAxis
-                )
-                .selectAll('text')
-                .style('font-size', this.defaultAxisLabelStyle.font.size + 'px')
-                .style('font-family', this.defaultAxisLabelStyle.font.family);
-                // .style('font-weight', 100)
-                // .style('stroke-width', 0.5)
-                // .style('stroke', this.defaultAxisLabelStyle.font.color);
-            }
+            // if (scale.tickTextParser) {
+            //     delayExcute(50, () => {
+            //         targetGroup.selectAll('text')
+            //             .text((d: string) => {
+            //                 return scale.tickTextParser(d);
+            //             });
+            //     })
+            // }
 
-            if (scale.tickTextParser) {
-                delayExcute(50, () => {
-                    this.axisGroups[scale.orient].selectAll('text')
-                    .text((d: string) => {
-                        return scale.tickTextParser(d);
-                    })
-                })
-            }
+            // if (scale.isGridLine) {
+            //     const targetScale = getAxisByPlacement(scale.orient, scale.scale);
+            //     if (scale.tickSize) {
+            //         targetScale.ticks(scale.tickSize);
+            //     }
+            //     const tickFmt: any = ' ';
+            //     if (scale.orient === Placement.RIGHT || scale.orient === Placement.LEFT) {
+            //         targetScale.tickSize(-this.width).tickFormat(tickFmt);
+            //     } else {
+            //         targetScale.tickSize(-this.height).tickFormat(tickFmt);
+            //     }
 
-            if (scale.isGridLine) {
-                const targetScale = getAxisByPlacement(scale.orient, scale.scale);
-                if (scale.tickSize) {
-                    targetScale.ticks(scale.tickSize);
-                }
-                const tickFmt: any = ' ';
-                if (scale.orient === Placement.RIGHT || scale.orient === Placement.LEFT) {
-                    targetScale.tickSize(-this.width).tickFormat(tickFmt);
-                } else {
-                    targetScale.tickSize(-this.height).tickFormat(tickFmt);
-                }
+            //     targetGroup
+            //         .style('stroke', '#ccc')
+            //         .style('stroke-opacity', 0.3)
+            //         .style('shape-rendering', 'crispEdges');
 
-                this.gridLineGroups[scale.orient]
-                    .style('stroke', '#ccc')
-                    .style('stroke-opacity', 0.3)
-                    .style('shape-rendering', 'crispEdges');
+            //     targetGroup.call(targetScale);
+            // }
 
-                this.gridLineGroups[scale.orient].call(
-                    targetScale
-                );
-            }
+            // if (scale.isZoom === true) {
+            //     this.setupBrush(scale);
+            // }
 
-            if (scale.isZoom === true) {
-                this.setupBrush(scale);
-            }
+            // // axis의 텍스트가 길어지면 margin도 덩달아 늘어나야함. 단, config.margin이 없을 때
+            // if (!this.isCustomMargin) {
+            //     // 가장 긴 텍스트를 찾아서 사이즈를 저장하고 margin에 더해야함
+            //     if (!maxTextWidth[scale.orient]) {
+            //         maxTextWidth[scale.orient] = 0;
+            //     }
+            //     let textLength = 0;
+            //     let longTextNode: any = null;
+            //     if (scale.orient === Placement.LEFT || scale.orient === Placement.RIGHT) {
+            //         targetGroup.selectAll('.tick').each((d: any, index: number, node: any[]) => {
+            //             const currentTextSize = (d + '').length;
+            //             if (textLength < currentTextSize) {
+            //                 textLength = currentTextSize;
+            //                 longTextNode = node[index];
+            //             }
+            //         });
 
-            // axis의 텍스트가 길어지면 margin도 덩달아 늘어나야함. 단, config.margin이 없을 때
-            if (!this.isCustomMargin) {
-                // 가장 긴 텍스트를 찾아서 사이즈를 저장하고 margin에 더해야함
-                if (!maxTextWidth[scale.orient]) {
-                    maxTextWidth[scale.orient] = 0;
-                }
-                let textLength = 0;
-                let longTextNode: any = null;
-                if (scale.orient === Placement.LEFT || scale.orient === Placement.RIGHT) {
-                    this.axisGroups[scale.orient].selectAll('.tick').each((d: any, index: number, node: any[]) => {
-                        const currentTextSize = (d + '').length;
-                        if (textLength < currentTextSize) {
-                            textLength = currentTextSize;
-                            longTextNode = node[index];
-                        }
-                    });
+            //         if (longTextNode) {
+            //             const textWidth = Math.round(longTextNode.getBoundingClientRect().width);
+            //             if (maxTextWidth[scale.orient] < textWidth) {
+            //                 maxTextWidth[scale.orient] = textWidth;
+            //             }
+            //         }
+            //     } else {
+            //         targetGroup.selectAll('.tick').each((d: any, index: number, node: any[]) => {
+            //             // string일 때 bandWidth 보다 텍스트 사이즈가 더 크면 wordrap한다.
+            //             if (bandWidth > 0) {
+            //                 const textNode: any = select(node[index]).select('text');
+            //                 const textNodeWidth = textNode.node().getComputedTextLength();
+            //                 const currentTextSize = (d + '').length;
+            //                 if (textNodeWidth > bandWidth) {
+            //                     textWrapping(textNode, bandWidth);
+            //                 }
 
-                    if (longTextNode) {
-                        const textWidth = Math.round(longTextNode.getBoundingClientRect().width);
-                        if (maxTextWidth[scale.orient] < textWidth) {
-                            maxTextWidth[scale.orient] = textWidth;
-                        }
-                    }
-                } else {
-                    this.axisGroups[scale.orient].selectAll('.tick').each((d: any, index: number, node: any[]) => {
-                        // string일 때 bandWidth 보다 텍스트 사이즈가 더 크면 wordrap한다.
-                        if (bandWidth > 0) {
-                            const textNode: any = select(node[index]).select('text');
-                            const textNodeWidth = textNode.node().getComputedTextLength();
-                            const currentTextSize = (d + '').length;
-                            if (textNodeWidth > bandWidth) {
-                                textWrapping(textNode, bandWidth);
-                            }
+            //                 if (textLength < currentTextSize) {
+            //                     textLength = currentTextSize;
+            //                     longTextNode = node[index];
+            //                 }
+            //             }
+            //         });
 
-                            if (textLength < currentTextSize) {
-                                textLength = currentTextSize;
-                                longTextNode = node[index];
-                            }
-                        }
-                    });
+            //         if (longTextNode) {
+            //             const textHeight = Math.round(longTextNode.getBoundingClientRect().height);
+            //             if (maxTextWidth[scale.orient] < textHeight) {
+            //                 maxTextWidth[scale.orient] = textHeight;
+            //             }
+            //         }
+            //     }
+            // }
 
-                    if (longTextNode) {
-                        const textHeight = Math.round(longTextNode.getBoundingClientRect().height);
-                        if (maxTextWidth[scale.orient] < textHeight) {
-                            maxTextWidth[scale.orient] = textHeight;
-                        }
-                    }
-                }
-            }
-
-            if (scale.title) {
-                this.axisGroups[scale.orient].selectAll(`.axis-${scale.orient}-title`)
-                    .data([
-                        scale.title
-                    ])
-                    .join(
-                        (enter) => enter.append('text').attr('class', `axis-${scale.orient}-title`),
-                        (update) => update,
-                        (exit) => exit.remove()
-                    )
-                    .attr('dy', () => {
-                        return scale.orient === Placement.TOP ? '0em' : '1em';
-                    })
-                    .style('text-anchor', (d: AxisTitle) => {
-                        let anchor = '';
-                        if (d.align === Align.TOP) {
-                            anchor = 'end';
-                        } else if (d.align === Align.BOTTOM) {
-                            anchor = 'start';
-                        } else {
-                            anchor = 'middle';
-                        }
-                        return anchor;
-                    })
-                    .style('font-weight', 100)
-                    .style('fill', this.defaultAxisTitleStyle.font.color)
-                    .style('font-size', this.defaultAxisTitleStyle.font.size)
-                    .style('font-family', this.defaultAxisTitleStyle.font.family)
-                    .text((d: AxisTitle) => {
-                        return d.content;
-                    })
-                    .attr('transform', (d: AxisTitle) => {
-                        return scale.orient === Placement.LEFT || scale.orient === Placement.RIGHT ? 'rotate(-90)': '';
-                    })
-                    .attr('y', (d: AxisTitle, index: number, node: any) => {
-                        const titlePadding = 5;
-                        let y = 0;
-                        if (scale.orient === Placement.LEFT) {
-                            y = 0 - (this.margin.left + this.axisTitleMargin.left - titlePadding);
-                        } else if (scale.orient === Placement.RIGHT) {
-                            y = this.margin.right - titlePadding;
-                        } else if (scale.orient === Placement.BOTTOM) {
-                            y = this.margin.bottom - titlePadding;
-                        } else {
-                            y = -this.axisTitleMargin.top - titlePadding;
-                        }
-                        return y;
-                    })
-                    .attr('x', (d: AxisTitle) => {
-                        let x = 0;
-                        if (scale.orient === Placement.LEFT || scale.orient === Placement.RIGHT) {
-                            if (d.align === Align.TOP) {
-                                x = 0;
-                            } else if (d.align === Align.BOTTOM) {
-                                x = 0 - this.height;
-                            } else {
-                                x = 0 - (this.height / 2);
-                            }
-                        } else if (scale.orient === Placement.BOTTOM || scale.orient === Placement.TOP) {
-                            if (d.align === Align.LEFT) {
-                                x = padding;
-                            } else if (d.align === Align.RIGHT) {
-                                x = this.width - padding;
-                            } else {
-                                x = this.width / 2;
-                            }
-                        }
-                        return x;
-                    });
-            }
+            // if (scale.title) {
+            //     targetGroup.selectAll(`.axis-${scale.orient}-title`)
+            //         .data([
+            //             scale.title
+            //         ])
+            //         .join(
+            //             (enter) => enter.append('text').attr('class', `axis-${scale.orient}-title`),
+            //             (update) => update,
+            //             (exit) => exit.remove()
+            //         )
+            //         .attr('dy', () => {
+            //             return scale.orient === Placement.TOP ? '0em' : '1em';
+            //         })
+            //         .style('text-anchor', (d: AxisTitle) => {
+            //             let anchor = '';
+            //             if (d.align === Align.TOP) {
+            //                 anchor = 'end';
+            //             } else if (d.align === Align.BOTTOM) {
+            //                 anchor = 'start';
+            //             } else {
+            //                 anchor = 'middle';
+            //             }
+            //             return anchor;
+            //         })
+            //         .style('font-weight', 100)
+            //         .style('fill', this.defaultAxisTitleStyle.font.color)
+            //         .style('font-size', this.defaultAxisTitleStyle.font.size)
+            //         .style('font-family', this.defaultAxisTitleStyle.font.family)
+            //         .text((d: AxisTitle) => {
+            //             return d.content;
+            //         })
+            //         .attr('transform', (d: AxisTitle) => {
+            //             return scale.orient === Placement.LEFT || scale.orient === Placement.RIGHT ? 'rotate(-90)': '';
+            //         })
+            //         .attr('y', (d: AxisTitle, index: number, node: any) => {
+            //             const titlePadding = 5;
+            //             let y = 0;
+            //             if (scale.orient === Placement.LEFT) {
+            //                 y = 0 - (this.margin.left + this.axisTitleMargin.left - titlePadding);
+            //             } else if (scale.orient === Placement.RIGHT) {
+            //                 y = this.margin.right - titlePadding;
+            //             } else if (scale.orient === Placement.BOTTOM) {
+            //                 y = this.margin.bottom - titlePadding;
+            //             } else {
+            //                 y = -this.axisTitleMargin.top - titlePadding;
+            //             }
+            //             return y;
+            //         })
+            //         .attr('x', (d: AxisTitle) => {
+            //             let x = 0;
+            //             if (scale.orient === Placement.LEFT || scale.orient === Placement.RIGHT) {
+            //                 if (d.align === Align.TOP) {
+            //                     x = 0;
+            //                 } else if (d.align === Align.BOTTOM) {
+            //                     x = 0 - this.height;
+            //                 } else {
+            //                     x = 0 - (this.height / 2);
+            //                 }
+            //             } else if (scale.orient === Placement.BOTTOM || scale.orient === Placement.TOP) {
+            //                 if (d.align === Align.LEFT) {
+            //                     x = padding;
+            //                 } else if (d.align === Align.RIGHT) {
+            //                     x = this.width - padding;
+            //                 } else {
+            //                     x = this.width / 2;
+            //                 }
+            //             }
+            //             return x;
+            //         });
+            // }
         });
 
         // margin 설정이 따로 없으면 자동으로 계산해서 margin을 갱신한다.
@@ -1537,123 +1425,6 @@ export class ChartBase<T = any> implements IChart {
 
         this.chartLegend.drawLegend(this.legendGroup);
     }
-
-    // protected updateLegend() {
-    //     if (!this.isLegend) {
-    //         return;
-    //     }
-    //     const isCheckBox = this.isCheckBox;
-    //     const isAll = this.isAll;
-    //     const checkboxPadding = isCheckBox ? this.legendItemSize.width + this.legendPadding : 0;
-    //     const addTitleWidth = this.isTitle && this.titlePlacement === Placement.LEFT ? this.titleContainerSize.width : 0;
-    //     const addAllWidth = isAll ? this.allWidth : 0;
-    //     const legendPlacement = this.legendPlacement;
-    //     const legendPadding = this.legendPadding;
-    //     const legendTextWidthList = this.legendTextWidthList;
-    //     const legendRowBreakCount = this.legendRowBreakCount;
-    //     const legendItemTextHeight = this.legendItemTextHeight;
-    //     const legendItemSize = this.legendItemSize;
-    //     const legendItemList = this.legendItemList;
-    //     const colors = this.colors;
-    //     const defaultLegendStyle = this.defaultLegendStyle;
-
-    //     let currentRow = 0;
-    //     let currentX = 0;
-
-    //     if (isAll) {
-    //         legendItemList.unshift({
-    //             label: 'All',
-    //             selected: true,
-    //             isHide: false,
-    //             shape: Shape.NONE
-    //         });
-    //     }
-
-    //     const legendItemGroup = this.legendGroup.selectAll('.legend-item-group')
-    //         .data(legendItemList)
-    //         .join(
-    //             (enter) => enter.append('g').attr('class', 'legend-item-group'),
-    //             (update) => {
-    //                 update.selectAll('*').remove();
-    //                 return update;
-    //             },
-    //             (exit) => exit.remove()
-    //         )
-    //         .attr('id', (d: LegendItem) => {
-    //             return d.label === 'All' ? 'legend-all-group' : null;
-    //         })
-    //         .attr('transform', (d: any, index: number) => {
-    //             let x = 0;
-    //             let y = legendPadding;
-    //             if (legendPlacement === Placement.LEFT || legendPlacement === Placement.RIGHT) {
-    //                 if (legendPlacement === Placement.LEFT) {
-    //                     x = legendPadding;
-    //                 }
-    //                 x = x + addTitleWidth;
-    //                 y = index * 20 + addAllWidth;
-    //             }
-    //             if (legendPlacement === Placement.TOP || legendPlacement === Placement.BOTTOM) {
-    //                 if (index > 0) {
-    //                     currentX += legendTextWidthList[index - 1] + legendPadding;
-    //                 }
-
-    //                 if (legendRowBreakCount.indexOf(index) > -1) {
-    //                     currentRow = legendRowBreakCount.indexOf(index) + 1;
-    //                     currentX = 0;
-    //                 }
-
-    //                 x = currentX;
-    //                 y = (legendItemTextHeight + legendPadding) * currentRow;
-    //             }
-    //             return `translate(${x}, ${y})`;
-    //         });
-
-    //     if (isCheckBox) {
-    //         legendItemGroup.each((d: LegendItem, index: number, nodeList: any) => {
-    //             drawSvgCheckBox(select(nodeList[index]), this.onLegendCheckBoxClick);
-    //         });
-    //     }
-
-    //     const legendLabelGroup: Selection<BaseType, any, BaseType, any> = legendItemGroup.selectAll('.legend-label-group')
-    //         .data((d: any) =>[d])
-    //         .join(
-    //             (enter) => enter.append('g').attr('class', 'legend-label-group'),
-    //             (update) => update,
-    //             (exit) => exit.remove()
-    //         )
-    //         .attr('id', (d: LegendItem) => {
-    //             return d.label === 'All' ? 'legend-all-label' : null;
-    //         })
-    //         .attr('transform', `translate(${checkboxPadding}, 0)`)
-    //         .on('click', this.onLegendLabelItemClick);
-
-    //     legendLabelGroup.each((d: LegendItem, i: number, nodeList: any) => {
-    //         const distictKeys = isAll ? legendItemList.filter((key: LegendItem) => key.label !== 'All') : legendItemList;
-    //         if (d.shape === Shape.LINE) {
-    //             drawLegendColorItemByLine(select(nodeList[i]), legendItemSize, distictKeys, colors);
-    //         } else if (d.shape === Shape.CIRCLE) {
-    //             drawLegendColorItemByCircle(select(nodeList[i]), legendItemSize, distictKeys, colors);
-    //         } else if (d.shape === Shape.RECT) {
-    //             drawLegendColorItemByRect(select(nodeList[i]), legendItemSize, distictKeys, colors);
-    //         }
-    //     });
-
-    //     legendLabelGroup.selectAll('.legend-label')
-    //         .data((d: LegendItem) => [d])
-    //         .join(
-    //             (enter) => enter.append('text').attr('class', 'legend-label'),
-    //             (update) => update,
-    //             (exit) => exit.remove()
-    //         )
-    //         .style('font-family', defaultLegendStyle.font.family)
-    //         .style('font-size', defaultLegendStyle.font.size)
-    //         .attr('dy', '.35em')
-    //         .attr('transform', (d: LegendItem, index: number) => {
-    //             const x = (d.shape === Shape.NONE ? 0 : legendPadding + legendItemSize.width);
-    //             return `translate(${x}, 5)`;
-    //         })
-    //         .text((d: LegendItem) => { return d.label; });
-    // }
 
     protected setupBrush(scale: any) {
         let brush = null;
@@ -1773,7 +1544,7 @@ export class ChartBase<T = any> implements IChart {
             );
         }
 
-        const currnetAxis: any = this.axisSetupByScale(scale);
+        const currnetAxis: any = ChartAxis.axisSetupByScale(scale);
 
         this.axisGroups[orient]
         .call(currnetAxis)
@@ -1842,38 +1613,6 @@ export class ChartBase<T = any> implements IChart {
         this.isResize = false;
     }
 
-    private axisSetupByScale(scale: Scale) {
-        let orientedAxis: any = null;
-
-        if (scale.orient === Placement.RIGHT) {
-            orientedAxis = axisRight(scale.scale);
-        } else if (scale.orient === Placement.LEFT) {
-            orientedAxis = axisLeft(scale.scale);
-        } else if (scale.orient === Placement.TOP) {
-            orientedAxis = axisTop(scale.scale);
-        } else {
-            orientedAxis = axisBottom(scale.scale);
-        }
-
-        if (scale.type === ScaleType.NUMBER) {
-            if (scale.tickFormat) {
-                orientedAxis.ticks(null, scale.tickFormat);
-            } else {
-                orientedAxis.tickFormat(format(',.0f'));
-            }
-        } else if (scale.type === ScaleType.TIME) {
-            if (scale.tickFormat) {
-                orientedAxis.tickFormat(timeFormat(scale.tickFormat));
-            }
-        }
-
-        if (scale.tickSize) {
-            orientedAxis.ticks(scale.tickSize);
-        }
-
-        return orientedAxis;
-    }
-
     private pointerClear() {
         const selectionCanvas = this.selector.select('.' + ChartSelector.SELECTION_CANVAS);
         if (selectionCanvas && selectionCanvas.node()) {
@@ -1911,6 +1650,12 @@ export class ChartBase<T = any> implements IChart {
         this.hideTooltip();
         this.currentLegend = null;
         d.isHide = !d.isHide;
+        if (d.isHide) {
+            this.isLegendAllHide = true;
+        } else {
+            this.isLegendAllHide = false;
+        }
+
         this.seriesList.forEach((series: ISeries) => {
             if (series.displayNames && series.displayNames.length) {
                 series.displayNames.forEach((displayName: string) => {
@@ -1921,25 +1666,48 @@ export class ChartBase<T = any> implements IChart {
             }
         });
 
-        // TODO: 아이템 클릭 시 전체 선택 해제하면 풀려버림. 어떻게 할지 해결책 찾아야 함.
-        this.legendGroup.selectAll('.legend-label-group').filter((item: LegendItem) => item.label !== 'All').each((item: LegendItem, i: number, node: any) => {
-            item.isHide = d.isHide;
-            // TODO: All 도 같이 해제 해야함.
-            // if (!d.isHide) {
-            //     select(node[i]).style('opacity', 1);
-            // }
-        });
+        this.legendGroup
+            .selectAll('.legend-label-group')
+            .filter((item: LegendItem) => item.label !== 'All')
+            .each((item: LegendItem, i: number, node: any) => {
+                item.isHide = d.isHide;
+            });
 
-        this.legendGroup.selectAll('.legend-item-group').filter((item: LegendItem) => item.label !== 'All').selectAll('.checkbox-mark').each((item: any, i: number, node: any) => {
-            item.checked = !d.isHide;
-            select(node[i]).style('opacity', item.checked? 1 : 0);
-        });
+        this.legendGroup.selectAll('.legend-item-group')
+            .filter((item: LegendItem) => item.label !== 'All')
+            .selectAll('.checkbox-mark')
+            .each((item: any, i: number, node: any) => {
+                item.checked = !d.isHide;
+                select(node[i]).style('opacity', item.checked? 1 : 0);
+            });
+
+        if (this.isLegendAllHide) {
+            // select 해제
+            this.legendGroup.selectAll('.legend-label-group')
+                .each((item: LegendItem, i: number, node: any) => {
+                    item.selected = true;
+                    select(node[i]).style('opacity', 1);
+                });
+        }
+    }
+
+    private isLegendItemChecked(isLegendAllChecked: boolean) {
+        this.legendGroup
+            .selectAll('#legend-all-group')
+            .selectAll('.checkbox-mark')
+            .each((item: any, i: number, node: any) => {
+                item.checked = isLegendAllChecked;
+                item.data.isHide = !isLegendAllChecked;
+                select(node[i]).style('opacity', item.checked? 1 : 0);
+            });
     }
 
     // 범례 체크박스 클릭 이벤트
     private onLegendCheckBoxItemClick(d: LegendItem, index: number, nodeList: any) {
         this.hideTooltip();
         d.isHide = !d.isHide;
+        // TODO: 자기 자신이 숨김이면 선택이 안되어야 함. isLegendAllHide 바꾸는 것 생각해볼것.
+        this.isLegendAllHide = false;
         if (this.seriesList && this.seriesList.length) {
             let target: ISeries;
             if (this.seriesList[0].displayNames && this.seriesList[0].displayNames.length) {
@@ -1954,7 +1722,7 @@ export class ChartBase<T = any> implements IChart {
                     target.select(d.label, d.selected);
                 }
 
-                if (this.isAll) {
+                if (this.isLegendAll) {
                     const isCheckedAll = (
                         this.legendGroup
                         .selectAll('#legend-all-group')
@@ -1965,38 +1733,24 @@ export class ChartBase<T = any> implements IChart {
                     let uncheckCount = 0;
                     let allCount = 0;
                     this.legendGroup.selectAll('.legend-item-group')
-                    .filter((item: LegendItem) => item.label !== 'All')
-                    .selectAll('.checkbox-mark')
-                    .each((item: any, i: number, node: any) => {
-                        if (item.checked) {
-                            checkCount++;
-                        } else {
-                            uncheckCount++;
-                        }
-                        allCount++;
-                    });
+                        .filter((item: LegendItem) => item.label !== 'All')
+                        .selectAll('.checkbox-mark')
+                        .each((item: any, i: number, node: any) => {
+                            if (item.checked) {
+                                checkCount++;
+                            } else {
+                                uncheckCount++;
+                            }
+                            allCount++;
+                        });
 
                     if (isCheckedAll && uncheckCount > 0) {
                         // all check 해제
-                        this.legendGroup
-                        .selectAll('#legend-all-group')
-                        .selectAll('.checkbox-mark')
-                        .each((item: any, i: number, node: any) => {
-                            item.checked = false;
-                            item.data.isHide = true;
-                            select(node[i]).style('opacity', item.checked? 1 : 0);
-                        });
+                        this.isLegendItemChecked(false);
                     } else {
                         if (checkCount === allCount) {
                             // all check 설정.
-                            this.legendGroup
-                            .selectAll('#legend-all-group')
-                            .selectAll('.checkbox-mark')
-                            .each((item: any, i: number, node: any) => {
-                                item.checked = true;
-                                item.data.isHide = false;
-                                select(node[i]).style('opacity', item.checked? 1 : 0);
-                            });
+                            this.isLegendItemChecked(true);
                         }
                     }
                 }
@@ -2006,7 +1760,9 @@ export class ChartBase<T = any> implements IChart {
 
     // 범례 라벨 아이템 클릭 이벤트
     private onLegendLabelItemClick = (d: LegendItem, index: number, nodeList: any) => {
-        // TODO: All이 체크박스 해제 상태 즉 전부 안보이는 상태이면 다른 액션이 안되어야 함.
+        if (this.isLegendAllHide) {
+            return;
+        }
         if (d.label === 'All') {
             this.onLegendAllLabelItemSelect(d, index, nodeList);
         } else {
@@ -2053,7 +1809,6 @@ export class ChartBase<T = any> implements IChart {
             } else {
                 series.select((series.displayName ? series.displayName : series.selector), d.selected);
             }
-            // series.select((series.displayName ? series.displayName : series.selector), d.selected);
         });
     }
 }

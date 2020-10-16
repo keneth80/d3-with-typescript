@@ -51,7 +51,7 @@ export interface Axis {
     field: any; // data propertie
     type: string; // default: number, option: number or string or point or time => number: scaleLinear, time: scaleTime, string: scaleBand, point: scalePoint for range
     placement: string; // position
-    domain?: Array<any>; // axis texts
+    domain?: any[]; // axis texts
     padding?: number;
     visible?: boolean;
     isRound?: boolean; // nice() call 여부
@@ -127,17 +127,17 @@ export interface ChartConfiguration<T = any> {
 
     margin?: Margin; // custom margin
 
-    axes?: Array<Axis>; // axis list
+    axes?: Axis[]; // axis list
 
-    series?: Array<ISeries<T>>; // series list
-    
-    functions?: Array<IFunctions<T>>; // function list
+    series?: ISeries<T>[]; // series list
 
-    options?: Array<IOptions<T>>; // function list
+    functions?: IFunctions<T>[]; // function list
+
+    options?: IOptions<T>[]; // function list
 
     data: T; // data
 
-    colors?: Array<string>; // custom color (default: d3.schemeCategory10, size: 10)
+    colors?: string[]; // custom color (default: d3.schemeCategory10, size: 10)
 
     min?: number, // only type is number
 

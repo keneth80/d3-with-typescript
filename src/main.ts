@@ -499,7 +499,7 @@ const simpleSvgStackedColumnSeriesExample = () => {
         xField: 'x',
         yField: 'total',
         columns: ['x', 'y', 'z'],
-        displayNames: ['x', 'y', 'z']
+        displayNames: ['xField', 'yField', 'zField']
     };
 
     const commonConfiguration = {
@@ -521,7 +521,11 @@ const simpleSvgStackedColumnSeriesExample = () => {
                 field: 'x',
                 type: ScaleType.STRING,
                 placement: Placement.BOTTOM,
-                padding: 0.2
+                padding: 0.2,
+                title: {
+                    align: Align.CENTER,
+                    content: 'x field'
+                }
             },
             {
                 field: 'total',
@@ -530,7 +534,11 @@ const simpleSvgStackedColumnSeriesExample = () => {
                 isRound: true,
                 tickFormat: ',d',
                 min: 0,
-                max: max(simpleData, (d: any) => d.total)
+                max: max(simpleData, (d: any) => d.total),
+                title: {
+                    align: Align.CENTER,
+                    content: 'y field'
+                }
             }
         ]
     };
