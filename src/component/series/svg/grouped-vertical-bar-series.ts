@@ -138,6 +138,7 @@ export class GroupedVerticalBarSeries extends SeriesBase {
                     const key = this.columns[j];
                     const itemx = groupx + barx(key);
                     const itemy = d[key] < 0 ? y(0) : y(d[key]);
+                    console.log('itemy : ', itemy);
                     // POINT: quadtree 에 저장 되는 데이터는
                     // [아이템의 x축, y축, 아이템의 데이터, 컬럼인덱스, 막대의 가로 사이즈, 막대의 세로 사이즈, 색상]
                     generateData.push([
@@ -172,14 +173,44 @@ export class GroupedVerticalBarSeries extends SeriesBase {
         // }
     }
 
+    onSelectItem(value: number[], selected: any[]) {
+        const selectedItem = selected[0];
+
+        if (value[1] < selectedItem[1]) {
+            return;
+        }
+
+        this.drawSelectionPoint(
+            {
+                width: selectedItem[5],
+                height: selectedItem[6]
+            },
+            [
+                selectedItem[0],
+                selectedItem[1]
+            ],
+            {
+                fill: selectedItem[7]
+            }
+        );
+    }
+
     getSeriesDataByPosition(value: number[]) {
-        return this.search(
+        const findItem = this.search(
             this.originQuadTree,
             value[0] - this.currentBarWidth,
             0,
             value[0],
             this.geometry.height
         );
+
+        // y좌표에 대해서 체크하여 영역안에 있지 않으면 툴팁을 보여주지 않는다.
+        // why? 바의 높이는 제각각 다른데 quadtree는 좌표만을 가지고 위치를 찾는다.
+        if (findItem.length && value[1] < findItem[0][1]) {
+            return [];
+        }
+
+        return findItem;
     }
 
     showPointAndTooltip(value: number[], selected: any[]) {
@@ -210,9 +241,9 @@ export class GroupedVerticalBarSeries extends SeriesBase {
         // why? 바의 높이는 제각각 다른데 quadtree는 좌표만을 가지고 위치를 찾는다.
         // 특정 영역안에 있는 좌표를 가져와야 하는데 바의 높이는 데이터에 따라 다르므로 좌표만으로 찾을 수 없다.
         // 해서 quadtree는 x 좌표만을 가지고 컨트롤 하고 실제 x좌표를 통해 가져온 데이터에서 실제 좌표와 비교하여 판단 할 수 밖에 없다.
-        if (mouseEvent[1] < seriesData[1]) {
-            return;
-        }
+        // if (mouseEvent[1] < seriesData[1]) {
+        //     return;
+        // }
 
         this.drawTooltipPoint(
             {
@@ -259,6 +290,27 @@ export class GroupedVerticalBarSeries extends SeriesBase {
             .selectAll('rect')
             .attr('width', textWidth)
             .attr('height', textHeight);
+    }
+
+    private drawSelectionPoint(
+        geometry: ContainerSize,
+        position: number[],
+        style:{fill: string}
+    ) {
+        this.selectionGroup.selectAll('.selection-point')
+            .data([geometry])
+            .join(
+                (enter) => enter.append('rect').attr('class', 'selection-point'),
+                (update) => update,
+                (exit) => exit.remove()
+            )
+            .style('stroke-width', 3)
+            .style('stroke', colorDarker(style.fill, 2))
+            .attr('fill', colorDarker(style.fill, 1))
+            .attr('x', position[0])
+            .attr('y', position[1])
+            .attr('height', geometry.height)
+            .attr('width', geometry.width);
     }
 
     private drawTooltipPoint(

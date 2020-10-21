@@ -40,8 +40,6 @@ export class BasicLineSeries extends SeriesBase {
 
     private tooltipGroup: Selection<BaseType, any, HTMLElement, any>;
 
-    private seriespGroup: Selection<BaseType, any, HTMLElement, any>;
-
     private line: any;
 
     private dotClass = 'basic-line-dot';
@@ -105,7 +103,6 @@ export class BasicLineSeries extends SeriesBase {
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
                   mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
-        this.seriespGroup = mainGroup;
         this.selectionGroup = this.svg.select('.' + ChartSelector.SELECTION_SVG);
         if (!mainGroup.select(`.${this.selector}-group`).node()) {
             this.mainGroup = mainGroup.append('g').attr('class', `${this.selector}-group`);
