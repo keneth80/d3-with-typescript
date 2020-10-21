@@ -44,6 +44,7 @@ import { delayExcute } from './component/chart/util/d3-svg-util';
 import { MiChart, OptionConfiguration, MiccBaseConfiguration } from './component/mi-chart';
 import { ChartItemEvent } from './component/chart';
 import { SvgTraceChart } from './component/chart-generator';
+import { sampleMockData } from './component/mock-data/simple-mock-data';
 
 
 class SalesModel {
@@ -185,90 +186,6 @@ const setSeriesColor = (item: any) => {
     }
 };
 
-const simpleData = [
-    {
-        x: 1,
-        y: 12,
-        z: 11,
-        total: 24,
-        data: {
-            label: 'number 1'
-        }
-    },
-    {
-        x: 2,
-        y: 3,
-        z: 1,
-        total: 6,
-        data: {
-            label: 'number 2'
-        }
-    },
-    {
-        x: 3,
-        y: 20,
-        z: 8,
-        total: 31,
-        data: {
-            label: 'number 3'
-        }
-    },
-    {
-        x: 4,
-        y: 20,
-        z: 9,
-        total: 34,
-        data: {
-            label: 'number 4'
-        }
-    },
-    {
-        x: 5,
-        y: 18,
-        z: 8,
-        total: 31,
-        data: {
-            label: 'number 5'
-        }
-    },
-    {
-        x: 6,
-        y: 8,
-        z: 9,
-        total: 23,
-        data: {
-            label: 'number 6'
-        }
-    },
-    {
-        x: 7,
-        y: 8,
-        z: 9,
-        total: 24,
-        data: {
-            label: 'number 7'
-        }
-    },
-    {
-        x: 8,
-        y: 10,
-        z: 7,
-        total: 25,
-        data: {
-            label: 'number 8'
-        }
-    },
-    {
-        x: 9,
-        y: 5,
-        z: 8,
-        total: 22,
-        data: {
-            label: 'number 9'
-        }
-    }
-];
-
 const simpleWebglLineSeriesExample = () => {
     const yFieldSeries: BasicCanvasWebglLineSeriesOneConfiguration = {
         selector: 'x-series',
@@ -314,7 +231,7 @@ const simpleWebglLineSeriesExample = () => {
 
     const commonConfiguration: MiccBaseConfiguration = {
         selector: '#chart-div',
-        data: simpleData,
+        data: sampleMockData(20),
         title: {
             placement: Placement.TOP,
             content: 'WebGL Line Series'
@@ -332,7 +249,7 @@ const simpleWebglLineSeriesExample = () => {
                 type: ScaleType.NUMBER,
                 placement: 'bottom',
                 min: 0,
-                max: 10
+                max: 21
             },
             {
                 field: 'y',
@@ -401,7 +318,7 @@ const simpleSvgLineSeriesExample = () => {
                 return `x: ${d.x} \ny: ${d.y}\nz: ${d.z}`
             }
         },
-        data: simpleData,
+        data: sampleMockData(20),
         title: {
             placement: Placement.TOP,
             content: 'SVG Line Series'
@@ -416,7 +333,7 @@ const simpleSvgLineSeriesExample = () => {
                 type: ScaleType.NUMBER,
                 placement: 'bottom',
                 min: 0,
-                max: 10
+                max: 21
             },
             {
                 field: 'y',
@@ -453,7 +370,7 @@ const simpleSvgColumnSeriesExample = () => {
 
     const commonConfiguration: MiccBaseConfiguration = {
         selector: '#chart-div',
-        data: simpleData,
+        data: sampleMockData(20),
         title: {
             placement: Placement.TOP,
             content: 'SVG Column Series'
@@ -504,7 +421,7 @@ const simpleSvgStackedColumnSeriesExample = () => {
 
     const commonConfiguration = {
         selector: '#chart-div',
-        data: simpleData,
+        data: sampleMockData(20),
         isResize: true,
         legend: {
             placement: Placement.TOP
@@ -534,7 +451,7 @@ const simpleSvgStackedColumnSeriesExample = () => {
                 isRound: true,
                 tickFormat: ',d',
                 min: 0,
-                max: max(simpleData, (d: any) => d.total),
+                max: max(sampleMockData(20), (d: any) => d.total),
                 title: {
                     align: Align.CENTER,
                     content: 'y field'
@@ -603,7 +520,7 @@ const simpleCanvasLineSeriesExample = () => {
         legend: {
             placement: Placement.TOP
         },
-        data: simpleData,
+        data: sampleMockData(20),
         title: {
             placement: Placement.TOP,
             content: 'Canvas Line Series'
@@ -615,7 +532,7 @@ const simpleCanvasLineSeriesExample = () => {
                 type: ScaleType.NUMBER,
                 placement: 'bottom',
                 min: 0,
-                max: 10
+                max: 21
             },
             {
                 field: 'y',
@@ -1884,7 +1801,7 @@ const violin = () => {
             data: result,
             isResize: true,
             min: 0,
-            max: 10,
+            max: 21,
             axes: [
                 {
                     field: 'Species',

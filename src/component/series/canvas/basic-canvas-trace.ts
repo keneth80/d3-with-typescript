@@ -5,7 +5,7 @@ import { quadtree } from 'd3-quadtree';
 import { Scale, ContainerSize, DisplayOption, DisplayType } from '../../chart/chart.interface';
 import { SeriesBase } from '../../chart/series-base';
 import { SeriesConfiguration } from '../../chart/series.interface';
-import { textBreak, delayExcute } from '../../chart/util/d3-svg-util';
+import { textBreak, delayExcute, colorDarker } from '../../chart/util/d3-svg-util';
 import { Placement } from '../../chart/chart-configuration';
 import { ChartSelector } from '../../chart';
 
@@ -308,16 +308,20 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         return index;
     }
 
-    // onSelectItem(selectedItem: Array<any>, event: ChartMouseEvent) {
-    //     this.onClickItem(
-    //         selectedItem,
-    //         {
-    //             width: this.geometry.width,
-    //             height: this.geometry.height
-    //         },
-    //         [event.position[0], event.position[1]]
-    //     );
-    // }
+    onSelectItem(value: number[], selected: any[]) {
+        const selectedItem = selected[0];
+        this.drawSelectionPoint(
+            [
+                selectedItem[0],
+                selectedItem[1]
+            ],
+            this.geometry,
+            {
+                fill: this.lineColor,
+                radius: this.radius * 2
+            }
+        );
+    }
 
     private setChartTooltip(d: any, geometry: ContainerSize, mouseEvent: number[]) {
         this.tooltipGroup = this.chartBase.showTooltip();
@@ -359,7 +363,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         position: number[],
         style:{radius: number, strokeColor: string, lineWidth: number}
     ) {
-        const selectionCanvas = this.chartBase.chartContainer.select('.' + ChartSelector.SELECTION_CANVAS);
+        const selectionCanvas = this.chartBase.chartContainer.select('.' + ChartSelector.POINTER_CANVAS);
         const context = (selectionCanvas.node() as any).getContext('2d');
         context.clearRect(0, 0, geometry.width, geometry.height);
         context.fillStyle = style.strokeColor;
@@ -382,9 +386,29 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         context.stroke();
     }
 
-    private viewClear(geometry: ContainerSize) {
-        // 화면 지우기
-        const context = (this.canvas.node() as any).getContext('2d');
+    private drawSelectionPoint(
+        position: number[],
+        geometry: ContainerSize,
+        style:{fill: string, radius: number}
+    ) {
+        const selectionCanvas = this.chartBase.chartContainer.select('.' + ChartSelector.SELECTION_CANVAS);
+        const context = (selectionCanvas.node() as any).getContext('2d');
         context.clearRect(0, 0, geometry.width, geometry.height);
+        context.fillStyle = colorDarker(style.fill, 2);
+        context.lineWidth = 2;
+        context.strokeStyle = colorDarker(style.fill, 1);
+        // this.drawPoint(context, {cx: selectedItem[0], cy:selectedItem[1], r: style.radius});
+        // cx, cy과 해당영역에 출력이 되는지? 좌표가 마이너스면 출력 안하는 로직을 넣어야 함.
+        const cx = position[0];
+        const cy = position[1];
+        if (cx < 0 || cy < 0) {
+            return;
+        }
+
+        context.beginPath();
+        context.fillRect(cx - style.radius, cy - style.radius, style.radius * 2, style.radius * 2);
+        context.closePath();
+        context.fill();
+        context.stroke();
     }
 }

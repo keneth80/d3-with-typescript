@@ -24,6 +24,7 @@ import { ChartAxis } from './axis/axis';
 import { ChartSelector } from './chart-selector-variable';
 import { ChartLegend } from './legend/chart-legend';
 import { setupWebglContext } from './util/webgl-util';
+import { clearCanvas } from './util/canvas-util';
 
 
 // TODO: 모든 참조되는 함수들은 subject로 바꾼다.
@@ -1028,6 +1029,7 @@ export class ChartBase<T = any> implements IChart {
                     case 'click':
                     case 'mouseup':
                         isDragStart = false;
+                        console.log('click');
                         if (this.currentSeriesIndex < 0) {
                             this.selectionClear();
                             this.chartItemEventSubject.next({
@@ -1453,10 +1455,10 @@ export class ChartBase<T = any> implements IChart {
     }
 
     private pointerClear() {
-        const selectionCanvas = this.selector.select('.' + ChartSelector.SELECTION_CANVAS);
+        const selectionCanvas = this.selector.select('.' + ChartSelector.POINTER_CANVAS);
         if (selectionCanvas && selectionCanvas.node()) {
             const context = (selectionCanvas.node() as any).getContext('2d');
-            context.clearRect(0, 0, this.width, this.height);
+            clearCanvas(context, this.width, this.height);
         }
 
         this.selectionGroup.selectAll('.tooltip-point').remove();
@@ -1465,6 +1467,12 @@ export class ChartBase<T = any> implements IChart {
 
     private selectionClear() {
         this.selectionGroup.selectAll('.selection-point').remove();
+
+        const selectionCanvas = this.selector.select('.' + ChartSelector.SELECTION_CANVAS);
+        if (selectionCanvas && selectionCanvas.node()) {
+            const context = (selectionCanvas.node() as any).getContext('2d');
+            clearCanvas(context, this.width, this.height);
+        }
     }
 
     private clearOption() {

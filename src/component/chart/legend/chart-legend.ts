@@ -2,7 +2,13 @@ import { Selection, BaseType, select } from 'd3-selection';
 import { Margin, Placement, Shape } from '../chart-configuration';
 import { ContainerSize, LegendItem } from '../chart.interface';
 import { ISeries } from '../series.interface';
-import { drawLegendColorItemByCircle, drawLegendColorItemByLine, drawLegendColorItemByRect, drawSvgCheckBox, getMaxText, getTextWidth } from '../util';
+import {
+    drawLegendColorItemByCircle,
+    drawLegendColorItemByLine,
+    drawLegendColorItemByRect,
+    drawSvgCheckBox,
+    getMaxText, getTextWidth
+} from '../util';
 
 export interface ChartLegendConfiguration {
     isCheckBox: boolean;
@@ -87,6 +93,24 @@ export class ChartLegend {
         this.configuration = configuration;
     }
 
+    parseLegendData(seriesList: ISeries[]) {
+        const legendItemList: LegendItem[] = [];
+        if (seriesList[0].displayNames && seriesList[0].displayNames.length) {
+            legendItemListByGrouped(seriesList)
+                .forEach((legendItem: LegendItem) => {
+                    legendItemList.push(legendItem);
+                });
+        } else {
+            // 일반 시리즈의 경우 범례 설정.
+            legendItemListByNormal(seriesList)
+                .forEach((legendItem: LegendItem) => {
+                    legendItemList.push(legendItem);
+                });
+        }
+
+        return legendItemList;
+    }
+
     init() {
         const titleTextHeight = 16;
         // 초기화.
@@ -106,16 +130,12 @@ export class ChartLegend {
         let targetTextWidth = 0;
         if (this.configuration.seriesList && this.configuration.seriesList.length) {
             // stacked, group bar 의 경우 범례 설정.
+            this.legendItemList = this.parseLegendData(this.configuration.seriesList);
+
             if (this.configuration.seriesList[0].displayNames && this.configuration.seriesList[0].displayNames.length) {
-                legendItemListByGrouped(this.configuration.seriesList).forEach((legendItem: LegendItem) => {
-                    this.legendItemList.push(legendItem);
-                });
                 targetText = getMaxText(this.configuration.seriesList[0].displayNames.map((displayName: string) => displayName));
             } else {
                 // 일반 시리즈의 경우 범례 설정.
-                legendItemListByNormal(this.configuration.seriesList).forEach((legendItem: LegendItem) => {
-                    this.legendItemList.push(legendItem);
-                });
                 targetText = getMaxText(this.configuration.seriesList.map((series: ISeries) => series.displayName || series.selector));
             }
 

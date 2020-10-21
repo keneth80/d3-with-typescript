@@ -133,15 +133,15 @@ export class BasicLineSeries extends SeriesBase {
         this.lineColor = option.color;
 
         this.line = line()
-            .defined(data => data[this.yField])
+            .defined(data => data[this.xField])
             .x((data: any, i) => {
                 const xposition = x(data[this.xField]) + padding;
                 return xposition;
-            }) // set the x values for the line generator
+            })
             .y((data: any) => {
                 const yposition = y(data[this.yField]);
                 return yposition;
-            }); // set the y values for the line generator
+            });
 
         if (this.config.isCurve === true) {
             this.line.curve(curveMonotoneX); // apply smoothing to the line
@@ -163,11 +163,11 @@ export class BasicLineSeries extends SeriesBase {
 
         if (this.isAnimation) {
             lineSeries
-            .attr('stroke-dasharray', (d: any, i: number, nodeList: any) => nodeList[i].getTotalLength())
-            .attr('stroke-dashoffset', (d: any, i: number, nodeList: any) => nodeList[i].getTotalLength());
+                .attr('stroke-dasharray', (d: any, i: number, nodeList: any) => nodeList[i].getTotalLength())
+                .attr('stroke-dashoffset', (d: any, i: number, nodeList: any) => nodeList[i].getTotalLength());
 
             lineSeries.transition(
-                transition().delay(500).duration(1000).ease(easeLinear)
+                transition().delay(100).duration(500).ease(easeLinear)
             ).attr('stroke-dashoffset', 0);
         }
 
