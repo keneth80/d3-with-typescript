@@ -993,7 +993,6 @@ export class ChartBase<T = any> implements IChart {
                             let maxLength = this.seriesList.length;
                             while(maxLength--) {
                                 const positionData = this.seriesList[maxLength].getSeriesDataByPosition(chartEvent.position);
-                                console.log('positionData : ', positionData);
                                 // TODO: 시리즈 루프 돌면서 해당 포지션에 데이터가 있는지 찾되
                                 // 툴팁을 보여줄 때면 멀티인지 싱글인지 체크 해서 break 여부를 판단하고 해당 시리즈의 메서드 실행.
                                 // multi tooltip이면 break 걸지 않는다.
