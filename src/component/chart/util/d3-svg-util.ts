@@ -3,7 +3,7 @@ import { select, event, Selection, BaseType } from 'd3-selection';
 import { line } from 'd3-shape';
 import { Placement } from '../chart-configuration';
 import { axisTop, axisLeft, axisRight, axisBottom } from 'd3-axis';
-import { LegendItem } from '../chart.interface';
+import { ContainerSize, LegendItem } from '../chart.interface';
 import { Observable, Observer } from 'rxjs';
 import { delay } from 'rxjs/operators';
 
@@ -385,4 +385,86 @@ export const delayExcute = (delayTime: number = 100, callback: any) => {
     ).subscribe(() => {
         callback();
     });
+}
+
+export const drawTooltipPointByCircle = (
+    targetGroup: Selection<BaseType, any, HTMLElement, any>,
+    position: number[][],
+    style:{radius: number, strokeColor: string, strokeWidth: number}
+) => {
+    targetGroup.selectAll('.tooltip-point')
+        .data(position)
+        .join(
+            (enter) => enter.append('circle').attr('class', 'tooltip-point'),
+            (update) => update,
+            (exit) => exit.remove()
+        )
+        .style('stroke-width', style.strokeWidth)
+        .style('stroke', style.strokeColor)
+        .style('fill', '#fff')
+        .attr('cx', (d: number[]) => d[0])
+        .attr('cy', (d: number[]) => d[1])
+        .attr('r', style.radius);
+}
+
+export const drawSelectionPointByCircle = (
+    targetGroup: Selection<BaseType, any, HTMLElement, any>,
+    position: number[][],
+    style:{fill: string, radius: number}
+) => {
+    targetGroup.selectAll('.selection-point')
+        .data(position)
+        .join(
+            (enter) => enter.append('circle').attr('class', 'selection-point'),
+            (update) => update,
+            (exit) => exit.remove()
+        )
+        .style('stroke-width', 3)
+        .style('stroke', colorDarker(style.fill, 2))
+        .attr('fill', colorDarker(style.fill, 1))
+        .attr('cx', (d: number[]) => d[0])
+        .attr('cy', (d: number[]) => d[1])
+        .attr('r', style.radius);
+}
+
+export const drawTooltipPointByRect = (
+    targetGroup: Selection<BaseType, any, HTMLElement, any>,
+    position: number[][],
+    itemSize: ContainerSize,
+    style:{fill: string}
+) => {
+    targetGroup.selectAll('.tooltip-point')
+        .data(position)
+        .join(
+            (enter) => enter.append('rect').attr('class', 'tooltip-point'),
+            (update) => update,
+            (exit) => exit.remove()
+        )
+        .attr('x', (d: number[]) => d[0])
+        .attr('y', (d: number[]) => d[1])
+        .attr('height', itemSize.height)
+        .attr('width', itemSize.width)
+        .attr('fill', colorDarker(style.fill, 2));
+}
+
+export const drawSelectionPointByRect = (
+    targetGroup: Selection<BaseType, any, HTMLElement, any>,
+    position: number[][],
+    itemSize: ContainerSize,
+    style:{fill: string}
+) => {
+    targetGroup.selectAll('.selection-point')
+        .data(position)
+        .join(
+            (enter) => enter.append('rect').attr('class', 'selection-point'),
+            (update) => update,
+            (exit) => exit.remove()
+        )
+        .style('stroke-width', 3)
+        .style('stroke', colorDarker(style.fill, 2))
+        .attr('fill', colorDarker(style.fill, 1))
+        .attr('x', (d: number[]) => d[0])
+        .attr('y', (d: number[]) => d[1])
+        .attr('height', itemSize.height)
+        .attr('width', itemSize.width);
 }

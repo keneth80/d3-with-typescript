@@ -1,4 +1,4 @@
-import { Selection, BaseType, event } from 'd3-selection';
+import { Selection, BaseType } from 'd3-selection';
 import { line, curveMonotoneX } from 'd3-shape';
 import { format } from 'd3-format';
 import { transition } from 'd3-transition';
@@ -8,9 +8,10 @@ import { quadtree } from 'd3-quadtree';
 import { Scale, ContainerSize, DisplayOption } from '../../chart/chart.interface';
 import { SeriesBase } from '../../chart/series-base';
 import { SeriesConfiguration } from '../../chart/series.interface';
-import { textBreak, delayExcute, colorDarker } from '../../chart/util/d3-svg-util';
+import { delayExcute, drawTooltipPointByCircle, drawSelectionPointByCircle } from '../../chart/util/d3-svg-util';
 import { Placement } from '../../chart/chart-configuration';
 import { ChartSelector } from '../../chart';
+import { setChartTooltipByPosition } from '../../chart/tooltip/tooltip-util';
 
 export interface BasicLineSeriesConfiguration extends SeriesConfiguration {
     dotSelector?: string;
@@ -219,7 +220,7 @@ export class BasicLineSeries extends SeriesBase {
     hide(displayName: string, isHide: boolean) {
         this.isHide = isHide;
         this.mainGroup.selectAll(`.${this.selector}`).style('opacity', !isHide ? null : 0);
-        // TODO: 좌표를 바꿀지 뎁스를 뒤로 보낼지 나중에 고민해볼 것.
+
         if (this.isHide) {
             this.mainGroup.lower();
         } else {
@@ -238,14 +239,12 @@ export class BasicLineSeries extends SeriesBase {
 
     onSelectItem(value: number[], selected: any[]) {
         const selectedItem = selected[0];
-        this.drawSelectionPoint(
-            [
-                selectedItem[0],
-                selectedItem[1]
-            ],
+        drawSelectionPointByCircle(
+            this.selectionGroup,
+            [[selectedItem[0], selectedItem[1]]],
             {
                 fill: this.lineColor,
-                radius: this.radius * 2
+                radius: this.radius * 1.5
             }
         );
     }
@@ -272,104 +271,35 @@ export class BasicLineSeries extends SeriesBase {
         const index = selected.length - 1;
         const selectedItem = selected[index];
 
-        this.drawTooltipPoint(this.geometry, selectedItem, {
-            radius: this.radius / 2 + 1,
-            strokeColor: this.lineColor,
-            strokeWidth: this.strokeWidth
-        });
-
-        this.setChartTooltip(
-            selectedItem,
+        drawTooltipPointByCircle(
+            this.selectionGroup,
+            [selectedItem],
             {
-                width: this.geometry.width,
-                height: this.geometry.height
-            },
-            value
+                radius: this.radius * 1.5,
+                strokeColor: this.lineColor,
+                strokeWidth: this.strokeWidth
+            }
         );
 
-        return index;
-    }
-
-    // TODO: tooltip에 시리즈 아이디를 부여하여 시리즈 마다 tooltip을 컨트롤 할 수 있도록 한다.
-    // multi tooltip도 구현해야 하기 때문에 이방법이 가장 좋음. 현재 중복으로 발생해서 왔다갔다 함.
-    private setChartTooltip(seriesData: any, geometry: ContainerSize, mouseEvent: number[]) {
-        if (this.chartBase.isTooltipDisplay) {
-            return;
-        }
-
-        this.tooltipGroup = this.chartBase.showTooltip();
-
-        const textElement: any = this.tooltipGroup
-            .select('text')
-            .attr('dy', '.1em')
-            .text(
+        if (!this.chartBase.isTooltipDisplay) {
+            this.tooltipGroup = this.chartBase.showTooltip();
+            setChartTooltipByPosition(
+                this.tooltipGroup,
                 this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser
-                    ? this.chartBase.tooltip.tooltipTextParser(seriesData[2])
-                    : `${this.xField}: ${seriesData[2][this.xField]} \n ${this.yField}: ${seriesData[2][this.yField]}`
-            );
-
-        textBreak(textElement, '\n');
-
-        // const parseTextNode = textElement.node().getBoundingClientRect();
-        const parseTextNode = textElement.node().getBBox();
-
-        const textWidth = Math.floor(parseTextNode.width) + 7;
-        const textHeight = Math.floor(parseTextNode.height) + 5;
-
-        let xPosition = mouseEvent[0] + this.chartBase.chartMargin.left + this.radius * 2;
-        let yPosition = mouseEvent[1] + this.chartBase.chartMargin.top + this.radius * 2;
-
-        if (xPosition + textWidth > geometry.width + this.chartBase.chartMargin.left) {
-            xPosition = xPosition - textWidth;
+                    ? this.chartBase.tooltip.tooltipTextParser(selectedItem[2])
+                    : `${this.xField}: ${selectedItem[2][this.xField]} \n ${this.yField}: ${selectedItem[2][this.yField]}`,
+                this.geometry,
+                [
+                    selectedItem[0],
+                    selectedItem[1]
+                ],
+                {
+                    width: this.radius,
+                    height: this.radius
+                }
+            )
         }
 
-        if (yPosition + textHeight > geometry.height + this.chartBase.chartMargin.top) {
-            yPosition = yPosition - textHeight;
-        }
-
-        this.tooltipGroup
-            .attr('transform', `translate(${xPosition + this.radius}, ${yPosition - this.radius})`)
-            .selectAll('rect')
-            .attr('width', textWidth)
-            .attr('height', textHeight);
-    }
-
-    private drawTooltipPoint(
-        geometry: ContainerSize,
-        position: number[],
-        style:{radius: number, strokeColor: string, strokeWidth: number}
-    ) {
-        this.selectionGroup.selectAll('.tooltip-point')
-            .data([geometry])
-            .join(
-                (enter) => enter.append('circle').attr('class', 'tooltip-point'),
-                (update) => update,
-                (exit) => exit.remove()
-            )
-            .style('stroke-width', this.radius * 1.7)
-            .style('stroke', this.lineColor)
-            .style('fill', '#fff')
-            .attr('cx', position[0])
-            .attr('cy', position[1])
-            .attr('r', this.radius);
-    }
-
-    private drawSelectionPoint(
-        position: number[],
-        style:{fill: string, radius: number}
-    ) {
-        this.selectionGroup.selectAll('.selection-point')
-            .data([style])
-            .join(
-                (enter) => enter.append('circle').attr('class', 'selection-point'),
-                (update) => update,
-                (exit) => exit.remove()
-            )
-            .style('stroke-width', 3)
-            .style('stroke', colorDarker(style.fill, 2))
-            .attr('fill', colorDarker(style.fill, 1))
-            .attr('cx', position[0])
-            .attr('cy', position[1])
-            .attr('r', style.radius);
+        return index;
     }
 }

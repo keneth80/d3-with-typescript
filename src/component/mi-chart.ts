@@ -32,6 +32,7 @@ export interface ZoomConfiguration {
     xDirection?: string; // bottom or top, default: bottom
     yDirection?: string; // left or right, default: left
     direction?: string; // horizontal or vertical or both, default: both
+    delayTime?: number;
 }
 
 export interface MiccBaseConfiguration {

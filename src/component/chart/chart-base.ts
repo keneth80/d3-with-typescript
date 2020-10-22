@@ -425,7 +425,7 @@ export class ChartBase<T = any> implements IChart {
             this.tooltipGroup.style('display', null);
             this.drawTooltip();
         }
-        return this.tooltipGroup;
+        return this.tooltipGroup.select('g.tooltip-item-group');
     }
 
     hideTooltip(): Selection<BaseType, any, HTMLElement, any> {
@@ -900,33 +900,24 @@ export class ChartBase<T = any> implements IChart {
         }
 
         if (!this.optionGroup) {
-            this.optionGroup = this.svg.append('g')
-                .attr('class', 'option-group')
+            this.optionGroup = this.svg.append('g').attr('class', 'option-group')
         }
-        this.optionGroup
-            .attr('transform', `translate(${x}, ${y})`)
-            .attr('clip-path', `url(#${this.maskId})`);
+        this.optionGroup.attr('transform', `translate(${x}, ${y})`).attr('clip-path', `url(#${this.maskId})`);
 
         if (!this.seriesGroup) {
-            this.seriesGroup = this.svg.append('g')
-                .attr('class', ChartSelector.SERIES_SVG)
+            this.seriesGroup = this.svg.append('g').attr('class', ChartSelector.SERIES_SVG)
         }
-        this.seriesGroup
-            .attr('transform', `translate(${x}, ${y})`)
-            .attr('clip-path', `url(#${this.maskId})`);
+        this.seriesGroup.attr('transform', `translate(${x}, ${y})`).attr('clip-path', `url(#${this.maskId})`);
 
         if (!this.selectionGroup) {
-            this.selectionGroup = this.svg.append('g')
-                .attr('class', ChartSelector.SELECTION_SVG)
+            this.selectionGroup = this.svg.append('g').attr('class', ChartSelector.SELECTION_SVG)
         }
-        this.selectionGroup
-            .attr('transform', `translate(${x}, ${y})`);
+        this.selectionGroup.attr('transform', `translate(${x}, ${y})`);
 
         if (!this.tooltipGroup) {
-            this.tooltipGroup = this.svg.append('g')
-                .attr('class', 'tooltip-group')
+            this.tooltipGroup = this.svg.append('g').attr('class', 'tooltip-group')
         }
-        this.tooltipGroup.style('display', 'none');
+        this.tooltipGroup.attr('transform', `translate(${x}, ${y})`).style('display', 'none');
 
         // zoom을 canvas와 webgl과 통일하기위한 순서.
         if (!this.zoomGroup) {
@@ -1028,7 +1019,6 @@ export class ChartBase<T = any> implements IChart {
                     case 'click':
                     case 'mouseup':
                         isDragStart = false;
-                        console.log('click : ', this.currentSeriesIndex);
                         if (this.currentSeriesIndex < 0) {
                             this.selectionClear();
                             this.chartItemEventSubject.next({
@@ -1103,6 +1093,7 @@ export class ChartBase<T = any> implements IChart {
     }
 
     protected mouseleaveEventHandler() {
+        this.hideTooltip();
         this.pointerClear();
         // this.selectionClear();
     }

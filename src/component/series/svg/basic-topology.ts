@@ -1,12 +1,10 @@
 import { Selection, select, BaseType, event } from 'd3-selection';
-import { linkHorizontal, linkVertical } from 'd3-shape';
-import { Subject, Observable } from 'rxjs';
+import { linkVertical } from 'd3-shape';
 
 import { Scale, ContainerSize } from '../../chart/chart.interface';
 import { SeriesBase } from '../../chart/series-base';
 import { getTransformByArray, wrapTextByRowLimit } from '../../chart/util/d3-svg-util';
 import { SeriesConfiguration } from '../../chart/series.interface';
-import { ChartSelector } from 'src/component/chart';
 
 export class Geometry {
     id: string = '';

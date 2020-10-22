@@ -15,7 +15,10 @@ import { IOptions } from './chart/options.interface';
 import { BasicSpecArea } from './options/basic-svg-spec-area';
 import { BasicStepLine } from './options/basic-svg-step-line';
 import { BasicStepArea } from './options/basic-svg-step-area';
-import { BasicLineSeries, BasicLineSeriesConfiguration } from './series';
+import {
+    BasicLineSeries, BasicLineSeriesConfiguration,
+    BasicPlotSeries, BasicPlotSeriesConfiguration
+} from './series';
 import { BasicSvgMouseZoomHandler } from './functions/basic-svg-mouse-zoom-handler';
 import { BasicSvgMouseHandler } from './functions/basic-svg-mouse-handler';
 import { GroupedVerticalBarSeriesConfiguration, GroupedVerticalBarSeries } from './series/svg/grouped-vertical-bar-series';
@@ -23,7 +26,6 @@ import { GroupedHorizontalBarSeriesConfiguration, GroupedHorizontalBarSeries } f
 import { StackedHorizontalBarSeriesConfiguration, StackedHorizontalBarSeries } from './series/svg/stacked-horizontal-bar-series';
 import { StackedVerticalBarSeriesConfiguration, StackedVerticalBarSeries } from './series/svg/stacked-vertical-bar-series';
 import { MiccBaseConfiguration, OptionConfiguration, ZoomConfiguration } from './mi-chart';
-import { BasicPlotSeries, BasicPlotSeriesConfiguration } from './series/svg/basic-plot-series';
 
 /*
 * desc: 캔버스 시리즈 출력 설정정보 맵핑.
@@ -182,11 +184,12 @@ export const generatorFunctions = (
 ): IFunctions[] => {
     const functions: IFunctions[] = [];
     if (zoom) {
+        zoom.delayTime = 10;
         functions.push(new BasicSvgMouseZoomHandler(zoom));
     } else {
         functions.push(new BasicSvgMouseHandler({
             isMoveEvent: true,
-            delayTime: 5
+            delayTime: 10
         }));
     }
     return functions;

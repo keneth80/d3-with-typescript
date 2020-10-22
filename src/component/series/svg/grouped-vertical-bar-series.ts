@@ -5,9 +5,10 @@ import { quadtree } from 'd3-quadtree';
 
 import { Scale, ContainerSize } from '../../chart/chart.interface';
 import { SeriesBase } from '../../chart/series-base';
-import { colorDarker, delayExcute, textBreak } from '../../chart/util/d3-svg-util';
+import { colorDarker, delayExcute, drawSelectionPointByRect, drawTooltipPointByRect, textBreak } from '../../chart/util/d3-svg-util';
 import { SeriesConfiguration } from '../../chart/series.interface';
 import { ChartSelector } from '../../chart';
+import { setChartTooltipByPosition } from '../../chart/tooltip/tooltip-util';
 
 export interface GroupedVerticalBarSeriesConfiguration extends SeriesConfiguration {
     xField: string;
@@ -138,7 +139,6 @@ export class GroupedVerticalBarSeries extends SeriesBase {
                     const key = this.columns[j];
                     const itemx = groupx + barx(key);
                     const itemy = d[key] < 0 ? y(0) : y(d[key]);
-                    console.log('itemy : ', itemy);
                     // POINT: quadtree 에 저장 되는 데이터는
                     // [아이템의 x축, y축, 아이템의 데이터, 컬럼인덱스, 막대의 가로 사이즈, 막대의 세로 사이즈, 색상]
                     generateData.push([
@@ -180,15 +180,13 @@ export class GroupedVerticalBarSeries extends SeriesBase {
             return;
         }
 
-        this.drawSelectionPoint(
+        drawSelectionPointByRect(
+            this.selectionGroup,
+            [[selectedItem[0], selectedItem[1]]],
             {
                 width: selectedItem[5],
                 height: selectedItem[6]
             },
-            [
-                selectedItem[0],
-                selectedItem[1]
-            ],
             {
                 fill: selectedItem[7]
             }
@@ -213,119 +211,46 @@ export class GroupedVerticalBarSeries extends SeriesBase {
         return findItem;
     }
 
+    // TODO: tooltip에 시리즈 아이디를 부여하여 시리즈 마다 tooltip을 컨트롤 할 수 있도록 한다.
+    // multi tooltip도 구현해야 하기 때문에 이방법이 가장 좋음. 현재 중복으로 발생해서 왔다갔다 함.
     showPointAndTooltip(value: number[], selected: any[]) {
         // const index = Math.floor(selected.length / 2);
         const index = selected.length - 1;
         const selectedItem = selected[index];
 
-        this.setChartTooltip(
-            selectedItem,
-            {
-                width: this.geometry.width,
-                height: this.geometry.height
-            },
-            value
-        );
-
-        return index;
-    }
-
-    // TODO: tooltip에 시리즈 아이디를 부여하여 시리즈 마다 tooltip을 컨트롤 할 수 있도록 한다.
-    // multi tooltip도 구현해야 하기 때문에 이방법이 가장 좋음. 현재 중복으로 발생해서 왔다갔다 함.
-    private setChartTooltip(seriesData: any, geometry: ContainerSize, mouseEvent: number[]) {
-        if (this.chartBase.isTooltipDisplay) {
-            return;
-        }
-
-        // y좌표에 대해서 체크하여 영역안에 있지 않으면 툴팁을 보여주지 않는다.
-        // why? 바의 높이는 제각각 다른데 quadtree는 좌표만을 가지고 위치를 찾는다.
-        // 특정 영역안에 있는 좌표를 가져와야 하는데 바의 높이는 데이터에 따라 다르므로 좌표만으로 찾을 수 없다.
-        // 해서 quadtree는 x 좌표만을 가지고 컨트롤 하고 실제 x좌표를 통해 가져온 데이터에서 실제 좌표와 비교하여 판단 할 수 밖에 없다.
-        // if (mouseEvent[1] < seriesData[1]) {
-        //     return;
-        // }
-
-        this.drawTooltipPoint(
-            {
-                width: seriesData[5],
-                height: seriesData[6]
-            },
-            [
-                seriesData[0],
-                seriesData[1]
-            ],
-            {
-                fill: seriesData[7]
-            }
-        );
-
-        this.tooltipGroup = this.chartBase.showTooltip();
-
-        const textElement: any = this.tooltipGroup
-            .select('text')
-            .attr('dy', '.1em')
-            .text(
-                this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser
-                    ? this.chartBase.tooltip.tooltipTextParser(seriesData)
-                    : `${this.xField}: ${seriesData[2][this.xField]} \n ${this.yField}: ${seriesData[2][this.yField]}`
+        if (!this.chartBase.isTooltipDisplay) {
+            drawTooltipPointByRect(
+                this.selectionGroup,
+                [[selectedItem[0], selectedItem[1]]],
+                {
+                    width: selectedItem[5],
+                    height: selectedItem[6]
+                },
+                {
+                    fill: selectedItem[7]
+                }
             );
 
-        textBreak(textElement, '\n');
-
-        // const parseTextNode = textElement.node().getBoundingClientRect();
-        const parseTextNode = textElement.node().getBBox();
-
-        const textWidth = Math.floor(parseTextNode.width) + 9;
-        const textHeight = Math.floor(parseTextNode.height) + 9;
-
-        let xPosition = seriesData[0] + this.chartBase.chartMargin.left + this.currentBarWidth;
-        const yPosition = seriesData[1] + this.chartBase.chartMargin.top - textHeight;
-
-        if (xPosition + textWidth > geometry.width + 5) {
-            xPosition = xPosition - textWidth;
+            if (!this.chartBase.isTooltipDisplay) {
+                this.tooltipGroup = this.chartBase.showTooltip();
+                setChartTooltipByPosition(
+                    this.tooltipGroup,
+                    this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser
+                    ? this.chartBase.tooltip.tooltipTextParser(selectedItem)
+                        : `${this.xField}: ${selectedItem[2][this.xField]} \n ${this.yField}: ${selectedItem[2][this.yField]}`,
+                    this.geometry,
+                    [
+                        selectedItem[0],
+                        selectedItem[1]
+                    ],
+                    {
+                        width: selectedItem[5],
+                        height: selectedItem[6]
+                    }
+                )
+            }
         }
 
-        this.tooltipGroup
-            .attr('transform', `translate(${xPosition}, ${yPosition})`)
-            .selectAll('rect')
-            .attr('width', textWidth)
-            .attr('height', textHeight);
-    }
-
-    private drawSelectionPoint(
-        geometry: ContainerSize,
-        position: number[],
-        style:{fill: string}
-    ) {
-        this.selectionGroup.selectAll('.selection-point')
-            .data([geometry])
-            .join(
-                (enter) => enter.append('rect').attr('class', 'selection-point'),
-                (update) => update,
-                (exit) => exit.remove()
-            )
-            .style('stroke-width', 3)
-            .style('stroke', colorDarker(style.fill, 2))
-            .attr('fill', colorDarker(style.fill, 1))
-            .attr('x', position[0])
-            .attr('y', position[1])
-            .attr('height', geometry.height)
-            .attr('width', geometry.width);
-    }
-
-    private drawTooltipPoint(
-        geometry: ContainerSize,
-        position: number[],
-        style:{fill: string}
-    ) {
-        this.selectionGroup.append('rect')
-            .attr('class', 'tooltip-point')
-            // .style('stroke-width', 3)
-            // .style('stroke', colorDarker(style.fill, 1))
-            .attr('x', position[0])
-            .attr('y', position[1])
-            .attr('height', geometry.height)
-            .attr('width', geometry.width)
-            .attr('fill', colorDarker(style.fill, 2));
+        return index;
     }
 }

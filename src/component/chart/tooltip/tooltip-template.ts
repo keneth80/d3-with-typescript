@@ -1,7 +1,8 @@
 import { Selection, BaseType } from 'd3-selection';
 
 export const baseTooltipTemplate = (group: Selection<BaseType, any, HTMLElement, any>) => {
-    group.selectAll('.tooltip-background')
+    const itemGroup = group.append('g').attr('class', 'tooltip-item-group');
+    itemGroup.selectAll('.tooltip-background')
             .data(['background'])
             .join(
                 (enter) => enter.append('rect').attr('class', '.tooltip-background'),
@@ -17,7 +18,7 @@ export const baseTooltipTemplate = (group: Selection<BaseType, any, HTMLElement,
             .attr('fill', '#111')
             .style('fill-opacity', 0.6);
 
-    group.selectAll('.tooltip-text')
+    itemGroup.selectAll('.tooltip-text')
         .data(['text'])
         .join(
             (enter) => enter.append('text').attr('class', '.tooltip-text'),
@@ -31,5 +32,5 @@ export const baseTooltipTemplate = (group: Selection<BaseType, any, HTMLElement,
         .attr('font-size', '14px')
         .attr('font-weight', '100');
 
-    return group;
+    return itemGroup;
 }
