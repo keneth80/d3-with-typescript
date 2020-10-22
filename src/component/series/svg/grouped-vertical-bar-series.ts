@@ -166,13 +166,6 @@ export class GroupedVerticalBarSeries extends SeriesBase {
         this.mainGroup.selectAll(`[index="${targetIndex}"]`).style('opacity', !isHide ? null : 0);
     }
 
-    unSelectItem() {
-        // if (this.currentSelector) {
-        //     this.currentSelector.attr('r', this.radius);
-        //     this.currentSelector = null;
-        // }
-    }
-
     onSelectItem(value: number[], selected: any[]) {
         const selectedItem = selected[0];
 

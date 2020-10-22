@@ -6,9 +6,10 @@ import { quadtree } from 'd3-quadtree';
 
 import { Scale, ContainerSize } from '../../chart/chart.interface';
 import { SeriesBase } from '../../chart/series-base';
-import { colorDarker, textBreak, delayExcute } from '../../chart/util/d3-svg-util';
+import { colorDarker, textBreak, delayExcute, drawSelectionPointByRect, drawTooltipPointByRect } from '../../chart/util/d3-svg-util';
 import { SeriesConfiguration } from '../../chart/series.interface';
 import { ChartSelector } from '../../chart';
+import { setChartTooltipByPosition } from '../../chart/tooltip/tooltip-util';
 
 export interface StackedVerticalBarSeriesConfiguration extends SeriesConfiguration {
     xField: string;
@@ -175,15 +176,14 @@ export class StackedVerticalBarSeries extends SeriesBase {
         }
 
         const selectedItem = selected[index];
-        this.drawSelectionPoint(
+
+        drawSelectionPointByRect(
+            this.selectionGroup,
+            [[selectedItem[0], selectedItem[1]]],
             {
                 width: selectedItem[5],
                 height: selectedItem[6]
             },
-            [
-                selectedItem[0],
-                selectedItem[1]
-            ],
             {
                 fill: selectedItem[7]
             }
@@ -215,14 +215,47 @@ export class StackedVerticalBarSeries extends SeriesBase {
         if (index > -1) {
             const selectedItem = selected[index];
 
-            this.setChartTooltip(
-                selectedItem,
-                {
-                    width: this.geometry.width,
-                    height: this.geometry.height
-                },
-                value
-            );
+            if (!this.chartBase.isTooltipDisplay) {
+                drawTooltipPointByRect(
+                    this.selectionGroup,
+                    [[selectedItem[0], selectedItem[1]]],
+                    {
+                        width: selectedItem[5],
+                        height: selectedItem[6]
+                    },
+                    {
+                        fill: selectedItem[7]
+                    }
+                );
+
+                if (!this.chartBase.isTooltipDisplay) {
+                    this.tooltipGroup = this.chartBase.showTooltip();
+                    setChartTooltipByPosition(
+                        this.tooltipGroup,
+                        this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser
+                        ? this.chartBase.tooltip.tooltipTextParser(selectedItem)
+                            : `${this.xField}: ${selectedItem[2][this.xField]} \n ${this.yField}: ${selectedItem[2][this.yField]}`,
+                        this.geometry,
+                        [
+                            selectedItem[0],
+                            selectedItem[1]
+                        ],
+                        {
+                            width: selectedItem[5],
+                            height: selectedItem[6]
+                        }
+                    )
+                }
+            }
+
+            // this.setChartTooltip(
+            //     selectedItem,
+            //     {
+            //         width: this.geometry.width,
+            //         height: this.geometry.height
+            //     },
+            //     value
+            // );
         }
 
         return index;
@@ -319,27 +352,6 @@ export class StackedVerticalBarSeries extends SeriesBase {
             .attr('height', geometry.height)
             .attr('width', geometry.width)
             .attr('fill', colorDarker(style.fill, 2));
-    }
-
-    private drawSelectionPoint(
-        geometry: ContainerSize,
-        position: number[],
-        style:{fill: string}
-    ) {
-        this.selectionGroup.selectAll('.selection-point')
-            .data([geometry])
-            .join(
-                (enter) => enter.append('rect').attr('class', 'selection-point'),
-                (update) => update,
-                (exit) => exit.remove()
-            )
-            .style('stroke-width', 3)
-            .style('stroke', colorDarker(style.fill, 2))
-            .attr('fill', colorDarker(style.fill, 1))
-            .attr('x', position[0])
-            .attr('y', position[1])
-            .attr('height', geometry.height)
-            .attr('width', geometry.width);
     }
 
     // drawLegend(keys: string[], z: any, width: number) {
