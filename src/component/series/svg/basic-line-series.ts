@@ -26,10 +26,10 @@ export interface BasicLineSeriesConfiguration extends SeriesConfiguration {
         // fill?: string;
     },
     filter?: any;
-    crossFilter?: {
-        filerField: string;
-        filterValue: string;
-    };
+    // crossFilter?: {
+    //     filerField: string;
+    //     filterValue: string;
+    // };
     animation?: boolean;
 }
 

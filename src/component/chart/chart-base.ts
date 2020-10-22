@@ -971,7 +971,6 @@ export class ChartBase<T = any> implements IChart {
 
     // 모든 외부에서 들어오는 이벤트는 여기서 처리한다.
     protected addEventListner() {
-        this.svg.on('click', this.chartCanvasClick);
         this.subscription = new Subscription();
         if (this.config.isResize && this.config.isResize === true) {
             const resizeEvent = fromEvent(window, 'resize').pipe(debounceTime(500));
@@ -1138,12 +1137,6 @@ export class ChartBase<T = any> implements IChart {
             data: this.currentChartItem[2],
             etc: this.currentChartItem
         });
-    }
-
-    protected chartCanvasClick = () => {
-        this.chartClickSubject.next();
-        this.hideTooltip();
-        // this.selectionClear();
     }
 
     protected updateTitle() {

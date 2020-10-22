@@ -15,7 +15,7 @@ import { BasicChart } from './component/basic-chart';
 import { VerticalBarSeries } from './component/series/svg/vertical-bar-series';
 import { BasicLineSeries, BasicLineSeriesConfiguration } from './component/series/svg/basic-line-series';
 import { LabelSeries } from './component/series/svg/label-series';
-import { BasicPlotSeries } from './component/series/svg/basic-plot-series';
+import { BasicPlotSeries, BasicPlotSeriesConfiguration } from './component/series/svg/basic-plot-series';
 import { BasicBoxplotSeries, BoxplotModel } from './component/series/svg/basic-boxplot-series';
 import { bollingerData } from './component/mock-data/bollinger-band-data';
 import { BasicBollingerBandSeries } from './component/series/svg/basic-bollinger-band-series';
@@ -43,7 +43,7 @@ import { BasicCanvasMouseZoomHandler } from './component/functions/basic-canvas-
 import { delayExcute } from './component/chart/util/d3-svg-util';
 import { MiChart, OptionConfiguration, MiccBaseConfiguration } from './component/mi-chart';
 import { ChartItemEvent } from './component/chart';
-import { SvgTraceChart } from './component/chart-generator';
+import { SvgPlotChart, SvgTraceChart } from './component/chart-generator';
 import { sampleMockData } from './component/mock-data/simple-mock-data';
 
 
@@ -163,6 +163,13 @@ const buttonMapping = () => {
         delayExcute(200, simpleSvgStackedColumnSeriesExample);
         delayExcute(1000, hideLoader);
     });
+
+    select('#svg-plot-series').on('click', () => {
+        showLoader();
+        clear();
+        delayExcute(200, simpleSvgPlotSeriesExample);
+        delayExcute(1000, hideLoader);
+    });
 }
 
 const setSeriesColor = (item: any) => {
@@ -237,7 +244,6 @@ const simpleWebglLineSeriesExample = () => {
             content: 'WebGL Line Series'
         },
         tooltip: {
-            eventType: 'mouseover',
             tooltipTextParser: (d:any) => {
                 return `x: ${d.x} \ny: ${d.y}\nz: ${d.z}`
             }
@@ -313,7 +319,6 @@ const simpleSvgLineSeriesExample = () => {
     const commonConfiguration: MiccBaseConfiguration = {
         selector: '#chart-div',
         tooltip: {
-            eventType: 'mouseover',
             tooltipTextParser: (d:any) => {
                 return `x: ${d.x} \ny: ${d.y}\nz: ${d.z}`
             }
@@ -512,7 +517,6 @@ const simpleCanvasLineSeriesExample = () => {
             backgroundColor: '#fff'
         },
         tooltip: {
-            eventType: 'mouseover',
             tooltipTextParser: (d:any) => {
                 return `x: ${d.x} \ny: ${d.y}\nz: ${d.z}`
             }
@@ -551,6 +555,83 @@ const simpleCanvasLineSeriesExample = () => {
     highlightBlock((select('#json-configuration').node() as any));
 
     chart = MiChart.CanvasTraceChart(commonConfiguration, seriesList).draw();
+}
+
+const simpleSvgPlotSeriesExample = () => {
+    const yFieldSeries: BasicPlotSeriesConfiguration = {
+        selector: 'y-series',
+        xField: 'x',
+        yField: 'y',
+        radius: 3,
+        displayName: 'y-series'
+    };
+
+    const zFieldSeries: BasicPlotSeriesConfiguration = {
+        selector: 'z-series',
+        xField: 'x',
+        yField: 'z',
+        radius: 3,
+        displayName: 'z-series'
+    }
+
+    const xFieldSeries: BasicPlotSeriesConfiguration = {
+        selector: 'x-series',
+        xField: 'x',
+        yField: 'x',
+        radius: 3,
+        displayName: 'x-series'
+    }
+
+    const seriesList = [
+        yFieldSeries,
+        zFieldSeries,
+        xFieldSeries
+    ];
+
+    const commonConfiguration: MiccBaseConfiguration = {
+        selector: '#chart-div',
+        style: {
+            backgroundColor: '#fff'
+        },
+        tooltip: {
+            tooltipTextParser: (d:any) => {
+                return `x: ${d.x} \ny: ${d.y}\nz: ${d.z}`
+            }
+        },
+        legend: {
+            placement: Placement.TOP
+        },
+        data: sampleMockData(20),
+        title: {
+            placement: Placement.TOP,
+            content: 'Svg Plot Series'
+        },
+        isResize: true,
+        axes: [
+            {
+                field: 'x',
+                type: ScaleType.NUMBER,
+                placement: 'bottom',
+                min: 0,
+                max: 21
+            },
+            {
+                field: 'y',
+                type: ScaleType.NUMBER,
+                placement: 'left',
+                min: 0,
+                max: 30
+            }
+        ],
+        zoom: {
+            direction: Direction.BOTH
+        }
+    };
+
+    (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
+    highlightBlock((select('#json-configuration').node() as any));
+
+    chart = SvgPlotChart(commonConfiguration, seriesList).draw();
 }
 
 const webGLBigDataLineSeriesSample = () => {
@@ -1557,7 +1638,6 @@ const excute = () => {
             // }
         },
         tooltip: {
-            eventType: 'mouseover',
             tooltipTextParser: (d: any) => {
                 return `${d.salesperson} \n Date: ${d.date} \n Value: ${d.sales}`
             }

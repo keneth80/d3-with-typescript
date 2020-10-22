@@ -1,5 +1,5 @@
 import { Selection, BaseType } from 'd3-selection';
-import { Subject, Observable } from 'rxjs';
+import { Placement } from 'src/component/chart';
 
 import { Scale, ContainerSize, DisplayOption } from '../../chart/chart.interface';
 import { SeriesBase } from '../../chart/series-base';
@@ -54,22 +54,17 @@ export class BasicPlotSeries extends SeriesBase {
     }
 
     drawSeries(chartData: any[], scales: Scale[], geometry: ContainerSize, option: DisplayOption) {
-        const x: any = scales.find((scale: Scale) => scale.orient === 'top').scale;
-        const y: any = scales.find((scale: Scale) => scale.orient === 'left').scale;
+        const x: any = scales.find((scale: Scale) => scale.orient === Placement.BOTTOM).scale;
+        const y: any = scales.find((scale: Scale) => scale.orient === Placement.LEFT).scale;
         let padding = 0;
         if (x.bandwidth) {
             padding = x.bandwidth() / 2;
         }
 
-        const elements = this.mainGroup.selectAll(`.${this.selector}`)
+        this.mainGroup.selectAll(`.${this.selector}`)
             .data(chartData)
                 .join(
-                    (enter) => enter.append('circle').attr('class', this.selector)
-                        .on('click', (data: any) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            this.itemClickSubject.next(data);
-                        }),
+                    (enter) => enter.append('circle').attr('class', this.selector),
                     (update) => update,
                     (exit) => exit.remove
                 )

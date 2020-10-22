@@ -4,6 +4,8 @@ import { ChartConfiguration,
 
 import { IFunctions } from './chart/functions.interface';
 
+import { SeriesConfiguration } from './chart/series.interface';
+
 import { BasicCanvasTraceConfiguration, BasicCanvasTrace } from './series/canvas/basic-canvas-trace';
 import { BasicCanvasWebglLineSeriesOneConfiguration, BasicCanvasWebgLineSeriesOne } from './series/webgl/basic-canvas-webgl-line-series-one';
 
@@ -21,6 +23,7 @@ import { GroupedHorizontalBarSeriesConfiguration, GroupedHorizontalBarSeries } f
 import { StackedHorizontalBarSeriesConfiguration, StackedHorizontalBarSeries } from './series/svg/stacked-horizontal-bar-series';
 import { StackedVerticalBarSeriesConfiguration, StackedVerticalBarSeries } from './series/svg/stacked-vertical-bar-series';
 import { MiccBaseConfiguration, OptionConfiguration, ZoomConfiguration } from './mi-chart';
+import { BasicPlotSeries, BasicPlotSeriesConfiguration } from './series/svg/basic-plot-series';
 
 /*
 * desc: 캔버스 시리즈 출력 설정정보 맵핑.
@@ -69,13 +72,32 @@ export const WebglTraceChart = (
 // svg 시리즈 출력 설정정보 맵핑.
 export const SvgTraceChart = (
     configuration: MiccBaseConfiguration,
-    series: BasicCanvasWebglLineSeriesOneConfiguration[] = [],
+    series: BasicLineSeriesConfiguration[] = [],
     options: OptionConfiguration[] = []
 ): BasicChart => {
     const chartConfiguration: ChartConfiguration = generatorCommomConfiguration(configuration);
 
     chartConfiguration.series = series.map((traceConfiguration: BasicLineSeriesConfiguration) => {
         return new BasicLineSeries(traceConfiguration);
+    });
+
+    chartConfiguration.options = generatorOptions(options);
+
+    chartConfiguration.functions = generatorFunctions(configuration.zoom);
+
+    return new BasicChart(chartConfiguration);
+}
+
+// svg 시리즈 출력 설정정보 맵핑.
+export const SvgPlotChart = (
+    configuration: MiccBaseConfiguration,
+    series: BasicPlotSeriesConfiguration[] = [],
+    options: OptionConfiguration[] = []
+): BasicChart => {
+    const chartConfiguration: ChartConfiguration = generatorCommomConfiguration(configuration);
+
+    chartConfiguration.series = series.map((plotConfiguration: BasicPlotSeriesConfiguration) => {
+        return new BasicPlotSeries(plotConfiguration);
     });
 
     chartConfiguration.options = generatorOptions(options);
@@ -116,6 +138,23 @@ export const SvgStackedBarChart = (
     chartConfiguration.series = [
         direction === Direction.VERTICAL ? new StackedVerticalBarSeries(series) : new StackedHorizontalBarSeries(series)
     ];
+
+    chartConfiguration.options = generatorOptions(options);
+
+    chartConfiguration.functions = generatorFunctions(configuration.zoom);
+
+    return new BasicChart(chartConfiguration);
+}
+
+export const SvgMultiSeriesChart = (
+    configuration: MiccBaseConfiguration,
+    series: SeriesConfiguration[],
+    options: OptionConfiguration[] = [],
+    direction = Direction.VERTICAL
+): BasicChart => {
+    const chartConfiguration: ChartConfiguration = generatorCommomConfiguration(configuration);
+
+    chartConfiguration.series = [];
 
     chartConfiguration.options = generatorOptions(options);
 
