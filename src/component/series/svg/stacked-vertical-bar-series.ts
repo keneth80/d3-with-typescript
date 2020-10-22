@@ -190,13 +190,6 @@ export class StackedVerticalBarSeries extends SeriesBase {
         );
     }
 
-    unSelectItem() {
-        // if (this.currentSelector) {
-        //     this.currentSelector.attr('r', this.radius);
-        //     this.currentSelector = null;
-        // }
-    }
-
     getSeriesDataByPosition(value: number[]) {
         return this.search(
             this.originQuadTree,
@@ -207,6 +200,8 @@ export class StackedVerticalBarSeries extends SeriesBase {
         );
     }
 
+    // TODO: tooltip에 시리즈 아이디를 부여하여 시리즈 마다 tooltip을 컨트롤 할 수 있도록 한다.
+    // multi tooltip도 구현해야 하기 때문에 이방법이 가장 좋음. 현재 중복으로 발생해서 왔다갔다 함.
     showPointAndTooltip(value: number[], selected: any[]) {
         // const index = Math.floor(selected.length / 2);
         // TODO: y좌표보다 작은 아이템을 골라야함.
@@ -247,15 +242,6 @@ export class StackedVerticalBarSeries extends SeriesBase {
                     )
                 }
             }
-
-            // this.setChartTooltip(
-            //     selectedItem,
-            //     {
-            //         width: this.geometry.width,
-            //         height: this.geometry.height
-            //     },
-            //     value
-            // );
         }
 
         return index;
@@ -271,87 +257,6 @@ export class StackedVerticalBarSeries extends SeriesBase {
         }
 
         return index;
-    }
-
-    // TODO: tooltip에 시리즈 아이디를 부여하여 시리즈 마다 tooltip을 컨트롤 할 수 있도록 한다.
-    // multi tooltip도 구현해야 하기 때문에 이방법이 가장 좋음. 현재 중복으로 발생해서 왔다갔다 함.
-    private setChartTooltip(seriesData: any, geometry: ContainerSize, mouseEvent: number[]) {
-        if (this.chartBase.isTooltipDisplay) {
-            return;
-        }
-
-        // y좌표에 대해서 체크하여 영역안에 있지 않으면 툴팁을 보여주지 않는다.
-        // why? 바의 높이는 제각각 다른데 quadtree는 좌표만을 가지고 위치를 찾는다.
-        // 특정 영역안에 있는 좌표를 가져와야 하는데 바의 높이는 데이터에 따라 다르므로 좌표만으로 찾을 수 없다.
-        // 해서 quadtree는 x 좌표만을 가지고 컨트롤 하고 실제 x좌표를 통해 가져온 데이터에서 실제 좌표와 비교하여 판단 할 수 밖에 없다.
-        // if (mouseEvent[1] < seriesData[1]) {
-        //     return;
-        // }
-
-        this.drawTooltipPoint(
-            {
-                width: seriesData[5],
-                height: seriesData[6]
-            },
-            [
-                seriesData[0],
-                seriesData[1]
-            ],
-            {
-                fill: seriesData[7]
-            }
-        );
-
-        this.tooltipGroup = this.chartBase.showTooltip();
-
-        const textElement: any = this.tooltipGroup
-            .select('text')
-            .attr('dy', '.1em')
-            .text(
-                this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser
-                    ? this.chartBase.tooltip.tooltipTextParser(seriesData)
-                    : `${this.xField}: ${seriesData[2][this.xField]} \n ${this.yField}: ${seriesData[2][this.yField]}`
-            );
-
-        textBreak(textElement, '\n');
-
-        // const parseTextNode = textElement.node().getBoundingClientRect();
-        const parseTextNode = textElement.node().getBBox();
-
-        const textWidth = Math.floor(parseTextNode.width) + 9;
-        const textHeight = Math.floor(parseTextNode.height) + 5;
-
-        let xPosition = seriesData[0] + this.chartBase.chartMargin.left + this.currentBarWidth;
-        const yPosition = seriesData[1] + this.chartBase.chartMargin.top - textHeight;
-
-        if (xPosition + textWidth > geometry.width + 5) {
-            xPosition = xPosition - textWidth;
-        }
-
-        this.tooltipGroup
-            .attr('transform', `translate(${xPosition}, ${yPosition})`)
-            .selectAll('rect')
-            .attr('width', textWidth)
-            .attr('height', textHeight);
-    }
-
-    private drawTooltipPoint(
-        geometry: ContainerSize,
-        position: number[],
-        style:{fill: string}
-    ) {
-        this.selectionGroup.selectAll('.tooltip-point')
-            .data([geometry])
-            .join(
-                (enter) => enter.append('rect').attr('class', 'tooltip-point'),
-                (update) => update,
-                (exit) => exit.remove()
-            )
-            .attr('x', position[0])
-            .attr('y', position[1])
-            .attr('height', geometry.height)
-            .attr('width', geometry.width)
-            .attr('fill', colorDarker(style.fill, 2));
     }
 
     // drawLegend(keys: string[], z: any, width: number) {
