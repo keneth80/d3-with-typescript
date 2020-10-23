@@ -9,6 +9,5 @@ export * from './svg/stacked-vertical-bar-series';
 export * from './svg/stacked-horizontal-bar-series';
 export * from './svg/vertical-bar-series';
 export * from './svg/basic-topology';
-export * from './svg/basic-plot-series';
 
 export * from './webgl/basic-canvas-webgl-line-series-one';

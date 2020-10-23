@@ -13,6 +13,7 @@ export interface SeriesConfiguration {
     selector?: string; // series group의 class 명
     displayName?: string; // 해당 series display 명칭 (legend에서도 사용)
     shape?: string; // legend에서 출력될 때 icon 모양
+    filter?: any; // data filter function
 }
 
 export interface ISeries<T = any> {

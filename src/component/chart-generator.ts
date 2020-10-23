@@ -15,10 +15,7 @@ import { IOptions } from './chart/options.interface';
 import { BasicSpecArea } from './options/basic-svg-spec-area';
 import { BasicStepLine } from './options/basic-svg-step-line';
 import { BasicStepArea } from './options/basic-svg-step-area';
-import {
-    BasicLineSeries, BasicLineSeriesConfiguration,
-    BasicPlotSeries, BasicPlotSeriesConfiguration
-} from './series';
+import { BasicLineSeries, BasicLineSeriesConfiguration } from './series';
 import { BasicSvgMouseZoomHandler } from './functions/basic-svg-mouse-zoom-handler';
 import { BasicSvgMouseHandler } from './functions/basic-svg-mouse-handler';
 import { GroupedVerticalBarSeriesConfiguration, GroupedVerticalBarSeries } from './series/svg/grouped-vertical-bar-series';
@@ -81,25 +78,6 @@ export const SvgTraceChart = (
 
     chartConfiguration.series = series.map((traceConfiguration: BasicLineSeriesConfiguration) => {
         return new BasicLineSeries(traceConfiguration);
-    });
-
-    chartConfiguration.options = generatorOptions(options);
-
-    chartConfiguration.functions = generatorFunctions(configuration.zoom);
-
-    return new BasicChart(chartConfiguration);
-}
-
-// svg 시리즈 출력 설정정보 맵핑.
-export const SvgPlotChart = (
-    configuration: MiccBaseConfiguration,
-    series: BasicPlotSeriesConfiguration[] = [],
-    options: OptionConfiguration[] = []
-): BasicChart => {
-    const chartConfiguration: ChartConfiguration = generatorCommomConfiguration(configuration);
-
-    chartConfiguration.series = series.map((plotConfiguration: BasicPlotSeriesConfiguration) => {
-        return new BasicPlotSeries(plotConfiguration);
     });
 
     chartConfiguration.options = generatorOptions(options);

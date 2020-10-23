@@ -1,6 +1,5 @@
 import { Selection, BaseType } from 'd3-selection';
 import { line, curveMonotoneX } from 'd3-shape';
-import { format } from 'd3-format';
 import { transition } from 'd3-transition';
 import { easeLinear } from 'd3-ease';
 import { quadtree } from 'd3-quadtree';
@@ -17,20 +16,15 @@ export interface BasicLineSeriesConfiguration extends SeriesConfiguration {
     dotSelector?: string;
     xField: string;
     yField: string;
-    isCurve?: boolean; // default : false
     dot?: {
-        radius?: number
-    }
-    style?: {
+        radius?: number;
+        fill?: string;
+    };
+    line?: {
         strokeWidth?: number;
-        // stroke?: string;
-        // fill?: string;
-    },
-    filter?: any;
-    // crossFilter?: {
-    //     filerField: string;
-    //     filterValue: string;
-    // };
+        strokeColor?: string;
+        isCurve?: boolean; // default : false
+    };
     animation?: boolean;
 }
 
@@ -51,11 +45,11 @@ export class BasicLineSeries extends SeriesBase {
 
     private config: BasicLineSeriesConfiguration;
 
-    private dataFilter: any;
-
     private strokeWidth = 2;
 
-    private numberFmt: any;
+    private strokeColor: string;
+
+    private fillColor: string;
 
     private isAnimation = false;
 
@@ -70,7 +64,7 @@ export class BasicLineSeries extends SeriesBase {
     constructor(configuration: BasicLineSeriesConfiguration) {
         super(configuration);
         this.config = configuration;
-        if (configuration) {
+        if (this.config) {
             if (configuration.dotSelector) {
                 this.dotClass = configuration.dotSelector;
             }
@@ -83,22 +77,20 @@ export class BasicLineSeries extends SeriesBase {
                 this.yField = configuration.yField;
             }
 
-            if (configuration.filter) {
-                this.dataFilter = configuration.filter;
+            if (configuration.line) {
+                this.strokeWidth = configuration.line.strokeWidth || this.strokeWidth;
+                this.strokeColor = configuration.line.strokeColor || this.strokeColor;
             }
 
-            if (configuration.style) {
-                this.strokeWidth = configuration.style.strokeWidth || this.strokeWidth;
+            if (configuration.dot) {
+                this.fillColor = configuration.dot.fill || this.fillColor;
+                this.radius = configuration.dot.radius || this.radius;
             }
 
             if (configuration.hasOwnProperty('animation')) {
                 this.isAnimation = configuration.animation;
             }
-
-            this.radius = this.config.dot.radius || this.radius;
         }
-
-        this.numberFmt = format(',d');
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
@@ -128,45 +120,47 @@ export class BasicLineSeries extends SeriesBase {
 
         this.geometry = geometry;
 
-        this.lineColor = option.color;
+        const resultData: any[] = !this.config.filter ? chartData : chartData.filter((item: any) => this.config.filter(item));
 
-        this.line = line()
-            .defined(data => data[this.xField])
-            .x((data: any, i) => {
-                const xposition = x(data[this.xField]) + padding;
-                return xposition;
-            })
-            .y((data: any) => {
-                const yposition = y(data[this.yField]);
-                return yposition;
-            });
+        this.lineColor = this.strokeColor ?? option.color;
+        this.fillColor = this.lineColor ?? this.fillColor;
 
-        if (this.config.isCurve === true) {
-            this.line.curve(curveMonotoneX); // apply smoothing to the line
-        }
+        if (this.config.line) {
+            this.line = line()
+                .defined(data => data[this.xField])
+                .x((data: any, i) => {
+                    const xposition = x(data[this.xField]) + padding;
+                    return xposition;
+                })
+                .y((data: any) => {
+                    const yposition = y(data[this.yField]);
+                    return yposition;
+                });
 
-        const lineData: any[] = !this.dataFilter ? chartData : chartData.filter((item: any) => this.dataFilter(item));
+            if (this.config.line.isCurve === true) {
+                this.line.curve(curveMonotoneX); // apply smoothing to the line
+            }
+            const lineSeries = this.mainGroup.selectAll(`.${this.selector}`)
+                .data([resultData])
+                    .join(
+                        (enter) => enter.append('path').attr('class', this.selector),
+                        (update) => update,
+                        (exit) => exit.remove
+                    )
+                    .style('stroke-width', this.strokeWidth)
+                    .style('stroke', this.lineColor)
+                    .style('fill', 'none')
+                    .attr('d', this.line);
 
-        const lineSeries = this.mainGroup.selectAll(`.${this.selector}`)
-            .data([lineData])
-                .join(
-                    (enter) => enter.append('path').attr('class', this.selector),
-                    (update) => update,
-                    (exit) => exit.remove
-                )
-                .style('stroke-width', this.strokeWidth)
-                .style('stroke', option.color)
-                .style('fill', 'none')
-                .attr('d', this.line);
+            if (this.isAnimation) {
+                lineSeries
+                    .attr('stroke-dasharray', (d: any, i: number, nodeList: any) => nodeList[i].getTotalLength())
+                    .attr('stroke-dashoffset', (d: any, i: number, nodeList: any) => nodeList[i].getTotalLength());
 
-        if (this.isAnimation) {
-            lineSeries
-                .attr('stroke-dasharray', (d: any, i: number, nodeList: any) => nodeList[i].getTotalLength())
-                .attr('stroke-dashoffset', (d: any, i: number, nodeList: any) => nodeList[i].getTotalLength());
-
-            lineSeries.transition(
-                transition().delay(100).duration(500).ease(easeLinear)
-            ).attr('stroke-dashoffset', 0);
+                lineSeries.transition(
+                    transition().delay(100).duration(500).ease(easeLinear)
+                ).attr('stroke-dashoffset', 0);
+            }
         }
 
         if (this.config.dot) {
@@ -178,8 +172,8 @@ export class BasicLineSeries extends SeriesBase {
             //     .attr('x', -(radius*2))
             //     .attr('y', -(radius*2));
 
-            const dots = this.dotGroup.selectAll(`.${this.dotClass}`)
-                .data(lineData)
+            this.dotGroup.selectAll(`.${this.dotClass}`)
+                .data(resultData)
                     .join(
                         (enter) => enter.append('circle').attr('class', this.dotClass),
                         (update) => update,
@@ -187,7 +181,7 @@ export class BasicLineSeries extends SeriesBase {
                     )
                     .style('stroke-width', this.radius / 2)
                     .style('stroke', this.lineColor)
-                    .style('fill', '#fff')
+                    .style('fill', this.fillColor)
                     .attr('cx', (data: any) => x(data[this.xField]) + padding)
                     .attr('cy', (data: any) => y(data[this.yField]))
                     .attr('r', this.radius);
@@ -198,7 +192,7 @@ export class BasicLineSeries extends SeriesBase {
         }
 
         delayExcute(300, () => {
-            const generateData: any[] = lineData
+            const generateData: any[] = resultData
                 .map((d: any, i: number) => {
                     const xposition = x(d[this.xField]) + padding;
                     const yposition = y(d[this.yField]);

@@ -1,4 +1,6 @@
 import { Selection, BaseType } from 'd3-selection';
+import { delayExcute } from 'src/component/chart/util';
+import { Placement } from '../../chart';
 
 import { Scale, ContainerSize, DisplayOption } from '../../chart/chart.interface';
 import { SeriesBase } from '../../chart/series-base';
@@ -11,6 +13,7 @@ export interface BasicPlotSeriesConfiguration extends SeriesConfiguration {
         stroke?: string;
         fill?: string;
     },
+    filter?: any;
     radius?: number;
 }
 
@@ -22,6 +25,8 @@ export class BasicPlotSeries extends SeriesBase {
     private style: any;
 
     private radius: number = 4;
+
+    private dataFilter: any;
 
     constructor(configuration: BasicPlotSeriesConfiguration) {
         super(configuration);
@@ -41,6 +46,10 @@ export class BasicPlotSeries extends SeriesBase {
             if (configuration.radius) {
                 this.radius = configuration.radius;
             }
+
+            if (configuration.filter) {
+                this.dataFilter = configuration.filter;
+            }
         }
     }
 
@@ -53,12 +62,14 @@ export class BasicPlotSeries extends SeriesBase {
     }
 
     drawSeries(chartData: any[], scales: Scale[], geometry: ContainerSize, option: DisplayOption) {
-        const x: any = scales.find((scale: Scale) => scale.orient === 'bottom').scale;
-        const y: any = scales.find((scale: Scale) => scale.orient === 'left').scale;
+        const x: any = scales.find((scale: Scale) => scale.orient === Placement.BOTTOM).scale;
+        const y: any = scales.find((scale: Scale) => scale.orient === Placement.LEFT).scale;
         let padding = 0;
         if (x.bandwidth) {
             padding = x.bandwidth() / 2;
         }
+
+        const plotData: any[] = !this.dataFilter ? chartData : chartData.filter((item: any) => this.dataFilter(item));
 
         this.mainGroup.selectAll(`.${this.selector}`)
             .data(chartData)

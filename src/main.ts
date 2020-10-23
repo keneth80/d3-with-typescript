@@ -43,7 +43,7 @@ import { BasicCanvasMouseZoomHandler } from './component/functions/basic-canvas-
 import { delayExcute } from './component/chart/util/d3-svg-util';
 import { MiChart, OptionConfiguration, MiccBaseConfiguration } from './component/mi-chart';
 import { ChartItemEvent } from './component/chart';
-import { SvgPlotChart, SvgTraceChart } from './component/chart-generator';
+import { CanvasTraceChart, SvgGroupedBarChart, SvgStackedBarChart, SvgTraceChart, WebglTraceChart } from './component/chart-generator';
 import { sampleMockData } from './component/mock-data/simple-mock-data';
 
 
@@ -199,7 +199,7 @@ const simpleWebglLineSeriesExample = () => {
         xField: 'x',
         yField: 'y',
         dot: {
-            radius: 4
+            radius: 6
         },
         style: {
             strokeColor: '#4d8700',
@@ -211,7 +211,7 @@ const simpleWebglLineSeriesExample = () => {
         xField: 'x',
         yField: 'z',
         dot: {
-            radius: 4
+            radius: 6
         },
         style: {
             strokeColor: '#ff9421',
@@ -223,7 +223,7 @@ const simpleWebglLineSeriesExample = () => {
         xField: 'x',
         yField: 'x',
         dot: {
-            radius: 4
+            radius: 6
         },
         style: {
             strokeColor: '#2137ff',
@@ -273,7 +273,7 @@ const simpleWebglLineSeriesExample = () => {
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
     highlightBlock((select('#json-configuration').node() as any));
 
-    chart = MiChart.WebglTraceChart(commonConfiguration, seriesList).draw();
+    chart = WebglTraceChart(commonConfiguration, seriesList).draw();
 }
 
 const simpleSvgLineSeriesExample = () => {
@@ -281,6 +281,7 @@ const simpleSvgLineSeriesExample = () => {
         selector: 'y-series',
         xField: 'x',
         yField: 'y',
+        line: {},
         dot: {
             radius: 3
         },
@@ -292,6 +293,7 @@ const simpleSvgLineSeriesExample = () => {
         selector: 'z-series',
         xField: 'x',
         yField: 'z',
+        line: {},
         dot: {
             radius: 3
         },
@@ -303,9 +305,14 @@ const simpleSvgLineSeriesExample = () => {
         selector: 'x-series',
         xField: 'x',
         yField: 'x',
+        line: {},
         dot: {
             radius: 3
         },
+        // style: {
+        //     strokeWidth: 5,
+        //     strokeColor: '#ccc'
+        // },
         displayName: 'x-series',
         dotSelector: 'basic-line-x-series-dot'
     }
@@ -413,7 +420,7 @@ const simpleSvgColumnSeriesExample = () => {
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
     highlightBlock((select('#json-configuration').node() as any));
 
-    chart = MiChart.SvgGroupedBarChart(commonConfiguration, groupedVerticalColumnSeriesConfiguration).draw();
+    chart = SvgGroupedBarChart(commonConfiguration, groupedVerticalColumnSeriesConfiguration).draw();
 }
 
 const simpleSvgStackedColumnSeriesExample = () => {
@@ -468,7 +475,7 @@ const simpleSvgStackedColumnSeriesExample = () => {
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
     highlightBlock((select('#json-configuration').node() as any));
 
-    chart = MiChart.SvgStackedBarChart(commonConfiguration, stackedVerticalColumnSeries).draw();
+    chart = SvgStackedBarChart(commonConfiguration, stackedVerticalColumnSeries).draw();
     chart.chartItemEvent.subscribe((item: ChartItemEvent) => {
         console.log('selected item : ', item);
     })
@@ -554,32 +561,41 @@ const simpleCanvasLineSeriesExample = () => {
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
     highlightBlock((select('#json-configuration').node() as any));
 
-    chart = MiChart.CanvasTraceChart(commonConfiguration, seriesList).draw();
+    chart = CanvasTraceChart(commonConfiguration, seriesList).draw();
 }
 
 const simpleSvgPlotSeriesExample = () => {
-    const yFieldSeries: BasicPlotSeriesConfiguration = {
+    const yFieldSeries: BasicLineSeriesConfiguration = {
         selector: 'y-series',
         xField: 'x',
         yField: 'y',
-        radius: 3,
-        displayName: 'y-series'
+        dot: {
+            radius: 3
+        },
+        displayName: 'y-series',
+        dotSelector: 'basic-line-y-series-dot'
     };
 
-    const zFieldSeries: BasicPlotSeriesConfiguration = {
+    const zFieldSeries: BasicLineSeriesConfiguration = {
         selector: 'z-series',
         xField: 'x',
         yField: 'z',
-        radius: 3,
-        displayName: 'z-series'
+        dot: {
+            radius: 3
+        },
+        displayName: 'z-series',
+        dotSelector: 'basic-line-z-series-dot'
     }
 
-    const xFieldSeries: BasicPlotSeriesConfiguration = {
+    const xFieldSeries: BasicLineSeriesConfiguration = {
         selector: 'x-series',
         xField: 'x',
         yField: 'x',
-        radius: 3,
-        displayName: 'x-series'
+        dot: {
+            radius: 3
+        },
+        displayName: 'x-series',
+        dotSelector: 'basic-line-x-series-dot'
     }
 
     const seriesList = [
@@ -590,21 +606,18 @@ const simpleSvgPlotSeriesExample = () => {
 
     const commonConfiguration: MiccBaseConfiguration = {
         selector: '#chart-div',
-        style: {
-            backgroundColor: '#fff'
-        },
         tooltip: {
             tooltipTextParser: (d:any) => {
                 return `x: ${d.x} \ny: ${d.y}\nz: ${d.z}`
             }
         },
-        legend: {
-            placement: Placement.TOP
-        },
         data: sampleMockData(20),
         title: {
             placement: Placement.TOP,
-            content: 'Svg Plot Series'
+            content: 'SVG Plot Series'
+        },
+        legend: {
+            placement: Placement.TOP
         },
         isResize: true,
         axes: [
@@ -631,7 +644,12 @@ const simpleSvgPlotSeriesExample = () => {
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
     highlightBlock((select('#json-configuration').node() as any));
 
-    chart = SvgPlotChart(commonConfiguration, seriesList).draw();
+    chart = SvgTraceChart(commonConfiguration, seriesList).draw();
+    chart.chartItemEvent.subscribe((item: ChartItemEvent) => {
+        if (item.type === 'click') {
+            alert('click =>' + JSON.stringify(item.data));
+        }
+    });
 }
 
 const webGLBigDataLineSeriesSample = () => {
@@ -801,7 +819,7 @@ const webGLBigDataLineSeriesSample = () => {
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
     highlightBlock((select('#json-configuration').node() as any));
 
-    chart = MiChart.WebglTraceChart(commonConfiguration, seriesList.concat(alarmSeriesList), optionList).draw();
+    chart = WebglTraceChart(commonConfiguration, seriesList.concat(alarmSeriesList), optionList).draw();
 }
 
 const canvasBigDataLineSeriesSample = () => {
@@ -989,7 +1007,7 @@ const canvasBigDataLineSeriesSample = () => {
     highlightBlock((select('#json-configuration').node() as any));
 
     console.time('canvaslinedraw');
-    chart = MiChart.CanvasTraceChart(commonConfiguration, seriesList.concat(alarmSeriesList), optionList).draw();
+    chart = CanvasTraceChart(commonConfiguration, seriesList.concat(alarmSeriesList), optionList).draw();
     console.timeEnd('canvaslinedraw');
 };
 
@@ -1407,7 +1425,9 @@ const svgLineSeriesExample = () => {
             dotSelector: 'basic-line-' + member + '-dot',
             yField: 'value',
             xField: 'date',
-            isCurve: false,
+            line: {
+                isCurve: true,
+            },
             dot: {
                 radius: 3
             },
@@ -1546,7 +1566,9 @@ const excute = () => {
         dotSelector: 'basic-line-sales-dot',
         yField: 'sales',
         xField: 'salesperson',
-        isCurve: true,
+        line: {
+            isCurve: true
+        },
         dot: {
             radius: 3
         },
@@ -1563,7 +1585,9 @@ const excute = () => {
         dotSelector: 'basic-line-assets-dot',
         yField: 'assets',
         xField: 'salesperson',
-        isCurve: false,
+        line: {
+            isCurve: false
+        },
         dot: {
             radius: 3
         },
@@ -1814,7 +1838,9 @@ const bollinger = () => {
 
     const lineSeries = new BasicLineSeries({
         selector: 'bollinger-line',
-        isCurve: false,
+        line: {
+            isCurve: false
+        },
         xField: 'key',
         yField: 'close'
     });
