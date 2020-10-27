@@ -6,7 +6,7 @@ import { Subject } from 'rxjs';
 import { Scale, ContainerSize, DisplayOption, DisplayType } from '../../chart/chart.interface';
 import { SeriesBase } from '../../chart/series-base';
 import { SeriesConfiguration } from '../../chart/series.interface';
-import { textBreak } from '../../chart/util/d3-svg-util';
+import { colorDarker, textBreak } from '../../chart/util/d3-svg-util';
 import { ChartBase } from '../../chart/chart-base';
 import { delayExcute } from '../../chart/util/d3-svg-util';
 import { Placement } from '../../chart/chart-configuration';
@@ -163,9 +163,6 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         ) {
             this.chartBase.chartContainer
                 .append('canvas')
-                .datum({
-                    index
-                })
                 .attr('class', ChartSelector.SELECTION_CANVAS)
                 .style('z-index', 98)
                 .style('position', 'absolute');
@@ -181,8 +178,8 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         this.lineColor = this.strokeColor ? this.strokeColor : option.color;
 
         const chartData = this.seriesData ? this.seriesData : chartBaseData;
-        const xScale: Scale = scales.find((scale: Scale) => scale.orient === Placement.BOTTOM);
-        const yScale: Scale = scales.find((scale: Scale) => scale.orient === Placement.LEFT);
+        const xScale: Scale = scales.find((scale: Scale) => scale.orient === this.xDirection);
+        const yScale: Scale = scales.find((scale: Scale) => scale.orient === this.yDirection);
 
         const x: any = xScale.scale;
         const y: any = yScale.scale;
@@ -261,6 +258,21 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
 
     hide(displayName: string, isHide: boolean) {
         this.canvas.style('opacity', !isHide ? null : 0);
+    }
+
+    onSelectItem(value: number[], selected: any[]) {
+        const selectedItem = selected[0];
+        this.drawSelectionPoint(
+            [
+                selectedItem[0],
+                selectedItem[1]
+            ],
+            this.geometry,
+            {
+                fill: this.lineColor,
+                radius: this.radius * 2
+            }
+        );
     }
 
     destroy() {
@@ -773,7 +785,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         selectedItem: [number, number, any][],
         style: { radius: number; strokeColor: string; strokeWidth: number }
     ) {
-        const selectionCanvas = this.chartBase.chartContainer.select('.' + ChartSelector.SELECTION_CANVAS);
+        const selectionCanvas = this.chartBase.chartContainer.select('.' + ChartSelector.POINTER_CANVAS);
         const context = (selectionCanvas.node() as any).getContext('2d');
         context.clearRect(0, 0, geometry.width, geometry.height);
         context.fillStyle = style.strokeColor;
@@ -790,6 +802,32 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         context.fillRect(cx - rectSize / 2, cy - rectSize / 2, rectSize, rectSize);
         // context.strokeRect(cx - style.radius - 0.5, cy - style.radius + 0.5, style.radius * 2, style.radius * 2);
         // context.arc(pointer.cx, pointer.cy, pointer.r, 0, 2 * Math.PI);
+        context.closePath();
+        context.fill();
+        context.stroke();
+    }
+
+    private drawSelectionPoint(
+        position: number[],
+        geometry: ContainerSize,
+        style:{fill: string, radius: number}
+    ) {
+        const selectionCanvas = this.chartBase.chartContainer.select('.' + ChartSelector.SELECTION_CANVAS);
+        const context = (selectionCanvas.node() as any).getContext('2d');
+        context.clearRect(0, 0, geometry.width, geometry.height);
+        context.fillStyle = colorDarker(style.fill, 2);
+        context.lineWidth = 2;
+        context.strokeStyle = colorDarker(style.fill, 1);
+        // this.drawPoint(context, {cx: selectedItem[0], cy:selectedItem[1], r: style.radius});
+        // cx, cy과 해당영역에 출력이 되는지? 좌표가 마이너스면 출력 안하는 로직을 넣어야 함.
+        const cx = position[0];
+        const cy = position[1];
+        if (cx < 0 || cy < 0) {
+            return;
+        }
+
+        context.beginPath();
+        context.fillRect(cx - style.radius / 2, cy - style.radius / 2, style.radius, style.radius);
         context.closePath();
         context.fill();
         context.stroke();

@@ -122,11 +122,6 @@ export class GroupedHorizontalBarSeries extends SeriesBase {
                                     xPosition = xPosition - textWidth;
                                 }
                                 this.tooltipGroup.attr('transform', `translate(${xPosition}, ${yPosition})`).selectAll('rect').attr('width', textWidth);
-                            })
-                            .on('click', (data: any) => {
-                                event.preventDefault();
-                                event.stopPropagation();
-                                this.itemClickSubject.next(data);
                             });
                         }
 

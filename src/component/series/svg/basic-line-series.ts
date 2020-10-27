@@ -93,8 +93,10 @@ export class BasicLineSeries extends SeriesBase {
         }
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
-                  mainGroup: Selection<BaseType, any, HTMLElement, any>) {
+    setSvgElement(
+        svg: Selection<BaseType, any, HTMLElement, any>,
+        mainGroup: Selection<BaseType, any, HTMLElement, any>
+    ) {
         this.svg = svg;
         this.selectionGroup = this.svg.select('.' + ChartSelector.SELECTION_SVG);
         if (!mainGroup.select(`.${this.selector}-group`).node()) {
@@ -107,9 +109,9 @@ export class BasicLineSeries extends SeriesBase {
     }
 
     drawSeries(chartData: any[], scales: Scale[], geometry: ContainerSize, option: DisplayOption) {
-        const xScale = scales.find((scale: Scale) => scale.orient === Placement.BOTTOM);
+        const xScale: any = scales.find((scale: Scale) => scale.orient === this.xDirection);
+        const yScale: any = scales.find((scale: Scale) => scale.orient === this.yDirection);
         const x: any = xScale.scale;
-        const yScale: any = scales.find((scale: Scale) => scale.orient === Placement.LEFT);
         const y: any = yScale.scale;
 
         let padding = 0;

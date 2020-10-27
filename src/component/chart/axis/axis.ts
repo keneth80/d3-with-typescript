@@ -7,7 +7,7 @@ import { brushX, brushY } from 'd3-brush';
 
 import { Scale, ContainerSize } from '../chart.interface';
 import { Align, Axis, AxisTitle, Margin, Placement, ScaleType } from '../chart-configuration';
-import { BaseType, select, Selection } from 'd3';
+import { BaseType, select, Selection, svg } from 'd3';
 import { delayExcute, getAxisByPlacement, textWrapping } from '../util';
 
 export class ChartAxis {
@@ -207,26 +207,6 @@ export class ChartAxis {
             })
         }
 
-        if (scale.isGridLine) {
-            const targetScale = getAxisByPlacement(scale.orient, scale.scale);
-            if (scale.tickSize) {
-                targetScale.ticks(scale.tickSize);
-            }
-            const tickFmt: any = ' ';
-            if (scale.orient === Placement.RIGHT || scale.orient === Placement.LEFT) {
-                targetScale.tickSize(-svgGeometry.width).tickFormat(tickFmt);
-            } else {
-                targetScale.tickSize(-svgGeometry.height).tickFormat(tickFmt);
-            }
-
-            targetGroup
-                .style('stroke', '#ccc')
-                .style('stroke-opacity', 0.3)
-                .style('shape-rendering', 'crispEdges');
-
-            targetGroup.call(targetScale);
-        }
-
         if (scale.isZoom === true) {
             ChartAxis.setupBrush(svgGeometry, margin, scale, targetGroup, updateBrushHandler);
         }
@@ -350,6 +330,42 @@ export class ChartAxis {
         }
 
         return maxTextWidth;
+    }
+
+    static drawGridLine(
+        svgGeometry: ContainerSize,
+        scale: Scale,
+        targetGroup: Selection<BaseType, any, BaseType, any>,
+    ) {
+        const gridLineGroup: Selection<BaseType, any, BaseType, any> =
+            targetGroup.selectAll(`g.${scale.orient}-grid-line`)
+            .data([scale])
+            .join(
+                (enter) => enter.append('g').attr('class', `${scale.orient}-grid-line`),
+                (update) => update,
+                (exit) => exit.remove()
+            )
+            .style('stroke', '#ccc')
+            .style('stroke-opacity', 0.3)
+            .style('shape-rendering', 'crispEdges');
+
+        const tickFmt: any = ' ';
+        let targetAxis: any;
+        if (scale.orient === Placement.TOP || scale.orient === Placement.BOTTOM) {
+            targetAxis = axisTop(scale.scale)
+                .tickFormat(tickFmt)
+                .tickSize(-svgGeometry.height);
+        } else {
+            targetAxis = axisLeft(scale.scale)
+                .tickFormat(tickFmt)
+                .tickSize(-svgGeometry.width);
+        }
+
+        if (scale.tickSize) {
+            targetAxis.ticks(scale.tickSize);
+        }
+
+        return gridLineGroup.call(targetAxis);
     }
 
     static setupBrush(

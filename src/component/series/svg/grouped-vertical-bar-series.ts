@@ -70,8 +70,8 @@ export class GroupedVerticalBarSeries extends SeriesBase {
     }
 
     drawSeries(chartData: any[], scales: Scale[], geometry: ContainerSize) {
-        const x: any = scales.find((scale: Scale) => scale.orient === 'bottom').scale;
-        const y: any = scales.find((scale: Scale) => scale.orient === 'left').scale;
+        const x: any = scales.find((scale: Scale) => scale.orient === this.xDirection).scale;
+        const y: any = scales.find((scale: Scale) => scale.orient === this.yDirection).scale;
 
         const barx: any = scaleBand()
             .domain(this.columns)

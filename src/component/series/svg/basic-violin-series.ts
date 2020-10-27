@@ -34,17 +34,19 @@ export class BasicViolinSeries extends SeriesBase {
         }
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
-                  mainGroup: Selection<BaseType, any, HTMLElement, any>) {
+    setSvgElement(
+        svg: Selection<BaseType, any, HTMLElement, any>,
+        mainGroup: Selection<BaseType, any, HTMLElement, any>
+    ) {
         this.svg = svg;
         if (!mainGroup.select(`.${this.selector}-group`).node()) {
             this.mainGroup = mainGroup.append('g').attr('class', `${this.selector}-group`);
         }
     }
 
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
-        const x: any = scales.find((scale: Scale) => scale.orient === 'bottom').scale;
-        const y: any = scales.find((scale: Scale) => scale.orient === 'left').scale;
+    drawSeries(chartData: any[], scales: Scale[], geometry: ContainerSize) {
+        const x: any = scales.find((scale: Scale) => scale.orient === this.xDirection).scale;
+        const y: any = scales.find((scale: Scale) => scale.orient === this.yDirection).scale;
 
         this.histogram = histogram()
             .domain(y.domain())
@@ -59,11 +61,11 @@ export class BasicViolinSeries extends SeriesBase {
                 return bins;
             })
             .entries(chartData);
-        
+
         let maxNum = 0
-        for ( let i in sumstat ){
-            const allBins: Array<any> = sumstat[i].value;
-            const lengths = allBins.map((a: Array<any>) => {return a.length;});
+        for (const i in sumstat){
+            const allBins: any[] = sumstat[i].value;
+            const lengths = allBins.map((a: any[]) => {return a.length;});
             const longuest = max(lengths);
             if (longuest > maxNum) {
                 maxNum = longuest;

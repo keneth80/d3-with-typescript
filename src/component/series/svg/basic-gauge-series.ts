@@ -27,7 +27,7 @@ export interface BasicGaugeSeriesConfiguration extends SeriesConfiguration {
     majorTicks?: number;
     labelFormat?: any;
     labelInset?: number;
-    colors?: Array<string>;
+    colors?: string[];
 }
 
 export class BasicGaugeSeries extends SeriesBase {
@@ -69,7 +69,7 @@ export class BasicGaugeSeries extends SeriesBase {
     constructor(configuration: BasicGaugeSeriesConfiguration) {
         super(configuration);
         if (configuration) {
-            let prop: string = undefined;
+            let prop: string;
             for (prop in configuration) {
                 this.config[prop] = configuration[prop];
             }
@@ -93,8 +93,10 @@ export class BasicGaugeSeries extends SeriesBase {
 
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
-                  mainGroup: Selection<BaseType, any, HTMLElement, any>) {
+    setSvgElement(
+        svg: Selection<BaseType, any, HTMLElement, any>,
+        mainGroup: Selection<BaseType, any, HTMLElement, any>
+    ) {
         this.svg = svg;
         svg.select('.series-group').attr('clip-path', null);
         if (!mainGroup.select(`.${this.selector}-group`).node()) {
@@ -105,7 +107,7 @@ export class BasicGaugeSeries extends SeriesBase {
         }
     }
 
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
+    drawSeries(chartData: any[], scales: Scale[], geometry: ContainerSize) {
         this.r = geometry.height;
         this.pointerHeadLength = Math.round(this.r * this.config.pointerHeadLengthPercent);
 
@@ -146,8 +148,8 @@ export class BasicGaugeSeries extends SeriesBase {
             .style('fill', '#aaa')
             .attr('transform', (d) => {
                 const ratio = this.scale(d);
-                const newAngle = this.config.minAngle + (ratio * this.range);
-                return `rotate(${newAngle}) translate(0, ${this.config.labelInset - this.r})`;
+                const angleValue = this.config.minAngle + (ratio * this.range);
+                return `rotate(${angleValue}) translate(0, ${this.config.labelInset - this.r})`;
             })
             .text(this.config.labelFormat);
 
@@ -209,5 +211,4 @@ export class BasicGaugeSeries extends SeriesBase {
         const x = svgWidth / 2 - elementWidth / 2;
         return `translate(${x}, ${r / 2})`
     }
-    
 }

@@ -626,14 +626,16 @@ const simpleSvgPlotSeriesExample = () => {
                 type: ScaleType.NUMBER,
                 placement: 'bottom',
                 min: 0,
-                max: 21
+                max: 21,
+                isGridLine: true
             },
             {
                 field: 'y',
                 type: ScaleType.NUMBER,
                 placement: 'left',
-                min: 0,
-                max: 30
+                min: -5,
+                max: 30,
+                isGridLine: true
             }
         ],
         zoom: {
@@ -1072,10 +1074,6 @@ const canvasTraceChart = () => {
         }
     });
 
-    canvasTrace.$currentItem.subscribe((item: any) => {
-        console.log('item : ', item);
-    })
-
     const dtFmt = timeFormat('%m-%d %H:%M:%S');
     const scatterChart = new BasicChart<BasicCanvasTraceModel>({
         selector: '#canvastracechart',
@@ -1233,11 +1231,6 @@ const canvasLineChart = () => {
         series.push(
             currnetLineSeries
         );
-
-        currnetLineSeries.$currentItem.subscribe((item: any) => {
-            console.log('select : ', item.event);
-            select('#canvaslinechart').select('.event-pointer').attr('transform', `translate(${item.event.offsetX}, ${item.event.offsetY})`);
-        });
     });
 
     const parseTime = timeFormat('%H:%M:%S %m-%d');
@@ -1367,10 +1360,6 @@ const svgTraceChart = () => {
         yField: 'y'
     });
 
-    svgTrace.$currentItem.subscribe((item: any) => {
-        console.log('item : ', item);
-    })
-
     // console.log('min : ', xmin, ymin);
     // console.log('max : ', ymax, ymax);
     const scatterChart = new BasicChart<BasicCanvasTraceModel>({
@@ -1438,11 +1427,6 @@ const svgLineSeriesExample = () => {
         series.push(
             currnetLineSeries
         );
-
-        currnetLineSeries.$currentItem.subscribe((item: any) => {
-            console.log('select : ', item.event);
-            select('#linechart').select('.event-pointer').attr('transform', `translate(${item.event.offsetX}, ${item.event.offsetY})`);
-        });
     });
 
     const parseTime = timeFormat('%H:%M:%S %m-%d');
@@ -1557,9 +1541,6 @@ const excute = () => {
         yField: 'sales',
         xField: 'salesperson'
     });
-    verticalBarSeries.$currentItem.subscribe((item: any) => {
-        console.log('verticalBarSeries.item : ', item);
-    });
 
     const basicLineSeries = new BasicLineSeries({
         selector: 'basic-line-sales',
@@ -1574,11 +1555,6 @@ const excute = () => {
         },
         shape: Shape.LINE
     });
-    basicLineSeries.$currentItem.subscribe((item: any) => {
-        console.log('basicLineSeries.item : ', item);
-        console.log('select : ', item.event);
-        select('#chart').select('.event-pointer').attr('transform', `translate(${item.event.offsetX}, ${item.event.offsetY})`);
-    });
 
     const basicLineSeries2 = new BasicLineSeries({
         selector: 'basic-line-assets',
@@ -1592,9 +1568,6 @@ const excute = () => {
             radius: 3
         },
         shape: Shape.LINE
-    });
-    basicLineSeries2.$currentItem.subscribe((item: any) => {
-        console.log('basicLineSerie2s.item : ', item);
     });
 
     const labelSeries = new LabelSeries({

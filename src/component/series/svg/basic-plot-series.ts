@@ -62,8 +62,8 @@ export class BasicPlotSeries extends SeriesBase {
     }
 
     drawSeries(chartData: any[], scales: Scale[], geometry: ContainerSize, option: DisplayOption) {
-        const x: any = scales.find((scale: Scale) => scale.orient === Placement.BOTTOM).scale;
-        const y: any = scales.find((scale: Scale) => scale.orient === Placement.LEFT).scale;
+        const x: any = scales.find((scale: Scale) => scale.orient === this.xDirection).scale;
+        const y: any = scales.find((scale: Scale) => scale.orient === this.yDirection).scale;
         let padding = 0;
         if (x.bandwidth) {
             padding = x.bandwidth() / 2;

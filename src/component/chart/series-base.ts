@@ -3,10 +3,11 @@ import { Subject, Observable, Subscription } from 'rxjs';
 
 import { ChartSelector } from './chart-selector-variable';
 import { ISeries, SeriesConfiguration } from './series.interface';
-import { Scale, ContainerSize, ScaleValue, DisplayOption } from './chart.interface';
+import { Scale, ContainerSize, DisplayOption } from './chart.interface';
 import { guid } from './util/d3-svg-util';
 import { Quadtree } from 'd3-quadtree';
 import { ChartBase } from './chart-base';
+import { Placement } from './chart-configuration';
 
 export class SeriesBase implements ISeries {
     type: string = 'series';
@@ -25,19 +26,21 @@ export class SeriesBase implements ISeries {
 
     protected subscription: Subscription = new Subscription();
 
-    protected itemClickSubject: Subject<{
-        data: any,
-        target?: any,
-        event?: any
-    }> = new Subject();
+    // protected itemClickSubject: Subject<{
+    //     data: any,
+    //     target?: any,
+    //     event?: any
+    // }> = new Subject();
 
     protected initGeometry: ContainerSize;
 
     protected geometry: ContainerSize;
 
-    protected scaleValue: ScaleValue;
-
     protected originQuadTree: Quadtree<any[]> = undefined;
+
+    protected xDirection: string = Placement.BOTTOM;
+
+    protected yDirection: string = Placement.LEFT;
 
     private chart: ChartBase;
 
@@ -46,21 +49,17 @@ export class SeriesBase implements ISeries {
     private maskId = '';
 
     constructor(configuration: SeriesConfiguration) {
-        if (configuration.type) {
-            this.type = configuration.type;
-        }
+        this.type = configuration.type || this.type;
 
-        if (configuration.selector) {
-            this.selector = configuration.selector;
-        }
+        this.selector = configuration.selector || this.selector;
 
-        if (configuration.displayName) {
-            this.displayName = configuration.displayName;
-        }
+        this.displayName = configuration.displayName || this.displayName;
 
-        if (configuration.shape) {
-            this.shape = configuration.shape;
-        }
+        this.shape = configuration.shape || this.shape;
+
+        this.xDirection = configuration.xDirection || this.xDirection;
+
+        this.yDirection = configuration.yDirection || this.yDirection;
     }
 
     set chartBase(value: ChartBase) {
@@ -71,9 +70,9 @@ export class SeriesBase implements ISeries {
         return this.chart;
     }
 
-    get $currentItem(): Observable<any> {
-        return this.itemClickSubject.asObservable();
-    }
+    // get $currentItem(): Observable<any> {
+    //     return this.itemClickSubject.asObservable();
+    // }
 
     changeConfiguration(configuration: SeriesConfiguration) {}
 

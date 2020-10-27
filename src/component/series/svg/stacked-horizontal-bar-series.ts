@@ -66,8 +66,8 @@ export class StackedHorizontalBarSeries extends SeriesBase {
     }
 
     drawSeries(chartData: any[], scales: Scale[], geometry: ContainerSize) {
-        const x: any = scales.find((scale: Scale) => scale.orient === 'bottom').scale;
-        const y: any = scales.find((scale: Scale) => scale.orient === 'left').scale;
+        const x: any = scales.find((scale: Scale) => scale.orient === this.xDirection).scale;
+        const y: any = scales.find((scale: Scale) => scale.orient === this.yDirection).scale;
 
         // set the colors
         const z = scaleOrdinal()
@@ -131,11 +131,6 @@ export class StackedHorizontalBarSeries extends SeriesBase {
                                 .attr('width', textElement.node().getComputedTextLength() + 10);
                             // this.tooltipGroup.select('text').text(`${d[1] - d[0]}`);
                             // console.log('d : ', d, target, parent);
-                        })
-                        .on('click', (data: any) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            this.itemClickSubject.next(data);
                         }),
                     (update) => update,
                     (exit) => exit.remove()

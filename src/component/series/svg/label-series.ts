@@ -35,33 +35,30 @@ export class LabelSeries extends SeriesBase {
         }
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
-                  mainGroup: Selection<BaseType, any, HTMLElement, any>) {
+    setSvgElement(
+        svg: Selection<BaseType, any, HTMLElement, any>,
+        mainGroup: Selection<BaseType, any, HTMLElement, any>
+    ) {
         this.svg = svg;
         if (!mainGroup.select(`.${this.selector}-group`).node()) {
             this.mainGroup = mainGroup.append('g').attr('class', `${this.selector}-group`);
         }
     }
 
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
-        const x: any = scales.find((scale: Scale) => scale.orient === 'bottom').scale;
-        const y: any = scales.find((scale: Scale) => scale.orient === 'left').scale;
+    drawSeries(chartData: any[], scales: Scale[], geometry: ContainerSize) {
+        const x: any = scales.find((scale: Scale) => scale.orient === this.xDirection).scale;
+        const y: any = scales.find((scale: Scale) => scale.orient === this.yDirection).scale;
         this.mainGroup.selectAll(`.${this.selector}`)
             .data(chartData)
                 .join(
-                    (enter) => enter.append('text').attr('class', this.selector)
-                        .on('click', (data: any) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            this.itemClickSubject.next(data);
-                        }),
+                    (enter) => enter.append('text').attr('class', this.selector),
                     (update) => update,
                     (exit) => exit.remove
                 )
-                .attr('x', (data: any) => { 
-                    return x(data[this.xField]); 
+                .attr('x', (data: any) => {
+                    return x(data[this.xField]);
                 })
-                .attr('y', (data: any) => { 
+                .attr('y', (data: any) => {
                     return y(data[this.yField]) - 7;
                 })
                 .text( (data: any) => {

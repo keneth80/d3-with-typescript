@@ -711,8 +711,19 @@ export class ChartBase<T = any> implements IChart {
                             .text((d: string) => {
                                 return scale.tickTextParser(d);
                             })
-                    })
+                    });
                 }
+            }
+
+            if (scale.isGridLine) {
+                ChartAxis.drawGridLine(
+                    {
+                        width: this.width,
+                        height: this.height
+                    },
+                    scale,
+                    this.mainGroup
+                );
             }
 
             if (isZoom && scale.isZoom === true) {
@@ -1219,7 +1230,18 @@ export class ChartBase<T = any> implements IChart {
                 this.defaultAxisTitleStyle,
                 this.axisTitleMargin,
                 this.updateBrushHandler
-            )
+            );
+
+            if (scale.isGridLine) {
+                ChartAxis.drawGridLine(
+                    {
+                        width: this.width,
+                        height: this.height
+                    },
+                    scale,
+                    this.mainGroup
+                );
+            }
         });
 
         // margin 설정이 따로 없으면 자동으로 계산해서 margin을 갱신한다.
@@ -1394,7 +1416,7 @@ export class ChartBase<T = any> implements IChart {
             if (scale.tickSize) {
                 targetScale.ticks(scale.tickSize);
             }
-            const tickFmt: any = ' ';
+            const tickFmt: any = '';
             if (scale.orient === Placement.RIGHT || scale.orient === Placement.LEFT) {
                 targetScale.tickSize(-this.width).tickFormat(tickFmt);
             } else {

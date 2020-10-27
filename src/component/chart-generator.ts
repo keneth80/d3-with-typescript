@@ -162,12 +162,12 @@ export const generatorFunctions = (
 ): IFunctions[] => {
     const functions: IFunctions[] = [];
     if (zoom) {
-        zoom.delayTime = 10;
+        zoom.delayTime = 50;
         functions.push(new BasicSvgMouseZoomHandler(zoom));
     } else {
         functions.push(new BasicSvgMouseHandler({
             isMoveEvent: true,
-            delayTime: 10
+            delayTime: 50
         }));
     }
     return functions;

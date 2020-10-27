@@ -144,14 +144,12 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
     }
 
     drawSeries(chartBaseData: T[], scales: Scale[], geometry: ContainerSize, option: DisplayOption) {
-        const chartData = this.seriesData ? this.seriesData : chartBaseData;
-
         this.geometry = geometry;
-
         this.seriesColor = option.color;
-        // TODO: scale direction 설정 추가 전부다.
-        const xScale: Scale = scales.find((scale: Scale) => scale.orient === Placement.BOTTOM);
-        const yScale: Scale = scales.find((scale: Scale) => scale.orient === Placement.LEFT);
+
+        const chartData = this.seriesData ? this.seriesData : chartBaseData;
+        const xScale: Scale = scales.find((scale: Scale) => scale.orient === this.xDirection);
+        const yScale: Scale = scales.find((scale: Scale) => scale.orient === this.yDirection);
         const x: any = xScale.scale;
         const y: any = yScale.scale;
 

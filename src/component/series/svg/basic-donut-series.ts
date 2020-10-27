@@ -60,8 +60,10 @@ export class BasicDonutSeries extends SeriesBase {
             .value((d: any) => d[this.valueField]);
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
-                  mainGroup: Selection<BaseType, any, HTMLElement, any>) {
+    setSvgElement(
+        svg: Selection<BaseType, any, HTMLElement, any>,
+        mainGroup: Selection<BaseType, any, HTMLElement, any>
+    ) {
         this.svg = svg;
         if (!mainGroup.select(`.${this.selector}-group`).node()) {
             this.mainGroup = mainGroup.append('g').attr('class', `${this.selector}-group`);
@@ -77,7 +79,7 @@ export class BasicDonutSeries extends SeriesBase {
             .attr('class', `${this.selector}-pie-line-group`);
     }
 
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
+    drawSeries(chartData: any[], scales: Scale[], geometry: ContainerSize) {
         const radius = Math.min(geometry.width, geometry.height) / 2;
 
         const arcs = this.pieShape(chartData);
@@ -131,7 +133,7 @@ export class BasicDonutSeries extends SeriesBase {
             .on('mousemove', (d: any, i: number, nodeList: any) => {
                 const textElement: any = this.tooltipGroup.select('text').text(`${d.data[this.categoryField]}: ${this.numberFmt(d.data[this.valueField])}`);
                 const textWidth = textElement.node().getComputedTextLength() + 10;
-                
+
                 let xPosition = event.x;
                 let yPosition = event.offsetY - 30;
 
@@ -143,10 +145,10 @@ export class BasicDonutSeries extends SeriesBase {
                 if (xPosition + textWidth > geometry.width) {
                     xPosition = xPosition - textWidth;
                 }
-                
+
                 this.tooltipGroup.attr('transform', `translate(${xPosition}, ${yPosition})`).selectAll('rect').attr('width', textWidth);
             });
-        
+
         let currentSeries = null;
         series.transition()
             .duration(1000)
@@ -194,7 +196,7 @@ export class BasicDonutSeries extends SeriesBase {
                     return this.midAngle(d2) < Math.PI ? 'start' : 'end';
                 };
             });
-            
+
         // ------- poly lines -------
         const lines = this.pieLineGroup.selectAll(`.${this.selector}-line`)
             .data(arcs, (d: any) => { return d.data[this.categoryField];})
@@ -219,7 +221,7 @@ export class BasicDonutSeries extends SeriesBase {
                     const pos = outerArc.centroid(d2);
                     pos[0] = radius * 0.95 * (this.midAngle(d2) < Math.PI ? 1 : -1);
                     return [innerArc.centroid(d2), outerArc.centroid(d2), pos].toLocaleString();
-                };			
+                };
             });
     }
 

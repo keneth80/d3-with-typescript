@@ -333,17 +333,6 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
     }
 
     onSelectItem(selectedItem: any[], position: any[]) {
-        this.itemClickSubject.next({
-            data: selectedItem[2],
-            event: {
-                offsetX: position[0] + this.chartBase.chartMargin.left,
-                offsetY: position[1] + this.chartBase.chartMargin.top
-            },
-            target: {
-                width: 1,
-                height: 1
-            }
-        });
     }
 
     clear() {

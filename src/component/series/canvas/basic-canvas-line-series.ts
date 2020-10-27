@@ -145,8 +145,8 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
     }
 
     drawSeries(chartData: T[], scales: Scale[], geometry: ContainerSize, option: DisplayOption) {
-        const xScale: Scale = scales.find((scale: Scale) => scale.field === this.xField);
-        const yScale: Scale = scales.find((scale: Scale) => scale.field === this.yField);
+        const xScale: Scale = scales.find((scale: Scale) => scale.orient === this.xDirection);
+        const yScale: Scale = scales.find((scale: Scale) => scale.orient === this.yDirection);
         const x: any = xScale.scale;
         const y: any = yScale.scale;
 
@@ -297,17 +297,7 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
     private onClickItem(geometry: ContainerSize, radius: number, mouseEvent: number[]) {
         const selectedItem: any = this.drawTooltipPoint(geometry, radius, mouseEvent);
         if (selectedItem) {
-            this.itemClickSubject.next({
-                data: selectedItem.data,
-                event: {
-                    offsetX: selectedItem.x + this.chartBase.chartMargin.left,
-                    offsetY: selectedItem.y + this.chartBase.chartMargin.top
-                },
-                target: {
-                    width: radius,
-                    height: radius
-                }
-            });
+
         }
     }
 

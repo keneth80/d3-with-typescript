@@ -58,8 +58,10 @@ export class BasicPieSeries extends SeriesBase {
             .value((d: any) => d[this.valueField]);
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
-                  mainGroup: Selection<BaseType, any, HTMLElement, any>) {
+    setSvgElement(
+        svg: Selection<BaseType, any, HTMLElement, any>,
+        mainGroup: Selection<BaseType, any, HTMLElement, any>
+    ) {
         this.svg = svg;
         if (!mainGroup.select(`.${this.selector}-group`).node()) {
             this.mainGroup = mainGroup.append('g').attr('class', `${this.selector}-group`);
@@ -74,8 +76,6 @@ export class BasicPieSeries extends SeriesBase {
             .range(quantize(t => interpolateSpectral(t * 0.8 + 0.1), chartData.length).reverse());
 
         const arcShape = arc()
-            // .innerRadius(radius * 0.5)
-            // .outerRadius(radius * 0.5);
             .innerRadius(this.innerRadius * 0.5)
             .outerRadius(Math.min(geometry.width, geometry.height) / 2 - 1 * 0.5);
 

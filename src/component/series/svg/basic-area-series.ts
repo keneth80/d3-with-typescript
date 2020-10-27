@@ -32,8 +32,10 @@ export class BasicAreaSeries extends SeriesBase {
         }
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
-                  mainGroup: Selection<BaseType, any, HTMLElement, any>) {
+    setSvgElement(
+        svg: Selection<BaseType, any, HTMLElement, any>,
+        mainGroup: Selection<BaseType, any, HTMLElement, any>
+    ) {
         this.svg = svg;
         if (!mainGroup.select(`.${this.selector}-group`).node()) {
             this.mainGroup = mainGroup.append('g').attr('class', `${this.selector}-group`);
@@ -41,8 +43,8 @@ export class BasicAreaSeries extends SeriesBase {
     }
 
     drawSeries(chartData: any[], scales: Scale[], geometry: ContainerSize) {
-        const x: any = scales.find((scale: Scale) => scale.orient === 'bottom').scale;
-        const y: any = scales.find((scale: Scale) => scale.orient === 'left').scale;
+        const x: any = scales.find((scale: Scale) => scale.orient === this.xDirection).scale;
+        const y: any = scales.find((scale: Scale) => scale.orient === this.yDirection).scale;
 
         this.area = area()
             .x((d: any) => {

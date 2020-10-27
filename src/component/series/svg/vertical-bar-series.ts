@@ -49,12 +49,10 @@ export class VerticalBarSeries extends SeriesBase {
             }
         }
 
-        this.transition = transition()
-        .duration(750)
-        // .ease(easeQuadIn);
+        this.transition = transition().duration(750);
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
                   mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
         if (!mainGroup.select(`.${this.selector}-group`).node()) {
@@ -62,9 +60,9 @@ export class VerticalBarSeries extends SeriesBase {
         }
     }
 
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
-        const x: any = scales.find((scale: Scale) => scale.orient === 'bottom').scale;
-        const y: any = scales.find((scale: Scale) => scale.orient === 'left').scale;
+    drawSeries(chartData: any[], scales: Scale[], geometry: ContainerSize) {
+        const x: any = scales.find((scale: Scale) => scale.orient === this.xDirection).scale;
+        const y: any = scales.find((scale: Scale) => scale.orient === this.yDirection).scale;
 
         const fill = this.style.fill;
         const stroke = this.style.stroke;
@@ -72,27 +70,14 @@ export class VerticalBarSeries extends SeriesBase {
         this.mainGroup.selectAll(`.${this.selector}`)
             .data(chartData)
                 .join(
-                    (enter) => enter.append('rect').attr('class', this.selector)
-                        .on('click', (data: any) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            this.itemClickSubject.next(data);
-                        })
-                        .on('mouseover', (d: any, i, nodeList: any) => {
-                            select(nodeList[i])
-                                .style('fill', () => colorDarker(fill, 2) + '');
-                        })
-                        .on('mouseout', (d: any, i, nodeList: any) => {
-                            select(nodeList[i])
-                                .style('fill', fill);
-                        }),
+                    (enter) => enter.append('rect').attr('class', this.selector),
                     (update) => update,
                     (exit) => exit.remove
                 )
                 .style('stroke', stroke)
                 .style('fill', fill)
-                .attr('x', (data: any) => { 
-                    return x(data[this.xField]); 
+                .attr('x', (data: any) => {
+                    return x(data[this.xField]);
                 })
                 .attr('width', x.bandwidth())
                 .attr('y', geometry.height)
@@ -103,7 +88,7 @@ export class VerticalBarSeries extends SeriesBase {
                 })
                 .attr('height', (data: any) => {
                     return Math.abs(y(data[this.yField]) - y(0));
-                    // return height - y(data[this.yField]); 
+                    // return height - y(data[this.yField]);
                 });
     }
 

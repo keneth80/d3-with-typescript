@@ -227,14 +227,24 @@ export class BasicTopology extends SeriesBase {
                     const moveY = sectorPoint / 2 - data.height / 2;
                     data.y = data.y + moveY;
                 }
-                return `translate(${data.x}, ${data.y})`
+                return `translate(${data.x}, ${data.y})`;
             });
         }
 
         // member draw start
-        this.drawMember(topSectorGroup, this.selector, {width: memberWidth, height: memberHeight, limitWidth: MAX_MEMBER_WIDTH}, MEMBER_PADDING, 'top')
-            .on('mouseover', this.onMemberMouseOver)
-            .on('mouseout', this.onMemberMouseOut);
+        this.drawMember(
+            topSectorGroup,
+            this.selector,
+            {
+                width: memberWidth,
+                height: memberHeight,
+                limitWidth: MAX_MEMBER_WIDTH
+            },
+            MEMBER_PADDING,
+            'top'
+        )
+        .on('mouseover', this.onMemberMouseOver)
+        .on('mouseout', this.onMemberMouseOut);
 
         // 하단 그리기
         const bottomSectorGroup: Selection<BaseType, TopologyGroupElement, BaseType, any> =

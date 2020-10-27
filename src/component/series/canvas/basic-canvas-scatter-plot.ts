@@ -115,8 +115,8 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
         this.originQuadTree = undefined;
         this.setContainerPosition(geometry, this.chartBase);
 
-        const xScale: Scale = scales.find((scale: Scale) => scale.field === this.xField);
-        const yScale: Scale = scales.find((scale: Scale) => scale.field === this.yField);
+        const xScale: Scale = scales.find((scale: Scale) => scale.orient === this.xDirection);
+        const yScale: Scale = scales.find((scale: Scale) => scale.orient === this.yDirection);
         const x: any = xScale.scale;
         const y: any = yScale.scale;
 
@@ -308,7 +308,6 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
                     // const selectY = Math.round(selected[selected.length - 1][1]);
 
                     if (selectedItem) {
-                        this.itemClickSubject.next(selectedItem);
                         const pointerContext = (event.target.node() as any).getContext('2d');
                         pointerContext.fillStyle = 'red';
                         pointerContext.strokeStyle = 'white';

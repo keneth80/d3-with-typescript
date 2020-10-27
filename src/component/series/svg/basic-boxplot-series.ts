@@ -40,17 +40,19 @@ export class BasicBoxplotSeries extends SeriesBase {
         }
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
-                  mainGroup: Selection<BaseType, any, HTMLElement, any>) {
+    setSvgElement(
+        svg: Selection<BaseType, any, HTMLElement, any>,
+        mainGroup: Selection<BaseType, any, HTMLElement, any>
+    ) {
         this.svg = svg;
         if (!mainGroup.select(`.${this.selector}-group`).node()) {
             this.mainGroup = mainGroup.append('g').attr('class', `${this.selector}-group`);
         }
     }
 
-    drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
-        const x: any = scales.find((scale: Scale) => scale.orient === 'bottom').scale;
-        const y: any = scales.find((scale: Scale) => scale.orient === 'left').scale;
+    drawSeries(chartData: any[], scales: Scale[], geometry: ContainerSize) {
+        const x: any = scales.find((scale: Scale) => scale.orient === this.xDirection).scale;
+        const y: any = scales.find((scale: Scale) => scale.orient === this.yDirection).scale;
 
         let padding = 0;
         let barWidth = 10;
@@ -84,19 +86,14 @@ export class BasicBoxplotSeries extends SeriesBase {
         this.mainGroup.selectAll('.quartile')
             .data(chartData)
             .join(
-                (enter) => enter.append('rect').attr('class', 'quartile')
-                    .on('click', (data: any) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        this.itemClickSubject.next(data);
-                    }),
+                (enter) => enter.append('rect').attr('class', 'quartile'),
                 (update) => update,
                 (exit) => exit.remove()
             )
             .attr('width', barWidth)
             .attr('height', (datum: any) => {
                 const quartiles = datum.quartile;
-                const height = y(quartiles[0]) - y(quartiles[2]);      
+                const height = y(quartiles[0]) - y(quartiles[2]);
                 return height;
             })
             .attr('x', (datum: any) => { return x(datum.key) + padding - (barWidth/2); })
