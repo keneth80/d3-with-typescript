@@ -719,7 +719,8 @@ const simpleSvgAreaSeriesExample = () => {
                 placement: 'bottom',
                 min: 1,
                 max: 20,
-                isGridLine: true
+                isGridLine: true,
+                tickFormat: ',.1f'
             },
             {
                 field: 'y',

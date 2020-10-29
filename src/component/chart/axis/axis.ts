@@ -152,7 +152,7 @@ export class ChartAxis {
             if (scale.tickFormat) {
                 orientedAxis.ticks(null, scale.tickFormat);
             } else {
-                orientedAxis.tickFormat(format(',.0f'));
+                // orientedAxis.tickFormat(format(',.1f'));
             }
         } else if (scale.type === ScaleType.TIME) {
             if (scale.tickFormat) {
