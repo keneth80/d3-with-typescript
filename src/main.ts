@@ -24,7 +24,7 @@ import { StackedVerticalBarSeries, StackedVerticalBarSeriesConfiguration } from 
 import { GroupedVerticalBarSeries, GroupedVerticalBarSeriesConfiguration } from './component/series/svg/grouped-vertical-bar-series';
 import { BasicPieSeries } from './component/series/svg/basic-pie-series';
 import { BasicDonutSeries } from './component/series/svg/basic-donut-series';
-import { BasicAreaSeries } from './component/series/svg/basic-area-series';
+import { BasicAreaSeries, BasicAreaSeriesConfiguration } from './component/series/svg/basic-area-series';
 import { BasicCanvasScatterPlotModel, BasicCanvasScatterPlot } from './component/series/canvas/basic-canvas-scatter-plot';
 import { BasicGaugeSeries } from './component/series/svg/basic-gauge-series';
 import { topologyData } from './component/mock-data/topology-data';
@@ -43,7 +43,14 @@ import { BasicCanvasMouseZoomHandler } from './component/functions/basic-canvas-
 import { delayExcute } from './component/chart/util/d3-svg-util';
 import { MiChart, OptionConfiguration, MiccBaseConfiguration } from './component/mi-chart';
 import { ChartItemEvent } from './component/chart';
-import { CanvasTraceChart, SvgGroupedBarChart, SvgStackedBarChart, SvgTraceChart, WebglTraceChart } from './component/chart-generator';
+import {
+    CanvasTraceChart,
+    SvgGroupedBarChart,
+    SvgStackedBarChart,
+    SvgTraceChart,
+    WebglTraceChart,
+    SvgAreaChart
+} from './component/chart-generator';
 import { sampleMockData } from './component/mock-data/simple-mock-data';
 
 
@@ -168,6 +175,13 @@ const buttonMapping = () => {
         showLoader();
         clear();
         delayExcute(200, simpleSvgPlotSeriesExample);
+        delayExcute(1000, hideLoader);
+    });
+
+    select('#svg-area-series').on('click', () => {
+        showLoader();
+        clear();
+        delayExcute(200, simpleSvgAreaSeriesExample);
         delayExcute(1000, hideLoader);
     });
 }
@@ -647,6 +661,84 @@ const simpleSvgPlotSeriesExample = () => {
     highlightBlock((select('#json-configuration').node() as any));
 
     chart = SvgTraceChart(commonConfiguration, seriesList).draw();
+    chart.chartItemEvent.subscribe((item: ChartItemEvent) => {
+        if (item.type === 'click') {
+            alert('click =>' + JSON.stringify(item.data));
+        }
+    });
+}
+
+const simpleSvgAreaSeriesExample = () => {
+    const yFieldSeries: BasicAreaSeriesConfiguration = {
+        selector: 'y-series',
+        xField: 'x',
+        yField: 'y',
+        displayName: 'y-series',
+    };
+
+    const zFieldSeries: BasicAreaSeriesConfiguration = {
+        selector: 'z-series',
+        xField: 'x',
+        yField: 'z',
+        displayName: 'z-series'
+    }
+
+    const xFieldSeries: BasicAreaSeriesConfiguration = {
+        selector: 'x-series',
+        xField: 'x',
+        yField: 'x',
+        displayName: 'x-series'
+    }
+
+    const seriesList = [
+        yFieldSeries,
+        zFieldSeries,
+        xFieldSeries
+    ];
+
+    const commonConfiguration: MiccBaseConfiguration = {
+        selector: '#chart-div',
+        tooltip: {
+            tooltipTextParser: (d:any) => {
+                return `x: ${d.x} \ny: ${d.y}\nz: ${d.z}`
+            }
+        },
+        data: sampleMockData(20),
+        title: {
+            placement: Placement.TOP,
+            content: 'SVG Area Series'
+        },
+        legend: {
+            placement: Placement.TOP
+        },
+        isResize: true,
+        axes: [
+            {
+                field: 'x',
+                type: ScaleType.NUMBER,
+                placement: 'bottom',
+                min: 1,
+                max: 20,
+                isGridLine: true
+            },
+            {
+                field: 'y',
+                type: ScaleType.NUMBER,
+                placement: 'left',
+                min: 0,
+                max: 30,
+                isGridLine: true
+            }
+        ],
+        zoom: {
+            direction: Direction.BOTH
+        }
+    };
+
+    (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
+    highlightBlock((select('#json-configuration').node() as any));
+
+    chart = SvgAreaChart(commonConfiguration, seriesList).draw();
     chart.chartItemEvent.subscribe((item: ChartItemEvent) => {
         if (item.type === 'click') {
             alert('click =>' + JSON.stringify(item.data));

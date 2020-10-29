@@ -23,6 +23,7 @@ import { GroupedHorizontalBarSeriesConfiguration, GroupedHorizontalBarSeries } f
 import { StackedHorizontalBarSeriesConfiguration, StackedHorizontalBarSeries } from './series/svg/stacked-horizontal-bar-series';
 import { StackedVerticalBarSeriesConfiguration, StackedVerticalBarSeries } from './series/svg/stacked-vertical-bar-series';
 import { MiccBaseConfiguration, OptionConfiguration, ZoomConfiguration } from './mi-chart';
+import { BasicAreaSeries, BasicAreaSeriesConfiguration } from './series/svg/basic-area-series';
 
 /*
 * desc: 캔버스 시리즈 출력 설정정보 맵핑.
@@ -78,6 +79,24 @@ export const SvgTraceChart = (
 
     chartConfiguration.series = series.map((traceConfiguration: BasicLineSeriesConfiguration) => {
         return new BasicLineSeries(traceConfiguration);
+    });
+
+    chartConfiguration.options = generatorOptions(options);
+
+    chartConfiguration.functions = generatorFunctions(configuration.zoom);
+
+    return new BasicChart(chartConfiguration);
+}
+
+export const SvgAreaChart = (
+    configuration: MiccBaseConfiguration,
+    series: BasicAreaSeriesConfiguration[] = [],
+    options: OptionConfiguration[] = []
+): BasicChart => {
+    const chartConfiguration: ChartConfiguration = generatorCommomConfiguration(configuration);
+
+    chartConfiguration.series = series.map((traceConfiguration: BasicAreaSeriesConfiguration) => {
+        return new BasicAreaSeries(traceConfiguration);
     });
 
     chartConfiguration.options = generatorOptions(options);

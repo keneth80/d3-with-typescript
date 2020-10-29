@@ -1064,9 +1064,11 @@ export class ChartBase<T = any> implements IChart {
                     this.pointerClear();
                 } else if (chartEvent.type === 'zoomin') {
                     isDragStart = false;
+                    this.selectionClear();
                     this.zoominEventHandler(chartEvent);
                 } else if (chartEvent.type === 'zoomout') {
                     isDragStart = false;
+                    this.selectionClear();
                     this.zoomoutEventHandler();
                 } else {
                     isDragStart = false;
