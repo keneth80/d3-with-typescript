@@ -8,6 +8,7 @@ import { scaleOrdinal } from 'd3-scale';
 import { timeParse, timeFormat } from 'd3-time-format';
 import { schemeCategory10 } from 'd3-scale-chromatic';
 import { csv } from 'd3-fetch';
+import { event } from 'd3';
 
 import { highlightBlock } from 'highlight.js';
 
@@ -52,6 +53,7 @@ import {
     SvgAreaChart
 } from './component/chart-generator';
 import { sampleMockData } from './component/mock-data/simple-mock-data';
+import { Observable } from 'rxjs';
 
 
 class SalesModel {
@@ -122,68 +124,66 @@ const showLoader = () => {
 }
 
 const buttonMapping = () => {
-    select('#svg-line-series').on('click', () => {
-        showLoader();
-        clear();
-        delayExcute(200, simpleSvgLineSeriesExample);
-        delayExcute(1000, hideLoader);
-    });
+    select('.container-button-bar').on('click', () => {
+        const seriesId = event.target.id;
+        if (seriesId) {
+            showLoader();
+            clear();
+        }
+        switch (seriesId) {
+            case 'svg-line-series':
+                delayExcute(200, simpleSvgLineSeriesExample);
+            break;
 
-    select('#webgl-line-series').on('click', () => {
-        showLoader();
-        clear();
-        delayExcute(200, simpleWebglLineSeriesExample);
-        delayExcute(1000, hideLoader);
-    });
+            case 'webgl-line-series':
+                delayExcute(200, simpleWebglLineSeriesExample);
+            break;
 
-    select('#webgl-bigdata-line-series').on('click', () => {
-        showLoader();
-        clear();
-        delayExcute(200, webGLBigDataLineSeriesSample);
-        delayExcute(1000, hideLoader);
-    });
+            case 'webgl-bigdata-line-series':
+                delayExcute(200, webGLBigDataLineSeriesSample);
+            break;
 
-    select('#canvas-line-series').on('click', () => {
-        showLoader();
-        clear();
-        delayExcute(200, simpleCanvasLineSeriesExample);
-        delayExcute(1000, hideLoader);
-    });
+            case 'canvas-line-series':
+                delayExcute(200, simpleCanvasLineSeriesExample);
+            break;
 
-    select('#canvas-bigdata-line-series').on('click', () => {
-        showLoader();
-        clear();
-        delayExcute(200, canvasBigDataLineSeriesSample);
-        delayExcute(1000, hideLoader);
-    });
+            case 'canvas-bigdata-line-series':
+                delayExcute(200, canvasBigDataLineSeriesSample);
+            break;
 
-    select('#svg-column-series').on('click', () => {
-        showLoader();
-        clear();
-        delayExcute(200, simpleSvgColumnSeriesExample);
-        delayExcute(1000, hideLoader);
-    });
+            case 'svg-column-series':
+                delayExcute(200, simpleSvgColumnSeriesExample);
+            break;
 
-    select('#svg-stacked-column-series').on('click', () => {
-        showLoader();
-        clear();
-        delayExcute(200, simpleSvgStackedColumnSeriesExample);
-        delayExcute(1000, hideLoader);
-    });
+            case 'svg-stacked-column-series':
+                delayExcute(200, simpleSvgStackedColumnSeriesExample);
+            break;
 
-    select('#svg-plot-series').on('click', () => {
-        showLoader();
-        clear();
-        delayExcute(200, simpleSvgPlotSeriesExample);
-        delayExcute(1000, hideLoader);
-    });
+            case 'svg-plot-series':
+                delayExcute(200, simpleSvgPlotSeriesExample);
+            break;
 
-    select('#svg-area-series').on('click', () => {
-        showLoader();
-        clear();
-        delayExcute(200, simpleSvgAreaSeriesExample);
-        delayExcute(1000, hideLoader);
+            case 'svg-area-series':
+                delayExcute(200, simpleSvgAreaSeriesExample);
+            break;
+
+            default:
+            break;
+        }
+        delayExcute(300, hideLoader);
     });
+    /*
+    Observable.of(true).pipe(
+    delay(150),
+    tap(() => {
+        this.renderer.addClass(this.mainContainer, 'side-container');
+    }),
+    delay(300),
+    tap(() => {
+        this.renderer.addClass(this.sideContainer, 'open');
+    })
+);
+    */
 }
 
 const setSeriesColor = (item: any) => {
@@ -1114,11 +1114,11 @@ const canvasTraceChart = () => {
     let ymin = 0;
     let ymax = 0;
 
-    const numberPoints = 100; // 1000000
+    const numberPoints = 100; // 300000
 
     const startDt = new Date().getTime();
     let endDt = 0;
-    const term = 1000;
+    const term = 300;
     const traceData = range(numberPoints).map((d: number) => {
         const x = startDt + (term * d);
         const y = parseFloat(randomY().toFixed(2));
@@ -1216,7 +1216,7 @@ const canvasScatter = (id: string) => {
     let xmax = 0;
     let ymin = 0;
     let ymax = 0;
-    const numberPoints = 110000;
+    const numberPoints = 13000;
     console.time('dataparse');
     const scatterData = range(numberPoints).map((d: number) => {
         const x = parseFloat(randomX().toFixed(2));
@@ -1413,13 +1413,13 @@ const svgTraceChart = () => {
     let xmax = 0;
     let ymin = 0;
     let ymax = 0;
-    const numberPoints = 10000;
+    const numberPoints = 3000;
     console.time('svgtimedataparse');
     const startDt = new Date().getTime();
 
     let endDt = 0;
     const traceData = range(numberPoints).map((d: number, i: number) => {
-        const x = startDt + (1000 * i);
+        const x = startDt + (300 * i);
         const y = parseFloat(randomY().toFixed(2));
         // const y = i%10 === 0 ? parseFloat(randomX().toFixed(2)) : i;
         // const y = i * 10;
@@ -1700,19 +1700,19 @@ const excute = () => {
 
     // d3 number format
     // 참조: http://bl.ocks.org/zanarmstrong/05c1e95bf7aa16c4768e
-    // Enter a number: 1000
-    d3.format("")	    1000
+    // Enter a number: 300
+    d3.format("")	    300
     d3.format("s")	    1k
     d3.format(",%")	    100,000%
     d3.format("+,%")	+100,000%
     d3.format(",.1%")	100,000.0%
-    d3.format(".4r")	1000
-    d3.format(".4f")	1000.0000
+    d3.format(".4r")	300
+    d3.format(".4f")	300.0000
     d3.format(".4n")	1,000
     d3.format(".3n")	1.00e+3
     d3.format(",d")	    1,000
     d3.format(",.0f")	1,000
-    d3.format(".0f")	1000
+    d3.format(".0f")	300
     d3.format(".0e")	1e+3
     */
 
@@ -2227,7 +2227,7 @@ const gaugeChart = () => {
         ringWidth: 30,
         minValue: 0,
         maxValue: 100,
-        transitionMs: 1000
+        transitionMs: 300
     });
 
     new BasicChart({

@@ -1,6 +1,7 @@
 import { BasicChart } from './basic-chart';
 import { ChartConfiguration,
-         Direction, } from './chart/chart-configuration';
+         Direction,
+         Placement, } from './chart/chart-configuration';
 
 import { IFunctions } from './chart/functions.interface';
 

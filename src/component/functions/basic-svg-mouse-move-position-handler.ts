@@ -11,7 +11,7 @@ import { FunctionsBase } from '../chart/functions-base';
 import { Direction, ScaleType, Placement } from '../chart/chart-configuration';
 import { ChartSelector } from '../chart';
 
-export interface BasicSvgMouseZoomHandlerConfiguration {
+export interface BasicSvgMouseMovePositionHandlerConfiguration {
     xDirection?: string; // bottom or top
     yDirection?: string; // left or right
     isMoveEvent?: boolean;
@@ -19,7 +19,7 @@ export interface BasicSvgMouseZoomHandlerConfiguration {
     delayTime?: number;
 }
 
-export class BasicSvgMouseZoomHandler extends FunctionsBase {
+export class BasicSvgMouseMovePositionHandler extends FunctionsBase {
     protected pointerGroup: Selection<BaseType, any, HTMLElement, any>;
 
     protected zoomBackDrop: Selection<BaseType, any, BaseType, any>;
@@ -48,7 +48,7 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
 
     private tempZoomBox: Selection<BaseType, any, BaseType, any>;
 
-    constructor(configuration: BasicSvgMouseZoomHandlerConfiguration) {
+    constructor(configuration: BasicSvgMouseMovePositionHandlerConfiguration) {
         super();
         if (configuration) {
             this.xDirection = configuration.xDirection ?? this.xDirection;
@@ -70,6 +70,14 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
         this.mainGroup = mainGroup;
 
         this.pointerGroup = this.svg.select('.' + ChartSelector.ZOOM_SVG);
+
+        if (!this.pointerGroup.select('.mouse-line').node()) {
+            this.pointerGroup.append('path')
+                .attr('class', 'mouse-line')
+                .style('stroke', 'black')
+                .style('stroke-width', '1px')
+                .style('opacity', 0);
+        }
 
         // zoom mask setup
         if (!this.svg.select('defs').select('#zoommask').node()) {
@@ -319,6 +327,64 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
                 position: mouseEvent,
                 target: this.pointerGroup
             });
+        });
+
+        const lineList: any[] = [];
+        this.svg.select('g.' + ChartSelector.SERIES_SVG).selectAll('g').each((data: any, index: number, nodeList: any) => {
+            const targetGroup = select(nodeList[index]);
+            lineList.push(targetGroup.attr('class') + '');
+            this.svg.select('g.' + ChartSelector.SERIES_SVG).append('g')
+                .attr('class', 'mouse-per-line')
+                .style('opacity', 0)
+                .append('circle')
+                    .attr('r', 7)
+                    .style('fill', 'none')
+                    .style('stroke-width', '2px')
+                    .style('stroke', this.chartBase.getColorByIndex(index));
+        });
+
+        const targetList = this.svg.select('g.' + ChartSelector.SERIES_SVG).selectAll('path').filter((d: any, index: number, nodeList: any) => {
+            return select(nodeList[index]).style('fill') === 'none';
+        });
+
+        this.pointerGroup
+        .on('mousemove', () => {
+            const mouseEvent = mouse(this.pointerGroup.node() as any);
+            this.pointerGroup.select('.mouse-line')
+                .attr('d', () => {
+                    let d = 'M' + mouseEvent[0] + ',' + geometry.height;
+                    d += ' ' + mouseEvent[0] + ',' + 0;
+                    return d;
+                });
+
+            this.svg.select('g.' + ChartSelector.SERIES_SVG).selectAll('.mouse-per-line')
+                .attr('transform', (d: any, index: number) => {
+                    const currentTarget = (targetList.nodes()[index] as any);
+                    let beginning = 0;
+                    let endIndex = currentTarget.getTotalLength();
+                    let target = null;
+                    let pos: any = null;
+                    while (true){
+                        target = Math.floor((beginning + endIndex) / 2);
+                        pos = currentTarget.getPointAtLength(target);
+                        if ((target === end || target === beginning) && pos.x !== mouseEvent[0]) {
+                            break;
+                        }
+                        if (pos.x > mouseEvent[0]) endIndex = target;
+                        else if (pos.x < mouseEvent[0]) beginning = target;
+                        else break;
+                    }
+
+                    return 'translate(' + mouseEvent[0] + ',' + pos.y +')';
+                });
+        })
+        .on('mouseover', () => {
+            this.pointerGroup.select('.mouse-line').style('opacity', 1);
+            this.svg.select('g.' + ChartSelector.SERIES_SVG).selectAll('.mouse-per-line').style('opacity', 1);
+        })
+        .on('mouseout', () => {
+            this.pointerGroup.select('.mouse-line').style('opacity', 0);
+            this.svg.select('g.' + ChartSelector.SERIES_SVG).selectAll('.mouse-per-line').style('opacity', 0);
         });
     }
 

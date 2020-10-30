@@ -123,7 +123,7 @@ export class SeriesBase implements ISeries {
     }
 
     getSeriesDataByPosition(value: number[]) {
-        return null;
+        return [];
     }
 
     showPointAndTooltip(value: number[], selected: any[]): number {

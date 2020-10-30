@@ -21,13 +21,9 @@ export class BasicSvgMouseHandler extends FunctionsBase {
     constructor(configuration: BasicSvgMouseHandlerConfiguration) {
         super();
         if (configuration) {
-            if (configuration.hasOwnProperty('isMoveEvent')) {
-                this.isMoveEvent = configuration.isMoveEvent;
-            }
+            this.isMoveEvent = configuration.isMoveEvent ?? this.isMoveEvent;
 
-            if (configuration.hasOwnProperty('delayTime')) {
-                this.delayTime = configuration.delayTime;
-            }
+            this.delayTime = configuration.delayTime ?? this.delayTime;
         }
     }
 

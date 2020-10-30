@@ -457,7 +457,7 @@ export class ChartBase<T = any> implements IChart {
                 selector
             });
             series.unSelectItem();
-            delayExcute(100, () => {
+            delayExcute(50, () => {
                 this.tooltipGroup.select('#' + selector).style('display', null);
                 this.drawTooltipBySeriesSelector(selector);
             });
@@ -1332,11 +1332,10 @@ export class ChartBase<T = any> implements IChart {
         this.updateAxis()
             .then(() => {
                 this.updateLegend();
-                // POINT: 해당 기능이 series에 의존함으로 series를 먼저 그린뒤에 function을 설정 하도록 한다.
-                this.updateFunctions();
                 this.updateTitle();
                 this.updateSeries(displayType);
                 this.updateOptions();
+                this.updateFunctions();
             });
     }
 
