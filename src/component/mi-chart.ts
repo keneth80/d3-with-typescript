@@ -22,6 +22,7 @@ import { GroupedVerticalBarSeriesConfiguration, GroupedVerticalBarSeries } from 
 import { GroupedHorizontalBarSeriesConfiguration, GroupedHorizontalBarSeries } from './series/svg/grouped-horizontal-bar-series';
 import { StackedHorizontalBarSeriesConfiguration, StackedHorizontalBarSeries } from './series/svg/stacked-horizontal-bar-series';
 import { StackedVerticalBarSeriesConfiguration, StackedVerticalBarSeries } from './series/svg/stacked-vertical-bar-series';
+import { BasicSvgMouseGuideLineHandlerConfiguration } from './functions/basic-svg-mouse-guide-line-handler';
 
 export interface OptionConfiguration {
     name: any;
@@ -61,6 +62,8 @@ export interface MiccBaseConfiguration {
     colors?: string[]; // custom color (default: d3.schemeCategory10, size: 10)
 
     zoom?: ZoomConfiguration;
+
+    mouseGuideLine?: BasicSvgMouseGuideLineHandlerConfiguration;
 
     options?: OptionConfiguration;
 

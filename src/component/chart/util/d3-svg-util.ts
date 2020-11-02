@@ -376,7 +376,7 @@ export const drawLegendColorItemByLine = (
 }
 
 export const delayExcute = (delayTime: number = 100, callback: any) => {
-    new Observable((observ: Observer<boolean>) => {
+    return new Observable((observ: Observer<boolean>) => {
         observ.next(true);
         observ.complete();
     })

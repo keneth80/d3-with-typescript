@@ -72,7 +72,7 @@ export class BasicPlotSeries extends SeriesBase {
         const plotData: any[] = !this.dataFilter ? chartData : chartData.filter((item: any) => this.dataFilter(item));
 
         this.mainGroup.selectAll(`.${this.selector}`)
-            .data(chartData)
+            .data(plotData)
                 .join(
                     (enter) => enter.append('circle').attr('class', this.selector),
                     (update) => update,

@@ -30,16 +30,18 @@ export class FunctionsBase implements IFunctions {
         return this.itemClickSubject.asObservable();
     }
 
-    changeConfiguration(configuration: any) {
-        
-    }
+    enable() {}
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
+    disable() {}
+
+    changeConfiguration(configuration: any) {}
+
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
         mainGroup: Selection<BaseType, any, HTMLElement, any>, index: number) {
 
     }
 
-    drawFunctions(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
+    drawFunctions(chartData: any[], scales: Scale[], geometry: ContainerSize) {
 
     }
 

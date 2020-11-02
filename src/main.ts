@@ -371,7 +371,8 @@ const simpleSvgLineSeriesExample = () => {
         ],
         zoom: {
             direction: Direction.BOTH
-        }
+        },
+        mouseGuideLine:{}
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');

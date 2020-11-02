@@ -25,6 +25,7 @@ import { StackedHorizontalBarSeriesConfiguration, StackedHorizontalBarSeries } f
 import { StackedVerticalBarSeriesConfiguration, StackedVerticalBarSeries } from './series/svg/stacked-vertical-bar-series';
 import { MiccBaseConfiguration, OptionConfiguration, ZoomConfiguration } from './mi-chart';
 import { BasicAreaSeries, BasicAreaSeriesConfiguration } from './series/svg/basic-area-series';
+import { BasicSvgMouseGuideLineHandler } from './functions/basic-svg-mouse-guide-line-handler';
 
 /*
 * desc: 캔버스 시리즈 출력 설정정보 맵핑.
@@ -84,7 +85,7 @@ export const SvgTraceChart = (
 
     chartConfiguration.options = generatorOptions(options);
 
-    chartConfiguration.functions = generatorFunctions(configuration.zoom);
+    chartConfiguration.functions = generatorFunctions(configuration);
 
     return new BasicChart(chartConfiguration);
 }
@@ -102,7 +103,7 @@ export const SvgAreaChart = (
 
     chartConfiguration.options = generatorOptions(options);
 
-    chartConfiguration.functions = generatorFunctions(configuration.zoom);
+    chartConfiguration.functions = generatorFunctions(configuration);
 
     return new BasicChart(chartConfiguration);
 }
@@ -122,7 +123,7 @@ export const SvgGroupedBarChart = (
 
     chartConfiguration.options = generatorOptions(options);
 
-    chartConfiguration.functions = generatorFunctions(configuration.zoom);
+    chartConfiguration.functions = generatorFunctions(configuration);
 
     return new BasicChart(chartConfiguration);
 }
@@ -141,7 +142,7 @@ export const SvgStackedBarChart = (
 
     chartConfiguration.options = generatorOptions(options);
 
-    chartConfiguration.functions = generatorFunctions(configuration.zoom);
+    chartConfiguration.functions = generatorFunctions(configuration);
 
     return new BasicChart(chartConfiguration);
 }
@@ -158,7 +159,7 @@ export const SvgMultiSeriesChart = (
 
     chartConfiguration.options = generatorOptions(options);
 
-    chartConfiguration.functions = generatorFunctions(configuration.zoom);
+    chartConfiguration.functions = generatorFunctions(configuration);
 
     return new BasicChart(chartConfiguration);
 }
@@ -178,18 +179,23 @@ export const generatorCanvasFunctions = (
 
 // 마우스 이벤트 같은 이벤트 함수설정 정보 맵핑.
 export const generatorFunctions = (
-    zoom?: ZoomConfiguration
+    config: MiccBaseConfiguration
 ): IFunctions[] => {
     const functions: IFunctions[] = [];
-    if (zoom) {
-        zoom.delayTime = 50;
-        functions.push(new BasicSvgMouseZoomHandler(zoom));
+    if (config.zoom) {
+        config.zoom.delayTime = 50;
+        functions.push(new BasicSvgMouseZoomHandler(config.zoom));
     } else {
         functions.push(new BasicSvgMouseHandler({
             isMoveEvent: true,
             delayTime: 50
         }));
     }
+
+    if (config.mouseGuideLine) {
+        functions.push(new BasicSvgMouseGuideLineHandler(config.mouseGuideLine));
+    }
+
     return functions;
 }
 
