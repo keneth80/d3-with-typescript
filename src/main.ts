@@ -566,14 +566,20 @@ const simpleCanvasLineSeriesExample = () => {
                 type: ScaleType.NUMBER,
                 placement: 'bottom',
                 min: 0,
-                max: 21
+                max: 21,
+                gridLine: {
+                    dasharray: 2,
+                }
             },
             {
                 field: 'y',
                 type: ScaleType.NUMBER,
                 placement: 'left',
                 min: 0,
-                max: 30
+                max: 30,
+                gridLine: {
+                    dasharray: 2,
+                }
             }
         ],
         zoom: {

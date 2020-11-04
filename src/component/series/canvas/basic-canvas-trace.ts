@@ -117,7 +117,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         }
 
         this.svg
-            .style('z-index', index + 2)
+            .style('z-index', 0)
             .style('position', 'absolute');
 
         if (!this.canvas) {
