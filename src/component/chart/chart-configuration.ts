@@ -58,7 +58,11 @@ export interface Axis {
     tickFormat?: any;
     tickTextParser?: any;
     tickSize?: number;
-    isGridLine?: boolean;
+    gridLine?: {
+        color?: string;
+        dasharray?: number;
+        opacity?: number;
+    };
     isZoom?: boolean;
     min?: number; // only type is number
     max?: number;  // only type is number

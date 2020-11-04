@@ -8,7 +8,6 @@ import { Scale, ContainerSize, DisplayOption } from '../../chart/chart.interface
 import { SeriesBase } from '../../chart/series-base';
 import { SeriesConfiguration } from '../../chart/series.interface';
 import { delayExcute, drawTooltipPointByCircle, drawSelectionPointByCircle } from '../../chart/util/d3-svg-util';
-import { Placement } from '../../chart/chart-configuration';
 import { ChartSelector } from '../../chart';
 import { setChartTooltipByPosition } from '../../chart/tooltip/tooltip-util';
 
@@ -23,6 +22,7 @@ export interface BasicLineSeriesConfiguration extends SeriesConfiguration {
     line?: {
         strokeWidth?: number;
         strokeColor?: string;
+        dashArray?: number;
         isCurve?: boolean; // default : false
     };
     animation?: boolean;
@@ -48,6 +48,8 @@ export class BasicLineSeries extends SeriesBase {
     private strokeWidth = 2;
 
     private strokeColor: string;
+
+    private dashArray: number = 0;
 
     private fillColor: string;
 
@@ -80,6 +82,7 @@ export class BasicLineSeries extends SeriesBase {
             if (configuration.line) {
                 this.strokeWidth = configuration.line.strokeWidth || this.strokeWidth;
                 this.strokeColor = configuration.line.strokeColor || this.strokeColor;
+                this.dashArray = configuration.line.dashArray || this.dashArray;
             }
 
             if (configuration.dot) {
@@ -149,6 +152,7 @@ export class BasicLineSeries extends SeriesBase {
                         (update) => update,
                         (exit) => exit.remove
                     )
+                    .style('stroke-dasharray', this.dashArray)
                     .style('stroke-width', this.strokeWidth)
                     .style('stroke', this.lineColor)
                     .style('fill', 'none')

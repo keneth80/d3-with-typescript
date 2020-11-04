@@ -295,7 +295,9 @@ const simpleSvgLineSeriesExample = () => {
         selector: 'y-series',
         xField: 'x',
         yField: 'y',
-        line: {},
+        line: {
+            dashArray: 2
+        },
         dot: {
             radius: 3
         },
@@ -359,14 +361,20 @@ const simpleSvgLineSeriesExample = () => {
                 type: ScaleType.NUMBER,
                 placement: 'bottom',
                 min: 0,
-                max: 21
+                max: 21,
+                gridLine: {
+                    color: '#ddd'
+                }
             },
             {
                 field: 'y',
                 type: ScaleType.NUMBER,
                 placement: 'left',
                 min: 0,
-                max: 30
+                max: 30,
+                gridLine: {
+                    color: '#ddd'
+                }
             }
         ],
         zoom: {
@@ -642,7 +650,9 @@ const simpleSvgPlotSeriesExample = () => {
                 placement: 'bottom',
                 min: 0,
                 max: 21,
-                isGridLine: true
+                gridLine: {
+                    dasharray: 2
+                }
             },
             {
                 field: 'y',
@@ -650,7 +660,9 @@ const simpleSvgPlotSeriesExample = () => {
                 placement: 'left',
                 min: -5,
                 max: 30,
-                isGridLine: true
+                gridLine: {
+                    dasharray: 2
+                }
             }
         ],
         zoom: {
@@ -720,7 +732,9 @@ const simpleSvgAreaSeriesExample = () => {
                 placement: 'bottom',
                 min: 1,
                 max: 20,
-                isGridLine: true,
+                gridLine: {
+                    color: '#ccc'
+                },
                 tickFormat: ',.1f'
             },
             {
@@ -729,7 +743,9 @@ const simpleSvgAreaSeriesExample = () => {
                 placement: 'left',
                 min: 0,
                 max: 30,
-                isGridLine: true
+                gridLine: {
+                    color: '#ccc'
+                }
             }
         ],
         zoom: {
@@ -1379,7 +1395,6 @@ const canvasLineChart = () => {
                 // tickTextParser: (d) => {
                 //     return parseTime(new Date(d));
                 // },
-                isGridLine: true,
                 isZoom: true,
                 title: {
                     content: 'Date',
@@ -1390,7 +1405,6 @@ const canvasLineChart = () => {
                 field: 'value',
                 type: 'number',
                 placement: Placement.LEFT,
-                isGridLine: true,
                 tickSize: 5,
                 min: 0,
                 isRound: true,
@@ -1561,7 +1575,6 @@ const svgLineSeriesExample = () => {
                 placement: Placement.BOTTOM,
                 tickFormat: '%H:%M %m-%d',
                 tickSize: 5,
-                isGridLine: true,
                 isZoom: true,
                 title: {
                     content: 'Date',
@@ -1572,7 +1585,6 @@ const svgLineSeriesExample = () => {
                 field: 'value',
                 type: 'number',
                 placement: Placement.LEFT,
-                isGridLine: true,
                 tickSize: 5,
                 min: 0,
                 isRound: true,
@@ -1759,8 +1771,7 @@ const excute = () => {
                 title: {
                     content: 'sales person',
                     align: Align.CENTER
-                },
-                isGridLine: true
+                }
                 // domain: data.map((item: any) => item.salesperson)
             },
             {

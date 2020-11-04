@@ -583,6 +583,8 @@ export class ChartBase<T = any> implements IChart {
             if (this.seriesList && this.seriesList.length) {
                 if (!this.config.displayDelay) {
                     // this.execute();
+                    // TODO: zoomin 일 경우 데이터 min, max filter를 여기에 걸기
+                    // .filter((d: T) => d[this.xField] >= (xmin - xmin * 0.02) && d[this.xField] <= (xmax + xmax * 0.02) && d[this.yField] >= ymin && d[this.yField] <= ymax)
                     this.seriesList.map((series: ISeries, index: number) => {
                         series.chartBase = this;
                         series.setSvgElement(this.svg, this.seriesGroup, index);
@@ -696,6 +698,22 @@ export class ChartBase<T = any> implements IChart {
             const scale = this.scales[index];
             const orientedAxis: any = ChartAxis.axisSetupByScale(scale);
 
+            if (scale.gridLine) {
+                ChartAxis.drawGridLine(
+                    {
+                        width: this.width,
+                        height: this.height
+                    },
+                    scale,
+                    this.mainGroup,
+                    {
+                        color: scale.gridLine.color ?? '#ccc',
+                        dasharray: scale.gridLine.dasharray ?? 0,
+                        opacity: scale.gridLine.opacity ?? 1
+                    }
+                );
+            }
+
             if (scale.visible) {
                 this.axisGroups[scale.orient].call(
                     orientedAxis
@@ -713,17 +731,6 @@ export class ChartBase<T = any> implements IChart {
                             })
                     });
                 }
-            }
-
-            if (scale.isGridLine) {
-                ChartAxis.drawGridLine(
-                    {
-                        width: this.width,
-                        height: this.height
-                    },
-                    scale,
-                    this.mainGroup
-                );
             }
 
             if (isZoom && scale.isZoom === true) {
@@ -1219,6 +1226,22 @@ export class ChartBase<T = any> implements IChart {
         this.scales = this.setupScale(this.config.axes, this.width, this.height, this.currentScale);
 
         this.scales.forEach((scale: Scale) => {
+            if (scale.gridLine) {
+                ChartAxis.drawGridLine(
+                    {
+                        width: this.width,
+                        height: this.height
+                    },
+                    scale,
+                    this.mainGroup,
+                    {
+                        color: scale.gridLine.color ?? '#ccc',
+                        dasharray: scale.gridLine.dasharray ?? 0,
+                        opacity: scale.gridLine.opacity ?? 1
+                    }
+                );
+            }
+
             maxTextWidth[scale.orient] = ChartAxis.drawAxisByScale(
                 {
                     width: this.width,
@@ -1233,17 +1256,6 @@ export class ChartBase<T = any> implements IChart {
                 this.axisTitleMargin,
                 this.updateBrushHandler
             );
-
-            if (scale.isGridLine) {
-                ChartAxis.drawGridLine(
-                    {
-                        width: this.width,
-                        height: this.height
-                    },
-                    scale,
-                    this.mainGroup
-                );
-            }
         });
 
         // margin 설정이 따로 없으면 자동으로 계산해서 margin을 갱신한다.
@@ -1392,6 +1404,22 @@ export class ChartBase<T = any> implements IChart {
             );
         }
 
+        if (scale.gridLine) {
+            ChartAxis.drawGridLine(
+                {
+                    width: this.width,
+                    height: this.height
+                },
+                scale,
+                this.mainGroup,
+                {
+                    color: scale.gridLine.color ?? '#ccc',
+                    dasharray: scale.gridLine.dasharray ?? 0,
+                    opacity: scale.gridLine.opacity ?? 1
+                }
+            )
+        }
+
         const currnetAxis: any = ChartAxis.axisSetupByScale(scale);
 
         this.axisGroups[orient]
@@ -1410,28 +1438,6 @@ export class ChartBase<T = any> implements IChart {
                     return scale.tickTextParser(d);
                 });
             });
-        }
-
-        if (scale.isGridLine) {
-            const targetScale = getAxisByPlacement(scale.orient, currentScale);
-            if (scale.tickSize) {
-                targetScale.ticks(scale.tickSize);
-            }
-            const tickFmt: any = '';
-            if (scale.orient === Placement.RIGHT || scale.orient === Placement.LEFT) {
-                targetScale.tickSize(-this.width).tickFormat(tickFmt);
-            } else {
-                targetScale.tickSize(-this.height).tickFormat(tickFmt);
-            }
-
-            this.gridLineGroups[scale.orient]
-                .style('stroke', '#ccc')
-                .style('stroke-opacity', 0.3)
-                .style('shape-rendering', 'crispEdges');
-
-            this.gridLineGroups[scale.orient].call(
-                targetScale
-            );
         }
 
         // this.axisGroups[orient].transition().duration(1000).call(currnetAxis);

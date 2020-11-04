@@ -71,7 +71,11 @@ export interface Scale {
     visible: boolean;
     tickFormat?: string;
     tickSize?: number;
-    isGridLine: boolean;
+    gridLine?: {
+        color?: string;
+        dasharray?: number;
+        opacity?: number;
+    };
     isZoom: boolean;
     min?: number;
     max?: number;

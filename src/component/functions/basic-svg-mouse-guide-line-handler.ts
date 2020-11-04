@@ -1,14 +1,11 @@
 import { Selection, BaseType, mouse, select } from 'd3-selection';
-import { drag } from 'd3-drag';
-import { min, max } from 'd3-array';
-import { event } from 'd3';
 
 import { fromEvent } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 
 import { Scale, ContainerSize } from '../chart/chart.interface';
 import { FunctionsBase } from '../chart/functions-base';
-import { Direction, ScaleType, Placement } from '../chart/chart-configuration';
+import { Direction, Placement } from '../chart/chart-configuration';
 import { ChartSelector } from '../chart';
 
 export interface BasicSvgMouseGuideLineHandlerConfiguration {
@@ -16,6 +13,7 @@ export interface BasicSvgMouseGuideLineHandlerConfiguration {
     yDirection?: string; // left or right
     direction?: string;
     delayTime?: number;
+    isMultiTooltip?: boolean;
 }
 
 export class BasicSvgMouseGuideLineHandler extends FunctionsBase {
@@ -170,7 +168,8 @@ export class BasicSvgMouseGuideLineHandler extends FunctionsBase {
                     }
 
                     select(nodeList[index]).select('text')
-                    .text(y.invert(pos.y).toFixed(2));
+                    // .text(Math.round(y.invert(pos.y)));
+                    .text(y.invert(pos.y).toFixed(1));
 
                     return 'translate(' + mouseEvent[0] + ',' + pos.y +')';
                 });
@@ -188,49 +187,5 @@ export class BasicSvgMouseGuideLineHandler extends FunctionsBase {
     destroy() {
         this.svg.select('g.' + ChartSelector.SERIES_SVG).selectAll('g.mouse-per-line').remove();
         this.subscription.unsubscribe();
-    }
-
-    private dragElementInit(
-        targetGroup: Selection<BaseType, any, HTMLElement, any>,
-        size: ContainerSize
-    ) {
-        return targetGroup.append('rect')
-            .attr('x', 0)
-            .attr('y', 0)
-            .attr('height', size.width)
-            .attr('width', size.width)
-            .attr('mask', 'url(#zoommask)')
-            // .style('fill', '#ccc')
-            .attr('fill-opacity', 0.3)
-
-        /**
-         * <rect x='0' y='0' width='500' height='300' mask='url(#mask)' fill-opacity='0.7'/>
-         */
-    }
-
-    private dragElementClear(
-        zoomBox: Selection<BaseType, any, BaseType, any>,
-        tempZoomBox: Selection<BaseType, any, BaseType, any>
-    ) {
-        zoomBox
-            .attr('width', 0)
-            .attr('height', 0);
-        if (tempZoomBox) {
-            tempZoomBox.remove();
-        }
-    }
-
-    private drawZoomBox(
-        zoomBox: Selection<BaseType, any, BaseType, any>,
-        start: {x: number, y: number},
-        end: {x: number, y: number},
-        size: ContainerSize,
-        isRestore: boolean = false
-    ) {
-        zoomBox
-            .attr('x', start.x)
-            .attr('y', start.y)
-            .attr('width', Math.abs(end.x - start.x))
-            .attr('height', Math.abs(end.y - start.y));
     }
 }

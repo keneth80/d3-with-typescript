@@ -124,7 +124,7 @@ export class ChartAxis {
                 tickFormat: axis.tickFormat ? axis.tickFormat : undefined,
                 tickTextParser: axis.tickTextParser ? axis.tickTextParser : undefined,
                 tickSize: axis.tickSize ? axis.tickSize : undefined,
-                isGridLine: axis.isGridLine === true ? true : false,
+                gridLine: axis.gridLine,
                 isZoom: axis.isZoom === true ? true : false,
                 min: minValue,
                 max: maxValue,
@@ -336,6 +336,11 @@ export class ChartAxis {
         svgGeometry: ContainerSize,
         scale: Scale,
         targetGroup: Selection<BaseType, any, BaseType, any>,
+        option: {
+            color: string;
+            dasharray: number;
+            opacity: number;
+        }
     ) {
         const gridLineGroup: Selection<BaseType, any, BaseType, any> =
             targetGroup.selectAll(`g.${scale.orient}-grid-line`)
@@ -345,11 +350,12 @@ export class ChartAxis {
                 (update) => update,
                 (exit) => exit.remove()
             )
-            .style('stroke', '#ccc')
-            .style('stroke-opacity', 0.3)
+            // .style('stroke', option.color)
+            .style('stroke-opacity', option.opacity)
+            .style('stroke-dasharray', option.dasharray)
             .style('shape-rendering', 'crispEdges');
 
-        const tickFmt: any = ' ';
+        const tickFmt: any = '';
         let targetAxis: any;
         if (scale.orient === Placement.TOP || scale.orient === Placement.BOTTOM) {
             targetAxis = axisTop(scale.scale)
@@ -365,7 +371,15 @@ export class ChartAxis {
             targetAxis.ticks(scale.tickSize);
         }
 
-        return gridLineGroup.call(targetAxis);
+        const gridLines = gridLineGroup.call(targetAxis);
+        gridLines.select('path').remove();
+        if (scale.orient === Placement.LEFT ||
+            scale.orient === Placement.RIGHT) {
+            gridLines.select('g').remove();
+        }
+        gridLines.selectAll('line').style('stroke', option.color);
+        gridLines.lower();
+        return gridLines;
     }
 
     static setupBrush(
