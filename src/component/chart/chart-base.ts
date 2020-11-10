@@ -583,10 +583,19 @@ export class ChartBase<T = any> implements IChart {
             if (this.seriesList && this.seriesList.length) {
                 if (!this.config.displayDelay) {
                     // this.execute();
-                    // TODO: zoomin 일 경우 데이터 min, max filter를 여기에 걸기
-                    // .filter((d: T) => d[this.xField] >= (xmin - xmin * 0.02) && d[this.xField] <= (xmax + xmax * 0.02) && d[this.yField] >= ymin && d[this.yField] <= ymax)
+                    // TODO: zoomin 일 경우 데이터 min, max filtering을 여기할 수 있는 방법 강구.
+                    // .filter(
+                    //    (d: T) =>
+                    ///       d[this.xField] >= xmin - xmin * 0.01 &&
+                    //        d[this.xField] <= xmax + xmax * 0.01 &&
+                    //        d[this.yField] >= ymin &&
+                    //        d[this.yField] <= ymax
+                    // )
                     this.seriesList.map((series: ISeries, index: number) => {
-                        series.chartBase = this;
+                        if (!series.chartBase) {
+                            series.chartBase = this;
+                        }
+
                         series.setSvgElement(this.svg, this.seriesGroup, index);
                         series.drawSeries(
                             this.data,

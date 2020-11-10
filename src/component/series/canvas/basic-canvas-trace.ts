@@ -214,7 +214,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                         // POINT: data 만들면서 포인트 찍는다.
                         // if (this.config.dot) {
                         const rectSize = this.config.dot.radius;
-                        context.fillRect(xposition - rectSize, yposition - rectSize, this.config.dot.radius * 2, this.config.dot.radius * 2);
+                        context.fillRect(xposition - rectSize, yposition - rectSize, rectSize * 2, rectSize * 2);
                         // context.arc(xposition, yposition, this.config.dot.radius, 0, 2 * Math.PI, false);
                         // }
 
@@ -276,12 +276,13 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
     }
 
     getSeriesDataByPosition(value: number[]) {
+        const rectSize = this.config.dot.radius * 2;
         return this.search(
             this.originQuadTree,
-            value[0] - this.config.dot.radius,
-            value[1] - this.config.dot.radius,
-            value[0] + this.config.dot.radius,
-            value[1] + this.config.dot.radius
+            value[0] - rectSize,
+            value[1] - rectSize,
+            value[0] + rectSize,
+            value[1] + rectSize
         );
     }
 

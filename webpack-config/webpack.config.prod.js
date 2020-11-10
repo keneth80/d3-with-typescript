@@ -1,12 +1,12 @@
 'use strict';
 
-const webpackMerge            = require('webpack-merge');
+const webpackMerge = require('webpack-merge');
 const TerserPlugin = require('terser-webpack-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
-const cssnano                 = require('cssnano');
+const cssnano = require('cssnano');
 
-const commonConfig            = require('./webpack.config.common');
-const helpers                 = require('./helpers');
+const commonConfig = require('./webpack.config.common');
+const helpers = require('./helpers');
 
 module.exports = webpackMerge(commonConfig, {
     mode: 'production',

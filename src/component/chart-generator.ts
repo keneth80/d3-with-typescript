@@ -155,7 +155,7 @@ export const SvgMultiSeriesChart = (
 ): BasicChart => {
     const chartConfiguration: ChartConfiguration = generatorCommomConfiguration(configuration);
 
-    chartConfiguration.series = [];
+    chartConfiguration.series = []; // configuration type을 체크 해야함.
 
     chartConfiguration.options = generatorOptions(options);
 
