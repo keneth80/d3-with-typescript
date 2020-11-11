@@ -5,10 +5,10 @@ import { quadtree } from 'd3-quadtree';
 
 import { Scale, ContainerSize } from '../../chart/chart.interface';
 import { SeriesBase } from '../../chart/series-base';
-import { colorDarker, delayExcute, drawSelectionPointByRect, drawTooltipPointByRect, textBreak } from '../../chart/util/d3-svg-util';
+import { delayExcute, drawSelectionPointByRect, drawTooltipPointByRect } from '../../chart/util/d3-svg-util';
 import { SeriesConfiguration } from '../../chart/series.interface';
 import { ChartSelector } from '../../chart';
-import { setChartTooltipByPosition } from '../../chart/tooltip/tooltip-util';
+import { setChartTooltipByPosition } from '../../chart/util/tooltip-util';
 
 export interface GroupedVerticalBarSeriesConfiguration extends SeriesConfiguration {
     xField: string;

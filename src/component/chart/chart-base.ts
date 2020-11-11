@@ -1,30 +1,34 @@
 // import './chart.css';
 import { schemeCategory10 } from 'd3-scale-chromatic';
 import { select, Selection, BaseType, event } from 'd3-selection';
-import { brushX, brushY } from 'd3-brush';
 
 import { fromEvent, Subscription, Subject, of, Observable, from, timer } from 'rxjs';
 import { debounceTime, switchMap, map, concatMap, mapTo } from 'rxjs/operators';
 
 import { sha1 } from 'object-hash';
 
-import { IChart, Scale, ContainerSize, LegendItem, ChartMouseEvent, ChartZoomEvent, DisplayType, ChartItemEvent } from './chart.interface';
-import { ChartConfiguration, Axis, Margin, Placement, ChartTitle, ScaleType,
-         Align, AxisTitle, ChartTooltip, PlacementByElement
+import {
+    IChart, Scale, ContainerSize, LegendItem,
+    ChartMouseEvent, ChartZoomEvent,
+    DisplayType, ChartItemEvent
+} from './chart.interface';
+import {
+    ChartConfiguration,
+    Axis, Margin, Placement,
+    ChartTitle, ChartTooltip, PlacementByElement
 } from './chart-configuration';
 import { ISeries } from './series.interface';
 import { IFunctions } from './functions.interface';
 import { IOptions } from './options.interface';
-
 import { baseTooltipTemplate } from './tooltip/tooltip-template';
-import { guid, delayExcute, textWrapping,
-         getAxisByPlacement, getTransformByArray
-} from './util/d3-svg-util';
-import { ChartAxis } from './axis/axis';
+import { guid, delayExcute, getTransformByArray } from './util/d3-svg-util';
+import { drawAxisByScale, generateScaleByAxis } from './axis';
 import { ChartSelector } from './chart-selector-variable';
-import { ChartLegend } from './legend/chart-legend';
+import { ChartLegend } from './legend';
 import { setupWebglContext } from './util/webgl-util';
 import { clearCanvas } from './util/canvas-util';
+import { axisSetupByScale } from './scale';
+import { drawGridLine } from './grid-line';
 
 
 // TODO: 모든 참조되는 함수들은 subject로 바꾼다.
@@ -705,10 +709,10 @@ export class ChartBase<T = any> implements IChart {
         let index = 0;
         for (index = 0; index < this.scales.length; index++) {
             const scale = this.scales[index];
-            const orientedAxis: any = ChartAxis.axisSetupByScale(scale);
+            const orientedAxis: any = axisSetupByScale(scale);
 
             if (scale.gridLine) {
-                ChartAxis.drawGridLine(
+                drawGridLine(
                     {
                         width: this.width,
                         height: this.height
@@ -742,19 +746,19 @@ export class ChartBase<T = any> implements IChart {
                 }
             }
 
-            if (isZoom && scale.isZoom === true) {
-                // this.setupBrush(scale);
-                ChartAxis.setupBrush(
-                    {
-                        width: this.width,
-                        height: this.height
-                    },
-                    this.margin,
-                    scale,
-                    this.axisGroups[scale.orient],
-                    this.updateBrushHandler
-                );
-            }
+            // if (isZoom && scale.isZoom === true) {
+            //     // this.setupBrush(scale);
+            //     setupBrush(
+            //         {
+            //             width: this.width,
+            //             height: this.height
+            //         },
+            //         this.margin,
+            //         scale,
+            //         this.axisGroups[scale.orient],
+            //         this.updateBrushHandler
+            //     );
+            // }
         }
     }
 
@@ -1236,7 +1240,7 @@ export class ChartBase<T = any> implements IChart {
 
         this.scales.forEach((scale: Scale) => {
             if (scale.gridLine) {
-                ChartAxis.drawGridLine(
+                drawGridLine(
                     {
                         width: this.width,
                         height: this.height
@@ -1251,7 +1255,7 @@ export class ChartBase<T = any> implements IChart {
                 );
             }
 
-            maxTextWidth[scale.orient] = ChartAxis.drawAxisByScale(
+            maxTextWidth[scale.orient] = drawAxisByScale(
                 {
                     width: this.width,
                     height: this.height
@@ -1296,50 +1300,50 @@ export class ChartBase<T = any> implements IChart {
         this.chartLegend.drawLegend(this.legendGroup);
     }
 
-    protected setupBrush(scale: any) {
-        let brush = null;
-        if (scale.type === ScaleType.NUMBER || scale.type === ScaleType.TIME) {
-            if (scale.orient === Placement.RIGHT || scale.orient === Placement.LEFT) {
-                let left = 0;
-                let width = 0;
+    // protected setupBrush(scale: any) {
+    //     let brush = null;
+    //     if (scale.type === ScaleType.NUMBER || scale.type === ScaleType.TIME) {
+    //         if (scale.orient === Placement.RIGHT || scale.orient === Placement.LEFT) {
+    //             let left = 0;
+    //             let width = 0;
 
-                if (scale.orient === Placement.LEFT) {
-                    left = -1 * this.margin.left;
-                } else {
-                    width = this.width;
-                }
+    //             if (scale.orient === Placement.LEFT) {
+    //                 left = -1 * this.margin.left;
+    //             } else {
+    //                 width = this.width;
+    //             }
 
-                brush = brushY()
-                    .extent([ [left, 0], [width, this.height] ]);
-            } else {
-                let top = 0;
-                let height = 0;
+    //             brush = brushY()
+    //                 .extent([ [left, 0], [width, this.height] ]);
+    //         } else {
+    //             let top = 0;
+    //             let height = 0;
 
-                // top margin 때문에 처리.
-                if (scale.orient === Placement.TOP) {
-                    top = this.margin.top * -1;
-                } else {
-                    height = this.margin.bottom;
-                }
+    //             // top margin 때문에 처리.
+    //             if (scale.orient === Placement.TOP) {
+    //                 top = this.margin.top * -1;
+    //             } else {
+    //                 height = this.margin.bottom;
+    //             }
 
-                brush = brushX()
-                    .extent([ [0, top], [this.width, height] ]);
-            }
-            brush.on('end', () => {
-                this.updateBrushHandler(scale.orient, brush);
-            });
-        }
+    //             brush = brushX()
+    //                 .extent([ [0, top], [this.width, height] ]);
+    //         }
+    //         brush.on('end', () => {
+    //             this.updateBrushHandler(scale.orient, brush);
+    //         });
+    //     }
 
-        if (brush) {
-            if (!this.axisGroups[scale.orient].select('.brush' + scale.orient).node()) {
-                this.axisGroups[scale.orient].append('g')
-                    .attr('class', 'brush' + scale.orient);
-            }
-            this.axisGroups[scale.orient].select('.brush' + scale.orient).call(
-                brush
-            );
-        }
-    }
+    //     if (brush) {
+    //         if (!this.axisGroups[scale.orient].select('.brush' + scale.orient).node()) {
+    //             this.axisGroups[scale.orient].append('g')
+    //                 .attr('class', 'brush' + scale.orient);
+    //         }
+    //         this.axisGroups[scale.orient].select('.brush' + scale.orient).call(
+    //             brush
+    //         );
+    //     }
+    // }
 
     protected updateDisplay(displayType: DisplayType = DisplayType.NORMAL) {
         if (this.width <= 50 || this.height <= 50) {
@@ -1378,7 +1382,7 @@ export class ChartBase<T = any> implements IChart {
             this.currentScale = [...reScaleAxes];
         }
 
-        return ChartAxis.generateScaleByAxis(axes, this.data, {width, height}, this.currentScale);
+        return generateScaleByAxis(axes, this.data, {width, height}, this.currentScale);
     }
 
     protected updateBrushHandler(orient: string = 'bottom', brush: any) {
@@ -1414,7 +1418,7 @@ export class ChartBase<T = any> implements IChart {
         }
 
         if (scale.gridLine) {
-            ChartAxis.drawGridLine(
+            drawGridLine(
                 {
                     width: this.width,
                     height: this.height
@@ -1429,7 +1433,7 @@ export class ChartBase<T = any> implements IChart {
             )
         }
 
-        const currnetAxis: any = ChartAxis.axisSetupByScale(scale);
+        const currnetAxis: any = axisSetupByScale(scale);
 
         this.axisGroups[orient]
         .call(currnetAxis)

@@ -230,10 +230,10 @@ const simpleSvgLineSeriesExample = () => {
             dashArray: 2
         },
         dot: {
+            selector: 'basic-line-y-series-dot',
             radius: 3
         },
-        displayName: 'y-series',
-        dotSelector: 'basic-line-y-series-dot'
+        displayName: 'y-series'
     };
 
     const zFieldSeries: BasicLineSeriesConfiguration = {
@@ -242,10 +242,10 @@ const simpleSvgLineSeriesExample = () => {
         yField: 'z',
         line: {},
         dot: {
+            selector: 'basic-line-z-series-dot',
             radius: 3
         },
-        displayName: 'z-series',
-        dotSelector: 'basic-line-z-series-dot'
+        displayName: 'z-series'
     }
 
     const xFieldSeries: BasicLineSeriesConfiguration = {
@@ -254,14 +254,14 @@ const simpleSvgLineSeriesExample = () => {
         yField: 'x',
         line: {},
         dot: {
-            radius: 3
+            radius: 3,
+            selector: 'basic-line-x-series-dot'
         },
         // style: {
         //     strokeWidth: 5,
         //     strokeColor: '#ccc'
         // },
-        displayName: 'x-series',
-        dotSelector: 'basic-line-x-series-dot'
+        displayName: 'x-series'
     }
 
     const seriesList = [
@@ -440,6 +440,7 @@ const simpleCanvasLineSeriesExample = () => {
         selector: 'y-series',
         xField: 'x',
         yField: 'y',
+        line: {},
         dot: {
             radius: 3
         },
@@ -450,6 +451,7 @@ const simpleCanvasLineSeriesExample = () => {
         selector: 'z-series',
         xField: 'x',
         yField: 'z',
+        line: {},
         dot: {
             radius: 3
         },
@@ -460,6 +462,9 @@ const simpleCanvasLineSeriesExample = () => {
         selector: 'x-series',
         xField: 'x',
         yField: 'x',
+        line: {
+            dashArray: 2
+        },
         dot: {
             radius: 3
         },
@@ -530,10 +535,10 @@ const simpleSvgPlotSeriesExample = () => {
         xField: 'x',
         yField: 'y',
         dot: {
-            radius: 3
+            radius: 3,
+            selector: 'basic-line-y-series-dot'
         },
-        displayName: 'y-series',
-        dotSelector: 'basic-line-y-series-dot'
+        displayName: 'y-series'
     };
 
     const zFieldSeries: BasicLineSeriesConfiguration = {
@@ -541,10 +546,10 @@ const simpleSvgPlotSeriesExample = () => {
         xField: 'x',
         yField: 'z',
         dot: {
-            radius: 3
+            radius: 3,
+            selector: 'basic-line-z-series-dot'
         },
-        displayName: 'z-series',
-        dotSelector: 'basic-line-z-series-dot'
+        displayName: 'z-series'
     }
 
     const xFieldSeries: BasicLineSeriesConfiguration = {
@@ -552,10 +557,10 @@ const simpleSvgPlotSeriesExample = () => {
         xField: 'x',
         yField: 'x',
         dot: {
-            radius: 3
+            radius: 3,
+            selector: 'basic-line-x-series-dot'
         },
-        displayName: 'x-series',
-        dotSelector: 'basic-line-x-series-dot'
+        displayName: 'x-series'
     }
 
     const seriesList = [
@@ -997,7 +1002,7 @@ const canvasBigDataLineSeriesSample = () => {
                 dot: {
                     radius: 4
                 },
-                style: {
+                line: {
                     strokeColor: seriesColor,
                     // opacity: seriesColor === '#EA3010' ? 1 :  0.9
                 },

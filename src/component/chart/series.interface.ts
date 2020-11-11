@@ -6,7 +6,7 @@ import { Scale, DisplayOption, ContainerSize } from './chart.interface';
 export enum SeriesType {
     SVG_LINE = 'svg-line',
     SVG_COLUMN = 'svg-column'
-} 
+}
 
 export interface SeriesConfiguration {
     type?: string; // line, bar, plot, area....

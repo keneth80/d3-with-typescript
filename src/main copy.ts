@@ -299,10 +299,10 @@ const simpleSvgLineSeriesExample = () => {
             dashArray: 2
         },
         dot: {
-            radius: 3
+            radius: 3,
+            selector: 'basic-line-y-series-dot'
         },
-        displayName: 'y-series',
-        dotSelector: 'basic-line-y-series-dot'
+        displayName: 'y-series'
     };
 
     const zFieldSeries: BasicLineSeriesConfiguration = {
@@ -311,10 +311,10 @@ const simpleSvgLineSeriesExample = () => {
         yField: 'z',
         line: {},
         dot: {
-            radius: 3
+            radius: 3,
+            selector: 'basic-line-z-series-dot'
         },
-        displayName: 'z-series',
-        dotSelector: 'basic-line-z-series-dot'
+        displayName: 'z-series'
     }
 
     const xFieldSeries: BasicLineSeriesConfiguration = {
@@ -323,14 +323,14 @@ const simpleSvgLineSeriesExample = () => {
         yField: 'x',
         line: {},
         dot: {
-            radius: 3
+            radius: 3,
+            selector: 'basic-line-x-series-dot'
         },
         // style: {
         //     strokeWidth: 5,
         //     strokeColor: '#ccc'
         // },
-        displayName: 'x-series',
-        dotSelector: 'basic-line-x-series-dot'
+        displayName: 'x-series'
     }
 
     const seriesList = [
@@ -599,10 +599,10 @@ const simpleSvgPlotSeriesExample = () => {
         xField: 'x',
         yField: 'y',
         dot: {
-            radius: 3
+            radius: 3,
+            selector: 'basic-line-y-series-dot'
         },
-        displayName: 'y-series',
-        dotSelector: 'basic-line-y-series-dot'
+        displayName: 'y-series'
     };
 
     const zFieldSeries: BasicLineSeriesConfiguration = {
@@ -610,10 +610,10 @@ const simpleSvgPlotSeriesExample = () => {
         xField: 'x',
         yField: 'z',
         dot: {
-            radius: 3
+            radius: 3,
+            selector: 'basic-line-z-series-dot'
         },
-        displayName: 'z-series',
-        dotSelector: 'basic-line-z-series-dot'
+        displayName: 'z-series'
     }
 
     const xFieldSeries: BasicLineSeriesConfiguration = {
@@ -621,10 +621,10 @@ const simpleSvgPlotSeriesExample = () => {
         xField: 'x',
         yField: 'x',
         dot: {
-            radius: 3
+            radius: 3,
+            selector: 'basic-line-x-series-dot'
         },
-        displayName: 'x-series',
-        dotSelector: 'basic-line-x-series-dot'
+        displayName: 'x-series'
     }
 
     const seriesList = [
@@ -1066,7 +1066,7 @@ const canvasBigDataLineSeriesSample = () => {
                 dot: {
                     radius: 4
                 },
-                style: {
+                line: {
                     strokeColor: seriesColor,
                     // opacity: seriesColor === '#EA3010' ? 1 :  0.9
                 },
@@ -1523,14 +1523,14 @@ const svgLineSeriesExample = () => {
             selector: 'basic-line-' + member,
             // animation: true,
             displayName: member,
-            dotSelector: 'basic-line-' + member + '-dot',
             yField: 'value',
             xField: 'date',
             line: {
                 isCurve: true,
             },
             dot: {
-                radius: 3
+                radius: 3,
+                selector: 'basic-line-' + member + '-dot',
             },
             filter,
             shape: Shape.LINE
@@ -1654,28 +1654,28 @@ const excute = () => {
 
     const basicLineSeries = new BasicLineSeries({
         selector: 'basic-line-sales',
-        dotSelector: 'basic-line-sales-dot',
         yField: 'sales',
         xField: 'salesperson',
         line: {
             isCurve: true
         },
         dot: {
-            radius: 3
+            radius: 3,
+            selector: 'basic-line-sales-dot'
         },
         shape: Shape.LINE
     });
 
     const basicLineSeries2 = new BasicLineSeries({
         selector: 'basic-line-assets',
-        dotSelector: 'basic-line-assets-dot',
         yField: 'assets',
         xField: 'salesperson',
         line: {
             isCurve: false
         },
         dot: {
-            radius: 3
+            radius: 3,
+            selector: 'basic-line-assets-dot'
         },
         shape: Shape.LINE
     });

@@ -30,16 +30,16 @@ export class BasicCanvasTraceModel {
 export interface BasicCanvasTraceConfiguration extends SeriesConfiguration {
     xField: string;
     yField: string;
-    isCurve?: boolean; // default : false
-    style?: {
-        lineWidth?: number;
-        strokeColor?: string;
-        opacity?: number;
-    },
     dot?: {
         radius?: number;
+        fill?: string;
     };
-    filter?: any;
+    line?: {
+        strokeWidth?: number;
+        strokeColor?: string;
+        dashArray?: number;
+        isCurve?: boolean; // default : false
+    };
     data?: any[];
     // animation?: boolean;
 }
@@ -51,57 +51,21 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
     private line: any;
 
-    private xField: string;
-
-    private yField: string;
-
     private config: BasicCanvasTraceConfiguration;
 
-    private seriesColor: string = '';
+    private restoreCanvas: Selection<BaseType, any, HTMLElement, any>;
 
-    private dataFilter: any;
-
-    private strokeColor;
-
-    private strokeOpacity = 1;
-
-    private seriesData: T[];
-
-    // ================= style 관련 변수 =============== //
     private radius = 4;
 
-    private lineWidth = 1;
+    private dotFill = '';
 
-    private lineColor = '#000000';
+    private strokeColor = '';
 
-    private restoreCanvas: Selection<BaseType, any, HTMLElement, any>;
+    private strokeWidth = 1;
 
     constructor(configuration: BasicCanvasTraceConfiguration) {
         super(configuration);
         this.config = configuration;
-        if (configuration) {
-            if (configuration.xField) {
-                this.xField = configuration.xField;
-            }
-
-            if (configuration.yField) {
-                this.yField = configuration.yField;
-            }
-
-            if (configuration.filter) {
-                this.dataFilter = configuration.filter;
-            }
-
-            if (configuration.style) {
-                this.lineWidth = configuration.style.lineWidth || 1;
-                this.strokeColor = configuration.style.strokeColor || null;
-                this.strokeOpacity = configuration.style.opacity || 1;
-            }
-
-            if (configuration.data) {
-                this.seriesData = configuration.data;
-            }
-        }
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
@@ -145,9 +109,10 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
     drawSeries(chartBaseData: T[], scales: Scale[], geometry: ContainerSize, option: DisplayOption) {
         this.geometry = geometry;
-        this.seriesColor = option.color;
+        this.strokeColor = this.checkSeriesColor() || option.color;
+        this.dotFill = this.config.dot && this.config.dot.fill ? this.config.dot.fill : option.color;
 
-        const chartData = this.seriesData ? this.seriesData : chartBaseData;
+        const chartData = this.config.data ? this.config.data : chartBaseData;
         const xScale: Scale = scales.find((scale: Scale) => scale.orient === this.xDirection);
         const yScale: Scale = scales.find((scale: Scale) => scale.orient === this.yDirection);
         const x: any = xScale.scale;
@@ -155,12 +120,14 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
         this.radius = this.config.dot ? this.config.dot.radius || 4 : 0;
 
-        this.lineColor = this.strokeColor ? this.strokeColor : option.color;
-
         const xmin = xScale.min;
         const xmax = xScale.max;
         const ymin = yScale.min;
         const ymax = yScale.max;
+
+        let generateData: any[];
+        const lineData: any[] = (!this.config.filter ? chartData : chartData.filter((item: T) => this.config.filter(item)))
+            .filter((d: T) => d[this.config.xField] >= (xmin - xmin * 0.02) && d[this.config.xField] <= (xmax + xmax * 0.02) && d[this.config.yField] >= ymin && d[this.config.yField] <= ymax);
 
         let padding = 0;
 
@@ -175,7 +142,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         this.canvas
             .attr('width', geometry.width)
             .attr('height', geometry.height)
-            .style('transform', `translate(${(this.chartBase.chartMargin.left)}px, ${(this.chartBase.chartMargin.top)}px)`);
+            .style('transform', `translate(${(this.chartBase.chartMargin.left + 1)}px, ${(this.chartBase.chartMargin.top)}px)`);
 
         this.chartBase.chartContainer.select('.' + ChartSelector.SELECTION_CANVAS)
             .attr('width', geometry.width)
@@ -183,66 +150,69 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
             .style('transform', `translate(${(this.chartBase.chartMargin.left + 1)}px, ${(this.chartBase.chartMargin.top)}px)`);
 
         const context = (this.canvas.node() as any).getContext('2d');
-        context.fillStyle = this.lineColor;
-        context.lineWidth = this.lineWidth;
-        // context.lineWidth = 0.5;
-        context.strokeStyle = this.lineColor;
+        context.fillStyle = this.dotFill;
+        context.strokeStyle = this.strokeColor;
         context.clearRect(0, 0, geometry.width, geometry.height);
         context.beginPath();
 
+        if (this.config.line) {
+            this.strokeWidth = this.config.line.strokeWidth || 1;
+            context.lineWidth = this.strokeWidth;
+            // context.lineWidth = 0.5;
+
+            if (this.config.line.dashArray && this.config.line.dashArray > 0) {
+                context.setLineDash([this.config.line.dashArray, this.config.line.dashArray]);
+            }
+
+            this.line = line()
+                .x((data: any) => {
+                    return data[0];
+                }) // set the x values for the line generator
+                .y((data: any) => {
+                    return data[1];
+                })
+                .context(context); // set the y values for the line generator
+            if (this.config.line.isCurve === true) {
+                this.line.curve(curveMonotoneX); // apply smoothing to the line
+            }
+        }
+
         // ctx.fillStyle = "rgba(0, 0, 0, 0)";
         // ctx.fillRect(left, top, width, height);
-
-        let generateData: any[];
         delayExcute(100, () => {
-            const lineData: any[] = (!this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item)))
-            .filter((d: T) => d[this.xField] >= (xmin - xmin * 0.02) && d[this.xField] <= (xmax + xmax * 0.02) && d[this.yField] >= ymin && d[this.yField] <= ymax);
-
             if (option.displayType === DisplayType.ZOOMOUT && this.restoreCanvas) {
                 generateData = lineData
                     .map((d: BasicCanvasTraceModel, i: number) => {
-                        const xposition = x(d[this.xField]) + padding;
-                        const yposition = y(d[this.yField]);
+                        const xposition = x(d[this.config.xField]) + padding;
+                        const yposition = y(d[this.config.yField]);
                         return [xposition, yposition, d];
                     });
                 context.drawImage(this.restoreCanvas.node(), 0, 0);
             } else {
                 generateData = lineData
                     .map((d: BasicCanvasTraceModel, i: number) => {
-                        const xposition = x(d[this.xField]) + padding;
-                        const yposition = y(d[this.yField]);
+                        const xposition = x(d[this.config.xField]) + padding;
+                        const yposition = y(d[this.config.yField]);
                         // POINT: data 만들면서 포인트 찍는다.
-                        // if (this.config.dot) {
-                        const rectSize = this.config.dot.radius;
-                        context.fillRect(xposition - rectSize, yposition - rectSize, rectSize * 2, rectSize * 2);
-                        // context.arc(xposition, yposition, this.config.dot.radius, 0, 2 * Math.PI, false);
-                        // }
-
+                        if (this.config.dot) {
+                            const rectSize = this.config.dot.radius;
+                            context.fillRect(xposition - rectSize, yposition - rectSize, rectSize * 2, rectSize * 2);
+                            // context.arc(xposition, yposition, this.config.dot.radius, 0, 2 * Math.PI, false);
+                        }
                         return [xposition, yposition, d, this.radius];
                     });
-                // 사이즈가 변경이 되면서 zoom out 경우에는 초기 사이즈를 업데이트 해준다.
-                this.line = line()
-                    .x((data: any) => {
-                        return data[0];
-                    }) // set the x values for the line generator
-                    .y((data: any) => {
-                        return data[1];
-                    })
-                    .context(context); // set the y values for the line generator
-
-                if (this.config.isCurve === true) {
-                    this.line.curve(curveMonotoneX); // apply smoothing to the line
+                if (this.config.line) {
+                    // 사이즈가 변경이 되면서 zoom out 경우에는 초기 사이즈를 업데이트 해준다.
+                    this.line(generateData);
+                    // context.fill();
+                    context.stroke();
                 }
-
-                this.line(generateData);
-                // context.fill();
-                context.stroke();
-            }
-
-            if (this.originQuadTree) {
-                this.originQuadTree = undefined;
             }
         });
+
+        if (this.originQuadTree) {
+            this.originQuadTree = undefined;
+        }
 
         delayExcute(300, () => {
             if ((option.displayType === DisplayType.NORMAL ||
@@ -292,8 +262,8 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         const selectedItem = selected[index];
         this.drawTooltipPoint(this.geometry, selectedItem, {
             radius: this.config.dot.radius / 2 + 1,
-            strokeColor: this.lineColor,
-            lineWidth: this.lineWidth
+            strokeColor: this.strokeColor,
+            strokeWidth: this.strokeWidth
         });
         this.setChartTooltip(
             selectedItem,
@@ -316,10 +286,14 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
             ],
             this.geometry,
             {
-                fill: this.lineColor,
+                fill: this.strokeColor,
                 radius: this.radius * 2
             }
         );
+    }
+
+    private checkSeriesColor() {
+        return this.config.line && this.config.line.strokeColor ? this.config.line.strokeColor : null;
     }
 
     private setChartTooltip(d: any, geometry: ContainerSize, mouseEvent: number[]) {
@@ -328,7 +302,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         const textElement: any = this.tooltipGroup.select('text').attr('dy', '.1em').text(
             this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser ?
                 this.chartBase.tooltip.tooltipTextParser(d[2]) :
-                `${this.xField}: ${d[2][this.xField]} \n ${this.yField}: ${d[2][this.yField]}`
+                `${this.config.xField}: ${d[2][this.config.xField]} \n ${this.config.yField}: ${d[2][this.config.yField]}`
         );
 
         textBreak(textElement, '\n');
@@ -360,13 +334,13 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
     private drawTooltipPoint(
         geometry: ContainerSize,
         position: number[],
-        style:{radius: number, strokeColor: string, lineWidth: number}
+        style:{radius: number, strokeColor: string, strokeWidth: number}
     ) {
         const selectionCanvas = this.chartBase.chartContainer.select('.' + ChartSelector.POINTER_CANVAS);
         const context = (selectionCanvas.node() as any).getContext('2d');
         context.clearRect(0, 0, geometry.width, geometry.height);
         context.fillStyle = style.strokeColor;
-        context.lineWidth = style.lineWidth;
+        context.lineWidth = style.strokeWidth;
         context.strokeStyle = '#000000';
         // this.drawPoint(context, {cx: selectedItem[0], cy:selectedItem[1], r: style.radius});
         // cx, cy과 해당영역에 출력이 되는지? 좌표가 마이너스면 출력 안하는 로직을 넣어야 함.

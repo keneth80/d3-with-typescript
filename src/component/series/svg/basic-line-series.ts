@@ -9,13 +9,13 @@ import { SeriesBase } from '../../chart/series-base';
 import { SeriesConfiguration } from '../../chart/series.interface';
 import { delayExcute, drawTooltipPointByCircle, drawSelectionPointByCircle } from '../../chart/util/d3-svg-util';
 import { ChartSelector } from '../../chart';
-import { setChartTooltipByPosition } from '../../chart/tooltip/tooltip-util';
+import { setChartTooltipByPosition } from '../../chart/util/tooltip-util';
 
 export interface BasicLineSeriesConfiguration extends SeriesConfiguration {
-    dotSelector?: string;
     xField: string;
     yField: string;
     dot?: {
+        selector?: string;
         radius?: number;
         fill?: string;
     };
@@ -39,19 +39,7 @@ export class BasicLineSeries extends SeriesBase {
 
     private dotClass = 'basic-line-dot';
 
-    private xField: string;
-
-    private yField: string;
-
     private config: BasicLineSeriesConfiguration;
-
-    private strokeWidth = 2;
-
-    private strokeColor: string;
-
-    private dashArray: number = 0;
-
-    private fillColor: string;
 
     private isAnimation = false;
 
@@ -59,41 +47,21 @@ export class BasicLineSeries extends SeriesBase {
 
     private isHide = false;
 
-    private radius = 4;
+    private radius = 2;
 
-    private lineColor = '';
+    private dotFill = '';
+
+    private strokeColor = '';
+
+    private strokeWidth = 1;
 
     constructor(configuration: BasicLineSeriesConfiguration) {
         super(configuration);
         this.config = configuration;
-        if (this.config) {
-            if (configuration.dotSelector) {
-                this.dotClass = configuration.dotSelector;
-            }
-
-            if (configuration.xField) {
-                this.xField = configuration.xField;
-            }
-
-            if (configuration.yField) {
-                this.yField = configuration.yField;
-            }
-
-            if (configuration.line) {
-                this.strokeWidth = configuration.line.strokeWidth || this.strokeWidth;
-                this.strokeColor = configuration.line.strokeColor || this.strokeColor;
-                this.dashArray = configuration.line.dashArray || this.dashArray;
-            }
-
-            if (configuration.dot) {
-                this.fillColor = configuration.dot.fill || this.fillColor;
-                this.radius = configuration.dot.radius || this.radius;
-            }
-
-            if (configuration.hasOwnProperty('animation')) {
-                this.isAnimation = configuration.animation;
-            }
+        if (this.config.hasOwnProperty('animation')) {
+            this.isAnimation = configuration.animation;
         }
+        this.dotClass = this.config.dot && this.config.dot.selector || this.dotClass + '-' + this.config.yField;
     }
 
     setSvgElement(
@@ -124,27 +92,26 @@ export class BasicLineSeries extends SeriesBase {
         }
 
         this.geometry = geometry;
+        this.strokeColor = this.checkSeriesColor() || option.color;
+        this.dotFill = this.config.dot && this.config.dot.fill ? this.config.dot.fill : option.color;
 
         const resultData: any[] = !this.config.filter ? chartData : chartData.filter((item: any) => this.config.filter(item));
 
-        this.lineColor = this.strokeColor ?? option.color;
-        this.fillColor = this.lineColor ?? this.fillColor;
-
         if (this.config.line) {
             this.line = line()
-                .defined(data => data[this.xField])
+                .defined(data => data[this.config.xField])
                 .x((data: any, i) => {
-                    const xposition = x(data[this.xField]) + padding;
+                    const xposition = x(data[this.config.xField]) + padding;
                     return xposition;
                 })
                 .y((data: any) => {
-                    const yposition = y(data[this.yField]);
+                    const yposition = y(data[this.config.yField]);
                     return yposition;
                 });
-
             if (this.config.line.isCurve === true) {
                 this.line.curve(curveMonotoneX); // apply smoothing to the line
             }
+
             const lineSeries = this.mainGroup.selectAll(`.${this.selector}`)
                 .data([resultData])
                     .join(
@@ -152,9 +119,9 @@ export class BasicLineSeries extends SeriesBase {
                         (update) => update,
                         (exit) => exit.remove
                     )
-                    .style('stroke-dasharray', this.dashArray)
+                    .style('stroke-dasharray', this.config.line.dashArray && this.config.line.dashArray > 0 ? this.config.line.dashArray : 0)
                     .style('stroke-width', this.strokeWidth)
-                    .style('stroke', this.lineColor)
+                    .style('stroke', this.strokeColor)
                     .style('fill', 'none')
                     .attr('d', this.line);
 
@@ -177,7 +144,7 @@ export class BasicLineSeries extends SeriesBase {
             //     .attr('height', geometry.height + (radius * 4))
             //     .attr('x', -(radius*2))
             //     .attr('y', -(radius*2));
-
+            this.radius = this.config.dot.radius || this.radius;
             this.dotGroup.selectAll(`.${this.dotClass}`)
                 .data(resultData)
                     .join(
@@ -186,10 +153,10 @@ export class BasicLineSeries extends SeriesBase {
                         (exit) => exit.remove
                     )
                     .style('stroke-width', this.radius / 2)
-                    .style('stroke', this.lineColor)
-                    .style('fill', this.fillColor)
-                    .attr('cx', (data: any) => x(data[this.xField]) + padding)
-                    .attr('cy', (data: any) => y(data[this.yField]))
+                    .style('stroke', this.strokeColor)
+                    .style('fill', this.dotFill)
+                    .attr('cx', (data: any) => x(data[this.config.xField]) + padding)
+                    .attr('cy', (data: any) => y(data[this.config.yField]))
                     .attr('r', this.radius);
         }
 
@@ -200,8 +167,8 @@ export class BasicLineSeries extends SeriesBase {
         delayExcute(300, () => {
             const generateData: any[] = resultData
                 .map((d: any, i: number) => {
-                    const xposition = x(d[this.xField]) + padding;
-                    const yposition = y(d[this.yField]);
+                    const xposition = x(d[this.config.xField]) + padding;
+                    const yposition = y(d[this.config.yField]);
                     return [xposition, yposition, d, this.radius];
                 });
             this.originQuadTree = quadtree()
@@ -243,7 +210,7 @@ export class BasicLineSeries extends SeriesBase {
             this.selectionGroup,
             [[selectedItem[0], selectedItem[1]]],
             {
-                fill: this.lineColor,
+                fill: this.dotFill,
                 radius: this.radius * 1.5
             }
         );
@@ -276,7 +243,7 @@ export class BasicLineSeries extends SeriesBase {
             [selectedItem],
             {
                 radius: this.radius * 1.5,
-                strokeColor: this.lineColor,
+                strokeColor: this.strokeColor,
                 strokeWidth: this.strokeWidth
             }
         );
@@ -287,7 +254,7 @@ export class BasicLineSeries extends SeriesBase {
                 this.tooltipGroup,
                 this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser
                     ? this.chartBase.tooltip.tooltipTextParser(selectedItem[2])
-                    : `${this.xField}: ${selectedItem[2][this.xField]} \n ${this.yField}: ${selectedItem[2][this.yField]}`,
+                    : `${this.config.xField}: ${selectedItem[2][this.config.xField]} \n ${this.config.yField}: ${selectedItem[2][this.config.yField]}`,
                 this.geometry,
                 [
                     selectedItem[0],
@@ -301,5 +268,9 @@ export class BasicLineSeries extends SeriesBase {
         }
 
         return index;
+    }
+
+    private checkSeriesColor() {
+        return this.config.line && this.config.line.strokeColor ? this.config.line.strokeColor : null;
     }
 }

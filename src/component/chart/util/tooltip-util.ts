@@ -1,7 +1,7 @@
 import { Selection, BaseType } from 'd3-selection';
 
 import { ContainerSize } from '../chart.interface';
-import { textBreak } from '../util';
+import { textBreak } from '.';
 
 export const setChartTooltipByPosition = (
     tooltipTarget: Selection<BaseType, any, HTMLElement, any>,
