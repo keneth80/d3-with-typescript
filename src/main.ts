@@ -5,6 +5,9 @@ import { select } from 'd3-selection';
 import { max } from 'd3-array';
 import { event } from 'd3';
 
+import { delay, tap } from 'rxjs/operators';
+import { Observable, Observer } from 'rxjs';
+
 import hljs from 'highlight.js/lib/core';
 import { highlightBlock } from 'highlight.js/lib/core';
 import json from 'highlight.js/lib/languages/json';
@@ -57,64 +60,106 @@ const showLoader = () => {
 const buttonMapping = () => {
     select('.container-button-bar').on('click', () => {
         const seriesId = event.target.id;
-        if (seriesId) {
-            showLoader();
-            clear();
-        }
-        switch (seriesId) {
-            case 'svg-line-series':
-                delayExcute(200, simpleSvgLineSeriesExample);
-            break;
+        // if (seriesId) {
+        //     showLoader();
+        //     clear();
+        // }
+        // switch (seriesId) {
+        //     case 'svg-line-series':
+        //         delayExcute(200, simpleSvgLineSeriesExample);
+        //     break;
 
-            case 'webgl-line-series':
-                delayExcute(200, simpleWebglLineSeriesExample);
-            break;
+        //     case 'webgl-line-series':
+        //         delayExcute(200, simpleWebglLineSeriesExample);
+        //     break;
 
-            case 'webgl-bigdata-line-series':
-                delayExcute(200, webGLBigDataLineSeriesSample);
-            break;
+        //     case 'webgl-bigdata-line-series':
+        //         delayExcute(200, webGLBigDataLineSeriesSample);
+        //     break;
 
-            case 'canvas-line-series':
-                delayExcute(200, simpleCanvasLineSeriesExample);
-            break;
+        //     case 'canvas-line-series':
+        //         delayExcute(200, simpleCanvasLineSeriesExample);
+        //     break;
 
-            case 'canvas-bigdata-line-series':
-                delayExcute(200, canvasBigDataLineSeriesSample);
-            break;
+        //     case 'canvas-bigdata-line-series':
+        //         delayExcute(200, canvasBigDataLineSeriesSample);
+        //     break;
 
-            case 'svg-column-series':
-                delayExcute(200, simpleSvgColumnSeriesExample);
-            break;
+        //     case 'svg-column-series':
+        //         delayExcute(200, simpleSvgColumnSeriesExample);
+        //     break;
 
-            case 'svg-stacked-column-series':
-                delayExcute(200, simpleSvgStackedColumnSeriesExample);
-            break;
+        //     case 'svg-stacked-column-series':
+        //         delayExcute(200, simpleSvgStackedColumnSeriesExample);
+        //     break;
 
-            case 'svg-plot-series':
-                delayExcute(200, simpleSvgPlotSeriesExample);
-            break;
+        //     case 'svg-plot-series':
+        //         delayExcute(200, simpleSvgPlotSeriesExample);
+        //     break;
 
-            case 'svg-area-series':
-                delayExcute(200, simpleSvgAreaSeriesExample);
-            break;
+        //     case 'svg-area-series':
+        //         delayExcute(200, simpleSvgAreaSeriesExample);
+        //     break;
 
-            default:
-            break;
-        }
-        delayExcute(300, hideLoader);
+        //     default:
+        //     break;
+        // }
+        // delayExcute(300, hideLoader);
+
+        new Observable((observ: Observer<any>) => {
+            observ.next(true);
+            observ.complete();
+        })
+        .pipe(
+            tap(() => {
+                if (seriesId) {
+                    showLoader();
+                    clear();
+                }
+            }),
+            delay(200),
+            tap(() => {
+                switch (seriesId) {
+                    case 'svg-line-series':
+                        simpleSvgLineSeriesExample();
+                    break;
+                    case 'webgl-line-series':
+                        simpleWebglLineSeriesExample();
+                    break;
+                    case 'webgl-bigdata-line-series':
+                        webGLBigDataLineSeriesSample();
+                    break;
+                    case 'canvas-line-series':
+                        simpleCanvasLineSeriesExample();
+                    break;
+                    case 'canvas-bigdata-line-series':
+                        canvasBigDataLineSeriesSample();
+                    break;
+                    case 'svg-column-series':
+                        simpleSvgColumnSeriesExample();
+                    break;
+                    case 'svg-stacked-column-series':
+                        simpleSvgStackedColumnSeriesExample();
+                    break;
+                    case 'svg-plot-series':
+                        simpleSvgPlotSeriesExample();
+                    break;
+                    case 'svg-area-series':
+                        simpleSvgAreaSeriesExample();
+                    break;
+                    default:
+                    break;
+                }
+            }),
+            delay(300),
+            tap(() => {
+                hideLoader();
+            })
+        )
+        .subscribe(() => {
+            console.log('exec => ', seriesId);
+        });
     });
-    /*
-    Observable.of(true).pipe(
-    delay(150),
-    tap(() => {
-        this.renderer.addClass(this.mainContainer, 'side-container');
-    }),
-    delay(300),
-    tap(() => {
-        this.renderer.addClass(this.sideContainer, 'open');
-    })
-);
-    */
 }
 
 const setSeriesColor = (item: any) => {
@@ -146,7 +191,7 @@ const simpleWebglLineSeriesExample = () => {
         dot: {
             radius: 6
         },
-        style: {
+        line: {
             strokeColor: '#4d8700',
         }
     };
@@ -158,7 +203,7 @@ const simpleWebglLineSeriesExample = () => {
         dot: {
             radius: 6
         },
-        style: {
+        line: {
             strokeColor: '#ff9421',
         }
     }
@@ -170,7 +215,7 @@ const simpleWebglLineSeriesExample = () => {
         dot: {
             radius: 6
         },
-        style: {
+        line: {
             strokeColor: '#2137ff',
         }
     }
@@ -789,7 +834,7 @@ const webGLBigDataLineSeriesSample = () => {
                 dot: {
                     radius: 4
                 },
-                style: {
+                line: {
                     strokeColor: seriesColor,
                     // opacity: seriesColor === '#EA3010' ? 1 :  0.9
                 },
@@ -975,22 +1020,22 @@ const canvasBigDataLineSeriesSample = () => {
             });
 
             // test data 늘리기
-            const tempRow: BasicCanvasTraceModel = seriesData[seriesData.length - 1];
-            for (let index = 1; index < 50000; index++) {
-                const x = tempRow.x + index;
-                const y = tempRow.y;
+            // const tempRow: BasicCanvasTraceModel = seriesData[seriesData.length - 1];
+            // for (let index = 1; index < 50000; index++) {
+            //     const x = tempRow.x + index;
+            //     const y = tempRow.y;
 
-                if (xmax < x) {
-                    xmax = x;
-                }
+            //     if (xmax < x) {
+            //         xmax = x;
+            //     }
 
-                seriesData.push(new BasicCanvasTraceModel(
-                    x,
-                    y,
-                    i,
-                    tempRow
-                ));
-            }
+            //     seriesData.push(new BasicCanvasTraceModel(
+            //         x,
+            //         y,
+            //         i,
+            //         tempRow
+            //     ));
+            // }
 
             // type별 컬러 지정.
             const seriesColor = setSeriesColor(tempData);
@@ -1000,7 +1045,8 @@ const canvasBigDataLineSeriesSample = () => {
                 xField: 'x',
                 yField: 'y',
                 dot: {
-                    radius: 4
+                    radius: 2,
+                    fill: seriesColor
                 },
                 line: {
                     strokeColor: seriesColor,
@@ -1030,7 +1076,7 @@ const canvasBigDataLineSeriesSample = () => {
         },
         tooltip: {
             tooltipTextParser: (d: any) => {
-                return 'd : ' + d;
+                return `x: ${d.x} \ny: ${d.y}\nz: ${d.i}`
             }
         },
         isResize: true,

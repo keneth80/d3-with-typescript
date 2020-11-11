@@ -27,13 +27,9 @@ export class StackedVerticalBarSeries extends SeriesBase {
 
     private rootGroup: Selection<BaseType, any, HTMLElement, any>;
 
-    private legendGroup: Selection<BaseType, any, HTMLElement, any>;
-
     private tooltipGroup: Selection<BaseType, any, HTMLElement, any>;
 
     private selectionGroup: Selection<BaseType, any, HTMLElement, any>;
-
-    private numberFmt: any;
 
     private currentBarWidth = 0;
 
@@ -60,8 +56,6 @@ export class StackedVerticalBarSeries extends SeriesBase {
                 this.displayNames = [...configuration.columns];
             }
         }
-
-        this.numberFmt = format(',d');
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
@@ -81,9 +75,8 @@ export class StackedVerticalBarSeries extends SeriesBase {
 
         // set the colors
         const z = scaleOrdinal()
-        .range(this.chartBase.seriesColors);
-
-        z.domain(this.columns);
+            .range(this.chartBase.seriesColors)
+            .domain(this.columns);
 
         this.currentBarWidth = x.bandwidth();
         this.geometry = {
@@ -126,8 +119,6 @@ export class StackedVerticalBarSeries extends SeriesBase {
                 // TODO: 계산 적용해 볼 것.
                 // .attr('height', (d: any) => { return Math.abs(y(d[0]) - y(d[1]) - y(0)); })
                 .attr('width', x.bandwidth());
-
-        // this.drawLegend(keys, z, geometry.width);
 
         delayExcute(300, () => {
             const size = generateChartData.length;
@@ -258,33 +249,4 @@ export class StackedVerticalBarSeries extends SeriesBase {
 
         return index;
     }
-
-    // drawLegend(keys: string[], z: any, width: number) {
-    //     const legendKey = keys.slice().reverse();
-    //     const legend = this.legendGroup.selectAll('.legend-item-group')
-    //         .data(legendKey)
-    //         .join(
-    //             (enter) => enter.append('g').attr('class', 'legend-item-group'),
-    //             (update) => {
-    //                 update.selectAll('*').remove();
-    //                 return update;
-    //             },
-    //             (exit) => exit.remove()
-    //         )
-    //         .attr('transform', (d: any, i: number) => { return 'translate(0,' + i * 20 + ')'; });
-
-    //     legend.append('rect')
-    //         .attr('x', width - 19)
-    //         .attr('width', 19)
-    //         .attr('height', 19)
-    //         .attr('fill', (d) => {
-    //             return z(d) + '';
-    //         });
-
-    //     legend.append('text')
-    //         .attr('x', width - 24)
-    //         .attr('y', 9.5)
-    //         .attr('dy', '0.32em')
-    //         .text((d) => { return d; });
-    // }
 }

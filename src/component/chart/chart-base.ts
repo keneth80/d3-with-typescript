@@ -1006,6 +1006,10 @@ export class ChartBase<T = any> implements IChart {
 
         this.subscription.add(
             this.mouseEvent$.subscribe((chartEvent: ChartMouseEvent) => {
+                if (isMouseLeave) {
+                    isMouseLeave = false;
+                    return;
+                }
                 switch(chartEvent.type) {
                     case 'mousemove':
                         isMouseLeave = false;

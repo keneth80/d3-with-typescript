@@ -8,7 +8,11 @@ export const setChartTooltipByPosition = (
     tooltipText: string,
     chartGeometry: ContainerSize,
     position: number[],
-    tooltipPointerSize: ContainerSize
+    tooltipPointerSize: ContainerSize,
+    margin?: {
+        left: number,
+        top: number
+    }
 ) => {
     const textElement: any = tooltipTarget
         .select('text')
@@ -22,8 +26,8 @@ export const setChartTooltipByPosition = (
     const textWidth = Math.floor(parseTextNode.width) + 7;
     const textHeight = Math.floor(parseTextNode.height) + 5;
 
-    let xPosition = Math.round(position[0]) + tooltipPointerSize.width;
-    let yPosition = Math.round(position[1]) - (textHeight + 5);
+    let xPosition = Math.round(position[0]) + tooltipPointerSize.width + (margin? margin.left : 0);
+    let yPosition = Math.round(position[1]) - (textHeight + 5) + (margin ? margin.top : 0);
 
     if (xPosition + textWidth >= chartGeometry.width) {
         xPosition = xPosition - (textWidth + tooltipPointerSize.width);

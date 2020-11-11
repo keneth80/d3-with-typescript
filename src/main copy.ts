@@ -53,7 +53,8 @@ import {
     SvgAreaChart
 } from './component/chart-generator';
 import { sampleMockData } from './component/mock-data/simple-mock-data';
-import { Observable } from 'rxjs';
+import { Observable, Observer, of } from 'rxjs';
+import { delay, tap } from 'rxjs/operators';
 
 
 class SalesModel {
@@ -126,64 +127,102 @@ const showLoader = () => {
 const buttonMapping = () => {
     select('.container-button-bar').on('click', () => {
         const seriesId = event.target.id;
-        if (seriesId) {
-            showLoader();
-            clear();
-        }
-        switch (seriesId) {
-            case 'svg-line-series':
-                delayExcute(200, simpleSvgLineSeriesExample);
-            break;
+        // if (seriesId) {
+        //     showLoader();
+        //     clear();
+        // }
+        // switch (seriesId) {
+        //     case 'svg-line-series':
+        //         delayExcute(200, simpleSvgLineSeriesExample);
+        //     break;
 
-            case 'webgl-line-series':
-                delayExcute(200, simpleWebglLineSeriesExample);
-            break;
+        //     case 'webgl-line-series':
+        //         delayExcute(200, simpleWebglLineSeriesExample);
+        //     break;
 
-            case 'webgl-bigdata-line-series':
-                delayExcute(200, webGLBigDataLineSeriesSample);
-            break;
+        //     case 'webgl-bigdata-line-series':
+        //         delayExcute(200, webGLBigDataLineSeriesSample);
+        //     break;
 
-            case 'canvas-line-series':
-                delayExcute(200, simpleCanvasLineSeriesExample);
-            break;
+        //     case 'canvas-line-series':
+        //         delayExcute(200, simpleCanvasLineSeriesExample);
+        //     break;
 
-            case 'canvas-bigdata-line-series':
-                delayExcute(200, canvasBigDataLineSeriesSample);
-            break;
+        //     case 'canvas-bigdata-line-series':
+        //         delayExcute(200, canvasBigDataLineSeriesSample);
+        //     break;
 
-            case 'svg-column-series':
-                delayExcute(200, simpleSvgColumnSeriesExample);
-            break;
+        //     case 'svg-column-series':
+        //         delayExcute(200, simpleSvgColumnSeriesExample);
+        //     break;
 
-            case 'svg-stacked-column-series':
-                delayExcute(200, simpleSvgStackedColumnSeriesExample);
-            break;
+        //     case 'svg-stacked-column-series':
+        //         delayExcute(200, simpleSvgStackedColumnSeriesExample);
+        //     break;
 
-            case 'svg-plot-series':
-                delayExcute(200, simpleSvgPlotSeriesExample);
-            break;
+        //     case 'svg-plot-series':
+        //         delayExcute(200, simpleSvgPlotSeriesExample);
+        //     break;
 
-            case 'svg-area-series':
-                delayExcute(200, simpleSvgAreaSeriesExample);
-            break;
+        //     case 'svg-area-series':
+        //         delayExcute(200, simpleSvgAreaSeriesExample);
+        //     break;
 
-            default:
-            break;
-        }
-        delayExcute(300, hideLoader);
+        //     default:
+        //     break;
+        // }
+        // delayExcute(300, hideLoader);
+        new Observable((observ: Observer<any>) => {
+            observ.next(true);
+            observ.complete();
+        })
+        .pipe(
+            tap(() => {
+                if (seriesId) {
+                    showLoader();
+                    clear();
+                }
+            }),
+            delay(200),
+            tap(() => {
+                switch (seriesId) {
+                    case 'svg-line-series':
+                        simpleSvgLineSeriesExample();
+                    break;
+                    case 'webgl-line-series':
+                        simpleWebglLineSeriesExample();
+                    break;
+                    case 'webgl-bigdata-line-series':
+                        webGLBigDataLineSeriesSample();
+                    break;
+                    case 'canvas-line-series':
+                        simpleCanvasLineSeriesExample();
+                    break;
+                    case 'canvas-bigdata-line-series':
+                        canvasBigDataLineSeriesSample();
+                    break;
+                    case 'svg-column-series':
+                        simpleSvgColumnSeriesExample();
+                    break;
+                    case 'svg-stacked-column-series':
+                        simpleSvgStackedColumnSeriesExample();
+                    break;
+                    case 'svg-plot-series':
+                        simpleSvgPlotSeriesExample();
+                    break;
+                    case 'svg-area-series':
+                        simpleSvgAreaSeriesExample();
+                    break;
+                    default:
+                    break;
+                }
+            }),
+            delay(300),
+            tap(() => {
+                hideLoader();
+            })
+        );
     });
-    /*
-    Observable.of(true).pipe(
-    delay(150),
-    tap(() => {
-        this.renderer.addClass(this.mainContainer, 'side-container');
-    }),
-    delay(300),
-    tap(() => {
-        this.renderer.addClass(this.sideContainer, 'open');
-    })
-);
-    */
 }
 
 const setSeriesColor = (item: any) => {
@@ -215,7 +254,7 @@ const simpleWebglLineSeriesExample = () => {
         dot: {
             radius: 6
         },
-        style: {
+        line: {
             strokeColor: '#4d8700',
         }
     };
@@ -227,7 +266,7 @@ const simpleWebglLineSeriesExample = () => {
         dot: {
             radius: 6
         },
-        style: {
+        line: {
             strokeColor: '#ff9421',
         }
     }
@@ -239,7 +278,7 @@ const simpleWebglLineSeriesExample = () => {
         dot: {
             radius: 6
         },
-        style: {
+        line: {
             strokeColor: '#2137ff',
         }
     }
@@ -853,7 +892,7 @@ const webGLBigDataLineSeriesSample = () => {
                 dot: {
                     radius: 4
                 },
-                style: {
+                line: {
                     strokeColor: seriesColor,
                     // opacity: seriesColor === '#EA3010' ? 1 :  0.9
                 },

@@ -12,6 +12,7 @@ import { delayExcute } from '../../chart/util/d3-svg-util';
 import { Placement } from '../../chart/chart-configuration';
 import { createProgramFromSources, hexToRgb } from '../../chart/util/webgl-util';
 import { ChartSelector } from '../../chart';
+import { setChartTooltipByPosition } from '../../chart/util/tooltip-util';
 
 export class BasicCanvasWebglLineSeriesOneModel {
     x: number;
@@ -41,14 +42,13 @@ export interface BasicCanvasWebglLineSeriesOneConfiguration extends SeriesConfig
     isCurve?: boolean; // default : false
     dot?: {
         radius?: number;
+        fill?: string;
     };
-    style?: {
+    line?: {
         strokeWidth?: number;
         strokeColor?: string;
-        fill?: string;
-        opacity?: number;
+        // strokeOpacity?: number;
     };
-    filter?: any;
     data?: any[];
     // animation?: boolean;
 }
@@ -66,19 +66,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
 
     private config: BasicCanvasWebglLineSeriesOneConfiguration;
 
-    private dataFilter: any;
-
-    private strokeWidth = 2;
-
-    private strokeColor;
-
-    private strokeOpacity = 1;
-
     private seriesIndex = -1;
-
-    // private isAnimation: boolean = false;
-
-    private move$: Subject<any> = new Subject();
 
     private seriesData: T[];
 
@@ -97,36 +85,19 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
     // ================= style 관련 변수 =============== //
     private radius = 4;
 
-    private lineStroke = 1;
+    private dotFill = '';
 
-    private lineColor = '#000000';
+    private strokeColor = '';
+
+    private strokeWidth = 1;
+
+    // private strokeOpacity = 1;
 
     constructor(configuration: BasicCanvasWebglLineSeriesOneConfiguration) {
         super(configuration);
         this.config = configuration;
-        if (configuration) {
-            if (configuration.xField) {
-                this.xField = configuration.xField;
-            }
-
-            if (configuration.yField) {
-                this.yField = configuration.yField;
-            }
-
-            if (configuration.filter) {
-                this.dataFilter = configuration.filter;
-            }
-
-            if (configuration.style) {
-                this.strokeWidth = configuration.style.strokeWidth || this.strokeWidth;
-                this.strokeColor = configuration.style.strokeColor || null;
-                this.strokeOpacity = configuration.style.opacity || 1;
-            }
-
-            if (configuration.data) {
-                this.seriesData = configuration.data;
-            }
-        }
+        this.xField = this.config.xField;
+        this.yField = this.config.yField;
     }
 
     setSvgElement(
@@ -149,7 +120,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
                     index
                 })
                 .attr('class', ChartSelector.DRAWING_CANVAS)
-                .style('opacity', this.strokeOpacity)
+                // .style('opacity', this.strokeOpacity)
                 .style('z-index', 2)
                 .style('position', 'absolute');
         } else {
@@ -174,8 +145,8 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         this.seriesIndex = option.index;
         this.geometry = geometry;
         this.radius = this.config.dot ? this.config.dot.radius || 4 : 0;
-        this.lineStroke = (this.config.style && this.config.style.strokeWidth) || 1;
-        this.lineColor = this.strokeColor ? this.strokeColor : option.color;
+        this.strokeColor = this.checkSeriesColor() || option.color;
+        this.dotFill = this.config.dot && this.config.dot.fill ? this.config.dot.fill : option.color;
 
         const chartData = this.seriesData ? this.seriesData : chartBaseData;
         const xScale: Scale = scales.find((scale: Scale) => scale.orient === this.xDirection);
@@ -200,9 +171,9 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
             this.cashingVertices.length = 0;
         }
 
-        const lineData: any[] = (!this.dataFilter
+        const lineData: any[] = (!this.config.filter
             ? chartData
-            : chartData.filter((item: T) => this.dataFilter(item))
+            : chartData.filter((item: T) => this.config.filter(item))
         ).filter(
             (d: T) =>
                 d[this.xField] >= xmin - xmin * 0.01 &&
@@ -228,7 +199,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
                 `translate(${this.chartBase.chartMargin.left + 1}px, ${this.chartBase.chartMargin.top}px)`
             );
 
-        this.webGLStart(lineData, { min: xmin, max: xmax }, { min: ymin, max: ymax }, geometry, this.lineColor);
+        this.webGLStart(lineData, { min: xmin, max: xmax }, { min: ymin, max: ymax }, geometry, this.strokeColor);
 
         if (this.originQuadTree) {
             this.originQuadTree = undefined;
@@ -269,7 +240,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
             ],
             this.geometry,
             {
-                fill: this.lineColor,
+                fill: this.dotFill,
                 radius: this.radius * 2
             }
         );
@@ -305,18 +276,38 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
 
         this.drawTooltipPoint(this.geometry, selectedItem, {
             radius: this.radius / 2 + 1,
-            strokeColor: this.lineColor,
+            strokeColor: this.strokeColor,
             strokeWidth: this.strokeWidth
         });
 
-        this.setChartTooltip(
-            selectedItem,
+        setChartTooltipByPosition(
+            this.chartBase.showTooltip(),
+            this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser
+                ? this.chartBase.tooltip.tooltipTextParser(selectedItem[2])
+                : `${this.config.xField}: ${selectedItem[2][this.config.xField]} \n ${this.config.yField}: ${selectedItem[2][this.config.yField]}`,
+            this.geometry,
+            [
+                selectedItem[0],
+                selectedItem[1]
+            ],
             {
-                width: this.geometry.width,
-                height: this.geometry.height
+                width: this.radius,
+                height: this.radius
             },
-            value
+            {
+                left: this.chartBase.chartMargin.left,
+                top: this.chartBase.chartMargin.top
+            }
         );
+
+        // this.setChartTooltip(
+        //     selectedItem,
+        //     {
+        //         width: this.geometry.width,
+        //         height: this.geometry.height
+        //     },
+        //     value
+        // );
 
         return index;
     }
@@ -341,49 +332,8 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         this.viewClear();
     }
 
-    // TODO: tooltip에 시리즈 아이디를 부여하여 시리즈 마다 tooltip을 컨트롤 할 수 있도록 한다.
-    // multi tooltip도 구현해야 하기 때문에 이방법이 가장 좋음. 현재 중복으로 발생해서 왔다갔다 함.
-    private setChartTooltip(seriesData: T, geometry: ContainerSize, mouseEvent: number[]) {
-        if (this.chartBase.isTooltipDisplay) {
-            return;
-        }
-
-        this.tooltipGroup = this.chartBase.showTooltip();
-
-        const textElement: any = this.tooltipGroup
-            .select('text')
-            .attr('dy', '.1em')
-            .text(
-                this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser
-                    ? this.chartBase.tooltip.tooltipTextParser(seriesData[2])
-                    : `${this.xField}: ${seriesData[2][this.xField]} \n ${this.yField}: ${seriesData[2][this.yField]}`
-            );
-
-        textBreak(textElement, '\n');
-
-        // const parseTextNode = textElement.node().getBoundingClientRect();
-        const parseTextNode = textElement.node().getBBox();
-
-        const textWidth = parseTextNode.width + 7;
-        const textHeight = parseTextNode.height + 5;
-        const radius = this.config.dot ? this.config.dot.radius || 4 : 0;
-
-        let xPosition = mouseEvent[0] + this.chartBase.chartMargin.left + radius;
-        let yPosition = mouseEvent[1];
-
-        if (xPosition + textWidth > geometry.width) {
-            xPosition = xPosition - textWidth;
-        }
-
-        if (yPosition + textHeight > geometry.height) {
-            yPosition = yPosition - textHeight;
-        }
-
-        this.tooltipGroup
-            .attr('transform', `translate(${xPosition}, ${yPosition})`)
-            .selectAll('rect')
-            .attr('width', textWidth)
-            .attr('height', textHeight);
+    private checkSeriesColor() {
+        return this.config.line && this.config.line.strokeColor ? this.config.line.strokeColor : null;
     }
 
     private webGLStart(

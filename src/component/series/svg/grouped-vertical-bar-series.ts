@@ -29,10 +29,6 @@ export class GroupedVerticalBarSeries extends SeriesBase {
 
     protected selectionGroup: Selection<BaseType, any, HTMLElement, any>;
 
-    private numberFmt: any;
-
-    private currentSelector: any;
-
     private isHide = false;
 
     private currentBarWidth = 0;
@@ -54,8 +50,6 @@ export class GroupedVerticalBarSeries extends SeriesBase {
                 this.displayNames = [...configuration.columns];
             }
         }
-
-        this.numberFmt = format(',d');
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
@@ -121,9 +115,6 @@ export class GroupedVerticalBarSeries extends SeriesBase {
                 .attr('width', barx.bandwidth())
                 .attr('fill', (d: any) => z(d.key) + '');
 
-        // this.drawLegend(this.columns, z, geometry.width);
-
-        // TODO: quadtree setup
         if (this.originQuadTree) {
             this.originQuadTree = undefined;
         }
