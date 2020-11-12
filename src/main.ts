@@ -813,17 +813,17 @@ const webGLBigDataLineSeriesSample = () => {
                 );
             });
             // test data 늘리기
-            const tempRow: BasicCanvasWebglLineSeriesOneModel = seriesData[seriesData.length - 1];
-            for (let index = 1; index < 50000; index++) {
-                const x = tempRow.x + index;
-                const y = tempRow.y;
-                if (xmax < x) {
-                    xmax = x;
-                }
-                seriesData.push(
-                    new BasicCanvasWebglLineSeriesOneModel(x, y, i, tempRow)
-                );
-            }
+            // const tempRow: BasicCanvasWebglLineSeriesOneModel = seriesData[seriesData.length - 1];
+            // for (let index = 1; index < 50000; index++) {
+            //     const x = tempRow.x + index;
+            //     const y = tempRow.y;
+            //     if (xmax < x) {
+            //         xmax = x;
+            //     }
+            //     seriesData.push(
+            //         new BasicCanvasWebglLineSeriesOneModel(x, y, i, tempRow)
+            //     );
+            // }
             // type별 컬러 지정.
             const seriesColor = setSeriesColor(tempData);
             const configuration: BasicCanvasWebglLineSeriesOneConfiguration = {
@@ -832,7 +832,8 @@ const webGLBigDataLineSeriesSample = () => {
                 xField: 'x',
                 yField: 'y',
                 dot: {
-                    radius: 4
+                    radius: 4,
+                    fill: seriesColor
                 },
                 line: {
                     strokeColor: seriesColor,
@@ -890,6 +891,11 @@ const webGLBigDataLineSeriesSample = () => {
         title: {
             placement: Placement.TOP,
             content: 'WebGL Big Data Line Chart'
+        },
+        tooltip: {
+            tooltipTextParser: (d: BasicCanvasWebglLineSeriesOneModel) => {
+                return `x: ${d.x} \ny: ${d.y}\ni: ${d.i}`
+            }
         },
         isResize: true,
         axes: [

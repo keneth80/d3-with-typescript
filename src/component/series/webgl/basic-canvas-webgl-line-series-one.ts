@@ -56,19 +56,9 @@ export interface BasicCanvasWebglLineSeriesOneConfiguration extends SeriesConfig
 export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
     protected canvas: Selection<BaseType, any, HTMLElement, any>;
 
-    private tooltipGroup: Selection<BaseType, any, HTMLElement, any>;
-
-    private selectionCanvas: Selection<BaseType, any, HTMLElement, any>;
-
-    private xField: string;
-
-    private yField: string;
-
     private config: BasicCanvasWebglLineSeriesOneConfiguration;
 
     private seriesIndex = -1;
-
-    private seriesData: T[];
 
     private padding = 0;
 
@@ -96,8 +86,6 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
     constructor(configuration: BasicCanvasWebglLineSeriesOneConfiguration) {
         super(configuration);
         this.config = configuration;
-        this.xField = this.config.xField;
-        this.yField = this.config.yField;
     }
 
     setSvgElement(
@@ -148,7 +136,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         this.strokeColor = this.checkSeriesColor() || option.color;
         this.dotFill = this.config.dot && this.config.dot.fill ? this.config.dot.fill : option.color;
 
-        const chartData = this.seriesData ? this.seriesData : chartBaseData;
+        const chartData = this.config.data ? this.config.data : chartBaseData;
         const xScale: Scale = scales.find((scale: Scale) => scale.orient === this.xDirection);
         const yScale: Scale = scales.find((scale: Scale) => scale.orient === this.yDirection);
 
@@ -176,10 +164,10 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
             : chartData.filter((item: T) => this.config.filter(item))
         ).filter(
             (d: T) =>
-                d[this.xField] >= xmin - xmin * 0.01 &&
-                d[this.xField] <= xmax + xmax * 0.01 &&
-                d[this.yField] >= ymin &&
-                d[this.yField] <= ymax
+                d[this.config.xField] >= xmin - xmin * 0.01 &&
+                d[this.config.xField] <= xmax + xmax * 0.01 &&
+                d[this.config.yField] >= ymin &&
+                d[this.config.yField] <= ymax
         );
 
         this.canvas
@@ -214,8 +202,8 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
                 ])
                 .addAll(
                     lineData.map<any>((d: BasicCanvasWebglLineSeriesOneModel) => {
-                        const xposition = x(d[this.xField]);
-                        const yposition = y(d[this.yField]);
+                        const xposition = x(d[this.config.xField]);
+                        const yposition = y(d[this.config.yField]);
 
                         return [xposition, yposition, d, this.radius];
                     })
@@ -247,9 +235,6 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
     }
 
     destroy() {
-        if (this.seriesData) {
-            this.seriesData.length = 0;
-        }
         this.subscription.unsubscribe();
         if (this.canvas) {
             this.canvas.remove();
@@ -364,7 +349,6 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         this.initGL(canvas);
 
         if (this.seriesIndex === 0) {
-            console.log('clear');
             // 화면 지우기
             this.viewClear();
             // this.gl.clearColor(0, 0, 0, 0); // rgba
@@ -556,8 +540,8 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         let i = 0;
 
         for (i = 0; i < endCount; i++) {
-            const xposition = xScale(chartData[i][this.xField]);
-            const yposition = yScale(chartData[i][this.yField]);
+            const xposition = xScale(chartData[i][this.config.xField]);
+            const yposition = yScale(chartData[i][this.config.yField]);
 
             vertices.push(xposition);
             vertices.push(yposition);
