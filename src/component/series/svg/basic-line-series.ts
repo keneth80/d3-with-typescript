@@ -18,6 +18,7 @@ export interface BasicLineSeriesConfiguration extends SeriesConfiguration {
         selector?: string;
         radius?: number;
         fill?: string;
+        strokeWidth?: number;
     };
     line?: {
         strokeWidth?: number;
@@ -50,6 +51,8 @@ export class BasicLineSeries extends SeriesBase {
     private radius = 2;
 
     private dotFill = '';
+
+    private dotStrokeWidth = 1;
 
     private strokeColor = '';
 
@@ -94,6 +97,7 @@ export class BasicLineSeries extends SeriesBase {
         this.geometry = geometry;
         this.strokeColor = this.checkSeriesColor() || option.color;
         this.dotFill = this.config.dot && this.config.dot.fill ? this.config.dot.fill : option.color;
+        this.dotStrokeWidth = this.config.dot && this.config.dot.strokeWidth ? this.config.dot.strokeWidth : this.dotStrokeWidth;
 
         const resultData: any[] = !this.config.filter ? chartData : chartData.filter((item: any) => this.config.filter(item));
 
@@ -152,7 +156,7 @@ export class BasicLineSeries extends SeriesBase {
                         (update) => update,
                         (exit) => exit.remove
                     )
-                    .style('stroke-width', this.radius / 2)
+                    .style('stroke-width', this.dotStrokeWidth)
                     .style('stroke', this.strokeColor)
                     .style('fill', this.dotFill)
                     .attr('cx', (data: any) => x(data[this.config.xField]) + padding)
@@ -244,7 +248,7 @@ export class BasicLineSeries extends SeriesBase {
             {
                 radius: this.radius * 1.5,
                 strokeColor: this.strokeColor,
-                strokeWidth: this.strokeWidth
+                strokeWidth: this.dotStrokeWidth + 2
             }
         );
 

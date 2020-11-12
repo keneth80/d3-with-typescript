@@ -34,5 +34,7 @@ export const axisSetupByScale = (scale: Scale) => {
         orientedAxis.ticks(scale.tickSize);
     }
 
+    // orientedAxis.tickSize(0);
+
     return orientedAxis;
 }

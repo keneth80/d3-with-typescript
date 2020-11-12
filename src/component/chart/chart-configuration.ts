@@ -58,6 +58,9 @@ export interface Axis {
     tickFormat?: any;
     tickTextParser?: any;
     tickSize?: number;
+    zeroLine?: {
+        color?: string;
+    };
     gridLine?: {
         color?: string;
         dasharray?: number;

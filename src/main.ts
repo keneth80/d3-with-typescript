@@ -60,51 +60,6 @@ const showLoader = () => {
 const buttonMapping = () => {
     select('.container-button-bar').on('click', () => {
         const seriesId = event.target.id;
-        // if (seriesId) {
-        //     showLoader();
-        //     clear();
-        // }
-        // switch (seriesId) {
-        //     case 'svg-line-series':
-        //         delayExcute(200, simpleSvgLineSeriesExample);
-        //     break;
-
-        //     case 'webgl-line-series':
-        //         delayExcute(200, simpleWebglLineSeriesExample);
-        //     break;
-
-        //     case 'webgl-bigdata-line-series':
-        //         delayExcute(200, webGLBigDataLineSeriesSample);
-        //     break;
-
-        //     case 'canvas-line-series':
-        //         delayExcute(200, simpleCanvasLineSeriesExample);
-        //     break;
-
-        //     case 'canvas-bigdata-line-series':
-        //         delayExcute(200, canvasBigDataLineSeriesSample);
-        //     break;
-
-        //     case 'svg-column-series':
-        //         delayExcute(200, simpleSvgColumnSeriesExample);
-        //     break;
-
-        //     case 'svg-stacked-column-series':
-        //         delayExcute(200, simpleSvgStackedColumnSeriesExample);
-        //     break;
-
-        //     case 'svg-plot-series':
-        //         delayExcute(200, simpleSvgPlotSeriesExample);
-        //     break;
-
-        //     case 'svg-area-series':
-        //         delayExcute(200, simpleSvgAreaSeriesExample);
-        //     break;
-
-        //     default:
-        //     break;
-        // }
-        // delayExcute(300, hideLoader);
 
         new Observable((observ: Observer<any>) => {
             observ.next(true);
@@ -336,20 +291,26 @@ const simpleSvgLineSeriesExample = () => {
                 field: 'x',
                 type: ScaleType.NUMBER,
                 placement: 'bottom',
-                min: 0,
+                min: -5,
                 max: 21,
                 gridLine: {
                     color: '#ddd'
+                },
+                zeroLine: {
+                    color: '#ff0000'
                 }
             },
             {
                 field: 'y',
                 type: ScaleType.NUMBER,
                 placement: 'left',
-                min: 0,
+                min: -5,
                 max: 30,
                 gridLine: {
                     color: '#ddd'
+                },
+                zeroLine: {
+                    color: '#ff0000'
                 }
             }
         ],

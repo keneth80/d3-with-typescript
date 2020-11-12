@@ -122,6 +122,7 @@ export const generateScaleByAxis = <T = any>(
             tickTextParser: axis.tickTextParser ? axis.tickTextParser : undefined,
             tickSize: axis.tickSize ? axis.tickSize : undefined,
             gridLine: axis.gridLine,
+            zeroLine: axis.zeroLine,
             isZoom: axis.isZoom === true ? true : false,
             min: minValue,
             max: maxValue,
@@ -140,8 +141,7 @@ export const drawAxisByScale = (
     targetGroup: Selection<BaseType, any, HTMLElement, any>,
     defaultAxisLabelStyle: any,
     defaultAxisTitleStyle: any,
-    axisTitleMargin: Margin,
-    updateBrushHandler: any
+    axisTitleMargin: Margin
 ) => {
     const padding = 10; // 10 는 axis 여백.
     const orientedAxis: any = axisSetupByScale(scale);
@@ -223,6 +223,12 @@ export const drawAxisByScale = (
         }
     }
 
+    if (scale.zeroLine && scale.min < 0) {
+        setupZeroLine(svgGeometry, scale, targetGroup);
+    } else {
+        targetGroup.selectAll(`.${scale.orient}-${scale.field}-zero-line`).remove();
+    }
+
     if (scale.title) {
         targetGroup.selectAll(`.axis-${scale.orient}-title`)
             .data([
@@ -295,6 +301,34 @@ export const drawAxisByScale = (
     }
 
     return maxTextWidth;
+}
+
+export const setupZeroLine = (
+    svgGeometry: ContainerSize,
+    scale: Scale,
+    targetGroup: Selection<BaseType, any, HTMLElement, any>,
+): Selection<BaseType, any, BaseType, any> => {
+    const zeroLine = targetGroup.selectAll(`.${scale.orient}-${scale.field}-zero-line`)
+        .data([scale])
+        .join(
+            (enter) => enter.append('line').attr('class', `${scale.orient}-${scale.field}-zero-line`)
+        )
+        .style('stroke', scale.zeroLine.color || '#000')
+        .style('stroke-width', 1);
+    if (scale.orient === Placement.LEFT || scale.orient === Placement.RIGHT) {
+        zeroLine
+        .attr('y1', scale.scale(0))
+        .attr('y2', scale.scale(0))
+        .attr('x2', svgGeometry.width);
+    } else {
+        zeroLine
+        .attr('x1', scale.scale(0))
+        .attr('y1', -svgGeometry.height)
+        .attr('x2', scale.scale(0))
+        .attr('y2', 0);
+    }
+
+    return zeroLine;
 }
 
 export const setupBrush = (

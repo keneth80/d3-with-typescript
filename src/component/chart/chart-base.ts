@@ -1270,8 +1270,7 @@ export class ChartBase<T = any> implements IChart {
                 this.axisGroups[scale.orient],
                 this.defaultAxisLabelStyle,
                 this.defaultAxisTitleStyle,
-                this.axisTitleMargin,
-                this.updateBrushHandler
+                this.axisTitleMargin
             );
         });
 

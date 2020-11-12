@@ -76,6 +76,9 @@ export interface Scale {
         dasharray?: number;
         opacity?: number;
     };
+    zeroLine?: {
+        color?: string;
+    };
     isZoom: boolean;
     min?: number;
     max?: number;
