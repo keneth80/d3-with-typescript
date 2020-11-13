@@ -5,7 +5,7 @@ import { ChartConfiguration,
 
 import { IFunctions } from './chart/functions.interface';
 
-import { ISeries, SeriesConfiguration } from './chart/series.interface';
+import { SeriesConfiguration } from './chart/series.interface';
 
 import { BasicCanvasTraceConfiguration, BasicCanvasTrace } from './series/canvas/basic-canvas-trace';
 import { BasicCanvasWebglLineSeriesOneConfiguration, BasicCanvasWebgLineSeriesOne } from './series/webgl/basic-canvas-webgl-line-series-one';

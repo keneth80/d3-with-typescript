@@ -29,7 +29,7 @@ import { BasicCanvasTraceModel, BasicCanvasTraceConfiguration } from './componen
 
 import { delayExcute } from './component/chart/util/d3-svg-util';
 import { OptionConfiguration, MiccBaseConfiguration } from './component/mi-chart';
-import { ChartItemEvent } from './component/chart';
+import { ChartItemEvent, SeriesType } from './component/chart';
 import {
     CanvasTraceChart,
     SvgGroupedBarChart,
@@ -796,7 +796,6 @@ const webGLBigDataLineSeriesSample = () => {
             // type별 컬러 지정.
             const seriesColor = setSeriesColor(tempData);
             const configuration: BasicCanvasWebglLineSeriesOneConfiguration = {
-                type: 'series',
                 selector: (seriesColor === '#EA3010' ? 'webgl-trace-alarm' : 'webgl-trace')  + i,
                 xField: 'x',
                 yField: 'y',
@@ -1015,7 +1014,6 @@ const canvasBigDataLineSeriesSample = () => {
             // type별 컬러 지정.
             const seriesColor = setSeriesColor(tempData);
             const configuration: BasicCanvasTraceConfiguration = {
-                type: 'series',
                 selector: (seriesColor === '#EA3010' ? 'canvas-trace-alarm' : 'canvas-trace')  + i,
                 xField: 'x',
                 yField: 'y',
@@ -1088,7 +1086,7 @@ const canvasBigDataLineSeriesSample = () => {
 
 const svgMultiSeriesExample = () => {
     const yFieldSeries: BasicLineSeriesConfiguration = {
-        type: 'BasicLineSeries',
+        type: SeriesType.SVG_LINE,
         selector: 'y-series',
         xField: 'x',
         yField: 'y',
@@ -1101,7 +1099,7 @@ const svgMultiSeriesExample = () => {
     };
 
     const zFieldSeries: BasicLineSeriesConfiguration = {
-        type: 'BasicLineSeries',
+        type: SeriesType.SVG_LINE,
         selector: 'z-series',
         xField: 'x',
         yField: 'z',
@@ -1114,7 +1112,7 @@ const svgMultiSeriesExample = () => {
     }
 
     const xFieldSeries: BasicLineSeriesConfiguration = {
-        type: 'BasicLineSeries',
+        type: SeriesType.SVG_LINE,
         selector: 'x-series',
         xField: 'x',
         yField: 'x',
@@ -1129,7 +1127,7 @@ const svgMultiSeriesExample = () => {
     const columns = ['z'];
 
     const groupedVerticalColumnSeriesConfiguration: GroupedVerticalBarSeriesConfiguration = {
-        type: 'GroupedVerticalBarSeries',
+        type: SeriesType.SVG_VERTICAL_BAR,
         xField: 'x',
         displayNames: columns,
         columns
@@ -1295,7 +1293,6 @@ const axisCustomMargin = () => {
             // type별 컬러 지정.
             const seriesColor = setSeriesColor(tempData);
             const configuration: BasicCanvasTraceConfiguration = {
-                type: 'series',
                 selector: (seriesColor === '#EA3010' ? 'canvas-trace-alarm' : 'canvas-trace')  + i,
                 xField: 'x',
                 yField: 'y',

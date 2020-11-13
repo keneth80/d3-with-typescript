@@ -885,7 +885,6 @@ const webGLBigDataLineSeriesSample = () => {
             // type별 컬러 지정.
             const seriesColor = setSeriesColor(tempData);
             const configuration: BasicCanvasWebglLineSeriesOneConfiguration = {
-                type: 'series',
                 selector: (seriesColor === '#EA3010' ? 'webgl-trace-alarm' : 'webgl-trace')  + i,
                 xField: 'x',
                 yField: 'y',
@@ -1098,7 +1097,6 @@ const canvasBigDataLineSeriesSample = () => {
             // type별 컬러 지정.
             const seriesColor = setSeriesColor(tempData);
             const configuration: BasicCanvasTraceConfiguration = {
-                type: 'series',
                 selector: (seriesColor === '#EA3010' ? 'canvas-trace-alarm' : 'canvas-trace')  + i,
                 xField: 'x',
                 yField: 'y',
