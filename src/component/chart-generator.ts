@@ -5,7 +5,7 @@ import { ChartConfiguration,
 
 import { IFunctions } from './chart/functions.interface';
 
-import { SeriesConfiguration } from './chart/series.interface';
+import { ISeries, SeriesConfiguration } from './chart/series.interface';
 
 import { BasicCanvasTraceConfiguration, BasicCanvasTrace } from './series/canvas/basic-canvas-trace';
 import { BasicCanvasWebglLineSeriesOneConfiguration, BasicCanvasWebgLineSeriesOne } from './series/webgl/basic-canvas-webgl-line-series-one';
@@ -26,6 +26,7 @@ import { StackedVerticalBarSeriesConfiguration, StackedVerticalBarSeries } from 
 import { MiccBaseConfiguration, OptionConfiguration, ZoomConfiguration } from './mi-chart';
 import { BasicAreaSeries, BasicAreaSeriesConfiguration } from './series/svg/basic-area-series';
 import { BasicSvgMouseGuideLineHandler } from './functions/basic-svg-mouse-guide-line-handler';
+import { SeriesBase } from './chart/series-base';
 
 /*
 * desc: 캔버스 시리즈 출력 설정정보 맵핑.
@@ -155,13 +156,26 @@ export const SvgMultiSeriesChart = (
 ): BasicChart => {
     const chartConfiguration: ChartConfiguration = generatorCommomConfiguration(configuration);
 
-    chartConfiguration.series = []; // configuration type을 체크 해야함.
+    chartConfiguration.series = series.map((seriesItem: SeriesConfiguration) => makeSeriesByConfigurationType(seriesItem)); // configuration type을 체크 해야함.
 
     chartConfiguration.options = generatorOptions(options);
 
     chartConfiguration.functions = generatorFunctions(configuration);
 
     return new BasicChart(chartConfiguration);
+}
+
+export const makeSeriesByConfigurationType = (configuration: SeriesConfiguration): SeriesBase => {
+    let series: SeriesBase;
+    switch(configuration.type) {
+        case 'GroupedVerticalBarSeries':
+            series = new GroupedVerticalBarSeries(configuration as GroupedVerticalBarSeriesConfiguration);
+        break;
+        case 'BasicLineSeries':
+            series = new BasicLineSeries(configuration as BasicLineSeriesConfiguration);
+        break;
+    }
+    return series;
 }
 
 // 마우스 이벤트 같은 이벤트 함수설정 정보 맵핑.

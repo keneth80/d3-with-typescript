@@ -314,6 +314,7 @@ export class ChartBase<T = any> implements IChart {
         if (configuration.margin) {
             Object.assign(this.margin, configuration.margin);
             this.isCustomMargin = true;
+            console.log('isCustomMargin : ', this.isCustomMargin, this.margin);
         } else {
             this.isCustomMargin = false;
             this.config.axes.map((axis: Axes) => {

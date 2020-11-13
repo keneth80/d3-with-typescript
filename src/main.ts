@@ -36,7 +36,8 @@ import {
     SvgStackedBarChart,
     SvgTraceChart,
     WebglTraceChart,
-    SvgAreaChart
+    SvgAreaChart,
+    SvgMultiSeriesChart
 } from './component/chart-generator';
 import { sampleMockData } from './component/mock-data/simple-mock-data';
 
@@ -101,6 +102,12 @@ const buttonMapping = () => {
                     break;
                     case 'svg-area-series':
                         simpleSvgAreaSeriesExample();
+                    break;
+                    case 'axis-custom-margin':
+                        axisCustomMargin();
+                    break;
+                    case 'svg-multi-series':
+                        svgMultiSeriesExample();
                     break;
                     default:
                     break;
@@ -298,7 +305,7 @@ const simpleSvgLineSeriesExample = () => {
                     color: '#ddd'
                 },
                 zeroLine: {
-                    color: '#ff0000'
+                    color: '#0000ff'
                 }
             },
             {
@@ -311,7 +318,7 @@ const simpleSvgLineSeriesExample = () => {
                     color: '#ddd'
                 },
                 zeroLine: {
-                    color: '#ff0000'
+                    color: '#0000ff'
                 }
             }
         ],
@@ -1078,6 +1085,290 @@ const canvasBigDataLineSeriesSample = () => {
     chart = CanvasTraceChart(commonConfiguration, seriesList.concat(alarmSeriesList), optionList).draw();
     console.timeEnd('canvaslinedraw');
 };
+
+const svgMultiSeriesExample = () => {
+    const yFieldSeries: BasicLineSeriesConfiguration = {
+        type: 'BasicLineSeries',
+        selector: 'y-series',
+        xField: 'x',
+        yField: 'y',
+        line: {},
+        dot: {
+            radius: 3,
+            selector: 'basic-line-y-series-dot'
+        },
+        displayName: 'y-series'
+    };
+
+    const zFieldSeries: BasicLineSeriesConfiguration = {
+        type: 'BasicLineSeries',
+        selector: 'z-series',
+        xField: 'x',
+        yField: 'z',
+        line: {},
+        dot: {
+            radius: 3,
+            selector: 'basic-line-z-series-dot'
+        },
+        displayName: 'z-series'
+    }
+
+    const xFieldSeries: BasicLineSeriesConfiguration = {
+        type: 'BasicLineSeries',
+        selector: 'x-series',
+        xField: 'x',
+        yField: 'x',
+        line: {},
+        dot: {
+            radius: 3,
+            selector: 'basic-line-x-series-dot'
+        },
+        displayName: 'x-series'
+    }
+
+    const columns = ['z'];
+
+    const groupedVerticalColumnSeriesConfiguration: GroupedVerticalBarSeriesConfiguration = {
+        type: 'GroupedVerticalBarSeries',
+        xField: 'x',
+        displayNames: columns,
+        columns
+    };
+
+    const seriesList = [
+        groupedVerticalColumnSeriesConfiguration,
+        yFieldSeries,
+        // zFieldSeries,
+        xFieldSeries
+    ];
+
+    const commonConfiguration: MiccBaseConfiguration = {
+        selector: '#chart-div',
+        tooltip: {
+            tooltipTextParser: (d:any) => {
+                return `x: ${d.x} \ny: ${d.y}\nz: ${d.z}`
+            }
+        },
+        data: sampleMockData(20),
+        title: {
+            placement: Placement.TOP,
+            content: 'SVG Muti Series'
+        },
+        legend: {
+            placement: Placement.TOP
+        },
+        isResize: true,
+        axes: [
+            {
+                field: 'x',
+                type: ScaleType.STRING,
+                placement: Placement.BOTTOM,
+                padding: 0.2,
+                gridLine: {
+                    dasharray: 2
+                }
+            },
+            {
+                field: 'y',
+                type: ScaleType.NUMBER,
+                placement: 'left',
+                min: -5,
+                max: 30,
+                gridLine: {
+                    dasharray: 2
+                }
+            }
+        ],
+        zoom: {
+            direction: Direction.BOTH
+        }
+    };
+
+    (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
+    highlightBlock((select('#json-configuration').node() as any));
+
+    chart = SvgMultiSeriesChart(commonConfiguration, seriesList).draw();
+    chart.chartItemEvent.subscribe((item: ChartItemEvent) => {
+        if (item.type === 'click') {
+            alert('click =>' + JSON.stringify(item.data));
+        }
+    });
+}
+
+const axisCustomMargin = () => {
+    const stepData = stepInfo.map((step: any) => {
+        return {
+            start: step.startCountSlot,
+            end: step.startCountSlot + step.maxCount,
+            label: step.step,
+            data: step
+        };
+    });
+
+    const seriesList = [];
+
+    const alarmSeriesList = [];
+
+    const optionList = [];
+
+    let xmin = 0;
+    let xmax = 0;
+    let ymin = Infinity;
+    let ymax = 0;
+
+    const parseData = () => {
+        seriesList.length = 0;
+        alarmSeriesList.length = 0;
+        optionList.length = 0;
+
+        const basicSpecArea: OptionConfiguration = {
+            name: 'BasicSpecArea',
+            configuration: {
+                selector: 'spec-area',
+                startField: 'start',
+                endField: 'end',
+                data: [stepData[2]]
+            }
+        };
+
+        const basicStepLine: OptionConfiguration = {
+            name: 'BasicStepLine',
+            configuration: {
+                selector: 'step-line',
+                xField: 'start',
+                data: stepData
+            }
+        };
+
+        const basicStepArea: OptionConfiguration = {
+            name: 'BasicStepArea',
+            configuration: {
+                startField: 'start',
+                labelField: 'label',
+                endField: 'end',
+                data: stepData
+            }
+        };
+
+        optionList.push(basicSpecArea);
+        optionList.push(basicStepArea);
+        optionList.push(basicStepLine);
+
+        xmin = 0;
+        xmax = 0;
+        ymin = Infinity;
+        ymax = 0;
+
+        for (let i = 0; i < tracePoints.length; i++) {
+            const tempData = tracePoints[i];
+            const seriesData = tempData.data.rows.map((row: any[]) => {
+                const rowData: any = {};
+                for (let j = 0; j < tempData.data.columns.length; j++) {
+                    const columnName = tempData.data.columns[j];
+                    rowData[columnName] = row[j];
+                }
+
+                const x = rowData['count_slot'];
+                const y = rowData['VALUE'];
+
+                if (xmin > x) {
+                    xmin = x;
+                }
+                if (xmax < x) {
+                    xmax = x;
+                }
+                if (ymin > y) {
+                    ymin = y;
+                }
+                if (ymax < y) {
+                    ymax = y;
+                }
+
+                return new BasicCanvasTraceModel(
+                    x,
+                    y,
+                    i,
+                    rowData
+                );
+            });
+
+            // type별 컬러 지정.
+            const seriesColor = setSeriesColor(tempData);
+            const configuration: BasicCanvasTraceConfiguration = {
+                type: 'series',
+                selector: (seriesColor === '#EA3010' ? 'canvas-trace-alarm' : 'canvas-trace')  + i,
+                xField: 'x',
+                yField: 'y',
+                dot: {
+                    radius: 2,
+                    fill: seriesColor
+                },
+                line: {
+                    strokeColor: seriesColor,
+                    // opacity: seriesColor === '#EA3010' ? 1 :  0.9
+                },
+                data: seriesData
+            }
+
+            if (seriesColor === '#EA3010') {
+                alarmSeriesList.push(configuration);
+            } else {
+                seriesList.push(configuration);
+            }
+        }
+    }
+
+    parseData();
+
+    const commonConfiguration: MiccBaseConfiguration = {
+        selector: '#chart-div',
+        data: [],
+        title: {
+            placement: Placement.TOP,
+            content: 'Axis Custom Margin'
+        },
+        margin: {
+            left: 60,
+            right: 50
+        },
+        tooltip: {
+            tooltipTextParser: (d: any) => {
+                return `x: ${d.x} \ny: ${d.y}\nz: ${d.i}`
+            }
+        },
+        isResize: true,
+        axes: [
+            {
+                field: 'x',
+                type: ScaleType.NUMBER,
+                placement: 'bottom',
+                min: xmin - (xmax * 0.01),
+                max: xmax + (xmax * 0.01)
+            },
+            {
+                field: 'y',
+                type: ScaleType.NUMBER,
+                placement: 'left',
+                min: ymin,
+                max: ymax,
+                title: {
+                    content: 'y field',
+                    align: Align.CENTER
+                }
+            }
+        ],
+        zoom: {
+            xDirection: 'bottom',
+            yDirection: 'left',
+            direction: Direction.BOTH
+        }
+    };
+
+    (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
+    highlightBlock((select('#json-configuration').node() as any));
+
+    chart = CanvasTraceChart(commonConfiguration, seriesList.concat(alarmSeriesList), optionList).draw();
+}
 
 delayExcute(200, () => {
     buttonMapping();
