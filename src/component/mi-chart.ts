@@ -2,7 +2,7 @@ import { BasicChart } from './basic-chart';
 import { ChartConfiguration,
          ChartTooltip, ChartTitle, ChartLegend,
          Direction,
-         Margin, Axis, ChartStyle,  } from './chart/chart-configuration';
+         Margin, Axes, ChartStyle,  } from './chart/chart-configuration';
 
 import { IFunctions } from './chart/functions.interface';
 
@@ -51,7 +51,7 @@ export interface MiccBaseConfiguration {
 
     margin?: Margin; // custom margin
 
-    axes?: Axis[]; // axis list
+    axes?: Axes[]; // axis list
 
     // functions?: any[]; // function list
 

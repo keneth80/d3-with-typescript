@@ -1,15 +1,16 @@
 import { min, max } from 'd3-array';
 import { scaleBand, scaleLinear, scaleTime, scalePoint } from 'd3-scale';
 import { brushX, brushY } from 'd3-brush';
+import { Axis } from 'd3-axis';
 
 import { Scale, ContainerSize } from '../chart.interface';
-import { Align, Axis, AxisTitle, Margin, Placement, ScaleType } from '../chart-configuration';
+import { Align, Axes, AxisTitle, Margin, Placement, ScaleType } from '../chart-configuration';
 import { BaseType, select, Selection } from 'd3-selection';
 import { delayExcute, textWrapping } from '../util';
 import { axisSetupByScale } from '../scale';
 
 export const generateScaleByAxis = <T = any>(
-    axes: Axis[] = [],
+    axes: Axes[] = [],
     data: T[] = [],
     size: ContainerSize = {
         width: 0, height: 0
@@ -17,7 +18,7 @@ export const generateScaleByAxis = <T = any>(
     currentScale: {field:string, min: number, max: number}[]
 ): Scale[] => {
     const returnAxes: Scale[] = [];
-    axes.map((axis: Axis) => {
+    axes.map((axis: Axes) => {
         let range: any = [];
         if (axis.placement === Placement.BOTTOM || axis.placement === Placement.TOP) {
             range = [0, size.width];
@@ -144,7 +145,7 @@ export const drawAxisByScale = (
     axisTitleMargin: Margin
 ) => {
     const padding = 10; // 10 는 axis 여백.
-    const orientedAxis: any = axisSetupByScale(scale);
+    const orientedAxis: Axis<any> = axisSetupByScale(scale);
 
     let maxTextWidth = 0;
     let bandWidth = -1;

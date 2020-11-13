@@ -1,11 +1,11 @@
-import { axisBottom, axisLeft, axisTop, axisRight } from 'd3-axis';
+import { axisBottom, axisLeft, axisTop, axisRight, Axis } from 'd3-axis';
 import { format } from 'd3-format';
 import { timeFormat } from 'd3-time-format';
 
 import { Scale } from '../chart.interface';
 import { Placement, ScaleType } from '../chart-configuration';
 
-export const axisSetupByScale = (scale: Scale) => {
+export const axisSetupByScale = (scale: Scale): Axis<any> => {
     let orientedAxis: any = null;
 
     if (scale.orient === Placement.RIGHT) {

@@ -14,7 +14,7 @@ import {
 } from './chart.interface';
 import {
     ChartConfiguration,
-    Axis, Margin, Placement,
+    Axes, Margin, Placement,
     ChartTitle, ChartTooltip, PlacementByElement
 } from './chart-configuration';
 import { ISeries } from './series.interface';
@@ -316,7 +316,7 @@ export class ChartBase<T = any> implements IChart {
             this.isCustomMargin = true;
         } else {
             this.isCustomMargin = false;
-            this.config.axes.map((axis: Axis) => {
+            this.config.axes.map((axis: Axes) => {
                 // 최초 axis padding을 조정해줌.
                 if (axis.placement === Placement.TOP || axis.placement === Placement.BOTTOM) {
                     this.margin[axis.placement] = 30;
@@ -813,7 +813,7 @@ export class ChartBase<T = any> implements IChart {
 
         // axis title check
         if (this.config.axes && this.config.axes.length) {
-            this.config.axes.forEach((axis: Axis) => {
+            this.config.axes.forEach((axis: Axes) => {
                 if (axis.title) {
                     this.axisTitleMargin[axis.placement] = titleTextHeight;
                 }
@@ -1399,7 +1399,7 @@ export class ChartBase<T = any> implements IChart {
     }
 
     protected setupScale(
-        axes: Axis[] = [],
+        axes: Axes[] = [],
         width: number = 0,
         height: number = 0,
         reScaleAxes?: any[]

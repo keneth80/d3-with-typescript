@@ -47,7 +47,7 @@ export interface AxisTitle {
     }
 }
 
-export interface Axis {
+export interface Axes {
     field: any; // data propertie
     type: string; // default: number, option: number or string or point or time => number: scaleLinear, time: scaleTime, string: scaleBand, point: scalePoint for range
     placement: string; // position
@@ -134,7 +134,7 @@ export interface ChartConfiguration<T = any> {
 
     margin?: Margin; // custom margin
 
-    axes?: Axis[]; // axis list
+    axes?: Axes[]; // axis list
 
     series?: ISeries<T>[]; // series list
 

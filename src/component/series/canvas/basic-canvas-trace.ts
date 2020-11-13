@@ -207,10 +207,6 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
             }
         }
 
-        if (this.originQuadTree) {
-            this.originQuadTree = undefined;
-        }
-
         if ((option.displayType === DisplayType.NORMAL ||
                 option.displayType === DisplayType.ZOOMOUT && !this.restoreCanvas)) {
             this.restoreCanvas = select(document.createElement('CANVAS'));
@@ -218,6 +214,10 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                 .attr('width', geometry.width)
                 .attr('height', geometry.height);
             (this.restoreCanvas.node() as any).getContext('2d').drawImage(this.canvas.node(), 0, 0);
+        }
+
+        if (this.originQuadTree) {
+            this.originQuadTree = undefined;
         }
 
         const makeQuadtree = () => {
