@@ -290,9 +290,10 @@ const simpleSvgLineSeriesExample = () => {
             {
                 field: 'x',
                 type: ScaleType.NUMBER,
-                placement: 'bottom',
-                min: -5,
+                placement: Placement.BOTTOM,
+                min: -1,
                 max: 21,
+                tickFormat: 's',
                 gridLine: {
                     color: '#ddd'
                 },
@@ -303,7 +304,7 @@ const simpleSvgLineSeriesExample = () => {
             {
                 field: 'y',
                 type: ScaleType.NUMBER,
-                placement: 'left',
+                placement: Placement.LEFT,
                 min: -5,
                 max: 30,
                 gridLine: {

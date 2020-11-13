@@ -193,7 +193,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
             this.originQuadTree = undefined;
         }
 
-        delayExcute(300 + this.seriesIndex * 10, () => {
+        const makeQuadtree = () => {
             // quadtree setup: data indexing by position
             this.originQuadTree = quadtree()
                 .extent([
@@ -208,7 +208,13 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
                         return [xposition, yposition, d, this.radius];
                     })
                 );
-        });
+        };
+
+        if (lineData.length >= 500000) {
+            delayExcute(300 + this.seriesIndex * 10, makeQuadtree);
+        } else {
+            makeQuadtree();
+        }
     }
 
     select(displayName: string, isSelected: boolean) {

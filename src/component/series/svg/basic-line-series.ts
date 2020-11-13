@@ -168,17 +168,15 @@ export class BasicLineSeries extends SeriesBase {
             this.originQuadTree = undefined;
         }
 
-        delayExcute(300, () => {
-            const generateData: any[] = resultData
-                .map((d: any, i: number) => {
-                    const xposition = x(d[this.config.xField]) + padding;
-                    const yposition = y(d[this.config.yField]);
-                    return [xposition, yposition, d, this.radius];
-                });
-            this.originQuadTree = quadtree()
-                .extent([[xScale.min, yScale.min], [geometry.width, geometry.height]])
-                .addAll(generateData);
-        });
+        const generateData: any[] = resultData
+            .map((d: any, i: number) => {
+                const xposition = x(d[this.config.xField]) + padding;
+                const yposition = y(d[this.config.yField]);
+                return [xposition, yposition, d, this.radius];
+            });
+        this.originQuadTree = quadtree()
+            .extent([[xScale.min, yScale.min], [geometry.width, geometry.height]])
+            .addAll(generateData);
     }
 
     select(displayName: string, isSelected: boolean) {

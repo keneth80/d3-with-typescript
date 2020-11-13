@@ -22,7 +22,7 @@ import { IFunctions } from './functions.interface';
 import { IOptions } from './options.interface';
 import { baseTooltipTemplate } from './tooltip/tooltip-template';
 import { guid, delayExcute, getTransformByArray } from './util/d3-svg-util';
-import { drawAxisByScale, generateScaleByAxis } from './axis';
+import { drawAxisByScale, generateScaleByAxis, setupZeroLine } from './axis';
 import { ChartSelector } from './chart-selector-variable';
 import { ChartLegend } from './legend';
 import { setupWebglContext } from './util/webgl-util';
@@ -586,15 +586,9 @@ export class ChartBase<T = any> implements IChart {
         try {
             if (this.seriesList && this.seriesList.length) {
                 if (!this.config.displayDelay) {
-                    // this.execute();
+                    // const xScale = this.scales.find((scale: Scale) => scale.orient === Placement.BOTTOM || scale.orient === Placement.TOP);
+                    // const yScale = this.scales.find((scale: Scale) => scale.orient === Placement.LEFT || scale.orient === Placement.RIGHT);
                     // TODO: zoomin 일 경우 데이터 min, max filtering을 여기할 수 있는 방법 강구.
-                    // .filter(
-                    //    (d: T) =>
-                    ///       d[this.xField] >= xmin - xmin * 0.01 &&
-                    //        d[this.xField] <= xmax + xmax * 0.01 &&
-                    //        d[this.yField] >= ymin &&
-                    //        d[this.yField] <= ymax
-                    // )
                     this.seriesList.map((series: ISeries, index: number) => {
                         if (!series.chartBase) {
                             series.chartBase = this;
@@ -602,7 +596,15 @@ export class ChartBase<T = any> implements IChart {
 
                         series.setSvgElement(this.svg, this.seriesGroup, index);
                         series.drawSeries(
-                            this.data,
+                            this.data
+                            // .filter(
+                            //     (d: T) =>
+                            //         d[xScale.field] >= xScale.min - xScale.min * 0.01 &&
+                            //         d[xScale.field] <= xScale.max + xScale.max * 0.01 &&
+                            //         d[yScale.field] >= yScale.min &&
+                            //         d[yScale.field] <= yScale.max
+                            // )
+                            ,
                             this.scales,
                             {
                                 width: this.width,
@@ -727,6 +729,21 @@ export class ChartBase<T = any> implements IChart {
                 );
             }
 
+            // TODO: 한가지 패턴으로 정리 할 것.
+            // drawAxisByScale(
+            //     {
+            //         width: this.width,
+            //         height: this.height
+            //     },
+            //     this.margin,
+            //     this.isCustomMargin,
+            //     scale,
+            //     this.axisGroups[scale.orient],
+            //     this.defaultAxisLabelStyle,
+            //     this.defaultAxisTitleStyle,
+            //     this.axisTitleMargin
+            // );
+
             if (scale.visible) {
                 this.axisGroups[scale.orient].call(
                     orientedAxis
@@ -744,6 +761,15 @@ export class ChartBase<T = any> implements IChart {
                             })
                     });
                 }
+            }
+
+            if (scale.zeroLine && scale.min < 0) {
+                setupZeroLine({
+                    width: this.width,
+                    height: this.height
+                }, scale, this.axisGroups[scale.orient]);
+            } else {
+                this.axisGroups[scale.orient].selectAll(`.${scale.orient}-${scale.field}-zero-line`).remove();
             }
 
             // if (isZoom && scale.isZoom === true) {
@@ -1388,79 +1414,79 @@ export class ChartBase<T = any> implements IChart {
         return generateScaleByAxis(axes, this.data, {width, height}, this.currentScale);
     }
 
-    protected updateBrushHandler(orient: string = 'bottom', brush: any) {
-        const extent = event.selection;
-        const scale: Scale = this.scales.find((scaleItem: Scale) => scaleItem.orient === orient);
-        const currentScale: any = scale.scale;
+    // protected updateBrushHandler(orient: string = 'bottom', brush: any) {
+    //     const extent = event.selection;
+    //     const scale: Scale = this.scales.find((scaleItem: Scale) => scaleItem.orient === orient);
+    //     const currentScale: any = scale.scale;
 
-        if (!extent) {
-            if (!this.idleTimeout) return this.idleTimeout = setTimeout(this.idled, 350);
-            if (this.originDomains[orient]) {
-                currentScale.domain([this.originDomains[orient][0], this.originDomains[orient][1]]);
-            }
-        } else {
-            if (!this.originDomains[orient]) {
-                this.originDomains[orient] = currentScale.domain();
-            }
+    //     if (!extent) {
+    //         if (!this.idleTimeout) return this.idleTimeout = setTimeout(this.idled, 350);
+    //         if (this.originDomains[orient]) {
+    //             currentScale.domain([this.originDomains[orient][0], this.originDomains[orient][1]]);
+    //         }
+    //     } else {
+    //         if (!this.originDomains[orient]) {
+    //             this.originDomains[orient] = currentScale.domain();
+    //         }
 
-            let domainStart = 0;
-            let domainEnd = 0;
+    //         let domainStart = 0;
+    //         let domainEnd = 0;
 
-            if (orient === Placement.TOP || orient === Placement.BOTTOM) {
-                domainStart = currentScale.invert(extent[0]);
-                domainEnd = currentScale.invert(extent[1]);
-            } else { // left, right 는 아래에서 위로 정렬이기 때문.
-                domainStart = currentScale.invert(extent[1]);
-                domainEnd = currentScale.invert(extent[0]);
-            }
+    //         if (orient === Placement.TOP || orient === Placement.BOTTOM) {
+    //             domainStart = currentScale.invert(extent[0]);
+    //             domainEnd = currentScale.invert(extent[1]);
+    //         } else { // left, right 는 아래에서 위로 정렬이기 때문.
+    //             domainStart = currentScale.invert(extent[1]);
+    //             domainEnd = currentScale.invert(extent[0]);
+    //         }
 
-            currentScale.domain([ domainStart, domainEnd ]);
-            this.axisGroups[orient].select('.brush' + orient).call(
-                brush.move, null
-            );
-        }
+    //         currentScale.domain([ domainStart, domainEnd ]);
+    //         this.axisGroups[orient].select('.brush' + orient).call(
+    //             brush.move, null
+    //         );
+    //     }
 
-        if (scale.gridLine) {
-            drawGridLine(
-                {
-                    width: this.width,
-                    height: this.height
-                },
-                scale,
-                this.mainGroup,
-                {
-                    color: scale.gridLine.color ?? '#ccc',
-                    dasharray: scale.gridLine.dasharray ?? 0,
-                    opacity: scale.gridLine.opacity ?? 1
-                }
-            )
-        }
+    //     if (scale.gridLine) {
+    //         drawGridLine(
+    //             {
+    //                 width: this.width,
+    //                 height: this.height
+    //             },
+    //             scale,
+    //             this.mainGroup,
+    //             {
+    //                 color: scale.gridLine.color ?? '#ccc',
+    //                 dasharray: scale.gridLine.dasharray ?? 0,
+    //                 opacity: scale.gridLine.opacity ?? 1
+    //             }
+    //         )
+    //     }
 
-        const currnetAxis: any = axisSetupByScale(scale);
+    //     const currnetAxis: any = axisSetupByScale(scale);
 
-        this.axisGroups[orient]
-        .call(currnetAxis)
-        .selectAll('text')
-            .style('font-size', this.defaultAxisLabelStyle.font.size + 'px')
-            .style('font-family', this.defaultAxisLabelStyle.font.family);
-            // .style('font-weight', 100)
-            // .style('stroke-width', 0.5)
-            // .style('stroke', this.defaultAxisLabelStyle.font.color);
+    //     this.axisGroups[orient]
+    //     .call(currnetAxis)
+    //     .selectAll('text')
+    //         .style('font-size', this.defaultAxisLabelStyle.font.size + 'px')
+    //         .style('font-family', this.defaultAxisLabelStyle.font.family);
+    //         // .style('font-weight', 100)
+    //         // .style('stroke-width', 0.5)
+    //         // .style('stroke', this.defaultAxisLabelStyle.font.color);
 
-        if (scale.tickTextParser) {
-            delayExcute(50, () => {
-                this.axisGroups[orient]
-                .text((d: string) => {
-                    return scale.tickTextParser(d);
-                });
-            });
-        }
+    //     if (scale.tickTextParser) {
+    //         delayExcute(50, () => {
+    //             this.axisGroups[orient]
+    //             .text((d: string) => {
+    //                 return scale.tickTextParser(d);
+    //             });
+    //         });
+    //     }
 
-        // this.axisGroups[orient].transition().duration(1000).call(currnetAxis);
+    //     // this.axisGroups[orient].transition().duration(1000).call(currnetAxis);
 
-        this.updateSeries();
-        this.updateOptions();
-    }
+    //     this.updateSeries();
+    //     this.updateOptions();
+    // }
 
     // TODO: 해상도에 최적화중입니다. 팝업 표시 추가.
     protected resizeEventHandler = () => {

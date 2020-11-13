@@ -120,31 +120,29 @@ export class StackedVerticalBarSeries extends SeriesBase {
                 // .attr('height', (d: any) => { return Math.abs(y(d[0]) - y(d[1]) - y(0)); })
                 .attr('width', x.bandwidth());
 
-        delayExcute(300, () => {
-            const size = generateChartData.length;
-            const generateData: any[] = [];
-            for (let i = 0; i < size; i++) {
-                const d: any = generateChartData[i];
-                const key = d.key;
-                const fill = z(key) + '';
-                const columnSize = d.length;
-                for (let j = 0; j < columnSize; j++) {
-                    const item = d[j];
-                    const data = d[j].data;
-                    const itemx = x(data[this.xField]);
-                    const itemy = (item[1] < 0 ? y(0) : y(item[1]));
-                    // POINT: quadtree 에 저장 되는 데이터는
-                    // [아이템의 x축, y축, 아이템의 데이터, 컬럼인덱스, 막대의 가로 사이즈, 막대의 세로 사이즈, 색상]
-                    generateData.push([
-                        itemx, itemy, data, j, key, x.bandwidth(), y(item[0]) - y(item[1]), fill
-                    ]);
-                }
+        const size = generateChartData.length;
+        const generateData: any[] = [];
+        for (let i = 0; i < size; i++) {
+            const d: any = generateChartData[i];
+            const key = d.key;
+            const fill = z(key) + '';
+            const columnSize = d.length;
+            for (let j = 0; j < columnSize; j++) {
+                const item = d[j];
+                const data = d[j].data;
+                const itemx = x(data[this.xField]);
+                const itemy = (item[1] < 0 ? y(0) : y(item[1]));
+                // POINT: quadtree 에 저장 되는 데이터는
+                // [아이템의 x축, y축, 아이템의 데이터, 컬럼인덱스, 막대의 가로 사이즈, 막대의 세로 사이즈, 색상]
+                generateData.push([
+                    itemx, itemy, data, j, key, x.bandwidth(), y(item[0]) - y(item[1]), fill
+                ]);
             }
+        }
 
-            this.originQuadTree = quadtree()
-                .extent([[0, 0], [geometry.width, geometry.height]])
-                .addAll(generateData);
-        });
+        this.originQuadTree = quadtree()
+            .extent([[0, 0], [geometry.width, geometry.height]])
+            .addAll(generateData);
     }
 
     select(displayName: string, isSelected: boolean) {

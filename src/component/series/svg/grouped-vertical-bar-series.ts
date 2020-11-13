@@ -119,29 +119,27 @@ export class GroupedVerticalBarSeries extends SeriesBase {
             this.originQuadTree = undefined;
         }
 
-        delayExcute(300, () => {
-            const size = chartData.length;
-            const columnSize = this.columns.length;
-            const generateData: any[] = [];
-            for (let i = 0; i < size; i++) {
-                const d = chartData[i];
-                const groupx = x(d[this.xField]);
-                for (let j = 0; j < columnSize; j++) {
-                    const key = this.columns[j];
-                    const itemx = groupx + barx(key);
-                    const itemy = d[key] < 0 ? y(0) : y(d[key]);
-                    // POINT: quadtree 에 저장 되는 데이터는
-                    // [아이템의 x축, y축, 아이템의 데이터, 컬럼인덱스, 막대의 가로 사이즈, 막대의 세로 사이즈, 색상]
-                    generateData.push([
-                        itemx, itemy, d, j, key, barx.bandwidth(), Math.abs(y(d[key]) - y(0)), z(key) + ''
-                    ]);
-                }
+        const size = chartData.length;
+        const columnSize = this.columns.length;
+        const generateData: any[] = [];
+        for (let i = 0; i < size; i++) {
+            const d = chartData[i];
+            const groupx = x(d[this.xField]);
+            for (let j = 0; j < columnSize; j++) {
+                const key = this.columns[j];
+                const itemx = groupx + barx(key);
+                const itemy = d[key] < 0 ? y(0) : y(d[key]);
+                // POINT: quadtree 에 저장 되는 데이터는
+                // [아이템의 x축, y축, 아이템의 데이터, 컬럼인덱스, 막대의 가로 사이즈, 막대의 세로 사이즈, 색상]
+                generateData.push([
+                    itemx, itemy, d, j, key, barx.bandwidth(), Math.abs(y(d[key]) - y(0)), z(key) + ''
+                ]);
             }
+        }
 
-            this.originQuadTree = quadtree()
-                .extent([[0, 0], [geometry.width, geometry.height]])
-                .addAll(generateData);
-        });
+        this.originQuadTree = quadtree()
+            .extent([[0, 0], [geometry.width, geometry.height]])
+            .addAll(generateData);
     }
 
     select(displayName: string, isSelected: boolean) {

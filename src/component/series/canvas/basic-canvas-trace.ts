@@ -170,63 +170,67 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
         // ctx.fillStyle = "rgba(0, 0, 0, 0)";
         // ctx.fillRect(left, top, width, height);
-        delayExcute(100, () => {
-            if (option.displayType === DisplayType.ZOOMOUT && this.restoreCanvas) {
-                generateData = lineData
-                    .map((d: BasicCanvasTraceModel, i: number) => {
-                        const xposition = x(d[this.config.xField]) + padding;
-                        const yposition = y(d[this.config.yField]);
-                        return [xposition, yposition, d];
-                    });
-                context.drawImage(this.restoreCanvas.node(), 0, 0);
-            } else {
-                generateData = lineData
-                    .map((d: BasicCanvasTraceModel, i: number) => {
-                        const xposition = x(d[this.config.xField]) + padding;
-                        const yposition = y(d[this.config.yField]);
-                        // POINT: data 만들면서 포인트 찍는다.
-                        if (this.config.dot) {
-                            context.fillRect(xposition - this.radius, yposition - this.radius, this.radius * 2, this.radius * 2);
-                            // context.arc(xposition, yposition, this.config.dot.radius, 0, 2 * Math.PI, false);
-                        }
-                        return [xposition, yposition, d, this.radius];
-                    });
+        if (option.displayType === DisplayType.ZOOMOUT && this.restoreCanvas) {
+            generateData = lineData
+                .map((d: BasicCanvasTraceModel, i: number) => {
+                    const xposition = x(d[this.config.xField]) + padding;
+                    const yposition = y(d[this.config.yField]);
+                    return [xposition, yposition, d];
+                });
+            context.drawImage(this.restoreCanvas.node(), 0, 0);
+        } else {
+            generateData = lineData
+                .map((d: BasicCanvasTraceModel, i: number) => {
+                    const xposition = x(d[this.config.xField]) + padding;
+                    const yposition = y(d[this.config.yField]);
+                    // POINT: data 만들면서 포인트 찍는다.
+                    if (this.config.dot) {
+                        context.fillRect(xposition - this.radius, yposition - this.radius, this.radius * 2, this.radius * 2);
+                        // context.arc(xposition, yposition, this.config.dot.radius, 0, 2 * Math.PI, false);
+                    }
+                    return [xposition, yposition, d, this.radius];
+                });
 
-                this.line = line()
-                    .x((data: any) => {
-                        return data[0];
-                    }) // set the x values for the line generator
-                    .y((data: any) => {
-                        return data[1];
-                    })
-                    .context(context); // set the y values for the line generator
-                if (this.config.line) {
-                    // 사이즈가 변경이 되면서 zoom out 경우에는 초기 사이즈를 업데이트 해준다.
-                    this.line(generateData);
-                    // context.fill();
-                    context.stroke();
-                }
+            this.line = line()
+                .x((data: any) => {
+                    return data[0];
+                }) // set the x values for the line generator
+                .y((data: any) => {
+                    return data[1];
+                })
+                .context(context); // set the y values for the line generator
+            if (this.config.line) {
+                // 사이즈가 변경이 되면서 zoom out 경우에는 초기 사이즈를 업데이트 해준다.
+                this.line(generateData);
+                // context.fill();
+                context.stroke();
             }
-        });
+        }
 
         if (this.originQuadTree) {
             this.originQuadTree = undefined;
         }
 
-        delayExcute(300, () => {
-            if ((option.displayType === DisplayType.NORMAL ||
-                 option.displayType === DisplayType.ZOOMOUT && !this.restoreCanvas)) {
-                this.restoreCanvas = select(document.createElement('CANVAS'));
-                this.restoreCanvas
-                    .attr('width', geometry.width)
-                    .attr('height', geometry.height);
-                (this.restoreCanvas.node() as any).getContext('2d').drawImage(this.canvas.node(), 0, 0);
-            }
+        if ((option.displayType === DisplayType.NORMAL ||
+                option.displayType === DisplayType.ZOOMOUT && !this.restoreCanvas)) {
+            this.restoreCanvas = select(document.createElement('CANVAS'));
+            this.restoreCanvas
+                .attr('width', geometry.width)
+                .attr('height', geometry.height);
+            (this.restoreCanvas.node() as any).getContext('2d').drawImage(this.canvas.node(), 0, 0);
+        }
 
+        const makeQuadtree = () => {
             this.originQuadTree = quadtree()
-                .extent([[0, 0], [geometry.width, geometry.height]])
-                .addAll(generateData);
-        });
+            .extent([[0, 0], [geometry.width, geometry.height]])
+            .addAll(generateData);
+        };
+
+        if (generateData.length >= 500000) {
+            delayExcute(200, makeQuadtree);
+        } else {
+            makeQuadtree();
+        }
     }
 
     select(displayName: string, isSelected: boolean) {
