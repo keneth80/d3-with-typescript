@@ -52,7 +52,7 @@ export const setupWebglContext = (canvas: Selection<BaseType, any, HTMLElement, 
         // desynchronized: true, // 이벤트 루프에서 캔버스 페인트 주기의 비동기화를 해제하여 사용자 에이전트가 대기 시간을 줄이도록 힌트하는 부울
         failIfMajorPerformanceCaveat: true // 시스템 성능이 낮거나 하드웨어 GPU를 사용할 수 없는 경우 컨텍스트가 생성될지 를 나타내는 부울수입니다.
     };
-    return (canvas.node() as any).getContext('webgl', webglOption) || (canvas.node() as any).getContext('experimental-webgl', webglOption);
+    return (canvas.node() as any).getContext('webgl', webglOption) ?? (canvas.node() as any).getContext('experimental-webgl', webglOption);
 }
 
 const createShaderFromScript = (gl: any, scriptId: string, optShaderType: string, optErrorCallback: any) => {
@@ -82,7 +82,7 @@ const createShaderFromScript = (gl: any, scriptId: string, optShaderType: string
 }
 
 const loadShader = (gl: any, shaderSource: any, shaderType: any, optErrorCallback: any) => {
-    const errFn = optErrorCallback || error;
+    const errFn = optErrorCallback ?? error;
     // Create the shader object
     const shader = gl.createShader(shaderType);
 
@@ -106,7 +106,7 @@ const loadShader = (gl: any, shaderSource: any, shaderType: any, optErrorCallbac
 }
 
 const createProgram = (gl: any, shaders: string[], optAttribs: any, optLocations: any, optErrorCallback: any) => {
-    const errFn = optErrorCallback || error;
+    const errFn = optErrorCallback ?? error;
     const program = gl.createProgram();
     shaders.forEach((shader: string) => {
         gl.attachShader(program, shader);

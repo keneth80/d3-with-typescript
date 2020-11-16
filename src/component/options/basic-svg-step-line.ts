@@ -7,26 +7,19 @@ import { OptionsBase } from '../chart/options-base';
 export interface BasicStepLineConfiguration<T = any> {
     selector: string;
     xField: string;
-    data?: Array<T>;
+    data?: T[];
 }
 
 export class BasicStepLine<T = any> extends OptionsBase {
     private xField: string;
 
-    private stepData: Array<T>;
+    private stepData: T[];
 
     constructor(configuration: BasicStepLineConfiguration) {
         super();
-        this.selector = configuration.selector || 'step-line';
-        if (configuration) {
-            if (configuration.xField) {
-                this.xField = configuration.xField;
-            }
-
-            if (configuration.data) {
-                this.stepData = configuration.data;
-            }
-        }
+        this.selector = configuration.selector ?? 'step-line';
+        this.xField = configuration.xField;
+        this.stepData = configuration.data ?? [];
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, mainGroup: Selection<BaseType, any, HTMLElement, any>) {
@@ -41,11 +34,11 @@ export class BasicStepLine<T = any> extends OptionsBase {
         }
     }
 
-    drawOptions(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
+    drawOptions(chartData: T[], scales: Scale[], geometry: ContainerSize) {
         if (!this.stepData || !this.stepData.length) {
             return;
         }
-        
+
         const xScale: Scale = scales.find((scale: Scale) => scale.orient === Placement.BOTTOM);
         const x = xScale.scale;
 

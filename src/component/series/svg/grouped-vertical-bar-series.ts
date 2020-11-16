@@ -156,6 +156,7 @@ export class GroupedVerticalBarSeries extends SeriesBase {
     }
 
     onSelectItem(value: number[], selected: any[]) {
+        console.log('vertical bar series onSelectItem');
         const selectedItem = selected[0];
 
         if (value[1] < selectedItem[1]) {

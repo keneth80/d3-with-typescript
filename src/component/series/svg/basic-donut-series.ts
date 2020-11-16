@@ -153,7 +153,7 @@ export class BasicDonutSeries extends SeriesBase {
         series.transition()
             .duration(1000)
             .attrTween('d', (d: any) => {
-                currentSeries = currentSeries || d;
+                currentSeries = currentSeries ?? d;
                 const interpolateMng = interpolate(currentSeries, d);
                 currentSeries = interpolateMng(0);
                 return (t: any) => {
@@ -177,7 +177,7 @@ export class BasicDonutSeries extends SeriesBase {
         let currentLabel = null;
         labels.transition().duration(1000)
             .attrTween('transform', (d: any) => {
-                currentLabel = currentLabel || d;
+                currentLabel = currentLabel ?? d;
                 const interpolateMng = interpolate(currentLabel, d);
                 currentLabel = interpolateMng(0);
                 return (t: any) => {
@@ -188,7 +188,7 @@ export class BasicDonutSeries extends SeriesBase {
                 };
             })
             .styleTween('text-anchor', (d: any) => {
-                currentLabel = currentLabel || d;
+                currentLabel = currentLabel ?? d;
                 const interpolateMng = interpolate(currentLabel, d);
                 currentLabel = interpolateMng(0);
                 return (t: any) => {
@@ -213,7 +213,7 @@ export class BasicDonutSeries extends SeriesBase {
         let currentLine = null;
         lines.transition().duration(1000)
             .attrTween('points', (d: any) => {
-                currentLine = currentLine || d;
+                currentLine = currentLine ?? d;
                 const interpolateMng = interpolate(currentLine, d);
                 currentLine = interpolateMng(0);
                 return (t: any) => {

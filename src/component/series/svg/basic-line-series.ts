@@ -64,7 +64,7 @@ export class BasicLineSeries extends SeriesBase {
         if (this.config.hasOwnProperty('animation')) {
             this.isAnimation = configuration.animation;
         }
-        this.dotClass = this.config.dot && this.config.dot.selector || this.dotClass + '-' + this.config.yField;
+        this.dotClass = this.config?.dot?.selector ?? this.dotClass + '-' + this.config.yField;
     }
 
     setSvgElement(
@@ -95,7 +95,7 @@ export class BasicLineSeries extends SeriesBase {
         }
 
         this.geometry = geometry;
-        this.strokeColor = this.checkSeriesColor() || option.color;
+        this.strokeColor = this.checkSeriesColor() ?? option.color;
         this.dotFill = this.config.dot && this.config.dot.fill ? this.config.dot.fill : option.color;
         this.dotStrokeWidth = this.config.dot && this.config.dot.strokeWidth ? this.config.dot.strokeWidth : this.dotStrokeWidth;
 
@@ -148,7 +148,7 @@ export class BasicLineSeries extends SeriesBase {
             //     .attr('height', geometry.height + (radius * 4))
             //     .attr('x', -(radius*2))
             //     .attr('y', -(radius*2));
-            this.radius = this.config.dot.radius || this.radius;
+            this.radius = this.config.dot.radius ?? this.radius;
             this.dotGroup.selectAll(`.${this.dotClass}`)
                 .data(resultData)
                     .join(
@@ -207,7 +207,10 @@ export class BasicLineSeries extends SeriesBase {
     }
 
     onSelectItem(value: number[], selected: any[]) {
+        console.log('line series onSelectItem');
         const selectedItem = selected[0];
+        // TODO: selector가 같아서 막대와 원 선택 아이템이 겹침. selector를 다르게 하거나 분기 해야함.
+        this.chartBase.selectionClear();
         drawSelectionPointByCircle(
             this.selectionGroup,
             [[selectedItem[0], selectedItem[1]]],
@@ -255,7 +258,7 @@ export class BasicLineSeries extends SeriesBase {
             setChartTooltipByPosition(
                 this.tooltipGroup,
                 this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser
-                    ? this.chartBase.tooltip.tooltipTextParser(selectedItem[2])
+                    ? this.chartBase.tooltip.tooltipTextParser(selectedItem)
                     : `${this.config.xField}: ${selectedItem[2][this.config.xField]} \n ${this.config.yField}: ${selectedItem[2][this.config.yField]}`,
                 this.geometry,
                 [

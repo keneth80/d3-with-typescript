@@ -49,17 +49,17 @@ export class SeriesBase implements ISeries {
     private maskId = '';
 
     constructor(configuration: SeriesConfiguration) {
-        this.type = configuration.type || this.type;
+        this.type = configuration.type ?? this.type;
 
-        this.selector = configuration.selector || this.selector;
+        this.selector = configuration.selector ?? this.selector;
 
-        this.displayName = configuration.displayName || this.displayName;
+        this.displayName = configuration.displayName ?? this.displayName;
 
-        this.shape = configuration.shape || this.shape;
+        this.shape = configuration.shape ?? this.shape;
 
-        this.xDirection = configuration.xDirection || this.xDirection;
+        this.xDirection = configuration.xDirection ?? this.xDirection;
 
-        this.yDirection = configuration.yDirection || this.yDirection;
+        this.yDirection = configuration.yDirection ?? this.yDirection;
     }
 
     set chartBase(value: ChartBase) {

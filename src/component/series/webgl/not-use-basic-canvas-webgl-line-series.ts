@@ -97,28 +97,17 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
     constructor(configuration: BasicCanvasWebglLineSeriesConfiguration) {
         super(configuration);
         this.config = configuration;
-        if (configuration) {
-            if (configuration.xField) {
-                this.xField = configuration.xField;
-            }
+        this.xField = configuration.xField;
+        this.yField = configuration.yField;
+        this.dataFilter = configuration.filter;
+        if (configuration.style) {
+            this.strokeWidth = configuration.style.strokeWidth ?? this.strokeWidth;
+            this.strokeColor = configuration.style.strokeColor ?? null;
+            this.strokeOpacity = configuration.style.opacity ?? 1;
+        }
 
-            if (configuration.yField) {
-                this.yField = configuration.yField;
-            }
-
-            if (configuration.filter) {
-                this.dataFilter = configuration.filter;
-            }
-
-            if (configuration.style) {
-                this.strokeWidth = configuration.style.strokeWidth || this.strokeWidth;
-                this.strokeColor = configuration.style.strokeColor || null;
-                this.strokeOpacity = configuration.style.opacity || 1;
-            }
-
-            if (configuration.data) {
-                this.seriesData = configuration.data;
-            }
+        if (configuration.data) {
+            this.seriesData = configuration.data;
         }
     }
 
@@ -174,9 +163,9 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
 
         this.geometry = geometry;
 
-        this.radius = this.config.dot ? this.config.dot.radius || 4 : 0;
+        this.radius = this.config?.dot?.radius ?? 4;
 
-        this.lineStroke = (this.config.style && this.config.style.strokeWidth) || 1;
+        this.lineStroke = this.config?.style?.strokeWidth ?? 1;
 
         this.lineColor = this.strokeColor ? this.strokeColor : option.color;
 
@@ -378,7 +367,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
 
         const textWidth = parseTextNode.width + 7;
         const textHeight = parseTextNode.height + 5;
-        const radius = this.config.dot ? this.config.dot.radius || 4 : 0;
+        const radius = this.config.dot ? this.config.dot.radius ?? 4 : 0;
 
         let xPosition = mouseEvent[0] + this.chartBase.chartMargin.left + radius;
         let yPosition = mouseEvent[1];
@@ -466,7 +455,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
     }
 
     private initShaders(color: string, geometry: ContainerSize, vertices: [number, number][], alpha: number = 1) {
-        const radius = this.config.dot ? this.config.dot.radius || 6 : 0;
+        const radius = this.config?.dot?.radius ?? 6;
 
         // Vertex shader source code
         const vertCodeSquare = `

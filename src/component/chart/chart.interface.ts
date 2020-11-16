@@ -57,12 +57,6 @@ export interface ChartZoomEvent extends ChartMouseEvent {
     }
 }
 
-export interface ISeriesConfiguration {
-    selector?: string;
-    xField: string;
-    yField: string;
-}
-
 export interface Scale {
     field: string;
     orient: string;
@@ -98,12 +92,22 @@ export interface LegendItem {
     shape: string;
 }
 
-export interface IChart {
+export interface IChartBase {
     bootstrap(configuration: ChartConfiguration) :void;
 
     draw(): void;
 
     clear(): void;
+
+    update(configuration: ChartConfiguration): void;
+
+    selectionClear(): void;
+
+    pointerClear(): void;
+
+    enableFunction(selector: string): void;
+
+    disableFunction(selector: string): void;
 
     showTooltip(): Selection<BaseType, any, HTMLElement, any>;
 

@@ -85,27 +85,10 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
     constructor(configuration: BasicCanvasLineSeriesConfiguration) {
         super(configuration);
         this.config = configuration;
-        if (configuration) {
-            if (configuration.xField) {
-                this.xField = configuration.xField;
-            }
-
-            if (configuration.yField) {
-                this.yField = configuration.yField;
-            }
-
-            if (configuration.filter) {
-                this.dataFilter = configuration.filter;
-            }
-
-            if (configuration.style) {
-                this.strokeWidth = configuration.style.strokeWidth || this.strokeWidth;
-            }
-
-            // if (configuration.hasOwnProperty('animation')) {
-            //     this.isAnimation = configuration.animation;
-            // }
-        }
+        this.xField = configuration.xField;
+        this.yField = configuration.yField;
+        this.dataFilter = configuration.filter;
+        this.strokeWidth = configuration.style.strokeWidth ?? this.strokeWidth;
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
@@ -150,9 +133,9 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
         const x: any = xScale.scale;
         const y: any = yScale.scale;
 
-        const radius = this.config.dot ? (this.config.dot.radius || 4) : 0;
+        const radius = this.config.dot ? (this.config.dot.radius ?? 4) : 0;
 
-        const lineStroke = (this.config.style && this.config.style.strokeWidth) || 1;
+        const lineStroke = (this.config.style && this.config.style.strokeWidth) ?? 1;
 
         const xmin = xScale.min;
         const xmax = xScale.max;
@@ -215,7 +198,7 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
             const memoryCanvasContext = (this.memoryCanvas.node() as any).getContext('2d');
             memoryCanvasContext.clearRect(0, 0, geometry.width + space, geometry.height + space);
 
-            const prevIndex = this.pointerCanvas.data()[0] || 0;
+            const prevIndex = this.pointerCanvas.data()[0] ?? 0;
             let colorIndex = 0;
             const colorData = {};
             lineData.forEach((point: T, i: number) => {

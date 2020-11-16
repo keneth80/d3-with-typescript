@@ -14,6 +14,8 @@ export class FunctionsBase implements IFunctions {
 
     protected subscription: Subscription = new Subscription();
 
+    protected isEnable = false;
+
     private chart: ChartBase;
 
     constructor() { }
@@ -30,20 +32,16 @@ export class FunctionsBase implements IFunctions {
         return this.itemClickSubject.asObservable();
     }
 
-    enable() {}
+    enable(data: any[], scales: Scale[], geometry: ContainerSize) {}
 
     disable() {}
 
     changeConfiguration(configuration: any) {}
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
-        mainGroup: Selection<BaseType, any, HTMLElement, any>, index: number) {
+        mainGroup: Selection<BaseType, any, HTMLElement, any>, index: number) {}
 
-    }
-
-    drawFunctions(chartData: any[], scales: Scale[], geometry: ContainerSize) {
-
-    }
+    drawFunctions(chartData: any[], scales: Scale[], geometry: ContainerSize) {}
 
     destroy() {
         this.subscription.unsubscribe();

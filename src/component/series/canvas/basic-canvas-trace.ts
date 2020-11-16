@@ -109,7 +109,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
     drawSeries(chartBaseData: T[], scales: Scale[], geometry: ContainerSize, option: DisplayOption) {
         this.geometry = geometry;
-        this.strokeColor = this.checkSeriesColor() || option.color;
+        this.strokeColor = this.checkSeriesColor() ?? option.color;
         this.dotFill = this.config.dot && this.config.dot.fill ? this.config.dot.fill : option.color;
 
         const chartData = this.config.data ? this.config.data : chartBaseData;
@@ -118,7 +118,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         const x: any = xScale.scale;
         const y: any = yScale.scale;
 
-        this.radius = this.config.dot ? this.config.dot.radius || 4 : 0;
+        this.radius = this.config.dot ? this.config.dot.radius ?? 4 : 0;
 
         const xmin = xScale.min;
         const xmax = xScale.max;
@@ -155,7 +155,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         context.beginPath();
         context.strokeStyle = this.strokeColor;
         if (this.config.line) {
-            this.strokeWidth = this.config.line.strokeWidth || 1;
+            this.strokeWidth = this.config.line.strokeWidth ?? 1;
             context.lineWidth = this.strokeWidth;
             // context.lineWidth = 0.5;
 
@@ -272,7 +272,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
             setChartTooltipByPosition(
                 this.tooltipGroup,
                 this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser
-                    ? this.chartBase.tooltip.tooltipTextParser(selectedItem[2])
+                    ? this.chartBase.tooltip.tooltipTextParser(selectedItem)
                     : `${this.config.xField}: ${selectedItem[2][this.config.xField]} \n ${this.config.yField}: ${selectedItem[2][this.config.yField]}`,
                 this.geometry,
                 [

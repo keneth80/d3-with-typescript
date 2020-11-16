@@ -1,5 +1,5 @@
-import { Selection, BaseType, select, mouse } from 'd3-selection';
-import { Subject } from 'rxjs';
+import { Selection, BaseType, mouse } from 'd3-selection';
+import { Subject, Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 
 import { Scale, ContainerSize } from '../chart/chart.interface';
@@ -20,6 +20,8 @@ export class BasicCanvasMouseHandler extends FunctionsBase {
 
     private delayTime = 100;
 
+    private moveSubscription: Subscription;
+
     constructor(configuration: BasicCanvasMouseHandlerConfiguration) {
         super();
         if (configuration) {
@@ -32,7 +34,7 @@ export class BasicCanvasMouseHandler extends FunctionsBase {
             }
         }
 
-        this.addEvent();
+        // this.addEvent();
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
@@ -53,6 +55,17 @@ export class BasicCanvasMouseHandler extends FunctionsBase {
 
     drawFunctions(chartData: any[], scales: Scale[], geometry: ContainerSize) {
         this.setContainerPosition(geometry, this.chartBase);
+        this.disable();
+        this.enable(chartData, scales, geometry);
+    }
+
+    enable(chartData: any[], scales: Scale[], geometry: ContainerSize) {
+        if (this.isEnable) {
+            return;
+        }
+
+        this.isEnable = true;
+        this.addEvent();
 
         if (this.isMoveEvent) {
             this.pointerCanvas.on('mousemove', () => {
@@ -91,20 +104,43 @@ export class BasicCanvasMouseHandler extends FunctionsBase {
         });
     }
 
+    disable() {
+        if (this.moveSubscription) {
+            this.subscription.remove(this.moveSubscription);
+        }
+
+        if (this.isMoveEvent) {
+            this.pointerCanvas
+                .on('mousemove', null);
+        }
+
+        this.pointerCanvas
+            .on('mouseleave', null)
+            .on('mousedown', null)
+            .on('mouseup', null);
+
+        this.isEnable = false;
+    }
+
     destroy() {
+        this.disable();
         this.subscription.unsubscribe();
         this.pointerCanvas.remove();
     }
 
     private addEvent() {
-        this.subscription.add(
-            this.move$.pipe(debounceTime(this.delayTime)).subscribe((value: [number, number]) => {
+        if (!this.moveSubscription) {
+            this.moveSubscription = this.move$.pipe(debounceTime(this.delayTime)).subscribe((value: [number, number]) => {
                 this.chartBase.mouseEventSubject.next({
                     type: 'mousemove',
                     position: value,
                     target: this.pointerCanvas
                 })
-            })
+            });
+        }
+
+        this.subscription.add(
+            this.moveSubscription
         );
     }
 

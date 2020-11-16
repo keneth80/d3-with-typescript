@@ -24,26 +24,11 @@ export interface ChartLegendConfiguration {
     svgGeometry: ContainerSize;
 }
 
-export const legendItemListByGrouped = (seriesList: ISeries[]) => {
+export const legendItemListByGrouped = (displayNames: string[]) => {
     const legendItemList: LegendItem[] = [];
-    seriesList[0].displayNames.forEach((displayName: string) => {
+    displayNames.forEach((displayName: string) => {
         const label: string = displayName;
         const shape: string = Shape.RECT;
-        legendItemList.push({
-            label,
-            shape,
-            selected: true,
-            isHide: false
-        });
-    });
-    return legendItemList;
-}
-
-export const legendItemListByNormal = (seriesList: ISeries[]) => {
-    const legendItemList: LegendItem[] = [];
-    seriesList.forEach((series: ISeries) => {
-        const label: string = series.displayName ? series.displayName : series.selector;
-        const shape: string = series.shape ? series.shape : Shape.RECT;
         legendItemList.push({
             label,
             shape,
@@ -95,19 +80,24 @@ export class ChartLegend {
 
     parseLegendData(seriesList: ISeries[]) {
         const legendItemList: LegendItem[] = [];
-        if (seriesList[0].displayNames && seriesList[0].displayNames.length) {
-            legendItemListByGrouped(seriesList)
+        // TODO: multi series 일 경우 전부 안그려짐.
+        seriesList.forEach((series: ISeries) => {
+            if (series.displayNames && series.displayNames.length) {
+                legendItemListByGrouped(series.displayNames)
                 .forEach((legendItem: LegendItem) => {
                     legendItemList.push(legendItem);
                 });
-        } else {
-            // 일반 시리즈의 경우 범례 설정.
-            legendItemListByNormal(seriesList)
-                .forEach((legendItem: LegendItem) => {
-                    legendItemList.push(legendItem);
+            } else {
+                const label: string = series.displayName ? series.displayName : series.selector;
+                const shape: string = series.shape ? series.shape : Shape.RECT;
+                legendItemList.push({
+                    label,
+                    shape,
+                    selected: true,
+                    isHide: false
                 });
-        }
-
+            }
+        })
         return legendItemList;
     }
 

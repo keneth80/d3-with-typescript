@@ -8,7 +8,7 @@ import { debounceTime, switchMap, map, concatMap, mapTo } from 'rxjs/operators';
 import { sha1 } from 'object-hash';
 
 import {
-    IChart, Scale, ContainerSize, LegendItem,
+    IChartBase, Scale, ContainerSize, LegendItem,
     ChartMouseEvent, ChartZoomEvent,
     DisplayType, ChartItemEvent
 } from './chart.interface';
@@ -32,7 +32,7 @@ import { drawGridLine } from './grid-line';
 
 
 // TODO: 모든 참조되는 함수들은 subject로 바꾼다.
-export class ChartBase<T = any> implements IChart {
+export class ChartBase<T = any> implements IChartBase {
     isResize = false;
 
     mouseEventSubject: Subject<ChartMouseEvent> = new Subject();
@@ -301,12 +301,16 @@ export class ChartBase<T = any> implements IChart {
         return this.chartItemEventSubject.asObservable();
     }
 
+    selectedChart() {
+        return this.chartClickSubject.asObservable();
+    }
+
     getColorBySeriesIndex(index: number): string {
         return this.colors[index];
     }
 
-    selectedChart() {
-        return this.chartClickSubject.asObservable();
+    getColorByIndex(index: number): string {
+        return this.colors[index];
     }
 
     bootstrap(configuration: ChartConfiguration) {
@@ -314,7 +318,6 @@ export class ChartBase<T = any> implements IChart {
         if (configuration.margin) {
             Object.assign(this.margin, configuration.margin);
             this.isCustomMargin = true;
-            console.log('isCustomMargin : ', this.isCustomMargin, this.margin);
         } else {
             this.isCustomMargin = false;
             this.config.axes.map((axis: Axes) => {
@@ -342,7 +345,7 @@ export class ChartBase<T = any> implements IChart {
 
         if (configuration.style) {
             // background color 설정.
-            this.selector.style('background-color', configuration.style.backgroundColor || '#fff')
+            this.selector.style('background-color', configuration.style.backgroundColor ?? '#fff')
         }
 
         // data setup origin data 와 분리.
@@ -378,8 +381,8 @@ export class ChartBase<T = any> implements IChart {
             this.legendPlacement = configuration.legend.placement;
             // this.isLegendCheckBox = configuration.legend.isLegendCheckBox === false ? configuration.legend.isLegendCheckBox : true;
             // this.isLegendAll = configuration.legend.isLegendAll === false ? configuration.legend.isLegendAll : true;
-            this.isLegendCheckBox = configuration.legend.isCheckBox || true;
-            this.isLegendAll = configuration.legend.isAll || true;
+            this.isLegendCheckBox = configuration.legend.isCheckBox ?? true;
+            this.isLegendAll = configuration.legend.isAll ?? true;
         }
 
         if (configuration.tooltip) {
@@ -393,8 +396,8 @@ export class ChartBase<T = any> implements IChart {
         this.addEventListner();
     }
 
-    getColorByIndex(index: number): string {
-        return this.colors[index];
+    update(configuration: ChartConfiguration) {
+
     }
 
     draw() {
@@ -789,6 +792,36 @@ export class ChartBase<T = any> implements IChart {
         }
     }
 
+    pointerClear() {
+        const selectionCanvas = this.selector.select('.' + ChartSelector.POINTER_CANVAS);
+        if (selectionCanvas && selectionCanvas.node()) {
+            const context = (selectionCanvas.node() as any).getContext('2d');
+            clearCanvas(context, this.width, this.height);
+        }
+
+        this.selectionGroup.selectAll('.tooltip-point').remove();
+        this.hideTooltip();
+    }
+
+    selectionClear() {
+        this.currentSeriesIndex = -1;
+        this.selectionGroup.selectAll('.selection-point').remove();
+
+        const selectionCanvas = this.selector.select('.' + ChartSelector.SELECTION_CANVAS);
+        if (selectionCanvas && selectionCanvas.node()) {
+            const context = (selectionCanvas.node() as any).getContext('2d');
+            clearCanvas(context, this.width, this.height);
+        }
+    }
+
+    enableFunction(selector: string) {
+
+    }
+
+    disableFunction(selector: string) {
+
+    }
+
     protected updateFunctions() {
         try {
             if (this.functionList && this.functionList.length) {
@@ -1055,6 +1088,7 @@ export class ChartBase<T = any> implements IChart {
                                     if (this.currentChartItemIndex > -1) {
                                         const newHash = sha1(positionData[this.currentChartItemIndex]);
                                         if (sha1(this.currentChartItem) !== newHash) {
+                                            console.log('show');
                                             // 전에 오버했던 아이템 아웃 이벤트 발생.
                                             this.mouseoutEventHandler();
                                             // 오버 이벤트 발생.
@@ -1081,6 +1115,7 @@ export class ChartBase<T = any> implements IChart {
                     case 'click':
                     case 'mouseup':
                         isDragStart = false;
+                        // TODO: multi series 구현시 chart item 이 같은 위치에 분포할 때 의도되지 않는 아이템이 선택되는 현상.
                         if (this.currentSeriesIndex < 0) {
                             this.selectionClear();
                             this.chartItemEventSubject.next({
@@ -1091,10 +1126,11 @@ export class ChartBase<T = any> implements IChart {
                             });
                             return;
                         }
-
-                        const positionDataList = this.seriesList[this.currentSeriesIndex].getSeriesDataByPosition(chartEvent.position);
+                        const targetSeries = this.seriesList[this.currentSeriesIndex];
+                        const positionDataList = targetSeries.getSeriesDataByPosition(chartEvent.position);
+                        console.log('click : ', targetSeries, this.currentSeriesIndex, this.currentChartItemIndex, positionDataList, this.seriesList);
                         if (positionDataList.length) {
-                            this.seriesList[this.currentSeriesIndex].onSelectItem(chartEvent.position, positionDataList);
+                            targetSeries.onSelectItem(chartEvent.position, positionDataList);
                             this.chartItemEventSubject.next({
                                 type: chartEvent.type,
                                 position: [positionDataList[this.currentChartItemIndex][0], positionDataList[this.currentChartItemIndex][1]],
@@ -1508,28 +1544,6 @@ export class ChartBase<T = any> implements IChart {
         this.updateDisplay(DisplayType.RESIZE);
 
         this.isResize = false;
-    }
-
-    private pointerClear() {
-        const selectionCanvas = this.selector.select('.' + ChartSelector.POINTER_CANVAS);
-        if (selectionCanvas && selectionCanvas.node()) {
-            const context = (selectionCanvas.node() as any).getContext('2d');
-            clearCanvas(context, this.width, this.height);
-        }
-
-        this.selectionGroup.selectAll('.tooltip-point').remove();
-        this.hideTooltip();
-    }
-
-    private selectionClear() {
-        this.currentSeriesIndex = -1;
-        this.selectionGroup.selectAll('.selection-point').remove();
-
-        const selectionCanvas = this.selector.select('.' + ChartSelector.SELECTION_CANVAS);
-        if (selectionCanvas && selectionCanvas.node()) {
-            const context = (selectionCanvas.node() as any).getContext('2d');
-            clearCanvas(context, this.width, this.height);
-        }
     }
 
     private clearOption() {

@@ -5,7 +5,7 @@ import { Scale, ContainerSize } from '../chart/chart.interface';
 export interface IFunctions<T = any> {
     chartBase: ChartBase;
 
-    enable(): void;
+    enable(data: T[], scales: Scale[], geometry: ContainerSize): void;
 
     disable(): void;
 

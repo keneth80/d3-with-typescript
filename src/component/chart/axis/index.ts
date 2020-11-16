@@ -314,7 +314,7 @@ export const setupZeroLine = (
         .join(
             (enter) => enter.append('line').attr('class', `${scale.orient}-${scale.field}-zero-line`)
         )
-        .style('stroke', scale.zeroLine.color || '#000')
+        .style('stroke', scale.zeroLine.color ?? '#000')
         .style('stroke-width', 1);
     if (scale.orient === Placement.LEFT || scale.orient === Placement.RIGHT) {
         zeroLine

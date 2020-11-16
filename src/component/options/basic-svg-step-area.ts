@@ -19,62 +19,34 @@ export class BasicStepArea<T = any> extends OptionsBase {
 
     private labelField: string;
 
-    private stepData: Array<T>;
+    private stepData: T[];
 
     constructor(configuration: BasicStepAreaConfiguration) {
         super();
-        this.selector = configuration.selector || 'step-area';
-        if (configuration) {
-            if (configuration.startField) {
-                this.startField = configuration.startField;
-            }
-
-            if (configuration.endField) {
-                this.endField = configuration.endField;
-            }
-
-            if (configuration.labelField) {
-                this.labelField = configuration.labelField;
-            }
-
-            if (configuration.data) {
-                this.stepData = configuration.data;
-            }
-        }
+        this.selector = configuration.selector ?? 'step-area';
+        this.startField = configuration.startField;
+        this.endField = configuration.endField;
+        this.labelField = configuration.labelField;
+        this.stepData = configuration.data ?? [];
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>) {
-        // const parentElement = select((svg.node() as HTMLElement).parentElement);
-        // if(!parentElement.select('.step-canvas').node()) {
-        //     this.svg = parentElement.append('svg')
-        //         .attr('class', 'step-canvas')
-        //         .style('z-index', 99)
-        //         .style('position', 'absolute')
-        //         .style('width', '100%')
-        //         .style('height', this.chartBase.chartMargin.top + 'px');
-        // } else {
-        //     this.svg = parentElement.select('.step-canvas').style('z-index', 99);
-        // }
-
-        // if (!this.svg.select('.' + this.selector + '-group').node()) {
-        //     this.mainGroup = this.svg.append('g').attr('class', this.selector + '-group');
-        // }
         this.svg = svg;
         if (!this.svg.select('.' + this.selector + '-group').node()) {
             this.mainGroup = this.svg.append('g').attr('class', this.selector + '-group');
         }
     }
 
-    drawOptions(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
+    drawOptions(chartData: T[], scales: Scale[], geometry: ContainerSize) {
         if (!this.stepData || !this.stepData.length) {
             return;
         }
-        
+
         const xScale: Scale = scales.find((scale: Scale) => scale.orient === Placement.BOTTOM);
         const x = xScale.scale;
 
         this.mainGroup.attr('transform', `translate(${this.chartBase.chartMargin.left}, 0)`);
-        
+
         const elementGroup = this.mainGroup.selectAll('.' + this.selector + '-group')
             .data(this.stepData)
                 .join(

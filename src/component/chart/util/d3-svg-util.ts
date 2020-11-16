@@ -70,9 +70,9 @@ export const textWrapping = (text: any, width: number) => {
         let word = null;
         let lineNumber = 0;
         const lineHeight = 1.1; // ems
-        const x = text.attr('x') || 0;
-        const y = text.attr('y') || 0;
-        const dy = parseFloat(text.attr('dy') || '0');
+        const x = text.attr('x') ?? 0;
+        const y = text.attr('y') ?? 0;
+        const dy = parseFloat(text.attr('dy') ?? '0');
         let tspan = text.text(null)
                         .append('tspan')
                         .attr('x', x)
@@ -107,9 +107,9 @@ export const textBreak = (target: any, pattern: any = /\s+/) => { // /(\n|\r\n)/
         let word = null;
         let lineNumber = 0;
         const lineHeight = 1.1; // ems
-        const x = text.attr('x') || 0;
-        const y = text.attr('y') || 0;
-        const dy = parseFloat(text.attr('dy') || '0');
+        const x = text.attr('x') ?? 0;
+        const y = text.attr('y') ?? 0;
+        const dy = parseFloat(text.attr('dy') ?? '0');
         let tspan = text.text(null)
                         .append('tspan')
                         .attr('x', x)
@@ -162,8 +162,8 @@ export const wrapTextByRowLimit = (text: any, width: number, limitRowCount: numb
 
     const words: string[] = text.text().split('').reverse();
     const lineHeight = 1.1; // ems
-    const y = text.attr('y') || 0;
-    const dy = parseFloat(text.attr('dy')) || 0;
+    const y = text.attr('y') ?? 0;
+    const dy = parseFloat(text.attr('dy')) ?? 0;
 
     let word: string;
     let lines = [];
@@ -412,19 +412,27 @@ export const drawSelectionPointByCircle = (
     position: number[][],
     style:{fill: string, radius: number}
 ) => {
-    targetGroup.selectAll('.selection-point')
-        .data(position)
-        .join(
-            (enter) => enter.append('circle').attr('class', 'selection-point'),
-            (update) => update,
-            (exit) => exit.remove()
-        )
+    targetGroup.selectAll('.selection-point').remove();
+    targetGroup.append('circle').attr('class', 'selection-point')
         .style('stroke-width', 3)
         .style('stroke', colorDarker(style.fill, 2))
         .attr('fill', colorDarker(style.fill, 1))
-        .attr('cx', (d: number[]) => d[0])
-        .attr('cy', (d: number[]) => d[1])
+        .attr('cx', position[0][0])
+        .attr('cy', position[0][1])
         .attr('r', style.radius);
+    // targetGroup.selectAll('.selection-point')
+    //     .data(position)
+    //     .join(
+    //         (enter) => enter.append('circle').attr('class', 'selection-point'),
+    //         (update) => update,
+    //         (exit) => exit.remove()
+    //     )
+    //     .style('stroke-width', 3)
+    //     .style('stroke', colorDarker(style.fill, 2))
+    //     .attr('fill', colorDarker(style.fill, 1))
+    //     .attr('cx', (d: number[]) => d[0])
+    //     .attr('cy', (d: number[]) => d[1])
+    //     .attr('r', style.radius);
 }
 
 export const drawTooltipPointByRect = (
@@ -453,18 +461,27 @@ export const drawSelectionPointByRect = (
     itemSize: ContainerSize,
     style:{fill: string}
 ) => {
-    targetGroup.selectAll('.selection-point')
-        .data(position)
-        .join(
-            (enter) => enter.append('rect').attr('class', 'selection-point'),
-            (update) => update,
-            (exit) => exit.remove()
-        )
+    targetGroup.selectAll('.selection-point').remove();
+    targetGroup.append('rect').attr('class', 'selection-point')
         .style('stroke-width', 3)
         .style('stroke', colorDarker(style.fill, 2))
         .attr('fill', colorDarker(style.fill, 1))
-        .attr('x', (d: number[]) => d[0])
-        .attr('y', (d: number[]) => d[1])
+        .attr('x', position[0][0])
+        .attr('y', position[0][1])
         .attr('height', itemSize.height)
         .attr('width', itemSize.width);
+    // targetGroup.selectAll('.selection-point')
+    //     .data(position)
+    //     .join(
+    //         (enter) => enter.append('rect').attr('class', 'selection-point'),
+    //         (update) => update,
+    //         (exit) => exit.remove()
+    //     )
+    //     .style('stroke-width', 3)
+    //     .style('stroke', colorDarker(style.fill, 2))
+    //     .attr('fill', colorDarker(style.fill, 1))
+    //     .attr('x', (d: number[]) => d[0])
+    //     .attr('y', (d: number[]) => d[1])
+    //     .attr('height', itemSize.height)
+    //     .attr('width', itemSize.width);
 }

@@ -1,16 +1,14 @@
-import { select, Selection, BaseType } from 'd3-selection';
+import { Selection, BaseType } from 'd3-selection';
 
-import { Scale, ContainerSize, ChartMouseEvent } from '../chart/chart.interface';
-import { Placement } from '../chart/chart-configuration';
-import { guid } from '../chart/util/d3-svg-util';
+import { Scale, ContainerSize } from '../chart/chart.interface';
 import { OptionsBase } from '../chart/options-base';
 
 export interface BasicSpecAreaConfiguration<T = any> {
     selector: string;
     startField: string;
     endField: string;
-    placement?: string; // 
-    data?: Array<T>;
+    placement?: string;
+    data?: T[];
     style?: {
         color: string;
     }
@@ -23,34 +21,17 @@ export class BasicSpecArea<T = any> extends OptionsBase {
 
     private labelField: string;
 
-    private stepData: Array<T>;
+    private stepData: T[];
 
     private placement: string = 'bottom';
 
     constructor(configuration: BasicSpecAreaConfiguration) {
         super();
-        this.selector = configuration.selector || 'spec-area';
-        if (configuration) {
-            if (configuration.startField) {
-                this.startField = configuration.startField;
-            }
-
-            if (configuration.endField) {
-                this.endField = configuration.endField;
-            }
-
-            if (configuration.data) {
-                this.stepData = configuration.data;
-            }
-
-            if (configuration.placement) {
-                this.placement = configuration.placement;
-            }
-
-            if (configuration.style) {
-                
-            }
-        }
+        this.selector = configuration.selector ?? 'spec-area';
+        this.startField = configuration.startField;
+        this.endField = configuration.endField;
+        this.stepData = configuration.data ?? [];
+        this.placement = configuration.placement;
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, mainGroup: Selection<BaseType, any, HTMLElement, any>) {
@@ -65,7 +46,7 @@ export class BasicSpecArea<T = any> extends OptionsBase {
         }
     }
 
-    drawOptions(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
+    drawOptions(chartData: T[], scales: Scale[], geometry: ContainerSize) {
         if (!this.stepData || !this.stepData.length) {
             return;
         }

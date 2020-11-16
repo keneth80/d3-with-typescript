@@ -132,8 +132,8 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         this.displayType = option.displayType;
         this.seriesIndex = option.index;
         this.geometry = geometry;
-        this.radius = this.config.dot ? this.config.dot.radius || 4 : 0;
-        this.strokeColor = this.checkSeriesColor() || option.color;
+        this.radius = this.config.dot ? this.config.dot.radius ?? 4 : 0;
+        this.strokeColor = this.checkSeriesColor() ?? option.color;
         this.dotFill = this.config.dot && this.config.dot.fill ? this.config.dot.fill : option.color;
 
         const chartData = this.config.data ? this.config.data : chartBaseData;
@@ -274,7 +274,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         setChartTooltipByPosition(
             this.chartBase.showTooltip(),
             this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser
-                ? this.chartBase.tooltip.tooltipTextParser(selectedItem[2])
+                ? this.chartBase.tooltip.tooltipTextParser(selectedItem)
                 : `${this.config.xField}: ${selectedItem[2][this.config.xField]} \n ${this.config.yField}: ${selectedItem[2][this.config.yField]}`,
             this.geometry,
             [
@@ -425,7 +425,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
     }
 
     private initShaders(color: string, geometry: ContainerSize, vertices: [number, number][], alpha: number = 1) {
-        const radius = this.config.dot ? this.config.dot.radius || 6 : 0;
+        const radius = this.config.dot ? this.config.dot.radius ?? 6 : 0;
 
         // Vertex shader source code
         const vertCodeSquare = `

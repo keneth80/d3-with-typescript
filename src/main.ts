@@ -196,8 +196,8 @@ const simpleWebglLineSeriesExample = () => {
             content: 'WebGL Line Series'
         },
         tooltip: {
-            tooltipTextParser: (d:any) => {
-                return `x: ${d.x} \ny: ${d.y}\nz: ${d.z}`
+            tooltipTextParser: (d: any) => {
+                return `x: ${d[2].x} \ny: ${d[2].y}\nz: ${d[2].z}`
             }
         },
         isResize: true,
@@ -280,8 +280,8 @@ const simpleSvgLineSeriesExample = () => {
     const commonConfiguration: MiccBaseConfiguration = {
         selector: '#chart-div',
         tooltip: {
-            tooltipTextParser: (d:any) => {
-                return `x: ${d.x} \ny: ${d.y}\nz: ${d.z}`
+            tooltipTextParser: (d: any) => {
+                return `x: ${d[2].x} \ny: ${d[2].y}\nz: ${d[2].z}`
             }
         },
         data: sampleMockData(20),
@@ -334,7 +334,7 @@ const simpleSvgLineSeriesExample = () => {
     chart = SvgTraceChart(commonConfiguration, seriesList).draw();
     chart.chartItemEvent.subscribe((item: ChartItemEvent) => {
         if (item.type === 'click') {
-            alert('click =>' + JSON.stringify(item.data));
+            console.log('click => ' + JSON.stringify(item.data));
         }
     });
 }
@@ -497,8 +497,8 @@ const simpleCanvasLineSeriesExample = () => {
             backgroundColor: '#fff'
         },
         tooltip: {
-            tooltipTextParser: (d:any) => {
-                return `x: ${d.x} \ny: ${d.y}\nz: ${d.z}`
+            tooltipTextParser: (d: any) => {
+                return `x: ${d[2].x} \ny: ${d[2].y}\nz: ${d[2].z}`
             }
         },
         legend: {
@@ -525,10 +525,13 @@ const simpleCanvasLineSeriesExample = () => {
                 field: 'y',
                 type: ScaleType.NUMBER,
                 placement: 'left',
-                min: 0,
+                min: -5,
                 max: 30,
                 gridLine: {
                     dasharray: 2,
+                },
+                zeroLine: {
+                    color: '#000'
                 }
             }
         ],
@@ -586,8 +589,8 @@ const simpleSvgPlotSeriesExample = () => {
     const commonConfiguration: MiccBaseConfiguration = {
         selector: '#chart-div',
         tooltip: {
-            tooltipTextParser: (d:any) => {
-                return `x: ${d.x} \ny: ${d.y}\nz: ${d.z}`
+            tooltipTextParser: (d: any) => {
+                return `x: ${d[2].x} \ny: ${d[2].y}\nz: ${d[2].z}`
             }
         },
         data: sampleMockData(20),
@@ -668,8 +671,8 @@ const simpleSvgAreaSeriesExample = () => {
     const commonConfiguration: MiccBaseConfiguration = {
         selector: '#chart-div',
         tooltip: {
-            tooltipTextParser: (d:any) => {
-                return `x: ${d.x} \ny: ${d.y}\nz: ${d.z}`
+            tooltipTextParser: (d: any) => {
+                return `x: ${d[2].x} \ny: ${d[2].y}\nz: ${d[2].z}`
             }
         },
         data: sampleMockData(20),
@@ -862,7 +865,7 @@ const webGLBigDataLineSeriesSample = () => {
         },
         tooltip: {
             tooltipTextParser: (d: BasicCanvasWebglLineSeriesOneModel) => {
-                return `x: ${d.x} \ny: ${d.y}\ni: ${d.i}`
+                return `x: ${d[2].x} \ny: ${d[2].y}\ni: ${d[2].i}`
             }
         },
         isResize: true,
@@ -1049,7 +1052,7 @@ const canvasBigDataLineSeriesSample = () => {
         },
         tooltip: {
             tooltipTextParser: (d: any) => {
-                return `x: ${d.x} \ny: ${d.y}\nz: ${d.i}`
+                return `x: ${d[2].x} \ny: ${d[2].y}\nz: ${d[2].i}`
             }
         },
         isResize: true,
@@ -1143,8 +1146,8 @@ const svgMultiSeriesExample = () => {
     const commonConfiguration: MiccBaseConfiguration = {
         selector: '#chart-div',
         tooltip: {
-            tooltipTextParser: (d:any) => {
-                return `x: ${d.x} \ny: ${d.y}\nz: ${d.z}`
+            tooltipTextParser: (d: any) => {
+                return `x: ${d[2].x} \ny: ${d[2].y}\nz: ${d[2].z}`
             }
         },
         data: sampleMockData(20),
@@ -1164,6 +1167,9 @@ const svgMultiSeriesExample = () => {
                 padding: 0.2,
                 gridLine: {
                     dasharray: 2
+                },
+                zeroLine : {
+                    color: '#0000ff'
                 }
             },
             {
@@ -1174,12 +1180,12 @@ const svgMultiSeriesExample = () => {
                 max: 30,
                 gridLine: {
                     dasharray: 2
+                },
+                zeroLine : {
+                    color: '#0000ff'
                 }
             }
-        ],
-        zoom: {
-            direction: Direction.BOTH
-        }
+        ]
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
@@ -1188,7 +1194,7 @@ const svgMultiSeriesExample = () => {
     chart = SvgMultiSeriesChart(commonConfiguration, seriesList).draw();
     chart.chartItemEvent.subscribe((item: ChartItemEvent) => {
         if (item.type === 'click') {
-            alert('click =>' + JSON.stringify(item.data));
+            console.log('click =>' + JSON.stringify(item.data));
         }
     });
 }
@@ -1330,7 +1336,7 @@ const axisCustomMargin = () => {
         },
         tooltip: {
             tooltipTextParser: (d: any) => {
-                return `x: ${d.x} \ny: ${d.y}\nz: ${d.i}`
+                return `x: ${d[2].x} \ny: ${d[2].y}\nz: ${d[2].i}`
             }
         },
         isResize: true,
