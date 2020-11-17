@@ -15,7 +15,7 @@ import {
 import {
     ChartConfiguration,
     Axes, Margin, Placement,
-    ChartTitle, ChartTooltip, PlacementByElement
+    ChartTitle, ChartTooltip, PlacementByElement, AxisTitle
 } from './chart-configuration';
 import { ISeries } from './series.interface';
 import { IFunctions } from './functions.interface';
@@ -135,7 +135,7 @@ export class ChartBase<T = any> implements IChartBase {
 
     private idleTimeout: any;
 
-    private maskId = '';
+    private maskId: string;
 
     private colors: string[];
 
@@ -313,19 +313,19 @@ export class ChartBase<T = any> implements IChartBase {
         return this.colors[index];
     }
 
-    bootstrap(configuration: ChartConfiguration) {
+    initialize(configuration: ChartConfiguration) {
         // initialize size setup
         if (configuration.margin) {
             Object.assign(this.margin, configuration.margin);
             this.isCustomMargin = true;
         } else {
             this.isCustomMargin = false;
-            this.config.axes.map((axis: Axes) => {
+            this.config.axes.forEach((axis: Axes) => {
                 // 최초 axis padding을 조정해줌.
                 if (axis.placement === Placement.TOP || axis.placement === Placement.BOTTOM) {
                     this.margin[axis.placement] = 30;
                 }
-            })
+            });
         }
 
         this.selector = select(configuration.selector);
@@ -334,14 +334,16 @@ export class ChartBase<T = any> implements IChartBase {
             if (console && console.log) {
                 console.log('is not html element!');
             }
-            return;
+            return false;
         }
 
-        this.svg = this.selector.append('svg')
-            .style('position', 'absolute')
-            .style('display', 'block')
-            .style('width', '100%')
-            .style('height', '100%');
+        if (!this.svg) {
+            this.svg = this.selector.append('svg')
+                .style('position', 'absolute')
+                .style('display', 'block')
+                .style('width', '100%')
+                .style('height', '100%');
+        }
 
         if (configuration.style) {
             // background color 설정.
@@ -389,20 +391,42 @@ export class ChartBase<T = any> implements IChartBase {
             this.isTooltipMultiple = configuration.tooltip.isMultiple === true ? true : false;
         }
 
-        this.maskId = guid();
+        if (!this.maskId) {
+            this.maskId = guid();
+        }
 
-        this.setRootSize();
-        this.initContainer();
-        this.addEventListner();
+        return true;
     }
 
-    update(configuration: ChartConfiguration) {
+    bootstrap(configuration: ChartConfiguration) {
+        if (this.initialize(configuration)) {
+            this.setRootSize();
+            this.initContainer();
+            this.addEventListner();
+        }
+    }
 
+    updateData(data: any) {
+        this.data = data;
+
+        return this;
+    }
+
+    updateSeriesList(seriesList: ISeries[]) {
+        this.seriesList.length = 0;
+        for (let i = 0; i < seriesList.length; i++) {
+            this.seriesList.push(seriesList[i]);
+        }
+
+        return this;
+    }
+
+    updateLayout(chartTitle?: ChartTitle, axisTitle?: AxisTitle) {
+        return this;
     }
 
     draw() {
         this.updateDisplay();
-
         return this;
     }
 

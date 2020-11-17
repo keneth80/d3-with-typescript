@@ -1,5 +1,6 @@
 import { Selection, BaseType } from 'd3-selection';
-import { ChartConfiguration, AxisTitle } from './chart-configuration';
+import { ChartConfiguration, AxisTitle, ChartTitle } from './chart-configuration';
+import { ISeries } from './series.interface';
 
 export enum DisplayType {
     NORMAL = 'normal',
@@ -95,11 +96,15 @@ export interface LegendItem {
 export interface IChartBase {
     bootstrap(configuration: ChartConfiguration) :void;
 
-    draw(): void;
+    draw(): IChartBase;
 
     clear(): void;
 
-    update(configuration: ChartConfiguration): void;
+    updateData(data: any): IChartBase;
+
+    updateSeriesList(seriesList: ISeries[]): IChartBase;
+
+    updateLayout(chartTitle?: ChartTitle, axisTitle?: AxisTitle): IChartBase;
 
     selectionClear(): void;
 
