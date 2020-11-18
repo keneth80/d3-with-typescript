@@ -2,8 +2,8 @@
 import { schemeCategory10 } from 'd3-scale-chromatic';
 import { select, Selection, BaseType, event } from 'd3-selection';
 
-import { fromEvent, Subscription, Subject, of, Observable, from, timer, Observer } from 'rxjs';
-import { debounceTime, switchMap, map, concatMap, mapTo, tap, delay } from 'rxjs/operators';
+import { fromEvent, Subscription, Subject, of, Observable, from, timer, Observer, throwError } from 'rxjs';
+import { debounceTime, switchMap, map, concatMap, mapTo, tap, delay, retry } from 'rxjs/operators';
 
 import { sha1 } from 'object-hash';
 
@@ -1404,7 +1404,7 @@ export class ChartBase<T = any> implements IChartBase {
             });
         }
 
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             if (isAxisUpdate) {
                 this.setRootSize();
                 this.initContainer();
@@ -1413,6 +1413,20 @@ export class ChartBase<T = any> implements IChartBase {
                 resolve();
             }
         });
+
+        // return of(1).pipe(
+        //     concatMap(() => {
+        //         if(isAxisUpdate) {
+        //             return of(true);
+        //         } else {
+        //             this.setRootSize();
+        //             this.initContainer();
+        //             this.updateDisplay();
+        //             return throwError('do check size');
+        //         }
+        //   }),
+        //   retry(2)
+        // )
     }
 
     protected updateLegend() {
@@ -1477,6 +1491,14 @@ export class ChartBase<T = any> implements IChartBase {
         }
         this.clearOption();
         // 기준이되는 axis가 완료된 후에 나머지를 그린다.
+        // this.updateAxis()
+        //     .subscribe(() => {
+        //         this.updateLegend();
+        //         this.updateTitle();
+        //         this.updateSeries(displayType);
+        //         this.updateOptions();
+        //         this.updateFunctions();
+        //     });
         this.updateAxis()
             .then(() => {
                 this.updateLegend();
