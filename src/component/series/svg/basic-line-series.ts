@@ -10,6 +10,8 @@ import { SeriesConfiguration } from '../../chart/series.interface';
 import { delayExcute, drawTooltipPointByCircle, drawSelectionPointByCircle } from '../../chart/util/d3-svg-util';
 import { ChartSelector } from '../../chart';
 import { setChartTooltipByPosition } from '../../chart/util/tooltip-util';
+import { Observable, Observer } from 'rxjs';
+import { delay, tap } from 'rxjs/operators';
 
 export interface BasicLineSeriesConfiguration extends SeriesConfiguration {
     xField: string;
@@ -120,10 +122,10 @@ export class BasicLineSeries extends SeriesBase {
                 .data([resultData])
                     .join(
                         (enter) => enter.append('path').attr('class', this.selector),
-                        (update) => update,
+                        (update) => update.style('stroke-dasharray', '').style('stroke-dashoffset', ''),
                         (exit) => exit.remove
                     )
-                    .style('stroke-dasharray', this.config.line.dashArray && this.config.line.dashArray > 0 ? this.config.line.dashArray : 0)
+                    // .style('stroke-dasharray', this.config.line.dashArray && this.config.line.dashArray > 0 ? this.config.line.dashArray : 0)
                     .style('stroke-width', this.strokeWidth)
                     .style('stroke', this.strokeColor)
                     .style('fill', 'none')
@@ -131,12 +133,18 @@ export class BasicLineSeries extends SeriesBase {
 
             if (this.isAnimation) {
                 lineSeries
-                    .attr('stroke-dasharray', (d: any, i: number, nodeList: any) => nodeList[i].getTotalLength())
-                    .attr('stroke-dashoffset', (d: any, i: number, nodeList: any) => nodeList[i].getTotalLength());
+                    .style('stroke-dasharray', (d: any, i: number, nodeList: any) => nodeList[i].getTotalLength())
+                    .style('stroke-dashoffset', (d: any, i: number, nodeList: any) => nodeList[i].getTotalLength());
 
                 lineSeries.transition(
-                    transition().delay(100).duration(500).ease(easeLinear)
-                ).attr('stroke-dashoffset', 0);
+                    transition().delay(200).duration(800).ease(easeLinear)
+                ).style('stroke-dashoffset', 0);
+
+                delayExcute(1000, () => {
+                    lineSeries
+                    // .attr('stroke-dashoffset', null)
+                    .style('stroke-dasharray', this.config.line.dashArray && this.config.line.dashArray > 0 ? this.config.line.dashArray : 0);
+                });
             }
         }
 

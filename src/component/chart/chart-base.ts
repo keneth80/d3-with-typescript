@@ -407,7 +407,7 @@ export class ChartBase<T = any> implements IChartBase {
 
     data(data: any) {
         this.originalData = data;
-
+        this.updateDisplay();
         return this;
     }
 
@@ -436,7 +436,22 @@ export class ChartBase<T = any> implements IChartBase {
         return this;
     }
 
-    title(chartTitle?: ChartTitle, axisTitle?: AxisTitle) {
+    title(chartTitle: string) {
+        if (this.config.title) {
+            this.config.title.content = chartTitle;
+            this.titleGroup.data([this.config.title]);
+            this.updateTitle();
+        }
+
+        return this;
+    }
+
+    axes(axes: Axes[]) {
+        this.config.axes.length = 0;
+        for (let i = 0; i < axes.length; i++) {
+            this.config.axes.push(axes[i]);
+        }
+        this.updateDisplay();
         return this;
     }
 
@@ -581,7 +596,6 @@ export class ChartBase<T = any> implements IChartBase {
         this.functionList.forEach((functions: IFunctions) => functions.destroy());
         this.optionList.forEach((options: IOptions) => options.destroy());
         this.originDomains = null;
-        this.originalData.length = 0;
         this.originalData.length = 0;
     }
 

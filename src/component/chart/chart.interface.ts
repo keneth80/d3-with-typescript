@@ -1,6 +1,6 @@
 import { Selection, BaseType } from 'd3-selection';
-import { ChartConfiguration, AxisTitle, ChartTitle } from './chart-configuration';
-import { ISeries, SeriesConfiguration } from './series.interface';
+import { ChartConfiguration, AxisTitle, Axes } from './chart-configuration';
+import { SeriesConfiguration } from './series.interface';
 
 export enum DisplayType {
     NORMAL = 'normal',
@@ -104,7 +104,9 @@ export interface IChartBase {
 
     series(seriesList: SeriesConfiguration[]): IChartBase;
 
-    title(chartTitle?: ChartTitle, axisTitle?: AxisTitle): IChartBase;
+    title(content: string): IChartBase;
+
+    axes(axes: Axes[]): IChartBase;
 
     selectionClear(): void;
 

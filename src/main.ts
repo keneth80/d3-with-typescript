@@ -112,6 +112,9 @@ const buttonMapping = () => {
                     case 'update-series':
                         updateSeriesExample();
                     break;
+                    case 'update-data':
+                        updateDataExample();
+                    break;
                     default:
                     break;
                 }
@@ -330,6 +333,128 @@ const updateSeriesExample = () => {
     )
     .subscribe(() => {
         console.log('display complete!');
+        chart.title('Update Title');
+    });
+}
+
+const updateDataExample = () => {
+    const yFieldSeries: BasicLineSeriesConfiguration = {
+        selector: 'y-series',
+        xField: 'x',
+        yField: 'y',
+        line: {
+            dashArray: 2
+        },
+        dot: {
+            selector: 'basic-line-y-series-dot',
+            radius: 3
+        },
+        displayName: 'y-series',
+        animation: true
+    };
+
+    const zFieldSeries: BasicLineSeriesConfiguration = {
+        selector: 'z-series',
+        xField: 'x',
+        yField: 'z',
+        line: {},
+        dot: {
+            selector: 'basic-line-z-series-dot',
+            radius: 3
+        },
+        displayName: 'z-series',
+        animation: true
+    }
+
+    const xFieldSeries: BasicLineSeriesConfiguration = {
+        selector: 'x-series',
+        xField: 'x',
+        yField: 'x',
+        line: {},
+        dot: {
+            radius: 3,
+            selector: 'basic-line-x-series-dot'
+        },
+        displayName: 'x-series',
+        animation: true
+    }
+
+    const seriesList = [
+        yFieldSeries,
+        zFieldSeries,
+        xFieldSeries
+    ];
+
+    const commonConfiguration: MiccBaseConfiguration = {
+        selector: '#chart-div',
+        tooltip: {
+            tooltipTextParser: (d: any) => {
+                return `x: ${d[2].x} \ny: ${d[2].y}\nz: ${d[2].z}`
+            }
+        },
+        data: sampleMockData(20),
+        title: {
+            placement: Placement.TOP,
+            content: 'Dynamic Data'
+        },
+        legend: {
+            placement: Placement.TOP
+        },
+        isResize: true,
+        axes: [
+            {
+                field: 'x',
+                type: ScaleType.STRING,
+                placement: Placement.BOTTOM,
+                gridLine: {
+                    color: '#ddd'
+                },
+                zeroLine: {
+                    color: '#0000ff'
+                }
+            },
+            {
+                field: 'y',
+                type: ScaleType.NUMBER,
+                placement: Placement.LEFT,
+                min: -5,
+                max: 30,
+                gridLine: {
+                    color: '#ddd'
+                },
+                zeroLine: {
+                    color: '#0000ff'
+                }
+            }
+        ],
+        zoom: {
+            direction: Direction.BOTH
+        },
+        mouseGuideLine:{}
+    };
+
+    (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
+    highlightBlock((select('#json-configuration').node() as any));
+
+    chart = SvgTraceChart(commonConfiguration, seriesList).draw();
+
+    new Observable((observ: Observer<boolean>) => {
+        observ.next(true);
+        observ.complete();
+    })
+    .pipe(
+        delay(3000),
+        tap(() => {
+            chart.data(sampleMockData(20));
+        }),
+        delay(3000),
+        tap(() => {
+            chart.data(sampleMockData(20));
+        })
+    )
+    .subscribe(() => {
+        chart.data(sampleMockData(20));
+        console.log('update complete!');
     });
 }
 
