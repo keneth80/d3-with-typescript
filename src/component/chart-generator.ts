@@ -26,7 +26,7 @@ import { StackedVerticalBarSeriesConfiguration, StackedVerticalBarSeries } from 
 import { MiccBaseConfiguration, OptionConfiguration, ZoomConfiguration } from './mi-chart';
 import { BasicAreaSeries, BasicAreaSeriesConfiguration } from './series/svg/basic-area-series';
 import { BasicSvgMouseGuideLineHandler } from './functions/basic-svg-mouse-guide-line-handler';
-import { SeriesBase } from './chart/series-base';
+import { makeSeriesByConfigurationType } from './chart/util/chart-util';
 
 /*
 * desc: 캔버스 시리즈 출력 설정정보 맵핑.
@@ -163,19 +163,6 @@ export const SvgMultiSeriesChart = (
     chartConfiguration.functions = generatorFunctions(configuration);
 
     return new BasicChart(chartConfiguration);
-}
-
-export const makeSeriesByConfigurationType = (configuration: SeriesConfiguration): SeriesBase => {
-    let series: SeriesBase;
-    switch(configuration.type) {
-        case 'GroupedVerticalBarSeries':
-            series = new GroupedVerticalBarSeries(configuration as GroupedVerticalBarSeriesConfiguration);
-        break;
-        case 'BasicLineSeries':
-            series = new BasicLineSeries(configuration as BasicLineSeriesConfiguration);
-        break;
-    }
-    return series;
 }
 
 // 마우스 이벤트 같은 이벤트 함수설정 정보 맵핑.

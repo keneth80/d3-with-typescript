@@ -6,7 +6,8 @@ import { Scale, DisplayOption, ContainerSize } from './chart.interface';
 
 export enum SeriesType {
     SVG_LINE = 'BasicLineSeries',
-    SVG_VERTICAL_BAR = 'GroupedVerticalBarSeries'
+    SVG_VERTICAL_BAR = 'GroupedVerticalBarSeries',
+    SVG_AREA = 'BasicAreaSeries'
 }
 
 export interface SeriesConfiguration {

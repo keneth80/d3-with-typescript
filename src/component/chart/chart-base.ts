@@ -2,8 +2,8 @@
 import { schemeCategory10 } from 'd3-scale-chromatic';
 import { select, Selection, BaseType, event } from 'd3-selection';
 
-import { fromEvent, Subscription, Subject, of, Observable, from, timer } from 'rxjs';
-import { debounceTime, switchMap, map, concatMap, mapTo } from 'rxjs/operators';
+import { fromEvent, Subscription, Subject, of, Observable, from, timer, Observer } from 'rxjs';
+import { debounceTime, switchMap, map, concatMap, mapTo, tap, delay } from 'rxjs/operators';
 
 import { sha1 } from 'object-hash';
 
@@ -17,7 +17,7 @@ import {
     Axes, Margin, Placement,
     ChartTitle, ChartTooltip, PlacementByElement, AxisTitle
 } from './chart-configuration';
-import { ISeries } from './series.interface';
+import { ISeries, SeriesConfiguration } from './series.interface';
 import { IFunctions } from './functions.interface';
 import { IOptions } from './options.interface';
 import { baseTooltipTemplate } from './tooltip/tooltip-template';
@@ -29,6 +29,7 @@ import { setupWebglContext } from './util/webgl-util';
 import { clearCanvas } from './util/canvas-util';
 import { axisSetupByScale } from './scale';
 import { drawGridLine } from './grid-line';
+import { makeSeriesByConfigurationType } from './util/chart-util';
 
 
 // TODO: 모든 참조되는 함수들은 subject로 바꾼다.
@@ -43,8 +44,6 @@ export class ChartBase<T = any> implements IChartBase {
 
     isTooltipDisplay = false; // 현재 툴팁이 열려있는지 판단여부.
 
-    protected data: T[] = [];
-
     protected svgWidth = 0;
 
     protected svgHeight = 0;
@@ -55,7 +54,7 @@ export class ChartBase<T = any> implements IChartBase {
 
     protected height = Infinity;
 
-    protected originalData: any[] = [];
+    protected originalData: T[] = [];
 
     protected svg: Selection<BaseType, any, HTMLElement, any>;
 
@@ -217,11 +216,11 @@ export class ChartBase<T = any> implements IChartBase {
     }
 
     get chartData(): T[] {
-        return this.data;
+        return this.originalData;
     }
 
     set chartData(value: T[]) {
-        this.data = value;
+        this.originalData = value;
         this.draw();
     }
 
@@ -273,7 +272,7 @@ export class ChartBase<T = any> implements IChartBase {
         return this.config.tooltip;
     }
 
-    get series(): ISeries[] {
+    get chartSeries(): ISeries[] {
         return this.seriesList;
     }
 
@@ -351,7 +350,7 @@ export class ChartBase<T = any> implements IChartBase {
         }
 
         // data setup origin data 와 분리.
-        this.data = this.setupData(configuration.data);
+        this.originalData = this.setupData(configuration.data);
 
         if (configuration.series && configuration.series.length) {
             this.seriesList = configuration.series;
@@ -406,22 +405,38 @@ export class ChartBase<T = any> implements IChartBase {
         }
     }
 
-    updateData(data: any) {
-        this.data = data;
+    data(data: any) {
+        this.originalData = data;
 
         return this;
     }
 
-    updateSeriesList(seriesList: ISeries[]) {
-        this.seriesList.length = 0;
-        for (let i = 0; i < seriesList.length; i++) {
-            this.seriesList.push(seriesList[i]);
-        }
+    series(seriesConfigurations: SeriesConfiguration[]) {
+        new Observable((observ: Observer<boolean>) => {
+            observ.next(true);
+            observ.complete();
+        })
+        .pipe(
+            tap(() => {
+                this.seriesGroup.selectAll('*').remove();
+                this.legendGroup.selectAll('*').remove();
+            }),
+            delay(50),
+            tap(() => {
+                this.seriesList.length = 0;
+                for (let i = 0; i < seriesConfigurations.length; i++) {
+                    this.seriesList.push(makeSeriesByConfigurationType(seriesConfigurations[i]));
+                }
+            })
+        ).subscribe(() => {
+            this.updateLegend();
+            this.updateSeries();
+        });
 
         return this;
     }
 
-    updateLayout(chartTitle?: ChartTitle, axisTitle?: AxisTitle) {
+    title(chartTitle?: ChartTitle, axisTitle?: AxisTitle) {
         return this;
     }
 
@@ -567,7 +582,7 @@ export class ChartBase<T = any> implements IChartBase {
         this.optionList.forEach((options: IOptions) => options.destroy());
         this.originDomains = null;
         this.originalData.length = 0;
-        this.data.length = 0;
+        this.originalData.length = 0;
     }
 
     updateOptions() {
@@ -575,7 +590,7 @@ export class ChartBase<T = any> implements IChartBase {
             this.optionList.map((option: IOptions, index: number) => {
                 option.chartBase = this;
                 option.setSvgElement(this.svg, this.optionGroup, index);
-                option.drawOptions(this.data, this.scales, {width: this.width, height: this.height});
+                option.drawOptions(this.originalData, this.scales, {width: this.width, height: this.height});
             });
         }
     }
@@ -585,7 +600,7 @@ export class ChartBase<T = any> implements IChartBase {
             series.chartBase = this;
             series.setSvgElement(this.svg, this.seriesGroup, index);
             series.drawSeries(
-                this.data,
+                this.originalData,
                 this.scales,
                 {
                     width: this.width,
@@ -624,7 +639,7 @@ export class ChartBase<T = any> implements IChartBase {
 
                         series.setSvgElement(this.svg, this.seriesGroup, index);
                         series.drawSeries(
-                            this.data
+                            this.originalData
                             // .filter(
                             //     (d: T) =>
                             //         d[xScale.field] >= xScale.min - xScale.min * 0.01 &&
@@ -653,7 +668,7 @@ export class ChartBase<T = any> implements IChartBase {
                             series.chartBase = this;
                             series.setSvgElement(this.svg, this.seriesGroup, index);
                             series.drawSeries(
-                                this.data,
+                                this.originalData,
                                 this.scales,
                                 {
                                     width: this.width,
@@ -694,7 +709,7 @@ export class ChartBase<T = any> implements IChartBase {
                         this.seriesList[currentIndex].chartBase = this;
                         this.seriesList[currentIndex].setSvgElement(this.svg, this.seriesGroup, currentIndex);
                         this.seriesList[currentIndex].drawSeries(
-                            this.data,
+                            this.originalData,
                             this.scales,
                             {
                                 width: this.width,
@@ -852,7 +867,7 @@ export class ChartBase<T = any> implements IChartBase {
                 this.functionList.forEach((functionItem: IFunctions, index: number) => {
                     functionItem.chartBase = this;
                     functionItem.setSvgElement(this.svg, this.seriesGroup, index);
-                    functionItem.drawFunctions(this.data, this.scales, {width: this.width, height: this.height});
+                    functionItem.drawFunctions(this.originalData, this.scales, {width: this.width, height: this.height});
                 });
             }
         } catch(error) {
@@ -890,29 +905,33 @@ export class ChartBase<T = any> implements IChartBase {
 
         // 범례 적용 시 사이즈 계산.
         if (this.isLegend) {
-            this.chartLegend = new ChartLegend({
-                isCheckBox: this.isLegendCheckBox,
-                isAll: this.isLegendAll,
-                addTitleWidth: this.isTitle && this.titlePlacement === Placement.LEFT ? this.titleContainerSize.width : 0,
-                legendPlacement: this.legendPlacement,
-                colors: this.colors,
-                defaultLegendStyle: this.defaultLegendStyle,
-                seriesList: this.seriesList,
-                margin: this.margin,
-                svgGeometry: {
-                    width: this.width,
-                    height: this.height
-                },
-                onLegendCheckBoxClickHandler: this.onLegendCheckBoxClick,
-                onLegendLabelItemClickHandler: this.onLegendLabelItemClick
-            });
-
-            this.legendContainerSize.width = this.chartLegend.init().width;
-            this.legendContainerSize.height = this.chartLegend.init().height;
-
-            this.width = this.width - (this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ? this.legendContainerSize.width : 0);
-            this.height = this.height - (this.legendPlacement === Placement.TOP || this.legendPlacement === Placement.BOTTOM ? this.legendContainerSize.height : 0);
+            this.initLegend();
         }
+    }
+
+    protected initLegend() {
+        this.chartLegend = new ChartLegend({
+            isCheckBox: this.isLegendCheckBox,
+            isAll: this.isLegendAll,
+            addTitleWidth: this.isTitle && this.titlePlacement === Placement.LEFT ? this.titleContainerSize.width : 0,
+            legendPlacement: this.legendPlacement,
+            colors: this.colors,
+            defaultLegendStyle: this.defaultLegendStyle,
+            seriesList: this.seriesList,
+            margin: this.margin,
+            svgGeometry: {
+                width: this.width,
+                height: this.height
+            },
+            onLegendCheckBoxClickHandler: this.onLegendCheckBoxClick,
+            onLegendLabelItemClickHandler: this.onLegendLabelItemClick
+        });
+
+        this.legendContainerSize.width = this.chartLegend.init().width;
+        this.legendContainerSize.height = this.chartLegend.init().height;
+
+        this.width = this.width - (this.legendPlacement === Placement.LEFT || this.legendPlacement === Placement.RIGHT ? this.legendContainerSize.width : 0);
+        this.height = this.height - (this.legendPlacement === Placement.TOP || this.legendPlacement === Placement.BOTTOM ? this.legendContainerSize.height : 0);
     }
 
     protected initContainer() {
@@ -1472,7 +1491,7 @@ export class ChartBase<T = any> implements IChartBase {
             this.currentScale = [...reScaleAxes];
         }
 
-        return generateScaleByAxis(axes, this.data, {width, height}, this.currentScale);
+        return generateScaleByAxis(axes, this.originalData, {width, height}, this.currentScale);
     }
 
     // protected updateBrushHandler(orient: string = 'bottom', brush: any) {

@@ -109,6 +109,9 @@ const buttonMapping = () => {
                     case 'svg-multi-series':
                         svgMultiSeriesExample();
                     break;
+                    case 'update-series':
+                        updateSeriesExample();
+                    break;
                     default:
                     break;
                 }
@@ -144,6 +147,191 @@ const setSeriesColor = (item: any) => {
         return '#EA3010';
     }
 };
+
+const updateSeriesExample = () => {
+    const yFieldSeries: BasicLineSeriesConfiguration = {
+        selector: 'y-series',
+        xField: 'x',
+        yField: 'y',
+        line: {
+            dashArray: 2
+        },
+        dot: {
+            selector: 'basic-line-y-series-dot',
+            radius: 3
+        },
+        displayName: 'y-series'
+    };
+
+    const zFieldSeries: BasicLineSeriesConfiguration = {
+        selector: 'z-series',
+        xField: 'x',
+        yField: 'z',
+        line: {},
+        dot: {
+            selector: 'basic-line-z-series-dot',
+            radius: 3
+        },
+        displayName: 'z-series'
+    }
+
+    const xFieldSeries: BasicLineSeriesConfiguration = {
+        selector: 'x-series',
+        xField: 'x',
+        yField: 'x',
+        line: {},
+        dot: {
+            radius: 3,
+            selector: 'basic-line-x-series-dot'
+        },
+        displayName: 'x-series'
+    }
+
+    const seriesList = [
+        yFieldSeries,
+        zFieldSeries,
+        xFieldSeries
+    ];
+
+    const commonConfiguration: MiccBaseConfiguration = {
+        selector: '#chart-div',
+        tooltip: {
+            tooltipTextParser: (d: any) => {
+                return `x: ${d[2].x} \ny: ${d[2].y}\nz: ${d[2].z}`
+            }
+        },
+        data: sampleMockData(20),
+        title: {
+            placement: Placement.TOP,
+            content: 'Dynamic Series'
+        },
+        legend: {
+            placement: Placement.TOP
+        },
+        isResize: true,
+        axes: [
+            {
+                field: 'x',
+                type: ScaleType.STRING,
+                placement: Placement.BOTTOM,
+                gridLine: {
+                    color: '#ddd'
+                },
+                zeroLine: {
+                    color: '#0000ff'
+                }
+            },
+            {
+                field: 'y',
+                type: ScaleType.NUMBER,
+                placement: Placement.LEFT,
+                min: -5,
+                max: 30,
+                gridLine: {
+                    color: '#ddd'
+                },
+                zeroLine: {
+                    color: '#0000ff'
+                }
+            }
+        ],
+        zoom: {
+            direction: Direction.BOTH
+        },
+        mouseGuideLine:{}
+    };
+
+    (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
+    highlightBlock((select('#json-configuration').node() as any));
+
+    chart = SvgTraceChart(commonConfiguration, seriesList).draw();
+
+    new Observable((observ: Observer<boolean>) => {
+        observ.next(true);
+        observ.complete();
+    })
+    .pipe(
+        delay(3000),
+        tap(() => {
+            const yFieldPlotSeries: BasicLineSeriesConfiguration = {
+                type: SeriesType.SVG_LINE,
+                selector: 'y-series',
+                xField: 'x',
+                yField: 'y',
+                dot: {
+                    selector: 'basic-line-y-series-dot',
+                    radius: 3
+                },
+                displayName: 'y-series'
+            };
+
+            const zFieldPlotSeries: BasicLineSeriesConfiguration = {
+                type: SeriesType.SVG_LINE,
+                selector: 'z-series',
+                xField: 'x',
+                yField: 'z',
+                dot: {
+                    selector: 'basic-line-z-series-dot',
+                    radius: 3
+                },
+                displayName: 'z-series'
+            }
+
+            const xFieldPlotSeries: BasicLineSeriesConfiguration = {
+                type: SeriesType.SVG_LINE,
+                selector: 'x-series',
+                xField: 'x',
+                yField: 'x',
+                dot: {
+                    radius: 3,
+                    selector: 'basic-line-x-series-dot'
+                },
+                displayName: 'x-series'
+            }
+
+            chart.series([
+                yFieldPlotSeries,
+                // zFieldPlotSeries,
+                xFieldPlotSeries
+            ]);
+        }),
+        delay(3000),
+        tap(() => {
+            const yFieldAreaSeries: BasicAreaSeriesConfiguration = {
+                type: SeriesType.SVG_AREA,
+                selector: 'y-series',
+                xField: 'x',
+                yField: 'y',
+                displayName: 'y-series',
+            };
+
+            const zFieldAreaSeries: BasicAreaSeriesConfiguration = {
+                type: SeriesType.SVG_AREA,
+                selector: 'z-series',
+                xField: 'x',
+                yField: 'z',
+                displayName: 'z-series'
+            };
+
+            const xFieldAreaSeries: BasicAreaSeriesConfiguration = {
+                type: SeriesType.SVG_AREA,
+                selector: 'x-series',
+                xField: 'x',
+                yField: 'x',
+                displayName: 'x-series'
+            };
+
+            chart.series([
+                yFieldAreaSeries,
+                zFieldAreaSeries,
+                xFieldAreaSeries
+            ]);
+        })
+    )
+    .subscribe(() => {
+        console.log('display complete!');
+    });
+}
 
 const simpleWebglLineSeriesExample = () => {
     const yFieldSeries: BasicCanvasWebglLineSeriesOneConfiguration = {

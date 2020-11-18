@@ -166,13 +166,6 @@ export class ChartLegend {
             this.configuration.svgGeometry.height :
             (this.legendPadding + titleTextHeight) * this.legendRowCount;
 
-        return this.legendContainerSize;
-    }
-
-    drawLegend(legendGroup: Selection<BaseType, any, BaseType, any>) {
-        let currentRow = 0;
-        let currentX = 0;
-
         if (this.configuration.isAll) {
             this.legendItemList.unshift({
                 label: 'All',
@@ -181,6 +174,13 @@ export class ChartLegend {
                 shape: Shape.NONE
             });
         }
+
+        return this.legendContainerSize;
+    }
+
+    drawLegend(legendGroup: Selection<BaseType, any, BaseType, any>) {
+        let currentRow = 0;
+        let currentX = 0;
 
         const legendItemGroup = legendGroup.selectAll('.legend-item-group')
             .data(this.legendItemList)
