@@ -29,7 +29,7 @@ import { BasicCanvasTraceModel, BasicCanvasTraceConfiguration } from './componen
 
 import { delayExcute } from './component/chart/util/d3-svg-util';
 import { OptionConfiguration, MiccBaseConfiguration } from './component/mi-chart';
-import { ChartItemEvent, SeriesType } from './component/chart';
+import { ChartItemEvent, colorTooltipTemplate, SeriesType } from './component/chart';
 import {
     CanvasTraceChart,
     SvgGroupedBarChart,
@@ -115,6 +115,9 @@ const buttonMapping = () => {
                     case 'update-data':
                         updateDataExample();
                     break;
+                    case 'tooltip-templete-change':
+                        changeTooltipTemplete();
+                    break;
                     default:
                     break;
                 }
@@ -151,7 +154,7 @@ const setSeriesColor = (item: any) => {
     }
 };
 
-const updateSeriesExample = () => {
+const changeTooltipTemplete = () => {
     const yFieldSeries: BasicLineSeriesConfiguration = {
         selector: 'y-series',
         xField: 'x',
@@ -241,6 +244,104 @@ const updateSeriesExample = () => {
         zoom: {
             direction: Direction.BOTH
         },
+        mouseGuideLine:{}
+    };
+
+    (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
+    highlightBlock((select('#json-configuration').node() as any));
+
+    chart = SvgTraceChart(commonConfiguration, seriesList);
+    chart.toolTipTemplete = colorTooltipTemplate;
+    chart.draw();
+}
+
+const updateSeriesExample = () => {
+    const yFieldSeries: BasicLineSeriesConfiguration = {
+        selector: 'y-series',
+        xField: 'x',
+        yField: 'y',
+        line: {
+            dashArray: 2
+        },
+        dot: {
+            selector: 'basic-line-y-series-dot',
+            radius: 3
+        },
+        displayName: 'y-series'
+    };
+
+    const zFieldSeries: BasicLineSeriesConfiguration = {
+        selector: 'z-series',
+        xField: 'x',
+        yField: 'z',
+        line: {},
+        dot: {
+            selector: 'basic-line-z-series-dot',
+            radius: 3
+        },
+        displayName: 'z-series'
+    }
+
+    const xFieldSeries: BasicLineSeriesConfiguration = {
+        selector: 'x-series',
+        xField: 'x',
+        yField: 'x',
+        line: {},
+        dot: {
+            radius: 3,
+            selector: 'basic-line-x-series-dot'
+        },
+        displayName: 'x-series'
+    }
+
+    const seriesList = [
+        yFieldSeries,
+        zFieldSeries,
+        xFieldSeries
+    ];
+
+    const commonConfiguration: MiccBaseConfiguration = {
+        selector: '#chart-div',
+        tooltip: {
+            tooltipTextParser: (d: any) => {
+                return `x: ${d[2].x} \ny: ${d[2].y}\nz: ${d[2].z}`
+            }
+        },
+        data: sampleMockData(20),
+        title: {
+            placement: Placement.TOP,
+            content: 'Dynamic Series'
+        },
+        legend: {
+            placement: Placement.TOP
+        },
+        isResize: true,
+        axes: [
+            {
+                field: 'x',
+                type: ScaleType.STRING,
+                placement: Placement.BOTTOM,
+                gridLine: {
+                    color: '#ddd'
+                },
+                zeroLine: {
+                    color: '#0000ff'
+                }
+            },
+            {
+                field: 'y',
+                type: ScaleType.NUMBER,
+                placement: Placement.LEFT,
+                min: -5,
+                max: 30,
+                gridLine: {
+                    color: '#ddd'
+                },
+                zeroLine: {
+                    color: '#0000ff'
+                }
+            }
+        ],
         mouseGuideLine:{}
     };
 
@@ -404,7 +505,7 @@ const updateDataExample = () => {
         axes: [
             {
                 field: 'x',
-                type: ScaleType.STRING,
+                type: ScaleType.NUMBER,
                 placement: Placement.BOTTOM,
                 gridLine: {
                     color: '#ddd'
@@ -454,6 +555,7 @@ const updateDataExample = () => {
     )
     .subscribe(() => {
         chart.data(sampleMockData(20));
+        chart.toolTipTemplete = colorTooltipTemplate;
         console.log('update complete!');
     });
 }

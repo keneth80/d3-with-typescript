@@ -3,6 +3,7 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const HtmlWebPackPlugin      = require('html-webpack-plugin');
 const BundleAnalyzerPlugin   = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const webpack = require('webpack');
 // const htmlWebpackInjectStringPlugin = require('html-webpack-inject-string-plugin');
 
 const helpers = require('./helpers');
@@ -13,6 +14,9 @@ module.exports = {
         extensions: ['.js', '.ts']
     },
     devtool: 'inline-source-map',
+    devServer: {
+        hot: true
+    },
     module: {
         rules: [
             {
@@ -73,6 +77,8 @@ module.exports = {
             { from: './src/assets/image/**', to: './assets/image', flatten: true },
             { from: './src/docs/**', to: './docs', flatten: true }
         ]),
+
+        new webpack.HotModuleReplacementPlugin(),
 
         // new BundleAnalyzerPlugin(
         //     {

@@ -4,7 +4,7 @@ import { transition } from 'd3-transition';
 import { easeLinear } from 'd3-ease';
 import { quadtree } from 'd3-quadtree';
 
-import { Scale, ContainerSize, DisplayOption } from '../../chart/chart.interface';
+import { Scale, ContainerSize, DisplayOption, DisplayType } from '../../chart/chart.interface';
 import { SeriesBase } from '../../chart/series-base';
 import { SeriesConfiguration } from '../../chart/series.interface';
 import { delayExcute, drawTooltipPointByCircle, drawSelectionPointByCircle } from '../../chart/util/d3-svg-util';
@@ -131,7 +131,7 @@ export class BasicLineSeries extends SeriesBase {
                     .style('fill', 'none')
                     .attr('d', this.line);
 
-            if (this.isAnimation) {
+            if (this.isAnimation && option.displayType === DisplayType.NORMAL) {
                 lineSeries
                     .style('stroke-dasharray', (d: any, i: number, nodeList: any) => nodeList[i].getTotalLength())
                     .style('stroke-dashoffset', (d: any, i: number, nodeList: any) => nodeList[i].getTotalLength());
@@ -262,7 +262,11 @@ export class BasicLineSeries extends SeriesBase {
         );
 
         if (!this.chartBase.isTooltipDisplay) {
-            this.tooltipGroup = this.chartBase.showTooltip();
+            this.tooltipGroup = this.chartBase.showTooltip({
+                fill: '#fff',
+                opacity: 1,
+                stroke: this.strokeColor
+            });
             setChartTooltipByPosition(
                 this.tooltipGroup,
                 this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser

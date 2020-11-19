@@ -100,9 +100,13 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
     }
 
     drawFunctions(chartData: any[], scales: Scale[], geometry: ContainerSize) {
-        this.setContainerPosition(geometry, this.chartBase);
-        this.disable();
-        this.enable(chartData, scales, geometry);
+        try {
+            this.setContainerPosition(geometry, this.chartBase);
+            this.disable();
+            this.enable(chartData, scales, geometry);
+        } catch (error) {
+            console.log('error : ', error);
+        }
     }
 
     enable(chartData: any[], scales: Scale[], geometry: ContainerSize) {

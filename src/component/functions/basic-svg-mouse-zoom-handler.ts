@@ -3,7 +3,7 @@ import { drag } from 'd3-drag';
 import { min, max } from 'd3-array';
 import { event } from 'd3';
 
-import { fromEvent } from 'rxjs';
+import { fromEvent, Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 
 import { Scale, ContainerSize } from '../chart/chart.interface';
@@ -48,6 +48,8 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
 
     private tempZoomBox: Selection<BaseType, any, BaseType, any>;
 
+    private moveSubscription: Subscription;
+
     constructor(configuration: BasicSvgMouseZoomHandlerConfiguration) {
         super();
         if (configuration) {
@@ -87,6 +89,21 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
     }
 
     drawFunctions(chartData: any[], scales: Scale[], geometry: ContainerSize) {
+        try {
+            this.disable();
+            this.enable(chartData, scales, geometry);
+        } catch (error) {
+            console.log('error : ', error);
+        }
+    }
+
+    enable(chartData: any[], scales: Scale[], geometry: ContainerSize) {
+        if (this.isEnable) {
+            return;
+        }
+
+        this.isEnable = true;
+
         const xScale: Scale = scales.find((scale: Scale) => scale.orient === this.xDirection);
         const yScale: Scale = scales.find((scale: Scale) => scale.orient === this.yDirection);
         const x: any = xScale.scale;
@@ -127,20 +144,21 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
         };
 
         if (this.isMoveEvent) {
+            this.moveSubscription = fromEvent(this.pointerGroup.node() as any, 'mousemove')
+                .pipe(debounceTime(this.delayTime))
+                .subscribe((e: MouseEvent) => {
+                    const mouseEvent: [number, number] = [
+                        e.offsetX - this.chartBase.chartMargin.left - 1,
+                        e.offsetY - this.chartBase.chartMargin.top - 1
+                    ];
+                    this.chartBase.mouseEventSubject.next({
+                        type: 'mousemove',
+                        position: mouseEvent,
+                        target: this.pointerGroup
+                    });
+                })
             this.subscription.add(
-                fromEvent(this.pointerGroup.node() as any, 'mousemove')
-                    .pipe(debounceTime(this.delayTime))
-                    .subscribe((e: MouseEvent) => {
-                        const mouseEvent: [number, number] = [
-                            e.offsetX - this.chartBase.chartMargin.left - 1,
-                            e.offsetY - this.chartBase.chartMargin.top - 1
-                        ];
-                        this.chartBase.mouseEventSubject.next({
-                            type: 'mousemove',
-                            position: mouseEvent,
-                            target: this.pointerGroup
-                        });
-                    })
+                this.moveSubscription
             );
         }
 
@@ -322,8 +340,36 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
         });
     }
 
+    disable() {
+        if (this.moveSubscription) {
+            this.subscription.remove(this.moveSubscription);
+        }
+
+        if (this.isMoveEvent) {
+            this.pointerGroup
+                .on('mousemove', null);
+        }
+
+        this.pointerGroup
+            .on('mouseleave', null)
+            .on('mousedown', null)
+            .on('mouseup', null)
+            .on('click', null);
+
+        this.pointerGroup.call(
+            drag()
+            .on('start', null)
+            .on('drag', null)
+            .on('end', null)
+        );
+
+        this.isEnable = false;
+    }
+
     destroy() {
+        this.disable();
         this.subscription.unsubscribe();
+        this.pointerGroup.remove();
     }
 
     private dragElementInit(

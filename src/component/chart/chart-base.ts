@@ -86,6 +86,8 @@ export class ChartBase<T = any> implements IChartBase {
 
     protected tooltipGroup: Selection<BaseType, any, HTMLElement, any>;
 
+    protected tooltipTemplete: any = baseTooltipTemplate;
+
     protected margin: Margin = {
         top: 25, left: 20, bottom: 30, right: 20
     }; // default margin
@@ -262,6 +264,10 @@ export class ChartBase<T = any> implements IChartBase {
         return {
             left, top, right, bottom
         };
+    }
+
+    set toolTipTemplete(value: any) {
+        this.tooltipTemplete = value;
     }
 
     set toolTipTarget(value: Selection<BaseType, any, HTMLElement, any>) {
@@ -478,14 +484,17 @@ export class ChartBase<T = any> implements IChartBase {
         this.subscription.unsubscribe();
     }
 
-    showTooltip(): Selection<BaseType, any, HTMLElement, any> {
+    showTooltip(
+        boxStyle?: {fill: string, opacity?: number, stroke: string, strokeWidth?: number},
+        textStyle?: {fill: number, size: number}
+    ): Selection<BaseType, any, HTMLElement, any> {
         if (!this.isTooltipDisplay) {
             this.isTooltipDisplay = true;
             this.seriesList.forEach((series: ISeries) => {
                 series.unSelectItem();
             });
             this.tooltipGroup.style('display', null);
-            this.drawTooltip();
+            this.tooltipTemplete(this.tooltipGroup, boxStyle, textStyle);
         }
         return this.tooltipGroup.select('g.tooltip-item-group');
     }
@@ -500,16 +509,6 @@ export class ChartBase<T = any> implements IChartBase {
             // TODO: tooltip hide event 발생.
         }
         return this.tooltipGroup;
-    }
-
-    drawTooltip() {
-        if (this.isTooltip) {
-            return;
-        }
-
-        this.isTooltip = true;
-
-        baseTooltipTemplate(this.tooltipGroup);
     }
 
     showTooltipBySeriesSelector(selector: string): Selection<BaseType, any, HTMLElement, any> {
@@ -1145,7 +1144,6 @@ export class ChartBase<T = any> implements IChartBase {
                                     if (this.currentChartItemIndex > -1) {
                                         const newHash = sha1(positionData[this.currentChartItemIndex]);
                                         if (sha1(this.currentChartItem) !== newHash) {
-                                            console.log('show');
                                             // 전에 오버했던 아이템 아웃 이벤트 발생.
                                             this.mouseoutEventHandler();
                                             // 오버 이벤트 발생.

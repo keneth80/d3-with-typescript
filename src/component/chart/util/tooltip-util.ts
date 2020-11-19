@@ -23,14 +23,14 @@ export const setChartTooltipByPosition = (
 
     const parseTextNode = textElement.node().getBBox();
 
-    const textWidth = Math.floor(parseTextNode.width) + 7;
-    const textHeight = Math.floor(parseTextNode.height) + 5;
+    const textWidth = Math.floor(parseTextNode.width) + 10;
+    const textHeight = Math.floor(parseTextNode.height) + 10;
 
-    let xPosition = Math.round(position[0]) + tooltipPointerSize.width + (margin? margin.left : 0);
+    let xPosition = Math.round(position[0]) + tooltipPointerSize.width + (margin? margin.left : 0) + 5;
     let yPosition = Math.round(position[1]) - (textHeight + 5) + (margin ? margin.top : 0);
 
     if (xPosition + textWidth >= chartGeometry.width) {
-        xPosition = xPosition - (textWidth + tooltipPointerSize.width);
+        xPosition = xPosition - (textWidth + tooltipPointerSize.width) - 5;
     }
 
     if (yPosition <= 0) {
@@ -39,7 +39,7 @@ export const setChartTooltipByPosition = (
 
     tooltipTarget
         .attr('transform', `translate(${xPosition}, ${yPosition})`)
-        .selectAll('rect')
+        .selectAll('rect.tooltip-background') // .tooltip-background
         .attr('width', textWidth)
         .attr('height', textHeight);
 }
