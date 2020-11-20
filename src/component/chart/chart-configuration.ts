@@ -111,6 +111,7 @@ export interface ChartLegend {
 
 export interface ChartTooltip {
     tooltipTextParser?: any;
+    visible?: boolean;
     isMultiple?: boolean; // default: false
     eventType?: string; // click or mouseover
 }

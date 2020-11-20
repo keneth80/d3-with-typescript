@@ -40,6 +40,16 @@ export interface ChartMouseEvent {
     target: Selection<BaseType, any, HTMLElement, any>;
 }
 
+export interface TooltipEvent {
+    type: string;
+    position: [number, number];
+    data?: any;
+    size: {
+        width: number,
+        height: number
+    }
+}
+
 export interface ChartZoomEvent extends ChartMouseEvent {
     zoom?: {
         direction: string,

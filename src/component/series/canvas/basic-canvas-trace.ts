@@ -175,7 +175,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                 .map((d: BasicCanvasTraceModel, i: number) => {
                     const xposition = x(d[this.config.xField]) + padding;
                     const yposition = y(d[this.config.yField]);
-                    return [xposition, yposition, d];
+                    return [xposition, yposition, d, this.radius, this.radius, this.strokeColor];
                 });
             context.drawImage(this.restoreCanvas.node(), 0, 0);
         } else {

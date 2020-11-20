@@ -1,12 +1,12 @@
 import './style.css';
 import '@babel/polyfill';
 
-import { select } from 'd3-selection';
+import { BaseType, select, Selection } from 'd3-selection';
 import { max } from 'd3-array';
 import { event } from 'd3';
 
 import { delay, tap } from 'rxjs/operators';
-import { Observable, Observer } from 'rxjs';
+import { Observable, Observer, Subscription } from 'rxjs';
 
 import hljs from 'highlight.js/lib/core';
 import { highlightBlock } from 'highlight.js/lib/core';
@@ -29,7 +29,7 @@ import { BasicCanvasTraceModel, BasicCanvasTraceConfiguration } from './componen
 
 import { delayExcute } from './component/chart/util/d3-svg-util';
 import { OptionConfiguration, MiccBaseConfiguration } from './component/mi-chart';
-import { ChartItemEvent, colorTooltipTemplate, SeriesType } from './component/chart';
+import { ChartItemEvent, colorTooltipTemplate, SeriesType, TooltipEvent } from './component/chart';
 import {
     CanvasTraceChart,
     SvgGroupedBarChart,
@@ -43,10 +43,16 @@ import { sampleMockData } from './component/mock-data/simple-mock-data';
 
 
 let chart: BasicChart;
+let currentSubscription: Subscription;
+let otherElement: Selection<BaseType, any, BaseType, any>;
 
 const clear = () => {
     if (chart) {
         chart.clear();
+    }
+
+    if (currentSubscription) {
+        currentSubscription.unsubscribe();
     }
 }
 
@@ -118,6 +124,9 @@ const buttonMapping = () => {
                     case 'tooltip-templete-change':
                         changeTooltipTemplete();
                     break;
+                    case 'tooltip-custom-templete':
+                        customTooltipTemplete();
+                    break;
                     default:
                     break;
                 }
@@ -153,6 +162,127 @@ const setSeriesColor = (item: any) => {
         return '#EA3010';
     }
 };
+
+const customTooltipTemplete = () => {
+    const yFieldSeries: BasicLineSeriesConfiguration = {
+        selector: 'y-series',
+        xField: 'x',
+        yField: 'y',
+        line: {
+            dashArray: 2
+        },
+        dot: {
+            selector: 'basic-line-y-series-dot',
+            radius: 3
+        },
+        displayName: 'y-series'
+    };
+
+    const zFieldSeries: BasicLineSeriesConfiguration = {
+        selector: 'z-series',
+        xField: 'x',
+        yField: 'z',
+        line: {},
+        dot: {
+            selector: 'basic-line-z-series-dot',
+            radius: 3
+        },
+        displayName: 'z-series'
+    }
+
+    const xFieldSeries: BasicLineSeriesConfiguration = {
+        selector: 'x-series',
+        xField: 'x',
+        yField: 'x',
+        line: {},
+        dot: {
+            radius: 3,
+            selector: 'basic-line-x-series-dot'
+        },
+        displayName: 'x-series'
+    }
+
+    const seriesList = [
+        yFieldSeries,
+        zFieldSeries,
+        xFieldSeries
+    ];
+
+    const commonConfiguration: MiccBaseConfiguration = {
+        selector: '#chart-div',
+        tooltip: {
+            tooltipTextParser: (d: any) => {
+                return `x: ${d[2].x} \ny: ${d[2].y}\nz: ${d[2].z}`
+            },
+            visible: false
+        },
+        data: sampleMockData(20),
+        title: {
+            placement: Placement.TOP,
+            content: 'Dynamic Series'
+        },
+        legend: {
+            placement: Placement.TOP
+        },
+        isResize: true,
+        axes: [
+            {
+                field: 'x',
+                type: ScaleType.STRING,
+                placement: Placement.BOTTOM,
+                gridLine: {
+                    color: '#ddd'
+                },
+                zeroLine: {
+                    color: '#0000ff'
+                }
+            },
+            {
+                field: 'y',
+                type: ScaleType.NUMBER,
+                placement: Placement.LEFT,
+                min: -5,
+                max: 30,
+                gridLine: {
+                    color: '#ddd'
+                },
+                zeroLine: {
+                    color: '#0000ff'
+                }
+            }
+        ],
+        zoom: {
+            direction: Direction.BOTH
+        }
+    };
+
+    (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
+    highlightBlock((select('#json-configuration').node() as any));
+
+    chart = SvgTraceChart(commonConfiguration, seriesList).draw();
+    currentSubscription = chart.tooltipEvent$.subscribe((tooltipEvent: TooltipEvent) => {
+        console.log('tooltip event : ', tooltipEvent);
+        if (tooltipEvent.type === 'show') {
+            otherElement
+                .select('strong')
+                .text('Data');
+            otherElement
+                .select('span')
+                .text(`${tooltipEvent.data[6]}: ${tooltipEvent.data[2][tooltipEvent.data[6]]}`);
+            otherElement
+                .style('pointer-events', 'all')
+                .style('opacity', 1)
+                .style('top', (tooltipEvent.data[1]) + 'px')
+                .style('left', (tooltipEvent.data[0]) + 'px');
+        } else {
+            // otherElement.style('pointer-events', 'none');
+            // otherElement.style('opacity', 0);
+        }
+    });
+
+    // custom tooltip templete select
+    otherElement = select('#chart-div').select('.chart-tip')
+}
 
 const changeTooltipTemplete = () => {
     const yFieldSeries: BasicLineSeriesConfiguration = {
@@ -747,7 +877,7 @@ const simpleSvgLineSeriesExample = () => {
     highlightBlock((select('#json-configuration').node() as any));
 
     chart = SvgTraceChart(commonConfiguration, seriesList).draw();
-    chart.chartItemEvent.subscribe((item: ChartItemEvent) => {
+    currentSubscription = chart.chartItemEvent.subscribe((item: ChartItemEvent) => {
         if (item.type === 'click') {
             console.log('click => ' + JSON.stringify(item.data));
         }
@@ -776,7 +906,7 @@ const simpleSvgColumnSeriesExample = () => {
         tooltip: {
             tooltipTextParser: (d: any) => {
                 const item: any = d[2];
-                const key = d[4];
+                const key = d[7];
                 return `${key}: ${item[key]}`
             }
         },
@@ -824,7 +954,7 @@ const simpleSvgStackedColumnSeriesExample = () => {
         tooltip: {
             tooltipTextParser: (d: any) => {
                 const item: any = d[2];
-                const key = d[4];
+                const key = d[7];
                 return `${key}: ${item[key]}`
             }
         },
@@ -859,7 +989,7 @@ const simpleSvgStackedColumnSeriesExample = () => {
     highlightBlock((select('#json-configuration').node() as any));
 
     chart = SvgStackedBarChart(commonConfiguration, stackedVerticalColumnSeries).draw();
-    chart.chartItemEvent.subscribe((item: ChartItemEvent) => {
+    currentSubscription = chart.chartItemEvent.subscribe((item: ChartItemEvent) => {
         console.log('selected item : ', item);
     })
 }
@@ -1048,7 +1178,7 @@ const simpleSvgPlotSeriesExample = () => {
     highlightBlock((select('#json-configuration').node() as any));
 
     chart = SvgTraceChart(commonConfiguration, seriesList).draw();
-    chart.chartItemEvent.subscribe((item: ChartItemEvent) => {
+    currentSubscription = chart.chartItemEvent.subscribe((item: ChartItemEvent) => {
         if (item.type === 'click') {
             alert('click =>' + JSON.stringify(item.data));
         }
@@ -1131,7 +1261,7 @@ const simpleSvgAreaSeriesExample = () => {
     highlightBlock((select('#json-configuration').node() as any));
 
     chart = SvgAreaChart(commonConfiguration, seriesList).draw();
-    chart.chartItemEvent.subscribe((item: ChartItemEvent) => {
+    currentSubscription = chart.chartItemEvent.subscribe((item: ChartItemEvent) => {
         if (item.type === 'click') {
             alert('click =>' + JSON.stringify(item.data));
         }
@@ -1607,7 +1737,7 @@ const svgMultiSeriesExample = () => {
     highlightBlock((select('#json-configuration').node() as any));
 
     chart = SvgMultiSeriesChart(commonConfiguration, seriesList).draw();
-    chart.chartItemEvent.subscribe((item: ChartItemEvent) => {
+    currentSubscription = chart.chartItemEvent.subscribe((item: ChartItemEvent) => {
         if (item.type === 'click') {
             console.log('click =>' + JSON.stringify(item.data));
         }

@@ -10,8 +10,6 @@ import { SeriesConfiguration } from '../../chart/series.interface';
 import { delayExcute, drawTooltipPointByCircle, drawSelectionPointByCircle } from '../../chart/util/d3-svg-util';
 import { ChartSelector } from '../../chart';
 import { setChartTooltipByPosition } from '../../chart/util/tooltip-util';
-import { Observable, Observer } from 'rxjs';
-import { delay, tap } from 'rxjs/operators';
 
 export interface BasicLineSeriesConfiguration extends SeriesConfiguration {
     xField: string;
@@ -180,7 +178,7 @@ export class BasicLineSeries extends SeriesBase {
             .map((d: any, i: number) => {
                 const xposition = x(d[this.config.xField]) + padding;
                 const yposition = y(d[this.config.yField]);
-                return [xposition, yposition, d, this.radius];
+                return [xposition, yposition, d, this.radius, this.radius, this.strokeColor, this.config.yField];
             });
         this.originQuadTree = quadtree()
             .extent([[xScale.min, yScale.min], [geometry.width, geometry.height]])
@@ -215,7 +213,6 @@ export class BasicLineSeries extends SeriesBase {
     }
 
     onSelectItem(value: number[], selected: any[]) {
-        console.log('line series onSelectItem');
         const selectedItem = selected[0];
         // TODO: selector가 같아서 막대와 원 선택 아이템이 겹침. selector를 다르게 하거나 분기 해야함.
         this.chartBase.selectionClear();
@@ -244,6 +241,43 @@ export class BasicLineSeries extends SeriesBase {
             value[0] + this.radius + 2,
             value[1] + this.radius + 2
         );
+    }
+
+    drawPointer(value: number[], selected: any[]): number {
+        // const index = Math.floor(selected.length / 2);
+        const index = selected.length - 1;
+        const selectedItem = selected[index];
+
+        drawTooltipPointByCircle(
+            this.selectionGroup,
+            [selectedItem],
+            {
+                radius: this.radius * 1.5,
+                strokeColor: this.strokeColor,
+                strokeWidth: this.dotStrokeWidth + 2
+            }
+        );
+
+        return index;
+    }
+
+    pointerSize(): ContainerSize {
+        return {
+            width: this.radius,
+            height: this.radius
+        }
+    }
+
+    tooltipText(selectedItem: any[]): string {
+        return `${this.displayName ?? this.config.xField}: ${selectedItem[2][this.config.yField]}`;
+    }
+
+    tooltipStyle(): {fill: string, opacity: number, stroke: string} {
+        return {
+            fill: '#fff',
+            opacity: 1,
+            stroke: this.strokeColor
+        };
     }
 
     showPointAndTooltip(value: number[], selected: any[]) {

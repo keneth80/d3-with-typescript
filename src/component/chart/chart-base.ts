@@ -10,7 +10,7 @@ import { sha1 } from 'object-hash';
 import {
     IChartBase, Scale, ContainerSize, LegendItem,
     ChartMouseEvent, ChartZoomEvent,
-    DisplayType, ChartItemEvent
+    DisplayType, ChartItemEvent, TooltipEvent
 } from './chart.interface';
 import {
     ChartConfiguration,
@@ -30,6 +30,7 @@ import { clearCanvas } from './util/canvas-util';
 import { axisSetupByScale } from './scale';
 import { drawGridLine } from './grid-line';
 import { makeSeriesByConfigurationType } from './util/chart-util';
+import { setChartTooltipByPosition } from './util/tooltip-util';
 
 
 // TODO: 모든 참조되는 함수들은 subject로 바꾼다.
@@ -197,6 +198,8 @@ export class ChartBase<T = any> implements IChartBase {
     // multi tooltip 및 series 별 tooltip을 구분할 수 있는 저장소.
     private tooltipItems: {selector: string}[] = [];
 
+    private tooltipEventSubject = new Subject<TooltipEvent>();
+
     // series delay display observable
     private eachElementAsObservableSubscription: Subscription = new Subscription();
 
@@ -298,6 +301,10 @@ export class ChartBase<T = any> implements IChartBase {
         return this.zoomEventSubject.asObservable();
     }
 
+    get tooltipEvent$(): Observable<TooltipEvent> {
+        return this.tooltipEventSubject.asObservable();
+    }
+
     get seriesColors(): string[] {
         return this.colors;
     }
@@ -393,6 +400,7 @@ export class ChartBase<T = any> implements IChartBase {
         }
 
         if (configuration.tooltip) {
+            this.isTooltip = configuration.tooltip?.visible ?? true;
             this.isTooltipMultiple = configuration.tooltip.isMultiple === true ? true : false;
         }
 
@@ -506,7 +514,15 @@ export class ChartBase<T = any> implements IChartBase {
                 series.unSelectItem();
             });
             this.tooltipGroup.style('display', 'none');
-            // TODO: tooltip hide event 발생.
+            // tooltip hide event 발생.
+            this.tooltipEventSubject.next({
+                type: 'hide',
+                position: [0, 0],
+                size: {
+                    width: 0,
+                    height: 0
+                }
+            });
         }
         return this.tooltipGroup;
     }
@@ -1139,9 +1155,46 @@ export class ChartBase<T = any> implements IChartBase {
                                 // multi tooltip이면 break 걸지 않는다.
                                 if (positionData.length && !this.isTooltipDisplay) {
                                     this.currentSeriesIndex = maxLength;
-                                    this.currentChartItemIndex = this.seriesList[maxLength].showPointAndTooltip(chartEvent.position, positionData);
+                                    // this.currentChartItemIndex = this.seriesList[maxLength].showPointAndTooltip(chartEvent.position, positionData);
+                                    this.currentChartItemIndex = this.seriesList[maxLength].drawPointer(chartEvent.position, positionData);
                                     // TODO: tooltip show event and mouse over 발생.
                                     if (this.currentChartItemIndex > -1) {
+                                        // tooltip show event 발생
+                                        const currentTooltipData = positionData[this.currentChartItemIndex];
+                                        this.tooltipEventSubject.next({
+                                            type: 'show',
+                                            position: [currentTooltipData[0] + this.chartMargin.left, currentTooltipData[1] + this.chartMargin.top],
+                                            data: [...currentTooltipData],
+                                            size: {
+                                                width: currentTooltipData[3],
+                                                height: currentTooltipData[4]
+                                            }
+                                        });
+
+                                        if (this.isTooltip && !this.isTooltipDisplay) {
+                                            const tooltipGroup = this.showTooltip(
+                                                this.seriesList[maxLength].tooltipStyle()
+                                            );
+                                            setChartTooltipByPosition(
+                                                tooltipGroup,
+                                                this.config.tooltip.tooltipTextParser
+                                                    ? this.config.tooltip.tooltipTextParser(currentTooltipData)
+                                                    : this.seriesList[maxLength].tooltipText(currentTooltipData),
+                                                {
+                                                    width: this.width,
+                                                    height: this.height
+                                                },
+                                                [
+                                                    currentTooltipData[0],
+                                                    currentTooltipData[1]
+                                                ],
+                                                {
+                                                    width: this.seriesList[maxLength].pointerSize().width,
+                                                    height: this.seriesList[maxLength].pointerSize().height
+                                                }
+                                            )
+                                        }
+
                                         const newHash = sha1(positionData[this.currentChartItemIndex]);
                                         if (sha1(this.currentChartItem) !== newHash) {
                                             // 전에 오버했던 아이템 아웃 이벤트 발생.
@@ -1183,7 +1236,6 @@ export class ChartBase<T = any> implements IChartBase {
                         }
                         const targetSeries = this.seriesList[this.currentSeriesIndex];
                         const positionDataList = targetSeries.getSeriesDataByPosition(chartEvent.position);
-                        console.log('click : ', targetSeries, this.currentSeriesIndex, this.currentChartItemIndex, positionDataList, this.seriesList);
                         if (positionDataList.length) {
                             targetSeries.onSelectItem(chartEvent.position, positionDataList);
                             this.chartItemEventSubject.next({
@@ -1277,6 +1329,7 @@ export class ChartBase<T = any> implements IChartBase {
         positionData.forEach((pdata: any) => {
             this.currentChartItem.push(pdata);
         });
+        // mouseover event 발생
         this.chartItemEventSubject.next({
             type: 'mouseover',
             position: [this.currentChartItem[0], this.currentChartItem[1]],

@@ -130,6 +130,25 @@ export class SeriesBase implements ISeries {
         return 0;
     }
 
+    drawPointer(value: number[], selected: any[]): number {
+        return 0;
+    }
+
+    pointerSize(): ContainerSize {
+        return {
+            width: 2,
+            height: 2
+        };
+    }
+
+    tooltipText(selectedItem: any[]): string {
+        return 'Tooltip Text';
+    }
+
+    tooltipStyle(): {fill: string, opacity: number, stroke: string} {
+        return null;
+    }
+
     onSelectItem(value: number[], selected: any[]) {}
 
     destroy() {

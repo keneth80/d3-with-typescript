@@ -130,9 +130,16 @@ export class GroupedVerticalBarSeries extends SeriesBase {
                 const itemx = groupx + barx(key);
                 const itemy = d[key] < 0 ? y(0) : y(d[key]);
                 // POINT: quadtree 에 저장 되는 데이터는
-                // [아이템의 x축, y축, 아이템의 데이터, 컬럼인덱스, 막대의 가로 사이즈, 막대의 세로 사이즈, 색상]
+                // [아이템의 x축, y축, 아이템의 데이터, 막대의 가로 사이즈, 막대의 세로 사이즈, 색상, 컬럼인덱스, 그룹키]
                 generateData.push([
-                    itemx, itemy, d, j, key, barx.bandwidth(), Math.abs(y(d[key]) - y(0)), z(key) + ''
+                    itemx,
+                    itemy,
+                    d,
+                    barx.bandwidth(),
+                    Math.abs(y(d[key]) - y(0)),
+                    z(key) + '',
+                    j,
+                    key
                 ]);
             }
         }
@@ -156,7 +163,6 @@ export class GroupedVerticalBarSeries extends SeriesBase {
     }
 
     onSelectItem(value: number[], selected: any[]) {
-        console.log('vertical bar series onSelectItem');
         const selectedItem = selected[0];
 
         if (value[1] < selectedItem[1]) {
@@ -167,11 +173,11 @@ export class GroupedVerticalBarSeries extends SeriesBase {
             this.selectionGroup,
             [[selectedItem[0], selectedItem[1]]],
             {
-                width: selectedItem[5],
-                height: selectedItem[6]
+                width: selectedItem[3],
+                height: selectedItem[4]
             },
             {
-                fill: selectedItem[7]
+                fill: selectedItem[5]
             }
         );
     }
@@ -206,11 +212,11 @@ export class GroupedVerticalBarSeries extends SeriesBase {
                 this.selectionGroup,
                 [[selectedItem[0], selectedItem[1]]],
                 {
-                    width: selectedItem[5],
-                    height: selectedItem[6]
+                    width: selectedItem[3],
+                    height: selectedItem[4]
                 },
                 {
-                    fill: selectedItem[7]
+                    fill: selectedItem[5]
                 }
             );
 
@@ -227,8 +233,8 @@ export class GroupedVerticalBarSeries extends SeriesBase {
                         selectedItem[1]
                     ],
                     {
-                        width: selectedItem[5],
-                        height: selectedItem[6]
+                        width: selectedItem[3],
+                        height: selectedItem[4]
                     }
                 )
             }

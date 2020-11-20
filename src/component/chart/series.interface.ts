@@ -47,6 +47,14 @@ export interface ISeries<T = any> {
 
     showPointAndTooltip(value: number[], selected: any[]): number;
 
+    drawPointer(value: number[], selected: any[]): number;
+
+    pointerSize(): ContainerSize;
+
+    tooltipStyle(): {fill: string, opacity: number, stroke: string};
+
+    tooltipText(selectedItem: any[]): string;
+
     onSelectItem(value: number[], selected: any[]): void;
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, seriesGroup: Selection<BaseType, any, HTMLElement, any>, index: number): void;

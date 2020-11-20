@@ -133,9 +133,9 @@ export class StackedVerticalBarSeries extends SeriesBase {
                 const itemx = x(data[this.xField]);
                 const itemy = (item[1] < 0 ? y(0) : y(item[1]));
                 // POINT: quadtree 에 저장 되는 데이터는
-                // [아이템의 x축, y축, 아이템의 데이터, 컬럼인덱스, 막대의 가로 사이즈, 막대의 세로 사이즈, 색상]
+                // [아이템의 x축, y축, 아이템의 데이터, 막대의 가로 사이즈, 막대의 세로 사이즈, 색상, 컬럼인덱스, 그룹키]
                 generateData.push([
-                    itemx, itemy, data, j, key, x.bandwidth(), y(item[0]) - y(item[1]), fill
+                    itemx, itemy, data, x.bandwidth(), y(item[0]) - y(item[1]), fill, j, key
                 ]);
             }
         }
@@ -170,11 +170,11 @@ export class StackedVerticalBarSeries extends SeriesBase {
             this.selectionGroup,
             [[selectedItem[0], selectedItem[1]]],
             {
-                width: selectedItem[5],
-                height: selectedItem[6]
+                width: selectedItem[3],
+                height: selectedItem[4]
             },
             {
-                fill: selectedItem[7]
+                fill: selectedItem[5]
             }
         );
     }
@@ -204,11 +204,11 @@ export class StackedVerticalBarSeries extends SeriesBase {
                     this.selectionGroup,
                     [[selectedItem[0], selectedItem[1]]],
                     {
-                        width: selectedItem[5],
-                        height: selectedItem[6]
+                        width: selectedItem[3],
+                        height: selectedItem[4]
                     },
                     {
-                        fill: selectedItem[7]
+                        fill: selectedItem[5]
                     }
                 );
 
@@ -225,8 +225,8 @@ export class StackedVerticalBarSeries extends SeriesBase {
                             selectedItem[1]
                         ],
                         {
-                            width: selectedItem[5],
-                            height: selectedItem[6]
+                            width: selectedItem[3],
+                            height: selectedItem[4]
                         }
                     )
                 }
@@ -239,7 +239,7 @@ export class StackedVerticalBarSeries extends SeriesBase {
     private retriveColumnIndex(value: number[], selected: any[]): number {
         let index = -1;
         for (let i = 0; i < selected.length; i++) {
-            if (value[1] > selected[i][1] && value[1] < (selected[i][6] + selected[i][1])) { // y좌표보다 작아야하고, 막대 크기보다 커야함.
+            if (value[1] > selected[i][1] && value[1] < (selected[i][4] + selected[i][1])) { // y좌표보다 작아야하고, 막대 크기보다 커야함.
                 index = i;
                 break;
             }
