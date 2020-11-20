@@ -475,7 +475,9 @@ export class ChartBase<T = any> implements IChartBase {
     }
 
     clear() {
-        this.selector.selectAll('*').remove();
+        this.selector.selectAll('svg').remove();
+        this.selector.selectAll('canvas').remove();
+        this.selector.selectAll('div').style('opacity', 0).style('pointer-events', 'none');
 
         this.seriesList.forEach((series: ISeries) => {
             series.destroy();
@@ -508,21 +510,24 @@ export class ChartBase<T = any> implements IChartBase {
     }
 
     hideTooltip(): Selection<BaseType, any, HTMLElement, any> {
+        // tooltip hide event 발생.
+        console.log('hideTooltip');
+        // if (this.config?.tooltip?.visible === false) {
+        //     this.tooltipEventSubject.next({
+        //         type: 'hide',
+        //         position: [0, 0],
+        //         size: {
+        //             width: 0,
+        //             height: 0
+        //         }
+        //     });
+        // }
         if (this.isTooltipDisplay) {
             this.isTooltipDisplay = false;
             this.seriesList.forEach((series: ISeries) => {
                 series.unSelectItem();
             });
             this.tooltipGroup.style('display', 'none');
-            // tooltip hide event 발생.
-            this.tooltipEventSubject.next({
-                type: 'hide',
-                position: [0, 0],
-                size: {
-                    width: 0,
-                    height: 0
-                }
-            });
         }
         return this.tooltipGroup;
     }

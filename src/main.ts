@@ -275,8 +275,8 @@ const customTooltipTemplete = () => {
                 .style('top', (tooltipEvent.data[1]) + 'px')
                 .style('left', (tooltipEvent.data[0]) + 'px');
         } else {
-            // otherElement.style('pointer-events', 'none');
-            // otherElement.style('opacity', 0);
+            otherElement.style('pointer-events', 'none');
+            otherElement.style('opacity', 0);
         }
     });
 
