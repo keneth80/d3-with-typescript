@@ -1374,7 +1374,8 @@ const webGLBigDataLineSeriesSample = () => {
             selector: 'spec-area',
             startField: 'start',
             endField: 'end',
-            data: [stepData[2]]
+            data: [stepData[2]],
+            placement: Placement.BOTTOM
         }
     };
 
@@ -1476,7 +1477,8 @@ const canvasBigDataLineSeriesSample = () => {
                 selector: 'spec-area',
                 startField: 'start',
                 endField: 'end',
-                data: [stepData[2]]
+                data: [stepData[2]],
+                placement: Placement.BOTTOM
             }
         };
 
@@ -1776,7 +1778,8 @@ const axisCustomMargin = () => {
                 selector: 'spec-area',
                 startField: 'start',
                 endField: 'end',
-                data: [stepData[2]]
+                data: [stepData[2]],
+                placement: Placement.BOTTOM
             }
         };
 

@@ -339,22 +339,20 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
             this.subscription.remove(this.moveSubscription);
         }
 
-        if (this.isMoveEvent) {
+        if (this.pointerCanvas) {
             this.pointerCanvas
+                .on('mouseleave', null)
+                .on('mousedown', null)
+                .on('mouseup', null)
                 .on('mousemove', null);
+
+            this.pointerCanvas.call(
+                drag()
+                .on('start', null)
+                .on('drag', null)
+                .on('end', null)
+            );
         }
-
-        this.pointerCanvas
-            .on('mouseleave', null)
-            .on('mousedown', null)
-            .on('mouseup', null);
-
-        this.pointerCanvas.call(
-            drag()
-            .on('start', null)
-            .on('drag', null)
-            .on('end', null)
-        );
 
         this.isEnable = false;
     }
