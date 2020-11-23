@@ -108,7 +108,9 @@ export class SeriesBase implements ISeries {
                         .attr('y', 0);
             }
 
-            const toolTipGroup = targetSvg.append('g').attr('class', 'tooltip-group');
+            const toolTipGroup = targetSvg.append('g')
+                .attr('class', 'tooltip-group')
+                .attr('transform', `translate(${this.chartBase.chartMargin.left}, ${this.chartBase.chartMargin.top})`);
             this.chartBase.toolTipTarget = toolTipGroup;
 
             // tooltip 용 svg가 겹치므로 legend group을 상위에 있는 svg로 옮긴다.

@@ -477,7 +477,7 @@ export class ChartBase<T = any> implements IChartBase {
     clear() {
         this.selector.selectAll('svg').remove();
         this.selector.selectAll('canvas').remove();
-        this.selector.selectAll('div').style('opacity', 0).style('pointer-events', 'none');
+        // this.selector.selectAll('div').style('opacity', 0).style('pointer-events', 'none').remove();
 
         this.seriesList.forEach((series: ISeries) => {
             series.destroy();
@@ -498,30 +498,40 @@ export class ChartBase<T = any> implements IChartBase {
         boxStyle?: {fill: string, opacity?: number, stroke: string, strokeWidth?: number},
         textStyle?: {fill: number, size: number}
     ): Selection<BaseType, any, HTMLElement, any> {
-        if (!this.isTooltipDisplay) {
-            this.isTooltipDisplay = true;
-            this.seriesList.forEach((series: ISeries) => {
-                series.unSelectItem();
-            });
-            this.tooltipGroup.style('display', null);
-            this.tooltipTemplete(this.tooltipGroup, boxStyle, textStyle);
-        }
+        // if (this.isTooltipDisplay) {
+        //     return this.tooltipGroup.select('g.tooltip-item-group');;
+        // }
+        // if (!this.isTooltipDisplay) {
+        //     this.isTooltipDisplay = true;
+        //     this.seriesList.forEach((series: ISeries) => {
+        //         series.unSelectItem();
+        //     });
+        //     this.tooltipGroup.style('display', null);
+        //     this.tooltipTemplete(this.tooltipGroup, boxStyle, textStyle);
+        // }
+        this.seriesList.forEach((series: ISeries) => {
+            series.unSelectItem();
+        });
+        this.tooltipGroup.style('display', null);
+        this.tooltipTemplete(this.tooltipGroup, boxStyle, textStyle);
         return this.tooltipGroup.select('g.tooltip-item-group');
     }
 
     hideTooltip(): Selection<BaseType, any, HTMLElement, any> {
+        if (!this.isTooltipDisplay) {
+            return;
+        }
         // tooltip hide event 발생.
-        console.log('hideTooltip');
-        // if (this.config?.tooltip?.visible === false) {
-        //     this.tooltipEventSubject.next({
-        //         type: 'hide',
-        //         position: [0, 0],
-        //         size: {
-        //             width: 0,
-        //             height: 0
-        //         }
-        //     });
-        // }
+        if (this.config?.tooltip?.visible === false) {
+            this.tooltipEventSubject.next({
+                type: 'hide',
+                position: [0, 0],
+                size: {
+                    width: 0,
+                    height: 0
+                }
+            });
+        }
         if (this.isTooltipDisplay) {
             this.isTooltipDisplay = false;
             this.seriesList.forEach((series: ISeries) => {
@@ -1159,6 +1169,7 @@ export class ChartBase<T = any> implements IChartBase {
                                 // 툴팁을 보여줄 때면 멀티인지 싱글인지 체크 해서 break 여부를 판단하고 해당 시리즈의 메서드 실행.
                                 // multi tooltip이면 break 걸지 않는다.
                                 if (positionData.length && !this.isTooltipDisplay) {
+                                    this.isTooltipDisplay = true;
                                     this.currentSeriesIndex = maxLength;
                                     // this.currentChartItemIndex = this.seriesList[maxLength].showPointAndTooltip(chartEvent.position, positionData);
                                     this.currentChartItemIndex = this.seriesList[maxLength].drawPointer(chartEvent.position, positionData);
@@ -1176,7 +1187,7 @@ export class ChartBase<T = any> implements IChartBase {
                                             }
                                         });
 
-                                        if (this.isTooltip && !this.isTooltipDisplay) {
+                                        if (this.isTooltip) {
                                             const tooltipGroup = this.showTooltip(
                                                 this.seriesList[maxLength].tooltipStyle()
                                             );

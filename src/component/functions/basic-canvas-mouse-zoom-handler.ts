@@ -41,7 +41,7 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
 
     private isMoveEvent = true;
 
-    private delayTime = 100;
+    private delayTime = 30;
 
     private move$: Subject<[number, number]> = new Subject();
 

@@ -18,7 +18,7 @@ export class BasicCanvasMouseHandler extends FunctionsBase {
 
     private move$: Subject<[number, number]> = new Subject();
 
-    private delayTime = 100;
+    private delayTime = 30;
 
     private moveSubscription: Subscription;
 

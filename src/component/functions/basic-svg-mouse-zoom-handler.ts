@@ -32,7 +32,7 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
 
     private isZoom: boolean = true;
 
-    private delayTime = 10;
+    private delayTime = 30;
 
     private xMinValue: number = NaN;
 

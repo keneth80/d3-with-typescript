@@ -16,7 +16,7 @@ export class BasicSvgMouseHandler extends FunctionsBase {
 
     private isMoveEvent = false;
 
-    private delayTime = 100;
+    private delayTime = 30;
 
     constructor(configuration: BasicSvgMouseHandlerConfiguration) {
         super();

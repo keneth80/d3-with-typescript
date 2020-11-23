@@ -217,6 +217,20 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         }
     }
 
+    drawPointer(value: number[], selected: any[]): number {
+        // const index = Math.floor(selected.length / 2);
+        const index = selected.length - 1;
+        const selectedItem = selected[index];
+
+        this.drawTooltipPoint(this.geometry, selectedItem, {
+            radius: this.radius / 2 + 1,
+            strokeColor: this.strokeColor,
+            strokeWidth: this.strokeWidth
+        });
+
+        return index;
+    }
+
     select(displayName: string, isSelected: boolean) {
         this.canvas.style('opacity', isSelected ? null : 0.4);
     }

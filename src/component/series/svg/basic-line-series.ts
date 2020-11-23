@@ -236,10 +236,10 @@ export class BasicLineSeries extends SeriesBase {
     getSeriesDataByPosition(value: number[]) {
         return this.search(
             this.originQuadTree,
-            value[0] - (this.radius + 2),
-            value[1] - (this.radius + 2),
-            value[0] + this.radius + 2,
-            value[1] + this.radius + 2
+            value[0] - this.radius * 2,
+            value[1] - this.radius * 2,
+            value[0] + this.radius * 2,
+            value[1] + this.radius * 2
         );
     }
 

@@ -261,19 +261,23 @@ const customTooltipTemplete = () => {
 
     chart = SvgTraceChart(commonConfiguration, seriesList).draw();
     currentSubscription = chart.tooltipEvent$.subscribe((tooltipEvent: TooltipEvent) => {
-        console.log('tooltip event : ', tooltipEvent);
         if (tooltipEvent.type === 'show') {
             otherElement
                 .select('strong')
                 .text('Data');
             otherElement
                 .select('span')
-                .text(`${tooltipEvent.data[6]}: ${tooltipEvent.data[2][tooltipEvent.data[6]]}`);
+                .text(`${tooltipEvent.data[6]}: ${tooltipEvent.data[2][tooltipEvent.data[6]]}fdsafdsafsadfdsafsa`);
+            const tempObj = (otherElement.node() as any);
+            const tempWidth = tempObj.offsetWidth;
+            const tempHeight = tempObj.offsetHeight;
+            const elementTop = tooltipEvent.data[1] + 5;
+            const elementLeft = tooltipEvent.data[0] - tempWidth / 2 + chart.chartMargin.left;
             otherElement
                 .style('pointer-events', 'all')
                 .style('opacity', 1)
-                .style('top', (tooltipEvent.data[1]) + 'px')
-                .style('left', (tooltipEvent.data[0]) + 'px');
+                .style('top', elementTop + 'px')
+                .style('left', elementLeft + 'px');
         } else {
             otherElement.style('pointer-events', 'none');
             otherElement.style('opacity', 0);
