@@ -49,9 +49,9 @@ export interface ISeries<T = any> {
 
     drawPointer(value: number[], selected: any[]): number;
 
-    pointerSize(): ContainerSize;
+    pointerSize(selected: any[]): ContainerSize;
 
-    tooltipStyle(): {fill: string, opacity: number, stroke: string};
+    tooltipStyle(selected: any[]): {fill: string, opacity: number, stroke: string};
 
     tooltipText(selectedItem: any[]): string;
 

@@ -1,6 +1,7 @@
 import { Selection, BaseType, select } from 'd3-selection';
 import { line, curveMonotoneX } from 'd3-shape';
 import { quadtree } from 'd3-quadtree';
+import { rgb } from 'd3-color';
 
 import { Scale, ContainerSize, DisplayOption, DisplayType } from '../../chart/chart.interface';
 import { SeriesBase } from '../../chart/series-base';
@@ -35,6 +36,7 @@ export interface BasicCanvasTraceConfiguration extends SeriesConfiguration {
         fill?: string;
     };
     line?: {
+        strokeOpacity?: number;
         strokeWidth?: number;
         strokeColor?: string;
         dashArray?: number;
@@ -110,7 +112,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
     drawSeries(chartBaseData: T[], scales: Scale[], geometry: ContainerSize, option: DisplayOption) {
         this.geometry = geometry;
         this.strokeColor = this.checkSeriesColor() ?? option.color;
-        this.dotFill = this.config.dot && this.config.dot.fill ? this.config.dot.fill : option.color;
+        this.dotFill = this.config?.dot?.fill ?? option.color;
 
         const chartData = this.config.data ? this.config.data : chartBaseData;
         const xScale: Scale = scales.find((scale: Scale) => scale.orient === this.xDirection);
@@ -153,7 +155,9 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         context.fillStyle = this.dotFill;
         context.clearRect(0, 0, geometry.width, geometry.height);
         context.beginPath();
-        context.strokeStyle = this.strokeColor;
+        // context.strokeStyle = this.strokeColor;
+        const rgbColor = rgb(this.strokeColor);
+        context.strokeStyle = `rgba(${rgbColor.r}, ${rgbColor.g}, ${rgbColor.b}, ${this.config?.line?.strokeOpacity ?? 1})`;
         if (this.config.line) {
             this.strokeWidth = this.config.line.strokeWidth ?? 1;
             context.lineWidth = this.strokeWidth;

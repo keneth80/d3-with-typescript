@@ -23,7 +23,7 @@ export class BasicSvgMouseGuideLineHandler extends FunctionsBase {
 
     private yDirection: string = Placement.LEFT;
 
-    private delayTime = 10;
+    private delayTime = 20;
 
     private direction: string = Direction.BOTH;
 

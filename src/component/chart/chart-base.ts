@@ -1169,11 +1169,11 @@ export class ChartBase<T = any> implements IChartBase {
                                 // 툴팁을 보여줄 때면 멀티인지 싱글인지 체크 해서 break 여부를 판단하고 해당 시리즈의 메서드 실행.
                                 // multi tooltip이면 break 걸지 않는다.
                                 if (positionData.length && !this.isTooltipDisplay) {
+                                    // TODO: data 있을 시 시리지 하이라이트 기능 여부 고민해 볼 것.
                                     this.isTooltipDisplay = true;
                                     this.currentSeriesIndex = maxLength;
                                     // this.currentChartItemIndex = this.seriesList[maxLength].showPointAndTooltip(chartEvent.position, positionData);
                                     this.currentChartItemIndex = this.seriesList[maxLength].drawPointer(chartEvent.position, positionData);
-                                    // TODO: tooltip show event and mouse over 발생.
                                     if (this.currentChartItemIndex > -1) {
                                         // tooltip show event 발생
                                         const currentTooltipData = positionData[this.currentChartItemIndex];
@@ -1187,28 +1187,8 @@ export class ChartBase<T = any> implements IChartBase {
                                             }
                                         });
 
-                                        if (this.isTooltip) {
-                                            const tooltipGroup = this.showTooltip(
-                                                this.seriesList[maxLength].tooltipStyle()
-                                            );
-                                            setChartTooltipByPosition(
-                                                tooltipGroup,
-                                                this.config.tooltip.tooltipTextParser
-                                                    ? this.config.tooltip.tooltipTextParser(currentTooltipData)
-                                                    : this.seriesList[maxLength].tooltipText(currentTooltipData),
-                                                {
-                                                    width: this.width,
-                                                    height: this.height
-                                                },
-                                                [
-                                                    currentTooltipData[0],
-                                                    currentTooltipData[1]
-                                                ],
-                                                {
-                                                    width: this.seriesList[maxLength].pointerSize().width,
-                                                    height: this.seriesList[maxLength].pointerSize().height
-                                                }
-                                            )
+                                        if (this.isTooltip) { // tooltip 출력여부가 true일 경우.
+                                            this.drawTooltip(this.seriesList[maxLength], currentTooltipData);
                                         }
 
                                         const newHash = sha1(positionData[this.currentChartItemIndex]);
@@ -1285,6 +1265,31 @@ export class ChartBase<T = any> implements IChartBase {
                 }
             })
         );
+    }
+
+    protected drawTooltip(currentSeries: ISeries, currentTooltipData: any[]) {
+        const tooltipGroup = this.showTooltip(
+            currentSeries.tooltipStyle(currentTooltipData)
+        );
+        const pointerSize = currentSeries.pointerSize(currentTooltipData);
+        setChartTooltipByPosition(
+            tooltipGroup,
+            this.config.tooltip.tooltipTextParser
+                ? this.config.tooltip.tooltipTextParser(currentTooltipData)
+                : currentSeries.tooltipText(currentTooltipData),
+            {
+                width: this.width,
+                height: this.height
+            },
+            [
+                currentTooltipData[0],
+                currentTooltipData[1]
+            ],
+            {
+                width: pointerSize.width,
+                height: pointerSize.height
+            }
+        )
     }
 
     protected zoominEventHandler(chartEvent: ChartZoomEvent) {

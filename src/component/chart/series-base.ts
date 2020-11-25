@@ -136,18 +136,18 @@ export class SeriesBase implements ISeries {
         return 0;
     }
 
-    pointerSize(): ContainerSize {
+    pointerSize(selected: any[]): ContainerSize {
         return {
             width: 2,
             height: 2
         };
     }
 
-    tooltipText(selectedItem: any[]): string {
+    tooltipText(selected: any[]): string {
         return 'Tooltip Text';
     }
 
-    tooltipStyle(): {fill: string, opacity: number, stroke: string} {
+    tooltipStyle(selected: any[]): {fill: string, opacity: number, stroke: string} {
         return null;
     }
 

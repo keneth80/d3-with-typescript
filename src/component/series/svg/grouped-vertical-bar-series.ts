@@ -17,9 +17,10 @@ export interface GroupedVerticalBarSeriesConfiguration extends SeriesConfigurati
 }
 
 export class GroupedVerticalBarSeries extends SeriesBase {
-    private xField = '';
 
-    private yField = '';
+    protected selectionGroup: Selection<BaseType, any, HTMLElement, any>;
+
+    private xField = '';
 
     private columns: string[];
 
@@ -27,29 +28,18 @@ export class GroupedVerticalBarSeries extends SeriesBase {
 
     private tooltipGroup: Selection<BaseType, any, HTMLElement, any>;
 
-    protected selectionGroup: Selection<BaseType, any, HTMLElement, any>;
-
     private isHide = false;
 
     private currentBarWidth = 0;
 
+    private config: GroupedVerticalBarSeriesConfiguration;
+
     constructor(configuration: GroupedVerticalBarSeriesConfiguration) {
         super(configuration);
-        if (configuration) {
-            if (configuration.xField) {
-                this.xField = configuration.xField;
-            }
-
-            if (configuration.columns) {
-                this.columns = [...configuration.columns];
-            }
-
-            if (configuration.displayNames) {
-                this.displayNames = [...configuration.displayNames];
-            } else {
-                this.displayNames = [...configuration.columns];
-            }
-        }
+        this.config = configuration;
+        this.xField = configuration.xField ?? this.xField;
+        this.columns = configuration.columns ? [...configuration.columns] : [];
+        this.displayNames = configuration.displayNames ? [...configuration.displayNames] : [...configuration.columns];
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
@@ -200,46 +190,85 @@ export class GroupedVerticalBarSeries extends SeriesBase {
         return findItem;
     }
 
-    // TODO: tooltip에 시리즈 아이디를 부여하여 시리즈 마다 tooltip을 컨트롤 할 수 있도록 한다.
-    // multi tooltip도 구현해야 하기 때문에 이방법이 가장 좋음. 현재 중복으로 발생해서 왔다갔다 함.
-    showPointAndTooltip(value: number[], selected: any[]) {
+    drawPointer(value: number[], selected: any[]): number {
         // const index = Math.floor(selected.length / 2);
         const index = selected.length - 1;
         const selectedItem = selected[index];
 
-        if (!this.chartBase.isTooltipDisplay) {
-            drawTooltipPointByRect(
-                this.selectionGroup,
-                [[selectedItem[0], selectedItem[1]]],
-                {
-                    width: selectedItem[3],
-                    height: selectedItem[4]
-                },
-                {
-                    fill: selectedItem[5]
-                }
-            );
-
-            if (!this.chartBase.isTooltipDisplay) {
-                this.tooltipGroup = this.chartBase.showTooltip();
-                setChartTooltipByPosition(
-                    this.tooltipGroup,
-                    this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser
-                    ? this.chartBase.tooltip.tooltipTextParser(selectedItem)
-                        : `${this.xField}: ${selectedItem[2][this.xField]} \n ${this.yField}: ${selectedItem[2][this.yField]}`,
-                    this.geometry,
-                    [
-                        selectedItem[0],
-                        selectedItem[1]
-                    ],
-                    {
-                        width: selectedItem[3],
-                        height: selectedItem[4]
-                    }
-                )
+        drawTooltipPointByRect(
+            this.selectionGroup,
+            [[selectedItem[0], selectedItem[1]]],
+            {
+                width: selectedItem[3],
+                height: selectedItem[4]
+            },
+            {
+                fill: selectedItem[5]
             }
-        }
+        );
 
         return index;
     }
+
+    pointerSize(selectedItem: any): ContainerSize {
+        return {
+            width: selectedItem[3],
+            height: selectedItem[4]
+        }
+    }
+
+    tooltipText(selectedItem: any[]): string {
+        const dataKey = selectedItem[6];
+        const tooltipData = selectedItem[2];
+        return `${this.displayName ?? this.config.xField}: ${tooltipData[dataKey]}`;
+    }
+
+    tooltipStyle(selectedItem: any): {fill: string, opacity: number, stroke: string} {
+        return {
+            fill: selectedItem[5],
+            opacity: 1,
+            stroke: selectedItem[5]
+        };
+    }
+
+    // showPointAndTooltip(value: number[], selected: any[]) {
+    //     // const index = Math.floor(selected.length / 2);
+    //     const index = selected.length - 1;
+    //     const selectedItem = selected[index];
+
+    //     if (!this.chartBase.isTooltipDisplay) {
+    //         drawTooltipPointByRect(
+    //             this.selectionGroup,
+    //             [[selectedItem[0], selectedItem[1]]],
+    //             {
+    //                 width: selectedItem[3],
+    //                 height: selectedItem[4]
+    //             },
+    //             {
+    //                 fill: selectedItem[5]
+    //             }
+    //         );
+
+    //         if (!this.chartBase.isTooltipDisplay) {
+    //             this.tooltipGroup = this.chartBase.showTooltip();
+    //             setChartTooltipByPosition(
+    //                 this.tooltipGroup,
+    //                 this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser
+    //                 ? this.chartBase.tooltip.tooltipTextParser(selectedItem)
+    //                     : `${this.xField}: ${selectedItem[2][this.xField]}`,
+    //                 this.geometry,
+    //                 [
+    //                     selectedItem[0],
+    //                     selectedItem[1]
+    //                 ],
+    //                 {
+    //                     width: selectedItem[3],
+    //                     height: selectedItem[4]
+    //                 }
+    //             )
+    //         }
+    //     }
+
+    //     return index;
+    // }
 }

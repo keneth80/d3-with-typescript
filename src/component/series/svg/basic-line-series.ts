@@ -280,46 +280,46 @@ export class BasicLineSeries extends SeriesBase {
         };
     }
 
-    showPointAndTooltip(value: number[], selected: any[]) {
-        // const index = Math.floor(selected.length / 2);
-        const index = selected.length - 1;
-        const selectedItem = selected[index];
+    // showPointAndTooltip(value: number[], selected: any[]) {
+    //     // const index = Math.floor(selected.length / 2);
+    //     const index = selected.length - 1;
+    //     const selectedItem = selected[index];
 
-        drawTooltipPointByCircle(
-            this.selectionGroup,
-            [selectedItem],
-            {
-                radius: this.radius * 1.5,
-                strokeColor: this.strokeColor,
-                strokeWidth: this.dotStrokeWidth + 2
-            }
-        );
+    //     drawTooltipPointByCircle(
+    //         this.selectionGroup,
+    //         [selectedItem],
+    //         {
+    //             radius: this.radius * 1.5,
+    //             strokeColor: this.strokeColor,
+    //             strokeWidth: this.dotStrokeWidth + 2
+    //         }
+    //     );
 
-        if (!this.chartBase.isTooltipDisplay) {
-            this.tooltipGroup = this.chartBase.showTooltip({
-                fill: '#fff',
-                opacity: 1,
-                stroke: this.strokeColor
-            });
-            setChartTooltipByPosition(
-                this.tooltipGroup,
-                this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser
-                    ? this.chartBase.tooltip.tooltipTextParser(selectedItem)
-                    : `${this.config.xField}: ${selectedItem[2][this.config.xField]} \n ${this.config.yField}: ${selectedItem[2][this.config.yField]}`,
-                this.geometry,
-                [
-                    selectedItem[0],
-                    selectedItem[1]
-                ],
-                {
-                    width: this.radius,
-                    height: this.radius
-                }
-            )
-        }
+    //     if (!this.chartBase.isTooltipDisplay) {
+    //         this.tooltipGroup = this.chartBase.showTooltip({
+    //             fill: '#fff',
+    //             opacity: 1,
+    //             stroke: this.strokeColor
+    //         });
+    //         setChartTooltipByPosition(
+    //             this.tooltipGroup,
+    //             this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser
+    //                 ? this.chartBase.tooltip.tooltipTextParser(selectedItem)
+    //                 : `${this.config.xField}: ${selectedItem[2][this.config.xField]} \n ${this.config.yField}: ${selectedItem[2][this.config.yField]}`,
+    //             this.geometry,
+    //             [
+    //                 selectedItem[0],
+    //                 selectedItem[1]
+    //             ],
+    //             {
+    //                 width: this.radius,
+    //                 height: this.radius
+    //             }
+    //         )
+    //     }
 
-        return index;
-    }
+    //     return index;
+    // }
 
     private checkSeriesColor() {
         return this.config.line && this.config.line.strokeColor ? this.config.line.strokeColor : null;

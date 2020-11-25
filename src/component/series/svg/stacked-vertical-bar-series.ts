@@ -21,8 +21,6 @@ export interface StackedVerticalBarSeriesConfiguration extends SeriesConfigurati
 export class StackedVerticalBarSeries extends SeriesBase {
     private xField: string;
 
-    private yField: string;
-
     private columns: string[];
 
     private rootGroup: Selection<BaseType, any, HTMLElement, any>;
@@ -35,27 +33,15 @@ export class StackedVerticalBarSeries extends SeriesBase {
 
     private isHide = false;
 
+    private config: StackedVerticalBarSeriesConfiguration;
+
     constructor(configuration: StackedVerticalBarSeriesConfiguration) {
         super(configuration);
-        if (configuration) {
-            if (configuration.xField) {
-                this.xField = configuration.xField;
-            }
-
-            if (configuration.yField) {
-                this.yField = configuration.yField;
-            }
-
-            if (configuration.columns) {
-                this.columns = [...configuration.columns];
-            }
-
-            if (configuration.displayNames) {
-                this.displayNames = [...configuration.displayNames];
-            } else {
-                this.displayNames = [...configuration.columns];
-            }
-        }
+        this.config = configuration;
+        this.config = configuration;
+        this.xField = configuration.xField ?? this.xField;
+        this.columns = configuration.columns ? [...configuration.columns] : [];
+        this.displayNames = configuration.displayNames ? [...configuration.displayNames] : [...configuration.columns];
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
@@ -135,7 +121,14 @@ export class StackedVerticalBarSeries extends SeriesBase {
                 // POINT: quadtree 에 저장 되는 데이터는
                 // [아이템의 x축, y축, 아이템의 데이터, 막대의 가로 사이즈, 막대의 세로 사이즈, 색상, 컬럼인덱스, 그룹키]
                 generateData.push([
-                    itemx, itemy, data, x.bandwidth(), y(item[0]) - y(item[1]), fill, j, key
+                    itemx,
+                    itemy,
+                    data,
+                    x.bandwidth(),
+                    y(item[0]) - y(item[1]),
+                    fill,
+                    j,
+                    key
                 ]);
             }
         }
@@ -189,52 +182,95 @@ export class StackedVerticalBarSeries extends SeriesBase {
         );
     }
 
-    // TODO: tooltip에 시리즈 아이디를 부여하여 시리즈 마다 tooltip을 컨트롤 할 수 있도록 한다.
-    // multi tooltip도 구현해야 하기 때문에 이방법이 가장 좋음. 현재 중복으로 발생해서 왔다갔다 함.
-    showPointAndTooltip(value: number[], selected: any[]) {
+    drawPointer(value: number[], selected: any[]): number {
         // const index = Math.floor(selected.length / 2);
-        // TODO: y좌표보다 작은 아이템을 골라야함.
         const index: number = this.retriveColumnIndex(value, selected);
-
         if (index > -1) {
             const selectedItem = selected[index];
 
-            if (!this.chartBase.isTooltipDisplay) {
-                drawTooltipPointByRect(
-                    this.selectionGroup,
-                    [[selectedItem[0], selectedItem[1]]],
-                    {
-                        width: selectedItem[3],
-                        height: selectedItem[4]
-                    },
-                    {
-                        fill: selectedItem[5]
-                    }
-                );
-
-                if (!this.chartBase.isTooltipDisplay) {
-                    this.tooltipGroup = this.chartBase.showTooltip();
-                    setChartTooltipByPosition(
-                        this.tooltipGroup,
-                        this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser
-                        ? this.chartBase.tooltip.tooltipTextParser(selectedItem)
-                            : `${this.xField}: ${selectedItem[2][this.xField]} \n ${this.yField}: ${selectedItem[2][this.yField]}`,
-                        this.geometry,
-                        [
-                            selectedItem[0],
-                            selectedItem[1]
-                        ],
-                        {
-                            width: selectedItem[3],
-                            height: selectedItem[4]
-                        }
-                    )
+            drawTooltipPointByRect(
+                this.selectionGroup,
+                [[selectedItem[0], selectedItem[1]]],
+                {
+                    width: selectedItem[3],
+                    height: selectedItem[4]
+                },
+                {
+                    fill: selectedItem[5]
                 }
-            }
+            );
         }
 
         return index;
     }
+
+    pointerSize(selectedItem: any): ContainerSize {
+        return {
+            width: selectedItem[3],
+            height: selectedItem[4]
+        }
+    }
+
+    tooltipText(selectedItem: any[]): string {
+        const dataKey = selectedItem[6];
+        const tooltipData = selectedItem[2];
+        return `${this.displayName ?? this.config.xField}: ${tooltipData[dataKey]}`;
+    }
+
+    tooltipStyle(selectedItem: any): {fill: string, opacity: number, stroke: string} {
+        return {
+            fill: selectedItem[5],
+            opacity: 1,
+            stroke: selectedItem[5]
+        };
+    }
+
+    // TODO: tooltip에 시리즈 아이디를 부여하여 시리즈 마다 tooltip을 컨트롤 할 수 있도록 한다.
+    // multi tooltip도 구현해야 하기 때문에 이방법이 가장 좋음. 현재 중복으로 발생해서 왔다갔다 함.
+    // showPointAndTooltip(value: number[], selected: any[]) {
+    //     // const index = Math.floor(selected.length / 2);
+    //     // TODO: y좌표보다 작은 아이템을 골라야함.
+    //     const index: number = this.retriveColumnIndex(value, selected);
+
+    //     if (index > -1) {
+    //         const selectedItem = selected[index];
+
+    //         if (!this.chartBase.isTooltipDisplay) {
+    //             drawTooltipPointByRect(
+    //                 this.selectionGroup,
+    //                 [[selectedItem[0], selectedItem[1]]],
+    //                 {
+    //                     width: selectedItem[3],
+    //                     height: selectedItem[4]
+    //                 },
+    //                 {
+    //                     fill: selectedItem[5]
+    //                 }
+    //             );
+
+    //             if (!this.chartBase.isTooltipDisplay) {
+    //                 this.tooltipGroup = this.chartBase.showTooltip();
+    //                 setChartTooltipByPosition(
+    //                     this.tooltipGroup,
+    //                     this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser
+    //                     ? this.chartBase.tooltip.tooltipTextParser(selectedItem)
+    //                         : `${this.xField}: ${selectedItem[2][this.xField]} \n ${this.yField}: ${selectedItem[2][this.yField]}`,
+    //                     this.geometry,
+    //                     [
+    //                         selectedItem[0],
+    //                         selectedItem[1]
+    //                     ],
+    //                     {
+    //                         width: selectedItem[3],
+    //                         height: selectedItem[4]
+    //                     }
+    //                 )
+    //             }
+    //         }
+    //     }
+
+    //     return index;
+    // }
 
     private retriveColumnIndex(value: number[], selected: any[]): number {
         let index = -1;
