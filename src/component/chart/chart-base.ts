@@ -1172,14 +1172,13 @@ export class ChartBase<T = any> implements IChartBase {
                                     // TODO: data 있을 시 시리지 하이라이트 기능 여부 고민해 볼 것.
                                     this.isTooltipDisplay = true;
                                     this.currentSeriesIndex = maxLength;
-                                    // this.currentChartItemIndex = this.seriesList[maxLength].showPointAndTooltip(chartEvent.position, positionData);
                                     this.currentChartItemIndex = this.seriesList[maxLength].drawPointer(chartEvent.position, positionData);
                                     if (this.currentChartItemIndex > -1) {
                                         // tooltip show event 발생
                                         const currentTooltipData = positionData[this.currentChartItemIndex];
                                         this.tooltipEventSubject.next({
                                             type: 'show',
-                                            position: [currentTooltipData[0] + this.chartMargin.left, currentTooltipData[1] + this.chartMargin.top],
+                                            position: [currentTooltipData[0], currentTooltipData[1]],
                                             data: [...currentTooltipData],
                                             size: {
                                                 width: currentTooltipData[3],

@@ -16,7 +16,7 @@ import { IOptions } from './chart/options.interface';
 import { BasicSpecArea } from './options/basic-svg-spec-area';
 import { BasicStepLine } from './options/basic-svg-step-line';
 import { BasicStepArea } from './options/basic-svg-step-area';
-import { BasicLineSeries, BasicLineSeriesConfiguration } from './series';
+import { BasicLineSeries, BasicLineSeriesConfiguration, BasicTopology } from './series';
 import { BasicSvgMouseZoomHandler } from './functions/basic-svg-mouse-zoom-handler';
 import { BasicSvgMouseHandler } from './functions/basic-svg-mouse-handler';
 import { GroupedVerticalBarSeriesConfiguration, GroupedVerticalBarSeries } from './series/svg/grouped-vertical-bar-series';
@@ -161,6 +161,17 @@ export const SvgMultiSeriesChart = (
     chartConfiguration.options = generatorOptions(options);
 
     chartConfiguration.functions = generatorFunctions(configuration);
+
+    return new BasicChart(chartConfiguration);
+}
+
+export const SvgTopology = (
+    configuration: MiccBaseConfiguration
+) => {
+    const chartConfiguration: ChartConfiguration = generatorCommomConfiguration(configuration);
+    chartConfiguration.series = [new BasicTopology({
+        selector: 'topology'
+    })];
 
     return new BasicChart(chartConfiguration);
 }

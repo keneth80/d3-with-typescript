@@ -37,9 +37,13 @@ import {
     SvgTraceChart,
     WebglTraceChart,
     SvgAreaChart,
-    SvgMultiSeriesChart
+    SvgMultiSeriesChart,
+    SvgTopology
 } from './component/chart-generator';
 import { sampleMockData } from './component/mock-data/simple-mock-data';
+import { centerPositionForTooltipElement } from './component/chart/util/tooltip-util';
+import { topologyData } from './component/mock-data/topology-data';
+import { TopologyGroupElement, TopologyData } from './component/series';
 
 
 let chart: BasicChart;
@@ -127,6 +131,9 @@ const buttonMapping = () => {
                     case 'tooltip-custom-templete':
                         customTooltipTemplete();
                     break;
+                    case 'svg-topology':
+                        topologyExample();
+                    break;
                     default:
                     break;
                 }
@@ -162,6 +169,46 @@ const setSeriesColor = (item: any) => {
         return '#EA3010';
     }
 };
+
+const topologyExample = () => {
+    const groups = topologyData.result.frameworks.map((item: any) => {
+        const currentData = {
+            rawID: item.rawID,
+            frameworkID: item.frameworkID,
+            frameworkSetID: item.frameworkSetID,
+            status: item.status,
+            previousStatus: item.previousStatus,
+            updateDateTime: item.updateDateTime,
+            fullName: item.fullName
+        };
+        return new TopologyGroupElement(item.fullName, 0, 0, 50, 50, 5, 5, currentData, item.members);
+    })
+    // .filter((item: TopologyGroupElement, index: number) => index === 0);
+
+    const machines = topologyData.result.machines.map((item: any) => {
+        return new TopologyGroupElement(item.fullName, 0, 0, 50, 50, 5, 5, item, []);
+    });
+
+    const commonConfiguration: MiccBaseConfiguration = {
+        selector: '#chart-div',
+        data: [
+            new TopologyData(groups, machines)
+        ],
+        margin: {
+            top: 5,
+            left: 10,
+            right: 10,
+            bottom: 5
+        },
+        isResize: true,
+        axes: []
+    };
+
+    (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
+    highlightBlock((select('#json-configuration').node() as any));
+
+    chart = SvgTopology(commonConfiguration).draw();
+}
 
 const customTooltipTemplete = () => {
     const yFieldSeries: BasicLineSeriesConfiguration = {
@@ -228,8 +275,10 @@ const customTooltipTemplete = () => {
         axes: [
             {
                 field: 'x',
-                type: ScaleType.STRING,
+                type: ScaleType.NUMBER,
                 placement: Placement.BOTTOM,
+                min: 0,
+                max: 21,
                 gridLine: {
                     color: '#ddd'
                 },
@@ -252,7 +301,8 @@ const customTooltipTemplete = () => {
             }
         ],
         zoom: {
-            direction: Direction.BOTH
+            direction: Direction.BOTH,
+            delayTime: 20
         }
     };
 
@@ -260,6 +310,8 @@ const customTooltipTemplete = () => {
     highlightBlock((select('#json-configuration').node() as any));
 
     chart = SvgTraceChart(commonConfiguration, seriesList).draw();
+    // custom tooltip templete select
+    otherElement = select('#chart-div').select('.chart-tip');
     currentSubscription = chart.tooltipEvent$.subscribe((tooltipEvent: TooltipEvent) => {
         if (tooltipEvent.type === 'show') {
             otherElement
@@ -267,25 +319,13 @@ const customTooltipTemplete = () => {
                 .text('Data');
             otherElement
                 .select('span')
-                .text(`${tooltipEvent.data[6]}: ${tooltipEvent.data[2][tooltipEvent.data[6]]}fdsafdsafsadfdsafsa`);
-            const tempObj = (otherElement.node() as any);
-            const tempWidth = tempObj.offsetWidth;
-            const tempHeight = tempObj.offsetHeight;
-            const elementTop = tooltipEvent.data[1] + 5;
-            const elementLeft = tooltipEvent.data[0] - tempWidth / 2 + chart.chartMargin.left;
-            otherElement
-                .style('pointer-events', 'all')
-                .style('opacity', 1)
-                .style('top', elementTop + 'px')
-                .style('left', elementLeft + 'px');
+                .text(`${tooltipEvent.data[6]}: ${tooltipEvent.data[2][tooltipEvent.data[6]]}`);
+            centerPositionForTooltipElement(chart, otherElement.node(), tooltipEvent.position);
         } else {
             otherElement.style('pointer-events', 'none');
             otherElement.style('opacity', 0);
         }
     });
-
-    // custom tooltip templete select
-    otherElement = select('#chart-div').select('.chart-tip')
 }
 
 const changeTooltipTemplete = () => {

@@ -1,7 +1,8 @@
-import { Selection, BaseType } from 'd3-selection';
+import { Selection, BaseType, select } from 'd3-selection';
 
 import { ContainerSize } from '../chart.interface';
 import { textBreak } from '.';
+import { ChartBase } from '..';
 
 export const setChartTooltipByPosition = (
     tooltipTarget: Selection<BaseType, any, HTMLElement, any>,
@@ -42,4 +43,21 @@ export const setChartTooltipByPosition = (
         .selectAll('rect.tooltip-background') // .tooltip-background
         .attr('width', textWidth)
         .attr('height', textHeight);
+}
+
+export const centerPositionForTooltipElement = (
+    chart: ChartBase, 
+    tooltipElement: any, 
+    position: any[], 
+    padding: {top: number, left: number} = {top: 0, left: 0}) => {
+    const tempWidth = tooltipElement.offsetWidth;
+    const tempHeight = tooltipElement.offsetHeight;
+    const elementTop = (position[1] + chart.chartMargin.top) - (tempHeight + 20) + padding.top;
+    const elementLeft = (position[0] - tempWidth / 2) + chart.chartMargin.left + padding.left;
+    select(tooltipElement)
+        .style('pointer-events', 'all')
+        .style('opacity', 1)
+        .style('top', elementTop + 'px')
+        .style('left', elementLeft + 'px');
+    return tooltipElement;
 }
