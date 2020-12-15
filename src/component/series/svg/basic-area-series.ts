@@ -25,10 +25,6 @@ export class BasicAreaSeries extends SeriesBase {
 
     private line: Line<[number, number]>;
 
-    private xField = 'x';
-
-    private yField = 'y';
-
     private lineStyle = {
         strokeWidth: 1,
         strokeColor: null
@@ -40,17 +36,20 @@ export class BasicAreaSeries extends SeriesBase {
         isCurve: false
     }
 
+    private config: BasicAreaSeriesConfiguration;
+
     constructor(configuration: BasicAreaSeriesConfiguration) {
         super(configuration);
-        if (configuration) {
-            this.xField = configuration.xField ?? this.xField;
+        this.config = configuration;
+        this.areaStyle.isCurve = configuration?.area?.isCurve ?? this.areaStyle.isCurve;
+    }
 
-            this.yField = configuration.yField ?? this.yField;
+    xField() {
+        return this.config.xField;
+    }
 
-            if (configuration.area) {
-                this.areaStyle.isCurve = configuration.area.isCurve ?? this.areaStyle.isCurve;
-            }
-        }
+    yField() {
+        return this.config.yField;
     }
 
     setSvgElement(
@@ -67,18 +66,19 @@ export class BasicAreaSeries extends SeriesBase {
         const x: any = scales.find((scale: Scale) => scale.orient === this.xDirection).scale;
         const y: any = scales.find((scale: Scale) => scale.orient === this.yDirection).scale;
 
+        this.color = this.areaStyle.color ?? option.color;
         this.area = area()
             .x((d: any) => {
-                return x(d[this.xField]) + 1;
+                return x(d[this.config.xField]) + 1;
             })
             .y0(y(0))
             .y1((d: any) => {
-                return y(d[this.yField]);
+                return y(d[this.config.yField]);
             });
 
         this.line = line()
-            .x((d: any) => { return x(d[this.xField]); })
-            .y((d: any) => { return y(d[this.yField]); });
+            .x((d: any) => { return x(d[this.config.xField]); })
+            .y((d: any) => { return y(d[this.config.yField]); });
 
         if (this.areaStyle.isCurve) {
             this.line.curve(curveMonotoneX);
@@ -92,7 +92,7 @@ export class BasicAreaSeries extends SeriesBase {
                     (update) => update,
                     (exit) => exit.remove
                 )
-                .style('fill', this.areaStyle.color ?? option.color)
+                .style('fill', this.color)
                 .style('fill-opacity', this.areaStyle.opacity)
                 .attr('d', this.area);
 
@@ -104,7 +104,7 @@ export class BasicAreaSeries extends SeriesBase {
                     (exit) => exit.remove
                 )
                 .style('fill', 'none')
-                .style('stroke', colorDarker(this.lineStyle.strokeColor ?? option.color, 2))
+                .style('stroke', colorDarker(this.lineStyle.strokeColor ?? this.color, 2))
                 .style('stroke-width', this.lineStyle.strokeWidth)
                 .attr('d', this.line);
     }

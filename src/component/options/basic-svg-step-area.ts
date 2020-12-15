@@ -3,6 +3,7 @@ import { select, Selection, BaseType } from 'd3-selection';
 import { Scale, ContainerSize, ChartMouseEvent } from '../chart/chart.interface';
 import { Placement } from '../chart/chart-configuration';
 import { OptionsBase } from '../chart/options-base';
+import { getTextHeight } from '../chart/util';
 
 export interface BasicStepAreaConfiguration<T = any> {
     selector: string;
@@ -44,13 +45,14 @@ export class BasicStepArea<T = any> extends OptionsBase {
 
         const xScale: Scale = scales.find((scale: Scale) => scale.orient === Placement.BOTTOM);
         const x = xScale.scale;
+        const textHeight = getTextHeight(12, 'Arial, Helvetica, sans-serif');
 
-        this.mainGroup.attr('transform', `translate(${this.chartBase.chartMargin.left}, 0)`);
+        this.mainGroup.attr('transform', `translate(${this.chartBase.chartMargin.left}, ${this.chartBase.chartMargin.top - (textHeight + 3)})`);
 
-        const elementGroup = this.mainGroup.selectAll('.' + this.selector + '-group')
+        const elementGroup = this.mainGroup.selectAll('.' + this.selector + '-item')
             .data(this.stepData)
                 .join(
-                    (enter) => enter.append('g').attr('class', this.selector + '-group'),
+                    (enter) => enter.append('g').attr('class', this.selector + '-item'),
                     (update) => update,
                      (exit) => exit.remove
                 )
@@ -66,10 +68,10 @@ export class BasicStepArea<T = any> extends OptionsBase {
                     (exit) => exit.remove
                 )
                 .style('font-size', '12px')
-                .style('font-family', ' Arial, Helvetica, sans-serif')
+                .style('font-family', 'Arial, Helvetica, sans-serif')
                 .attr('dy', '0.71em')
                 .attr('x', 2)
-                .attr('y', this.chartBase.chartMargin.top / 2)
+                // .attr('y', this.chartBase.chartMargin.top / 2)
                 .text((data: T) => data[this.labelField]);
 
         elementGroup.selectAll('.' + this.selector + '-box')
@@ -85,7 +87,7 @@ export class BasicStepArea<T = any> extends OptionsBase {
                 .attr('width', (data: T) => { 
                     return x(data[this.endField]) - x(data[this.startField]);
                 })
-                .attr('height', this.chartBase.chartMargin.top);
+                .attr('height', textHeight);
 
         elementGroup
             .on('mouseover', (data: any) => {

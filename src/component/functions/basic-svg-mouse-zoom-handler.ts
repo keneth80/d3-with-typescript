@@ -50,6 +50,8 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
 
     private moveSubscription: Subscription;
 
+    private isDrag = false;
+
     constructor(configuration: BasicSvgMouseZoomHandlerConfiguration) {
         super();
         if (configuration) {
@@ -86,6 +88,8 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
             this.zoomBackDrop = mask.select('.zoom-back-drop');
             this.zoomBox = mask.select('.zoom-box');
         }
+
+        // TODO: mask로 했더니 버벅이는 현상이 나옴. 다른 방법 강구 (예로 그냥 박스 그리기로 할 것.)
     }
 
     drawFunctions(chartData: any[], scales: Scale[], geometry: ContainerSize) {
@@ -147,6 +151,9 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
             this.moveSubscription = fromEvent(this.pointerGroup.node() as any, 'mousemove')
                 .pipe(debounceTime(this.delayTime))
                 .subscribe((e: MouseEvent) => {
+                    if (this.isDrag) {
+                        return;
+                    }
                     const mouseEvent: [number, number] = [
                         e.offsetX - this.chartBase.chartMargin.left - 1,
                         e.offsetY - this.chartBase.chartMargin.top - 1
@@ -168,7 +175,7 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
                 const mouseEvent = mouse(this.pointerGroup.node() as any);
                 startX = mouseEvent[0];
                 startY = mouseEvent[1];
-
+                this.isDrag = true;
                 this.chartBase.zoomEventSubject.next({
                     type: 'dragstart',
                     position: mouseEvent,
@@ -232,13 +239,14 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
                     startX > moveX && startY > moveY
                 );
 
-                this.chartBase.zoomEventSubject.next({
-                    type: 'drag',
-                    position: mouseEvent,
-                    target: this.pointerGroup
-                });
+                // this.chartBase.zoomEventSubject.next({
+                //     type: 'drag',
+                //     position: mouseEvent,
+                //     target: this.pointerGroup
+                // });
             })
             .on('end', () => {
+                this.isDrag = false;
                 const mouseEvent = mouse(this.pointerGroup.node() as any);
                 endX = mouseEvent[0];
                 endY = mouseEvent[1];
@@ -303,7 +311,7 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
         )
         .on('mouseleave', () => {
             const mouseEvent = mouse(this.pointerGroup.node() as any);
-
+            this.isDrag = false;
             this.chartBase.mouseEventSubject.next({
                 type: 'mouseleave',
                 position: mouseEvent,
@@ -395,6 +403,7 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
         tempZoomBox: Selection<BaseType, any, BaseType, any>
     ) {
         zoomBox
+            // .style('fill', '#fff')
             .attr('width', 0)
             .attr('height', 0);
         if (tempZoomBox) {
@@ -410,6 +419,21 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
         isRestore: boolean = false
     ) {
         zoomBox
+            .attr('x', start.x)
+            .attr('y', start.y)
+            .attr('width', Math.abs(end.x - start.x))
+            .attr('height', Math.abs(end.y - start.y));
+    }
+
+    private drawZoomBox2(
+        zoomBox: Selection<BaseType, any, BaseType, any>,
+        start: {x: number, y: number},
+        end: {x: number, y: number},
+        size: ContainerSize,
+        isRestore: boolean = false
+    ) {
+        zoomBox
+            .style('fill', '#000')
             .attr('x', start.x)
             .attr('y', start.y)
             .attr('width', Math.abs(end.x - start.x))

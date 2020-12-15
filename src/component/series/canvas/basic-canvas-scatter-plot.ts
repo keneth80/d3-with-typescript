@@ -4,7 +4,7 @@ import { min, max, range } from 'd3-array';
 import { timer, of, from, Observable, Observer, Subscription } from 'rxjs';
 import { switchMap, map, concatMap, mapTo, delay } from 'rxjs/operators';
 
-import { Scale, ContainerSize } from '../../chart/chart.interface';
+import { Scale, ContainerSize, DisplayOption } from '../../chart/chart.interface';
 import { SeriesBase } from '../../chart/series-base';
 import { SeriesConfiguration } from '../../chart/series.interface';
 import { ChartBase } from '../../chart/chart-base';
@@ -47,10 +47,6 @@ export interface BasicCanvasScatterPlotConfiguration extends SeriesConfiguration
 export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
     protected canvas: Selection<BaseType, any, HTMLElement, any>;
 
-    private xField: string = 'x';
-
-    private yField: string = 'y';
-
     private prevCanvas: any = null;
 
     private bufferCanvas: any = null;
@@ -77,23 +73,26 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
 
     private mouseSubscription: Subscription;
 
+    private config: BasicCanvasScatterPlotConfiguration;
+
     constructor(configuration: BasicCanvasScatterPlotConfiguration) {
         super(configuration);
-        if (configuration.xField) {
-            this.xField = configuration.xField;
-        }
-
-        if (configuration.yField) {
-            this.yField = configuration.yField;
-        }
-
-        if (configuration.pointer) {
-            this.pointerRadius = configuration.pointer.radius;
-            if (configuration.pointer.stroke) {
-                this.strokeWidth = configuration.pointer.stroke.strokeWidth;
-                this.strokeColor = configuration.pointer.stroke.color;
+        this.config = configuration;
+        if (this.config.pointer) {
+            this.pointerRadius = this.config.pointer.radius;
+            if (this.config.pointer.stroke) {
+                this.strokeWidth = this.config.pointer.stroke.strokeWidth;
+                this.color = this.strokeColor = this.config.pointer.stroke.color;
             }
         }
+    }
+
+    xField() {
+        return this.config.xField;
+    }
+
+    yField() {
+        return this.config.yField;
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>) {
@@ -111,7 +110,7 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
         }
     }
 
-    drawSeries(chartData: T[], scales: Scale[], geometry: ContainerSize) {
+    drawSeries(chartData: T[], scales: Scale[], geometry: ContainerSize, option: DisplayOption) {
         this.originQuadTree = undefined;
         this.setContainerPosition(geometry, this.chartBase);
 
@@ -161,13 +160,10 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
             generateData = this.originData;
         } else {
             const filterData = this.xMaxValue === xmax && this.yMaxValue === ymax ? chartData : chartData
-                .filter((d: T) => d[this.xField] >= xmin && d[this.xField] <= xmax && d[this.yField] >= ymin && d[this.yField] <= ymax)
+                // .filter((d: T) => d[this.config.xField] >= xmin && d[this.config.xField] <= xmax && d[this.config.yField] >= ymin && d[this.config.yField] <= ymax)
                 .map((d: T, i: number) => {
-                    const xposition = x(d[this.xField]);
-                    const yposition = y(d[this.yField]);
-                    // TODO: 건수에 따라 포인트를 세분화 할지를 결정한다. 깊게 파고 들어가면 포인트가 잡히지 않음.
-                    // POINT: selection을 위해 indexing을 한다.
-                    // this.indexing[xposition + ';' + yposition] = d;
+                    const xposition = x(d[this.config.xField]);
+                    const yposition = y(d[this.config.yField]);
                     if (initialize) {
                         this.originData.push([xposition, yposition, d]);
                     }
@@ -177,7 +173,6 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
         }
 
         console.timeEnd('filterdata');
-        console.log('data size : ', generateData.length, this.isRestore);
 
         if (this.isRestore && this.bufferCanvas) {
             console.time('restoreputimage');

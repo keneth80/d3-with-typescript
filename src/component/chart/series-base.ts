@@ -20,6 +20,10 @@ export class SeriesBase implements ISeries {
 
     shape: string; // legend 출력 시 색상아이템의 type
 
+    color: string;
+
+    colors: string[];
+
     protected svg: Selection<BaseType, any, HTMLElement, any>;
 
     protected mainGroup: Selection<BaseType, any, HTMLElement, any>;
@@ -73,6 +77,14 @@ export class SeriesBase implements ISeries {
     // get $currentItem(): Observable<any> {
     //     return this.itemClickSubject.asObservable();
     // }
+
+    xField() {
+        return null;
+    }
+
+    yField() {
+        return null;
+    }
 
     changeConfiguration(configuration: SeriesConfiguration) {}
 

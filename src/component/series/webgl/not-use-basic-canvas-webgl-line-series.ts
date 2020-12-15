@@ -57,10 +57,6 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
 
     private tooltipGroup: Selection<BaseType, any, HTMLElement, any>;
 
-    private xField: string;
-
-    private yField: string;
-
     private config: BasicCanvasWebglLineSeriesConfiguration;
 
     private dataFilter: any;
@@ -97,8 +93,6 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
     constructor(configuration: BasicCanvasWebglLineSeriesConfiguration) {
         super(configuration);
         this.config = configuration;
-        this.xField = configuration.xField;
-        this.yField = configuration.yField;
         this.dataFilter = configuration.filter;
         if (configuration.style) {
             this.strokeWidth = configuration.style.strokeWidth ?? this.strokeWidth;
@@ -194,10 +188,10 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
             : chartData.filter((item: T) => this.dataFilter(item))
         ).filter(
             (d: T) =>
-                d[this.xField] >= xmin - xmin * 0.01 &&
-                d[this.xField] <= xmax + xmax * 0.01 &&
-                d[this.yField] >= ymin &&
-                d[this.yField] <= ymax
+                d[this.config.xField] >= xmin - xmin * 0.01 &&
+                d[this.config.xField] <= xmax + xmax * 0.01 &&
+                d[this.config.yField] >= ymin &&
+                d[this.config.yField] <= ymax
         );
         // console.timeEnd('data_generate' + this.selector);
 
@@ -263,8 +257,8 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
                 ])
                 .addAll(
                     lineData.map<any>((d: BasicCanvasWebglLineSeriesModel) => {
-                        const xposition = x(d[this.xField]);
-                        const yposition = y(d[this.yField]);
+                        const xposition = x(d[this.config.xField]);
+                        const yposition = y(d[this.config.yField]);
 
                         return [xposition, yposition, d];
                     })
@@ -357,7 +351,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
             .text(
                 this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser
                     ? this.chartBase.tooltip.tooltipTextParser(seriesData)
-                    : `${this.xField}: ${seriesData[2][this.xField]} \n ${this.yField}: ${seriesData[2][this.yField]}`
+                    : `${this.xField}: ${seriesData[2][this.config.xField]} \n ${this.yField}: ${seriesData[2][this.config.yField]}`
             );
 
         textBreak(textElement, '\n');
@@ -574,8 +568,8 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         const endCount = chartData.length;
 
         for (let i = 0; i < endCount; i++) {
-            const xposition = xScale(chartData[i][this.xField]);
-            const yposition = yScale(chartData[i][this.yField]);
+            const xposition = xScale(chartData[i][this.config.xField]);
+            const yposition = yScale(chartData[i][this.config.yField]);
 
             vertices.push(xposition);
             vertices.push(yposition);

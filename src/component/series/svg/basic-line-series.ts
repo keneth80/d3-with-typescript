@@ -61,10 +61,19 @@ export class BasicLineSeries extends SeriesBase {
     constructor(configuration: BasicLineSeriesConfiguration) {
         super(configuration);
         this.config = configuration;
+        this.color = this.checkSeriesColor();
         if (this.config.hasOwnProperty('animation')) {
             this.isAnimation = configuration.animation;
         }
         this.dotClass = this.config?.dot?.selector ?? this.dotClass + '-' + this.config.yField;
+    }
+
+    xField() {
+        return this.config.xField;
+    }
+
+    yField() {
+        return this.config.yField;
     }
 
     setSvgElement(
@@ -87,6 +96,10 @@ export class BasicLineSeries extends SeriesBase {
         const yScale: any = scales.find((scale: Scale) => scale.orient === this.yDirection);
         const x: any = xScale.scale;
         const y: any = yScale.scale;
+        const xmin = xScale.min;
+        const xmax = xScale.max;
+        const ymin = yScale.min;
+        const ymax = yScale.max;
 
         let padding = 0;
 
@@ -99,7 +112,8 @@ export class BasicLineSeries extends SeriesBase {
         this.dotFill = this.config.dot && this.config.dot.fill ? this.config.dot.fill : option.color;
         this.dotStrokeWidth = this.config.dot && this.config.dot.strokeWidth ? this.config.dot.strokeWidth : this.dotStrokeWidth;
 
-        const resultData: any[] = !this.config.filter ? chartData : chartData.filter((item: any) => this.config.filter(item));
+        const resultData: any[] = (!this.config.filter ? chartData : chartData.filter((item: any) => this.config.filter(item)))
+            // .filter((d: any) => d[this.config.xField] >= (xmin - xmin * 0.02) && d[this.config.xField] <= (xmax + xmax * 0.02) && d[this.config.yField] >= ymin && d[this.config.yField] <= ymax);
 
         if (this.config.line) {
             this.line = line()
@@ -121,7 +135,7 @@ export class BasicLineSeries extends SeriesBase {
                     .join(
                         (enter) => enter.append('path').attr('class', this.selector),
                         (update) => update.style('stroke-dasharray', '').style('stroke-dashoffset', ''),
-                        (exit) => exit.remove
+                        (exit) => exit.remove()
                     )
                     // .style('stroke-dasharray', this.config.line.dashArray && this.config.line.dashArray > 0 ? this.config.line.dashArray : 0)
                     .style('stroke-width', this.strokeWidth)
@@ -160,7 +174,7 @@ export class BasicLineSeries extends SeriesBase {
                     .join(
                         (enter) => enter.append('circle').attr('class', this.dotClass),
                         (update) => update,
-                        (exit) => exit.remove
+                        (exit) => exit.remove()
                     )
                     .style('stroke-width', this.dotStrokeWidth)
                     .style('stroke', this.strokeColor)

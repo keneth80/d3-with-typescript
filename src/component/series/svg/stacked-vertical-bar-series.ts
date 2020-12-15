@@ -15,12 +15,11 @@ export interface StackedVerticalBarSeriesConfiguration extends SeriesConfigurati
     xField: string;
     yField: string;
     columns: string[];
+    colors?: string[];
     displayNames?: string[];
 }
 
 export class StackedVerticalBarSeries extends SeriesBase {
-    private xField: string;
-
     private columns: string[];
 
     private rootGroup: Selection<BaseType, any, HTMLElement, any>;
@@ -38,10 +37,17 @@ export class StackedVerticalBarSeries extends SeriesBase {
     constructor(configuration: StackedVerticalBarSeriesConfiguration) {
         super(configuration);
         this.config = configuration;
-        this.config = configuration;
-        this.xField = configuration.xField ?? this.xField;
         this.columns = configuration.columns ? [...configuration.columns] : [];
+        this.colors = configuration.colors ? [...configuration.colors] : undefined;
         this.displayNames = configuration.displayNames ? [...configuration.displayNames] : [...configuration.columns];
+    }
+
+    xField() {
+        return this.config.xField;
+    }
+
+    yField() {
+        return null;
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
@@ -61,7 +67,7 @@ export class StackedVerticalBarSeries extends SeriesBase {
 
         // set the colors
         const z = scaleOrdinal()
-            .range(this.chartBase.seriesColors)
+            .range(this.colors ?? this.chartBase.seriesColors)
             .domain(this.columns);
 
         this.currentBarWidth = x.bandwidth();
@@ -94,7 +100,7 @@ export class StackedVerticalBarSeries extends SeriesBase {
                     (exit) => exit.remove()
                 )
                 .attr('x', (d: any) => {
-                    return x(d.data[this.xField]);
+                    return x(d.data[this.config.xField]);
                 })
                 .attr('height', (d: any) => {
                     return y(d[0]) - y(d[1]);
@@ -116,7 +122,7 @@ export class StackedVerticalBarSeries extends SeriesBase {
             for (let j = 0; j < columnSize; j++) {
                 const item = d[j];
                 const data = d[j].data;
-                const itemx = x(data[this.xField]);
+                const itemx = x(data[this.config.xField]);
                 const itemy = (item[1] < 0 ? y(0) : y(item[1]));
                 // POINT: quadtree 에 저장 되는 데이터는
                 // [아이템의 x축, y축, 아이템의 데이터, 막대의 가로 사이즈, 막대의 세로 사이즈, 색상, 컬럼인덱스, 그룹키]

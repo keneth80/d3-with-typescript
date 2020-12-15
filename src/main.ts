@@ -913,8 +913,7 @@ const simpleSvgLineSeriesExample = () => {
         ],
         zoom: {
             direction: Direction.BOTH
-        },
-        mouseGuideLine:{}
+        }
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
@@ -939,7 +938,7 @@ const simpleSvgColumnSeriesExample = () => {
 
     const commonConfiguration: MiccBaseConfiguration = {
         selector: '#chart-div',
-        data: sampleMockData(20),
+        data: sampleMockData(40),
         title: {
             placement: Placement.TOP,
             content: 'SVG Column Series'
@@ -985,6 +984,7 @@ const simpleSvgStackedColumnSeriesExample = () => {
         xField: 'x',
         yField: 'total',
         columns: ['x', 'y', 'z'],
+        // colors: ['#ff0000', '#ff00ff', '#0000ff'],
         displayNames: ['xField', 'yField', 'zField']
     };
 
@@ -1588,22 +1588,22 @@ const canvasBigDataLineSeriesSample = () => {
             });
 
             // test data 늘리기
-            // const tempRow: BasicCanvasTraceModel = seriesData[seriesData.length - 1];
-            // for (let index = 1; index < 50000; index++) {
-            //     const x = tempRow.x + index;
-            //     const y = tempRow.y;
+            const tempRow: BasicCanvasTraceModel = seriesData[seriesData.length - 1];
+            for (let index = 1; index < 20000; index++) {
+                const x = tempRow.x + index;
+                const y = tempRow.y;
 
-            //     if (xmax < x) {
-            //         xmax = x;
-            //     }
+                if (xmax < x) {
+                    xmax = x;
+                }
 
-            //     seriesData.push(new BasicCanvasTraceModel(
-            //         x,
-            //         y,
-            //         i,
-            //         tempRow
-            //     ));
-            // }
+                seriesData.push(new BasicCanvasTraceModel(
+                    x,
+                    y,
+                    i,
+                    tempRow
+                ));
+            }
 
             // type별 컬러 지정.
             const seriesColor = setSeriesColor(tempData);
@@ -1637,6 +1637,9 @@ const canvasBigDataLineSeriesSample = () => {
     const commonConfiguration: MiccBaseConfiguration = {
         selector: '#chart-div',
         data: [],
+        legend: {
+            placement: Placement.TOP
+        },
         title: {
             placement: Placement.TOP,
             content: 'Canvas BigData Line Series'
@@ -1674,8 +1677,11 @@ const canvasBigDataLineSeriesSample = () => {
     highlightBlock((select('#json-configuration').node() as any));
 
     console.time('canvaslinedraw');
-    chart = CanvasTraceChart(commonConfiguration, seriesList.concat(alarmSeriesList), optionList).draw();
-    console.timeEnd('canvaslinedraw');
+    chart = CanvasTraceChart(commonConfiguration, seriesList.concat(alarmSeriesList), optionList);
+    currentSubscription = chart.complete$.subscribe(() => {
+        console.timeEnd('canvaslinedraw');
+    });
+    chart.draw();
 };
 
 const svgMultiSeriesExample = () => {
@@ -1744,7 +1750,7 @@ const svgMultiSeriesExample = () => {
         data: sampleMockData(20),
         title: {
             placement: Placement.TOP,
-            content: 'SVG Muti Series'
+            content: 'SVG Multi Series'
         },
         legend: {
             placement: Placement.TOP

@@ -88,6 +88,14 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         this.config = configuration;
     }
 
+    xField() {
+        return this.config.xField;
+    }
+
+    yField() {
+        return this.config.yField;
+    }
+
     setSvgElement(
         svg: Selection<BaseType, any, HTMLElement, any>,
         mainGroup: Selection<BaseType, any, HTMLElement, any>,
@@ -133,7 +141,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         this.seriesIndex = option.index;
         this.geometry = geometry;
         this.radius = this.config.dot ? this.config.dot.radius ?? 4 : 0;
-        this.strokeColor = this.checkSeriesColor() ?? option.color;
+        this.color = this.strokeColor = this.checkSeriesColor() ?? option.color;
         this.dotFill = this.config.dot && this.config.dot.fill ? this.config.dot.fill : option.color;
 
         const chartData = this.config.data ? this.config.data : chartBaseData;
@@ -162,13 +170,14 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         const lineData: any[] = (!this.config.filter
             ? chartData
             : chartData.filter((item: T) => this.config.filter(item))
-        ).filter(
-            (d: T) =>
-                d[this.config.xField] >= xmin - xmin * 0.01 &&
-                d[this.config.xField] <= xmax + xmax * 0.01 &&
-                d[this.config.yField] >= ymin &&
-                d[this.config.yField] <= ymax
-        );
+        )
+        // .filter(
+        //     (d: T) =>
+        //         d[this.config.xField] >= xmin - xmin * 0.01 &&
+        //         d[this.config.xField] <= xmax + xmax * 0.01 &&
+        //         d[this.config.yField] >= ymin &&
+        //         d[this.config.yField] <= ymax
+        // );
 
         this.canvas
             .attr('width', geometry.width)

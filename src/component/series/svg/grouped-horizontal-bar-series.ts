@@ -13,10 +13,6 @@ export interface GroupedHorizontalBarSeriesConfiguration extends SeriesConfigura
 }
 
 export class GroupedHorizontalBarSeries extends SeriesBase {
-    private xField: string;
-
-    private yField: string;
-
     private columns: string[];
 
     private rootGroup: Selection<BaseType, any, HTMLElement, any>;
@@ -27,19 +23,22 @@ export class GroupedHorizontalBarSeries extends SeriesBase {
 
     private numberFmt: any;
 
+    private config: GroupedHorizontalBarSeriesConfiguration;
+
     constructor(configuration: GroupedHorizontalBarSeriesConfiguration) {
         super(configuration);
-        if (configuration) {
-            if (configuration.xField) {
-                this.xField = configuration.xField;
-            }
-
-            if (configuration.columns) {
-                this.columns = [...configuration.columns];
-            }
-        }
+        this.config = configuration;
+        this.columns = [...this.config.columns];
 
         this.numberFmt = format(',d');
+    }
+
+    xField() {
+        return this.config.xField;
+    }
+
+    yField() {
+        return null;
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
@@ -82,7 +81,7 @@ export class GroupedHorizontalBarSeries extends SeriesBase {
                 (exit) => exit.remove()
             )
             .attr('transform', (d: any) => {
-                return `translate( ${x(d[this.xField])} ,0)`;
+                return `translate( ${x(d[this.config.xField])} ,0)`;
             })
             .selectAll('.grouped-horizontal-item')
                 .data((data: any) => {
@@ -116,7 +115,7 @@ export class GroupedHorizontalBarSeries extends SeriesBase {
                                 const textElement: any = this.tooltipGroup.select('text').text(`${d.key}: ${this.numberFmt(d.value)}`);
                                 const textWidth = textElement.node().getComputedTextLength() + 10;
 
-                                let xPosition = x(d.data[this.xField]) + (d.index * barx.bandwidth());
+                                let xPosition = x(d.data[this.config.xField]) + (d.index * barx.bandwidth());
                                 const yPosition = event.offsetY -30;
                                 if (xPosition + textWidth > geometry.width) {
                                     xPosition = xPosition - textWidth;

@@ -48,7 +48,7 @@ export const CanvasTraceChart = (
 
     chartConfiguration.options = generatorOptions(options);
 
-    chartConfiguration.functions = generatorCanvasFunctions(configuration.zoom);
+    chartConfiguration.functions = generatorCanvasFunctions(configuration);
 
     return new BasicChart(chartConfiguration);
 }
@@ -67,7 +67,7 @@ export const WebglTraceChart = (
 
     chartConfiguration.options = generatorOptions(options);
 
-    chartConfiguration.functions = generatorCanvasFunctions(configuration.zoom);
+    chartConfiguration.functions = generatorCanvasFunctions(configuration);
 
     return new BasicChart(chartConfiguration);
 }
@@ -178,11 +178,11 @@ export const SvgTopology = (
 
 // 마우스 이벤트 같은 이벤트 함수설정 정보 맵핑.
 export const generatorCanvasFunctions = (
-    zoom?: ZoomConfiguration
+    config: MiccBaseConfiguration
 ): IFunctions[] => {
     const functions: IFunctions[] = [];
-    if (zoom) {
-        functions.push(new BasicCanvasMouseZoomHandler(zoom));
+    if (config.zoom) {
+        functions.push(new BasicCanvasMouseZoomHandler(config.zoom));
     } else {
         functions.push(new BasicCanvasMouseHandler({isMoveEvent: true}));
     }
@@ -196,7 +196,8 @@ export const generatorFunctions = (
     const functions: IFunctions[] = [];
     if (config.zoom) {
         config.zoom.delayTime = 50;
-        functions.push(new BasicSvgMouseZoomHandler(config.zoom));
+        // functions.push(new BasicSvgMouseZoomHandler(config.zoom));
+        functions.push(new BasicCanvasMouseZoomHandler(config.zoom));
     } else {
         functions.push(new BasicSvgMouseHandler({
             isMoveEvent: true,

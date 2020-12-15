@@ -64,10 +64,6 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
 
     private line: any;
 
-    private xField: string;
-
-    private yField: string;
-
     private config: BasicCanvasLineSeriesConfiguration;
 
     private dataFilter: any;
@@ -85,10 +81,16 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
     constructor(configuration: BasicCanvasLineSeriesConfiguration) {
         super(configuration);
         this.config = configuration;
-        this.xField = configuration.xField;
-        this.yField = configuration.yField;
         this.dataFilter = configuration.filter;
         this.strokeWidth = configuration.style.strokeWidth ?? this.strokeWidth;
+    }
+
+    xField() {
+        return this.config.xField;
+    }
+
+    yField() {
+        return this.config.yField;
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
@@ -167,13 +169,13 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
             context.beginPath();
 
         this.line = line()
-            .defined(data => data[this.yField])
+            .defined(data => data[this.config.yField])
             .x((data: any) => {
-                const xposition = x(data[this.xField]) + padding + space / 4;
+                const xposition = x(data[this.config.xField]) + padding + space / 4;
                 return xposition;
             }) // set the x values for the line generator
             .y((data: any) => {
-                const yposition = y(data[this.yField]) + space / 4;
+                const yposition = y(data[this.config.yField]) + space / 4;
                 return yposition;
             })
             .context(context); // set the y values for the line generator
@@ -181,7 +183,7 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
         if (this.config.isCurve === true) {
             this.line.curve(curveMonotoneX); // apply smoothing to the line
         }
-
+        this.color = option.color;
         const strokeStyle = hsl(option.color);
 
         this.line(lineData);
@@ -202,8 +204,8 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
             let colorIndex = 0;
             const colorData = {};
             lineData.forEach((point: T, i: number) => {
-                const drawX = x(point[this.xField]) + padding + space / 4;
-                const drawY = y(point[this.yField]) + space / 4;
+                const drawX = x(point[this.config.xField]) + padding + space / 4;
+                const drawY = y(point[this.config.yField]) + space / 4;
                 this.drawPoint(drawX, drawY, radius, context);
 
                 // mouse over click event를 위한 데이터 인덱싱.

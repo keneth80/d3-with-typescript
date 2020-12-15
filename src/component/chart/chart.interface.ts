@@ -101,6 +101,7 @@ export interface LegendItem {
     selected: boolean;
     isHide: boolean;
     shape: string;
+    color?: string;
 }
 
 export interface IChartBase {

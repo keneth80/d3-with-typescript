@@ -15,23 +15,21 @@ export interface BasicViolinSeriesConfiguration extends SeriesConfiguration {
 }
 
 export class BasicViolinSeries extends SeriesBase {
-    private xField: string;
-
-    private yField: string;
-
     private histogram: any;
+
+    private config: BasicViolinSeriesConfiguration;
 
     constructor(configuration: BasicViolinSeriesConfiguration) {
         super(configuration);
-        if (configuration) {
-            if (configuration.xField) {
-                this.xField = configuration.xField;
-            }
+        this.config = configuration
+    }
 
-            if (configuration.yField) {
-                this.yField = configuration.yField;
-            }
-        }
+    xField() {
+        return this.config.xField;
+    }
+
+    yField() {
+        return this.config.yField;
     }
 
     setSvgElement(
@@ -54,9 +52,9 @@ export class BasicViolinSeries extends SeriesBase {
             .value(d => d);
 
         const sumstat = nest()  // nest function allows to group the calculation per level of a factor
-            .key((d: any) => { return d[this.xField];})
+            .key((d: any) => { return d[this.config.xField];})
             .rollup((d: any) => {   // For each key..
-                const input = d.map((g: any) => { return g[this.yField];})
+                const input = d.map((g: any) => { return g[this.config.yField];})
                 const bins = this.histogram(input)   // And compute the binning on it.
                 return bins;
             })

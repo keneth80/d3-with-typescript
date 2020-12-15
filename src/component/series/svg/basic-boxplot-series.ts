@@ -23,21 +23,24 @@ export interface BoxplotModel {
 }
 
 export class BasicBoxplotSeries extends SeriesBase {
-    private xField: string;
+    private config: BasicBoxplotSeriesConfiguration;
 
     private maxWidth: number;
 
     constructor(configuration: BasicBoxplotSeriesConfiguration) {
         super(configuration);
-        if (configuration) {
-            if (configuration.xField) {
-                this.xField = configuration.xField;
-            }
-
-            if (configuration.maxWidth) {
-                this.maxWidth = configuration.maxWidth;
-            }
+        this.config = configuration;
+        if (configuration.maxWidth) {
+            this.maxWidth = configuration.maxWidth;
         }
+    }
+
+    xField() {
+        return this.config.xField;
+    }
+
+    yField() {
+        return null;
     }
 
     setSvgElement(

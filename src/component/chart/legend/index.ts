@@ -7,7 +7,7 @@ import {
     drawLegendColorItemByLine,
     drawLegendColorItemByRect,
     drawSvgCheckBox,
-    getMaxText, getTextWidth
+    getMaxText, getTextWidth, getTextHeight
 } from '../util';
 
 export interface ChartLegendConfiguration {
@@ -24,16 +24,17 @@ export interface ChartLegendConfiguration {
     svgGeometry: ContainerSize;
 }
 
-export const legendItemListByGrouped = (displayNames: string[]) => {
+export const legendItemListByGrouped = (displayNames: string[], colors?: string[]) => {
     const legendItemList: LegendItem[] = [];
-    displayNames.forEach((displayName: string) => {
+    displayNames.forEach((displayName: string, index: number) => {
         const label: string = displayName;
         const shape: string = Shape.RECT;
         legendItemList.push({
             label,
             shape,
             selected: true,
-            isHide: false
+            isHide: false,
+            color: colors ? colors[index] : undefined
         });
     });
     return legendItemList;
@@ -80,10 +81,11 @@ export class ChartLegend {
 
     parseLegendData(seriesList: ISeries[]) {
         const legendItemList: LegendItem[] = [];
-        // TODO: multi series 일 경우 전부 안그려짐.
+        // TODO: 색상을 커스텀으로 줄시에 색상 셋팅이 안됨. 그리고 갯수가 많아지니 아래 여백이 넓어짐.
         seriesList.forEach((series: ISeries) => {
             if (series.displayNames && series.displayNames.length) {
-                legendItemListByGrouped(series.displayNames)
+                // TODO: series color setup
+                legendItemListByGrouped(series.displayNames, series.colors)
                 .forEach((legendItem: LegendItem) => {
                     legendItemList.push(legendItem);
                 });
@@ -94,7 +96,8 @@ export class ChartLegend {
                     label,
                     shape,
                     selected: true,
-                    isHide: false
+                    isHide: false,
+                    color: series.color
                 });
             }
         })
@@ -102,23 +105,21 @@ export class ChartLegend {
     }
 
     init() {
-        const titleTextHeight = 16;
+        const titleTextHeight = getTextHeight(this.configuration.defaultLegendStyle.font.size, this.configuration.defaultLegendStyle.font.family); // 14
+        // legend row 한개의 길이
+        const checkWidth = this.configuration.margin.left + this.configuration.margin.right + this.configuration.svgGeometry.width - this.legendPadding * 2;
+        // const checkWidth = this.configuration.svgGeometry.width;
         // 초기화.
         this.legendItemList.length = 0;
         this.legendTextWidthList.length = 0;
         this.legendRowBreakCount.length = 0;
         this.totalLegendWidth = 0;
-
         this.checkboxPadding = this.configuration.isCheckBox ? this.legendItemSize.width + this.legendPadding : 0;
-
         this.addAllWidth = this.configuration.isAll ? this.allWidth : 0;
-
-        // legend row 한개의 길이
-        const checkWidth = this.configuration.margin.left + this.configuration.margin.right + this.configuration.svgGeometry.width - this.legendPadding * 4;
 
         let targetText = null;
         let targetTextWidth = 0;
-        if (this.configuration.seriesList && this.configuration.seriesList.length) {
+        if (this.configuration.seriesList.length) {
             // stacked, group bar 의 경우 범례 설정.
             this.legendItemList = this.parseLegendData(this.configuration.seriesList);
 
@@ -128,7 +129,6 @@ export class ChartLegend {
                 // 일반 시리즈의 경우 범례 설정.
                 targetText = getMaxText(this.configuration.seriesList.map((series: ISeries) => series.displayName || series.selector));
             }
-
             targetTextWidth = getTextWidth(targetText, this.configuration.defaultLegendStyle.font.size, this.configuration.defaultLegendStyle.font.family);
         }
 
@@ -142,14 +142,15 @@ export class ChartLegend {
 
         for (let i = 0; i < this.legendItemList.length; i++) {
             const currentText = this.legendItemList[i].label;
-            const currentTextWidth = ((this.configuration.isCheckBox ? this.checkBoxWidth : 0) + getTextWidth(currentText, this.configuration.defaultLegendStyle.font.size, this.configuration.defaultLegendStyle.font.family));
-            const currentItemWidth = currentTextWidth + this.legendItemSize.width + this.legendPadding;
+            const currentTextWidth = getTextWidth(currentText, this.configuration.defaultLegendStyle.font.size, this.configuration.defaultLegendStyle.font.family);
+            const currentItemWidth = (this.configuration.isCheckBox ? this.checkBoxWidth : 0) + currentTextWidth + this.legendItemSize.width + this.legendPadding;
             this.legendTextWidthList.push(currentItemWidth);
             this.totalLegendWidth += currentItemWidth;
-            compareWidth += currentItemWidth;
-            if (compareWidth > checkWidth) {
-                compareWidth = currentItemWidth;
+            if (compareWidth + currentItemWidth + this.legendPadding >= checkWidth) {
+                compareWidth =  currentItemWidth;
                 this.legendRowBreakCount.push(i + (this.configuration.isAll ? 1 : 0));
+            } else {
+                compareWidth += currentItemWidth + this.legendPadding;
             }
         }
 
@@ -251,6 +252,13 @@ export class ChartLegend {
             } else if (d.shape === Shape.RECT) {
                 drawLegendColorItemByRect(select(nodeList[i]), this.legendItemSize, distictKeys, this.configuration.colors);
             }
+            // if (d.shape === Shape.LINE) {
+            //     drawLegendColorItemByLine(select(nodeList[i]), this.legendItemSize, distictKeys, this.configuration.colors);
+            // } else if (d.shape === Shape.CIRCLE) {
+            //     drawLegendColorItemByCircle(select(nodeList[i]), this.legendItemSize, distictKeys, this.configuration.colors);
+            // } else if (d.shape === Shape.RECT) {
+            //     drawLegendColorItemByRect(select(nodeList[i]), this.legendItemSize, distictKeys, this.configuration.colors);
+            // }
         });
 
         legendLabelGroup.selectAll('.legend-label')

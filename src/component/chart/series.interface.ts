@@ -33,6 +33,10 @@ export interface ISeries<T = any> {
 
     selector: string; // legend 출력시 출력 명칭이 없으면 selector로 보여줌.
 
+    color: string;
+
+    colors: string[];
+
     changeConfiguration(configuration: SeriesConfiguration): void;
 
     select(displayName: string, isSelected: boolean): void; // 해당 series 선택 메서드
@@ -63,4 +67,8 @@ export interface ISeries<T = any> {
     drawSeries(data: T[], scales: Scale[], geometry: ContainerSize, displayOption: DisplayOption): void;
     // drawSeries(data: Array<T>, scales: Array<Scale>, geometry: ContainerSize, index: number, sereisColor: string): void;
     // chart container의 사이즈가 변경 되거나 다시 display 될 때 호출되는 메서드로 chart data, scale, series 영역의 사이즈, series index, series color를 해당 메서드를 통해 인자값으로 내려줌.
+
+    xField(): string;
+
+    yField(): string;
 }

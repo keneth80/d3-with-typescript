@@ -10,21 +10,19 @@ export interface ExampleSeriesConfiguration extends SeriesConfiguration {
 }
 
 export class ExampleSeries extends SeriesBase {
-    private xField: string;
-
-    private yField: string;
+    private config: ExampleSeriesConfiguration;
 
     constructor(configuration: ExampleSeriesConfiguration) {
         super(configuration);
-        if (configuration) {
-            if (configuration.xField) {
-                this.xField = configuration.xField;
-            }
+        this.config = configuration;
+    }
 
-            if (configuration.yField) {
-                this.yField = configuration.yField;
-            }
-        }
+    xField() {
+        return this.config.xField;
+    }
+
+    yField() {
+        return null;
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
@@ -37,8 +35,8 @@ export class ExampleSeries extends SeriesBase {
     }
 
     drawSeries(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize, option: DisplayOption) {
-        const x: any = scales.find((scale: Scale) => scale.field === this.xField).scale;
-        const y: any = scales.find((scale: Scale) => scale.field === this.yField).scale;
+        const x: any = scales.find((scale: Scale) => scale.field === this.config.xField).scale;
+        const y: any = scales.find((scale: Scale) => scale.field === this.config.yField).scale;
         this.mainGroup.selectAll('.' + this.selector)
             .data(chartData)
                 .join(
@@ -49,14 +47,14 @@ export class ExampleSeries extends SeriesBase {
                 .style('stroke', '#fff')
                 .style('fill', option.color)
                 .attr('x', (data: any) => { 
-                    return x(data[this.xField]); 
+                    return x(data[this.config.xField]); 
                 })
                 .attr('width', x.bandwidth())
                 .attr('y', (data: any) => {
-                    return (data[this.yField] < 0 ? y(0) : y(data[this.yField]));
+                    return (data[this.config.yField] < 0 ? y(0) : y(data[this.config.yField]));
                 })
                 .attr('height', (data: any) => {
-                    return Math.abs(y(data[this.yField]) - y(0));
+                    return Math.abs(y(data[this.config.yField]) - y(0));
                 });
     }
 

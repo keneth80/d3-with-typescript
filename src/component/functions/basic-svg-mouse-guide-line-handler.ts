@@ -152,6 +152,10 @@ export class BasicSvgMouseGuideLineHandler extends FunctionsBase {
             this.svg.select('g.' + ChartSelector.SERIES_SVG).selectAll('.mouse-per-line')
                 .attr('transform', (d: any, index: number, nodeList: any) => {
                     const currentTarget = (targetList.nodes()[index] as any);
+                    if (!currentTarget) {
+                        return 'translate(' + (-50) + ',' + (-50) +')';
+                    }
+                    
                     let beginning = 0;
                     let endIndex = currentTarget.getTotalLength();
                     let target = null;

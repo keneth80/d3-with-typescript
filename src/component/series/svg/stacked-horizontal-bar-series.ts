@@ -15,10 +15,6 @@ export interface StackedHorizontalBarSeriesConfiguration extends SeriesConfigura
 }
 
 export class StackedHorizontalBarSeries extends SeriesBase {
-    private xField: string;
-
-    private yField: string;
-
     private columns: string[];
 
     private rootGroup: Selection<BaseType, any, HTMLElement, any>;
@@ -29,22 +25,12 @@ export class StackedHorizontalBarSeries extends SeriesBase {
 
     private numberFmt: any;
 
+    private config: StackedHorizontalBarSeriesConfiguration;
+
     constructor(configuration: StackedHorizontalBarSeriesConfiguration) {
         super(configuration);
-        if (configuration) {
-            if (configuration.xField) {
-                this.xField = configuration.xField;
-            }
-
-            if (configuration.yField) {
-                this.yField = configuration.yField;
-            }
-
-            if (configuration.columns) {
-                this.columns = [...configuration.columns];
-            }
-        }
-
+        this.config = configuration;
+        this.columns = [...configuration.columns];
         this.numberFmt = format(',d');
     }
 
@@ -135,7 +121,7 @@ export class StackedHorizontalBarSeries extends SeriesBase {
                     (update) => update,
                     (exit) => exit.remove()
                 )
-                .attr('x', (d: any) => { return x(d.data[this.xField]); })
+                .attr('x', (d: any) => { return x(d.data[this.config.xField]); })
                 .attr('height', (d: any) => { return y(d[0]) - y(d[1]); })
                 .attr('y', (d: any) => { return (d[1] < 0 ? y(0) : y(d[1])); })
                 // TODO: 계산 적용해 볼 것.

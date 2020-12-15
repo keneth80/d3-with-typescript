@@ -201,6 +201,18 @@ export const getTextWidth = (text: string, fontSize: number, fontFace: string) =
     return width;
 };
 
+export const getTextHeight = (fontSize: number, fontFace: string) => {
+    var body = document.getElementsByTagName('body')[0];
+    var dummy = document.createElement('div');
+    var dummyText = document.createTextNode('m');
+    dummy.appendChild(dummyText);
+    dummy.setAttribute('style', 'font-family: ' + fontFace + '; font-size: ' + fontSize + 'px;');
+    body.appendChild(dummy);
+    var result = dummy.offsetHeight;
+    body.removeChild(dummy);
+    return result;
+};
+
 export const getTextWidthByComputedTextLength = (text: any) => {
     return text.getComputedTextLength();
 };
@@ -327,7 +339,8 @@ export const drawLegendColorItemByRect = (
             .attr('height', legendItemSize.height)
             .attr('fill', (d: LegendItem) => {
                 const index = keys.findIndex((key: LegendItem) => d.label === key.label);
-                return colors[index];
+                // return colors[index];
+                return d.color ?? colors[index];
             });
 };
 
@@ -349,7 +362,8 @@ export const drawLegendColorItemByCircle = (
             .attr('cy', legendItemSize.width / 2)
             .attr('fill', (d: LegendItem) => {
                 const index = keys.findIndex((key: LegendItem) => d.label === key.label);
-                return colors[index];
+                // return colors[index];
+                return d.color ?? colors[index];
             });
 };
 
@@ -371,7 +385,8 @@ export const drawLegendColorItemByLine = (
             .attr('y', legendItemSize.width / 2 - 1)
             .attr('fill', (d: LegendItem) => {
                 const index = keys.findIndex((key: LegendItem) => d.label === key.label);
-                return colors[index];
+                // return colors[index];
+                return d.color ?? colors[index];
             });
 }
 

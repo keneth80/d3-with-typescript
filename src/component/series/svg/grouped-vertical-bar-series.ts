@@ -13,14 +13,13 @@ import { setChartTooltipByPosition } from '../../chart/util/tooltip-util';
 export interface GroupedVerticalBarSeriesConfiguration extends SeriesConfiguration {
     xField: string;
     columns: string[];
+    colors?: string[];
     displayNames?: string[];
 }
 
 export class GroupedVerticalBarSeries extends SeriesBase {
 
     protected selectionGroup: Selection<BaseType, any, HTMLElement, any>;
-
-    private xField = '';
 
     private columns: string[];
 
@@ -37,9 +36,17 @@ export class GroupedVerticalBarSeries extends SeriesBase {
     constructor(configuration: GroupedVerticalBarSeriesConfiguration) {
         super(configuration);
         this.config = configuration;
-        this.xField = configuration.xField ?? this.xField;
-        this.columns = configuration.columns ? [...configuration.columns] : [];
+        this.columns = [...configuration.columns];
+        this.colors = configuration.colors ? [...configuration.colors] : undefined;
         this.displayNames = configuration.displayNames ? [...configuration.displayNames] : [...configuration.columns];
+    }
+
+    xField() {
+        return this.config.xField;
+    }
+
+    yField() {
+        return null;
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
@@ -84,7 +91,7 @@ export class GroupedVerticalBarSeries extends SeriesBase {
                 (exit) => exit.remove()
             )
             .attr('transform', (d: any) => {
-                return `translate( ${x(d[this.xField])} ,0)`;
+                return `translate( ${x(d[this.config.xField])} ,0)`;
             })
             .selectAll('.grouped-bar-item')
                 .data((data: any) => {
@@ -114,7 +121,7 @@ export class GroupedVerticalBarSeries extends SeriesBase {
         const generateData: any[] = [];
         for (let i = 0; i < size; i++) {
             const d = chartData[i];
-            const groupx = x(d[this.xField]);
+            const groupx = x(d[this.config.xField]);
             for (let j = 0; j < columnSize; j++) {
                 const key = this.columns[j];
                 const itemx = groupx + barx(key);
@@ -230,45 +237,4 @@ export class GroupedVerticalBarSeries extends SeriesBase {
             stroke: selectedItem[5]
         };
     }
-
-    // showPointAndTooltip(value: number[], selected: any[]) {
-    //     // const index = Math.floor(selected.length / 2);
-    //     const index = selected.length - 1;
-    //     const selectedItem = selected[index];
-
-    //     if (!this.chartBase.isTooltipDisplay) {
-    //         drawTooltipPointByRect(
-    //             this.selectionGroup,
-    //             [[selectedItem[0], selectedItem[1]]],
-    //             {
-    //                 width: selectedItem[3],
-    //                 height: selectedItem[4]
-    //             },
-    //             {
-    //                 fill: selectedItem[5]
-    //             }
-    //         );
-
-    //         if (!this.chartBase.isTooltipDisplay) {
-    //             this.tooltipGroup = this.chartBase.showTooltip();
-    //             setChartTooltipByPosition(
-    //                 this.tooltipGroup,
-    //                 this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser
-    //                 ? this.chartBase.tooltip.tooltipTextParser(selectedItem)
-    //                     : `${this.xField}: ${selectedItem[2][this.xField]}`,
-    //                 this.geometry,
-    //                 [
-    //                     selectedItem[0],
-    //                     selectedItem[1]
-    //                 ],
-    //                 {
-    //                     width: selectedItem[3],
-    //                     height: selectedItem[4]
-    //                 }
-    //             )
-    //         }
-    //     }
-
-    //     return index;
-    // }
 }

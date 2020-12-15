@@ -68,6 +68,15 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
     constructor(configuration: BasicCanvasTraceConfiguration) {
         super(configuration);
         this.config = configuration;
+        this.color = this.checkSeriesColor();
+    }
+
+    xField() {
+        return this.config.xField;
+    }
+
+    yField() {
+        return this.config.yField;
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
@@ -129,7 +138,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
         let generateData: any[];
         const lineData: any[] = (!this.config.filter ? chartData : chartData.filter((item: T) => this.config.filter(item)))
-            .filter((d: T) => d[this.config.xField] >= (xmin - xmin * 0.02) && d[this.config.xField] <= (xmax + xmax * 0.02) && d[this.config.yField] >= ymin && d[this.config.yField] <= ymax);
+            // .filter((d: T) => d[this.config.xField] >= (xmin - xmin * 0.02) && d[this.config.xField] <= (xmax + xmax * 0.02) && d[this.config.yField] >= ymin && d[this.config.yField] <= ymax);
 
         let padding = 0;
 
@@ -158,6 +167,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         // context.strokeStyle = this.strokeColor;
         const rgbColor = rgb(this.strokeColor);
         context.strokeStyle = `rgba(${rgbColor.r}, ${rgbColor.g}, ${rgbColor.b}, ${this.config?.line?.strokeOpacity ?? 1})`;
+
         if (this.config.line) {
             this.strokeWidth = this.config.line.strokeWidth ?? 1;
             context.lineWidth = this.strokeWidth;
@@ -327,7 +337,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
     }
 
     private checkSeriesColor() {
-        return this.config.line && this.config.line.strokeColor ? this.config.line.strokeColor : null;
+        return this.config.line && this.config.line.strokeColor ? this.config.line.strokeColor : undefined;
     }
 
     private drawTooltipPoint(

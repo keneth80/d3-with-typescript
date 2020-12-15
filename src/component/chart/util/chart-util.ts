@@ -7,18 +7,18 @@ import {
     GroupedVerticalBarSeriesConfiguration
 } from '../../../component/series';
 import { SeriesBase } from '../series-base';
-import { SeriesConfiguration } from '../series.interface';
+import { SeriesConfiguration, SeriesType } from '../series.interface';
 
 export const makeSeriesByConfigurationType = (configuration: SeriesConfiguration): SeriesBase => {
     let series: SeriesBase;
     switch(configuration.type) {
-        case 'GroupedVerticalBarSeries':
+        case SeriesType.SVG_VERTICAL_BAR:
             series = new GroupedVerticalBarSeries(configuration as GroupedVerticalBarSeriesConfiguration);
         break;
-        case 'BasicLineSeries':
+        case SeriesType.SVG_LINE:
             series = new BasicLineSeries(configuration as BasicLineSeriesConfiguration);
         break;
-        case 'BasicAreaSeries':
+        case SeriesType.SVG_AREA:
             series = new BasicAreaSeries(configuration as BasicAreaSeriesConfiguration);
         break;
     }

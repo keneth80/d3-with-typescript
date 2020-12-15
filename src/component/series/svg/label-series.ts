@@ -12,27 +12,24 @@ export interface LabelSeriesConfiguration extends SeriesConfiguration {
 }
 
 export class LabelSeries extends SeriesBase {
-    private xField: string;
-
-    private yField: string;
-
     private templete: any;
+
+    private config: LabelSeriesConfiguration;
 
     constructor(configuration: LabelSeriesConfiguration) {
         super(configuration);
-        if (configuration) {
-            if (configuration.xField) {
-                this.xField = configuration.xField;
-            }
-
-            if (configuration.yField) {
-                this.yField = configuration.yField;
-            }
-
-            if (configuration.templete) {
-                this.templete = configuration.templete;
-            }
+        this.config = configuration;
+        if (configuration.templete) {
+            this.templete = configuration.templete;
         }
+    }
+
+    xField() {
+        return this.config.xField;
+    }
+
+    yField() {
+        return this.config.yField;
     }
 
     setSvgElement(
@@ -56,13 +53,13 @@ export class LabelSeries extends SeriesBase {
                     (exit) => exit.remove
                 )
                 .attr('x', (data: any) => {
-                    return x(data[this.xField]);
+                    return x(data[this.config.xField]);
                 })
                 .attr('y', (data: any) => {
-                    return y(data[this.yField]) - 7;
+                    return y(data[this.config.yField]) - 7;
                 })
                 .text( (data: any) => {
-                    let returnText = `${this.yField}: ${data[this.yField]}`;
+                    let returnText = `${this.yField}: ${data[this.config.yField]}`;
                     if (this.templete) {
                         returnText = this.templete(data);
                     }

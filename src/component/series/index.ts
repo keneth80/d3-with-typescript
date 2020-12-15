@@ -7,7 +7,6 @@ export * from './svg/grouped-vertical-bar-series';
 export * from './svg/grouped-horizontal-bar-series';
 export * from './svg/stacked-vertical-bar-series';
 export * from './svg/stacked-horizontal-bar-series';
-export * from './svg/vertical-bar-series';
 export * from './svg/basic-topology';
 export * from './svg/basic-area-series';
 

@@ -6,6 +6,7 @@ import { fromEvent, Subscription, Subject, of, Observable, from, timer, Observer
 import { debounceTime, switchMap, map, concatMap, mapTo, tap, delay, retry } from 'rxjs/operators';
 
 import { sha1 } from 'object-hash';
+import crossFilter from 'crossfilter2';
 
 import {
     IChartBase, Scale, ContainerSize, LegendItem,
@@ -32,6 +33,7 @@ import { drawGridLine } from './grid-line';
 import { makeSeriesByConfigurationType } from './util/chart-util';
 import { setChartTooltipByPosition } from './util/tooltip-util';
 
+console.log('cross filter : ', crossFilter);
 
 // TODO: 모든 참조되는 함수들은 subject로 바꾼다.
 export class ChartBase<T = any> implements IChartBase {
@@ -213,6 +215,10 @@ export class ChartBase<T = any> implements IChartBase {
 
     private currentChartItemIndex = -1;
 
+    private crossFilterObject: any = null;
+
+    private completeSubject: Subject<boolean> = new Subject();
+
     constructor(
         configuration: ChartConfiguration
     ) {
@@ -305,6 +311,10 @@ export class ChartBase<T = any> implements IChartBase {
         return this.tooltipEventSubject.asObservable();
     }
 
+    get complete$(): Observable<boolean> {
+        return this.completeSubject.asObservable();
+    }
+
     get seriesColors(): string[] {
         return this.colors;
     }
@@ -359,11 +369,13 @@ export class ChartBase<T = any> implements IChartBase {
 
         if (configuration.style) {
             // background color 설정.
-            this.selector.style('background-color', configuration.style.backgroundColor ?? '#fff')
+            this.selector.style('background-color', configuration.style.backgroundColor ?? '#fff');
         }
 
         // data setup origin data 와 분리.
         this.originalData = this.setupData(configuration.data);
+
+        this.crossFilterObject = crossFilter(this.originalData);
 
         if (configuration.series && configuration.series.length) {
             this.seriesList = configuration.series;
@@ -419,10 +431,20 @@ export class ChartBase<T = any> implements IChartBase {
         }
     }
 
-    data(data: any) {
+    data(data: any[]) {
         this.originalData = data;
         this.updateDisplay();
         return this;
+    }
+
+    // TODO: real time data 적용해 볼 것.
+    appendData(data: any, seriesSelector?: string) {
+        this.originalData.push(data);
+        this.originalData.shift();
+        this.updateAxis()
+        .then(() => {
+            this.updateSeries();
+        });
     }
 
     series(seriesConfigurations: SeriesConfiguration[]) {
@@ -673,24 +695,28 @@ export class ChartBase<T = any> implements IChartBase {
         try {
             if (this.seriesList && this.seriesList.length) {
                 if (!this.config.displayDelay) {
-                    // const xScale = this.scales.find((scale: Scale) => scale.orient === Placement.BOTTOM || scale.orient === Placement.TOP);
-                    // const yScale = this.scales.find((scale: Scale) => scale.orient === Placement.LEFT || scale.orient === Placement.RIGHT);
-                    // TODO: zoomin 일 경우 데이터 min, max filtering을 여기할 수 있는 방법 강구.
+                    const xScale = this.scales.find((scale: Scale) => scale.orient === Placement.BOTTOM || scale.orient === Placement.TOP);
+                    const yScale = this.scales.find((scale: Scale) => scale.orient === Placement.LEFT || scale.orient === Placement.RIGHT);
                     this.seriesList.map((series: ISeries, index: number) => {
                         if (!series.chartBase) {
                             series.chartBase = this;
                         }
 
                         series.setSvgElement(this.svg, this.seriesGroup, index);
+                        // TODO: crossFilter 적용해서 각 시리즈에서 해당하는 필드데이터만 넘겨줄 수 있도록? 고려해 볼 것.
+                        // this.crossFilterObject.dimension((d: any) => d[series.xField])
+                        const xField = series.xField();
+                        const yField = series.yField();
                         series.drawSeries(
+                            // this.originalData
+                            displayType === DisplayType.ZOOMIN ? 
                             this.originalData
-                            // .filter(
-                            //     (d: T) =>
-                            //         d[xScale.field] >= xScale.min - xScale.min * 0.01 &&
-                            //         d[xScale.field] <= xScale.max + xScale.max * 0.01 &&
-                            //         d[yScale.field] >= yScale.min &&
-                            //         d[yScale.field] <= yScale.max
-                            // )
+                            .filter(
+                                (d: T) =>
+                                    (xField && d[xField] >= xScale.min - xScale.min * 0.1 && d[xField] <= xScale.max + xScale.max * 0.1) &&
+                                    (yField && d[yField] >= yScale.min && d[yField] <= yScale.max)
+                            )
+                            : this.originalData
                             ,
                             this.scales,
                             {
@@ -1062,11 +1088,11 @@ export class ChartBase<T = any> implements IChartBase {
                     legendX = (this.isTitle && this.titlePlacement === Placement.LEFT ? this.titleContainerSize.width : 0);
                     translate = `translate(${legendX}, ${legendY})`;
                 } else if (this.legendPlacement === Placement.TOP) {
-                    legendX = this.legendPadding * 2;
-                    legendY = (this.isTitle && this.titlePlacement === Placement.TOP ? this.titleContainerSize.height : 0) + this.legendPadding * 2;
+                    legendX = this.legendPadding;
+                    legendY = (this.isTitle && this.titlePlacement === Placement.TOP ? this.titleContainerSize.height : 0) + this.legendPadding;
                     translate = `translate(${legendX}, ${legendY})`;
                 } else if (this.legendPlacement === Placement.BOTTOM) {
-                    legendX = this.legendPadding * 2;
+                    legendX = this.legendPadding;
                     legendY = (this.margin.top + this.margin.bottom) + (this.axisTitleMargin.top + this.axisTitleMargin.bottom) + height;
                     if (this.isTitle && this.titlePlacement === Placement.TOP) {
                         legendY += this.titleContainerSize.height + this.legendPadding;
@@ -1572,11 +1598,13 @@ export class ChartBase<T = any> implements IChartBase {
         //     });
         this.updateAxis()
             .then(() => {
+                // TODO: rxjs로 delay time 걸어서 pipe 라인 구축해서 돌려볼 것.
                 this.updateLegend();
                 this.updateTitle();
                 this.updateSeries(displayType);
                 this.updateOptions();
                 this.updateFunctions();
+                this.completeSubject.next(true);
             });
     }
 

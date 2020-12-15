@@ -13,10 +13,8 @@ import { event } from 'd3';
 import { highlightBlock } from 'highlight.js';
 
 import { BasicChart } from './component/basic-chart';
-import { VerticalBarSeries } from './component/series/svg/vertical-bar-series';
 import { BasicLineSeries, BasicLineSeriesConfiguration } from './component/series/svg/basic-line-series';
 import { LabelSeries } from './component/series/svg/label-series';
-import { BasicPlotSeries, BasicPlotSeriesConfiguration } from './component/series/svg/basic-plot-series';
 import { BasicBoxplotSeries, BoxplotModel } from './component/series/svg/basic-boxplot-series';
 import { bollingerData } from './component/mock-data/bollinger-band-data';
 import { BasicBollingerBandSeries } from './component/series/svg/basic-bollinger-band-series';
@@ -1314,46 +1312,46 @@ const canvasScatter = (id: string) => {
 
     // console.log('min : ', xmin, ymin);
     // console.log('max : ', ymax, ymax);
-    const scatterChart = new BasicChart<BasicCanvasScatterPlotModel>({
-        selector: id,
-        data: scatterData,
-        title: {
-            placement: Placement.TOP,
-            content: 'Canvas Scatter Plot'
-        },
-        margin: {
-            top: 10, right: 10, bottom: 30, left: 40
-        },
-        calcField: 'y',
-        isResize: true,
-        axes: [
-            {
-                field: 'x',
-                type: 'number',
-                placement: 'bottom',
-                min: xmin,
-                max: xmax
-            },
-            {
-                field: 'y',
-                type: 'number',
-                placement: 'left',
-                min: ymin,
-                max: ymax
-            }
-        ],
-        series: [
-            // canvasLineSeries,
-            // canvasTrace,
-            scatterPlot
-        ],
-        functions: [
-            new BasicCanvasMouseZoomHandler({
-                xDirection: 'bottom',
-                yDirection: 'left'
-            })
-        ]
-    }).draw();
+    // const scatterChart = new BasicChart<BasicCanvasScatterPlotModel>({
+    //     selector: id,
+    //     data: scatterData,
+    //     title: {
+    //         placement: Placement.TOP,
+    //         content: 'Canvas Scatter Plot'
+    //     },
+    //     margin: {
+    //         top: 10, right: 10, bottom: 30, left: 40
+    //     },
+    //     calcField: 'y',
+    //     isResize: true,
+    //     axes: [
+    //         {
+    //             field: 'x',
+    //             type: 'number',
+    //             placement: 'bottom',
+    //             min: xmin,
+    //             max: xmax
+    //         },
+    //         {
+    //             field: 'y',
+    //             type: 'number',
+    //             placement: 'left',
+    //             min: ymin,
+    //             max: ymax
+    //         }
+    //     ],
+    //     series: [
+    //         // canvasLineSeries,
+    //         // canvasTrace,
+    //         scatterPlot
+    //     ],
+    //     functions: [
+    //         new BasicCanvasMouseZoomHandler({
+    //             xDirection: 'bottom',
+    //             yDirection: 'left'
+    //         })
+    //     ]
+    // }).draw();
     console.timeEnd('chartdraw');
 }
 
@@ -1683,60 +1681,6 @@ const topologyExcute = () => {
 
 const excute = () => {
     const parseTime = timeParse('%d-%b-%y');
-    const verticalBarSeries = new VerticalBarSeries({
-        selector: 'vertical-bar',
-        yField: 'sales',
-        xField: 'salesperson'
-    });
-
-    const basicLineSeries = new BasicLineSeries({
-        selector: 'basic-line-sales',
-        yField: 'sales',
-        xField: 'salesperson',
-        line: {
-            isCurve: true
-        },
-        dot: {
-            radius: 3,
-            selector: 'basic-line-sales-dot'
-        },
-        shape: Shape.LINE
-    });
-
-    const basicLineSeries2 = new BasicLineSeries({
-        selector: 'basic-line-assets',
-        yField: 'assets',
-        xField: 'salesperson',
-        line: {
-            isCurve: false
-        },
-        dot: {
-            radius: 3,
-            selector: 'basic-line-assets-dot'
-        },
-        shape: Shape.LINE
-    });
-
-    const labelSeries = new LabelSeries({
-        selector: 'sales-label',
-        yField: 'sales',
-        xField: 'salesperson'
-    });
-
-    const plotSeries = new BasicPlotSeries({
-        selector: 'basic-plot-sales',
-        yField: 'sales',
-        xField: 'date',
-        radius: 3,
-        shape: Shape.CIRCLE
-    });
-
-    const plotSeries2 = new BasicPlotSeries({
-        selector: 'basic-plot-assets',
-        yField: 'assets',
-        xField: 'date',
-        shape: Shape.CIRCLE
-    });
 
     /*
     // d3 date format
@@ -1769,90 +1713,6 @@ const excute = () => {
     d3.format(".0f")	300
     d3.format(".0e")	1e+3
     */
-
-    const basicChart: BasicChart = new BasicChart({
-        selector: '#chart-div',
-        title: {
-            placement: Placement.TOP,
-            content: 'Multi Series Chart',
-            // style: {
-            //     size: 16,
-            //     color: '#ff0000',
-            //     font: 'monospace'
-            // }
-        },
-        tooltip: {
-            tooltipTextParser: (d: any) => {
-                return `${d.salesperson} \n Date: ${d.date} \n Value: ${d.sales}`
-            }
-        },
-        legend: {
-            placement: Placement.RIGHT,
-            isCheckBox: true,
-            isAll: true
-        },
-        // data: [],
-        data: data.map((item: SalesModel) => {
-            item.date = parseTime(item.dateStr);
-            return item;
-        }),
-        // margin: {
-        //     top: 30,
-        //     bottom: 30,
-        //     left: 40,
-        //     right: 20
-        // },
-        isResize: true,
-        axes: [
-            {
-                field: 'salesperson',
-                type: 'string',
-                placement: 'bottom',
-                padding: 0.2,
-                title: {
-                    content: 'sales person',
-                    align: Align.CENTER
-                }
-                // domain: data.map((item: any) => item.salesperson)
-            },
-            {
-                field: 'assets',
-                type: 'number',
-                placement: 'left',
-                min: 0,
-                title: {
-                    content: 'assets',
-                    align: Align.TOP
-                },
-            },
-            {
-                field: 'date',
-                type: 'time',
-                placement: 'top',
-                tickFormat: '%Y/%m/%d',
-                tickSize: 6,
-                // title: {
-                //     content: 'Date',
-                //     align: Align.CENTER
-                // },
-            },
-            {
-                field: 'sales',
-                type: 'number',
-                placement: 'right',
-                min: 0,
-                // max: max(data.map((item: SalesModel) => item.assets)),
-            }
-        ],
-        series: [
-            verticalBarSeries,
-            basicLineSeries,
-            basicLineSeries2,
-            // labelSeries,
-            plotSeries,
-            plotSeries2
-        ]
-    }).draw();
 };
 
 const boxplot = () => {

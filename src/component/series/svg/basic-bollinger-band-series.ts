@@ -22,15 +22,19 @@ export interface BollingerBandModel {
 }
 
 export class BasicBollingerBandSeries extends SeriesBase {
-    private xField: string;
+    private config: BasicBollingerBandSeriesConfiguration;
 
     constructor(configuration: BasicBollingerBandSeriesConfiguration) {
         super(configuration);
-        if (configuration) {
-            if (configuration.xField) {
-                this.xField = configuration.xField;
-            }
-        }
+        this.config = configuration;
+    }
+
+    xField() {
+        return this.config.xField;
+    }
+
+    yField() {
+        return null;
     }
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
@@ -46,16 +50,16 @@ export class BasicBollingerBandSeries extends SeriesBase {
         const y: any = scales.find((scale: Scale) => scale.orient === this.yDirection).scale;
 
         const ma = line()
-            .x((d: any) =>{ return x(d[this.xField]); })
+            .x((d: any) =>{ return x(d[this.config.xField]); })
             .y((d: any) =>{ return y(d.ma); });
         const lowBand = line()
-            .x((d: any) =>{ return x(d[this.xField]); })
+            .x((d: any) =>{ return x(d[this.config.xField]); })
             .y((d: any) =>{ return y(d.low); });
         const highBand = line()
-            .x((d: any) =>{ return x(d[this.xField]); })
+            .x((d: any) =>{ return x(d[this.config.xField]); })
             .y((d: any) =>{ return y(d.high); });
         const bandsArea = area()
-            .x((d: any) =>{ return x(d[this.xField]); })
+            .x((d: any) =>{ return x(d[this.config.xField]); })
             .y0((d: any) =>{ return y(d.low); })
             .y1((d: any) =>{ return y(d.high); });
 
