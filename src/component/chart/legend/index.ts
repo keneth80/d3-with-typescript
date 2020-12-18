@@ -1,4 +1,6 @@
 import { Selection, BaseType, select } from 'd3-selection';
+import { Subscription } from 'rxjs';
+
 import { Margin, Placement, Shape } from '../chart-configuration';
 import { ContainerSize, LegendItem } from '../chart.interface';
 import { ISeries } from '../series.interface';
@@ -9,6 +11,7 @@ import {
     drawSvgCheckBox,
     getMaxText, getTextWidth, getTextHeight
 } from '../util';
+import { ObjectScrollBar } from '../../svg-component/object-scroll-bar';
 
 export interface ChartLegendConfiguration {
     isCheckBox: boolean;
@@ -22,6 +25,7 @@ export interface ChartLegendConfiguration {
     seriesList: ISeries[];
     margin: Margin;
     svgGeometry: ContainerSize;
+    mainGeometry: ContainerSize;
 }
 
 export const legendItemListByGrouped = (displayNames: string[], colors?: string[]) => {
@@ -53,6 +57,10 @@ export class ChartLegend {
         width: 0, height: 0
     };
 
+    private legendTopBottmPadding = 10;
+
+    private legendRightLeftPadding = 10;
+
     private addAllWidth = 0;
 
     private legendRowCount = 1;
@@ -72,6 +80,10 @@ export class ChartLegend {
     private legendTextWidthList: number[] = [];
 
     private checkboxPadding: number = 0;
+
+    private scrollBar: ObjectScrollBar;
+
+    private scrollEventSubscription: Subscription;
 
     constructor(
         configuration: ChartLegendConfiguration
@@ -107,8 +119,8 @@ export class ChartLegend {
     init() {
         const titleTextHeight = getTextHeight(this.configuration.defaultLegendStyle.font.size, this.configuration.defaultLegendStyle.font.family); // 14
         // legend row 한개의 길이
-        const checkWidth = this.configuration.margin.left + this.configuration.margin.right + this.configuration.svgGeometry.width - this.legendPadding * 2;
-        // const checkWidth = this.configuration.svgGeometry.width;
+        // const checkWidth = this.configuration.margin.left + this.configuration.margin.right + this.configuration.svgGeometry.width - this.legendPadding * 2;
+        const checkWidth = this.configuration.svgGeometry.width - this.legendPadding * 2;
         // 초기화.
         this.legendItemList.length = 0;
         this.legendTextWidthList.length = 0;
@@ -180,49 +192,59 @@ export class ChartLegend {
     }
 
     drawLegend(legendGroup: Selection<BaseType, any, BaseType, any>) {
+        // clip path 설정
+        const clipPathName: string = 'scrollbox-clip-path';
+        legendGroup.attr('clip-path', `url(#${clipPathName})`)
+        // scroll로 인한 view position을 지정해주기 위한.group.
+        legendGroup.append('g')
+            .attr('class', 'legend-item-list-group')
+            .attr('transform', `translate(0, 0)`);
+
         let currentRow = 0;
         let currentX = 0;
 
-        const legendItemGroup = legendGroup.selectAll('.legend-item-group')
-            .data(this.legendItemList)
-            .join(
-                (enter) => enter.append('g').attr('class', 'legend-item-group'),
-                (update) => {
-                    update.selectAll('*').remove();
-                    return update;
-                },
-                (exit) => exit.remove()
-            )
-            .attr('id', (d: LegendItem) => {
-                return d.label === 'All' ? 'legend-all-group' : null;
-            })
-            .attr('transform', (d: any, index: number) => {
-                let x = 0;
-                let y = this.legendPadding;
-                if (this.configuration.legendPlacement === Placement.LEFT ||
-                    this.configuration.legendPlacement === Placement.RIGHT) {
-                    if (this.configuration.legendPlacement === Placement.LEFT) {
-                        x = this.legendPadding;
+        const legendItemGroup = legendGroup
+            .select('.legend-item-list-group')
+            .selectAll('.legend-item-group')
+                .data(this.legendItemList)
+                .join(
+                    (enter) => enter.append('g').attr('class', 'legend-item-group'),
+                    (update) => {
+                        update.selectAll('*').remove();
+                        return update;
+                    },
+                    (exit) => exit.remove()
+                )
+                .attr('id', (d: LegendItem) => {
+                    return d.label === 'All' ? 'legend-all-group' : null;
+                })
+                .attr('transform', (d: any, index: number) => {
+                    let x = 0;
+                    let y = this.legendTopBottmPadding;
+                    if (this.configuration.legendPlacement === Placement.LEFT ||
+                        this.configuration.legendPlacement === Placement.RIGHT) {
+                        if (this.configuration.legendPlacement === Placement.LEFT) {
+                            x = this.legendPadding;
+                        }
+                        x = x + this.configuration.addTitleWidth;
+                        y = index * 20 + this.legendTopBottmPadding;
                     }
-                    x = x + this.configuration.addTitleWidth;
-                    y = index * 20 + this.addAllWidth;
-                }
-                if (this.configuration.legendPlacement === Placement.TOP ||
-                    this.configuration.legendPlacement === Placement.BOTTOM) {
-                    if (index > 0) {
-                        currentX += this.legendTextWidthList[index - 1] + this.legendPadding;
-                    }
+                    if (this.configuration.legendPlacement === Placement.TOP ||
+                        this.configuration.legendPlacement === Placement.BOTTOM) {
+                        if (index > 0) {
+                            currentX += this.legendTextWidthList[index - 1] + this.legendPadding;
+                        }
 
-                    if (this.legendRowBreakCount.indexOf(index) > -1) {
-                        currentRow = this.legendRowBreakCount.indexOf(index) + 1;
-                        currentX = 0;
-                    }
+                        if (this.legendRowBreakCount.indexOf(index) > -1) {
+                            currentRow = this.legendRowBreakCount.indexOf(index) + 1;
+                            currentX = 0;
+                        }
 
-                    x = currentX;
-                    y = (this.legendItemTextHeight + this.legendPadding) * currentRow;
-                }
-                return `translate(${x}, ${y})`;
-            });
+                        x = currentX;
+                        y = (this.legendItemTextHeight + this.legendPadding) * currentRow;
+                    }
+                    return `translate(${x}, ${y})`;
+                });
 
         if (this.configuration.isCheckBox) {
             legendItemGroup.each((d: LegendItem, index: number, nodeList: any) => {
@@ -276,5 +298,65 @@ export class ChartLegend {
                 return `translate(${x}, 5)`;
             })
             .text((d: LegendItem) => { return d.label; });
+
+        if (this.configuration.svgGeometry.height < (legendGroup.node() as SVGAElement).getBBox().height) {
+            console.log('draw scrollbar : ', this.configuration.svgGeometry.height, (legendGroup.node() as SVGAElement).getBBox().height);
+            // scroll bar initialize
+            const backgroundRect: Selection<BaseType, any, BaseType, any> = 
+            this.drawLegendContainerBackground(legendGroup, {
+                width: this.legendContainerSize.width,
+                height: this.configuration.svgGeometry.height
+            });
+            // scrollbar setup
+            if (!this.scrollBar) {
+                this.scrollBar = new ObjectScrollBar({
+                    rootGroup: legendGroup,
+                    clipPathName: clipPathName,
+                    viewPortBackground: backgroundRect,
+                    scrollAreaSize: {
+                        width: this.legendContainerSize.width,
+                        height: this.configuration.svgGeometry.height
+                    },
+                    padding: 10
+                });
+
+                this.addEvent(legendGroup, this.scrollBar, this.scrollEventSubscription);
+            }
+            this.scrollBar.draw();
+        }
+    }
+
+    destroy() {
+        if (this.scrollEventSubscription) {
+            this.scrollEventSubscription.unsubscribe();
+        }
+
+        if (this.scrollBar) {
+            this.scrollBar.destroy()
+        }
+    }
+
+    private drawLegendContainerBackground(
+        targetGroup: Selection<BaseType, any, BaseType, any>, 
+        containerSize: {width: number, height: number} = {width: 150, height: 100}
+    ) {
+        const width: number = containerSize.width;
+        const height: number = containerSize.height;
+        return targetGroup.append('rect')
+                    .style('fill', '#fff')
+                    .style('fill-opacity', 0)
+                    .attr('class', 'legend-group-background')
+                    .attr('width', width)
+                    .attr('height', height + 10).lower();
+    }
+
+    private addEvent(legendGroup: Selection<BaseType, any, BaseType, any>, scrollBar: ObjectScrollBar, scrollEventSubscription: Subscription) {
+        // scroll bar event 등록.
+        if (scrollBar) {
+            scrollEventSubscription = scrollBar.scroller$.subscribe((position: number) => {
+                legendGroup.select('.legend-item-list-group')
+                    .attr('transform', `translate(0, ${-1*(position)})`);
+            });
+        }
     }
 }

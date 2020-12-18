@@ -4,6 +4,7 @@ import { Scale, ContainerSize, ChartMouseEvent } from '../chart/chart.interface'
 import { Placement } from '../chart/chart-configuration';
 import { OptionsBase } from '../chart/options-base';
 import { getTextHeight } from '../chart/util';
+import { ChartBase, ChartSelector } from '../..';
 
 export interface BasicStepAreaConfiguration<T = any> {
     selector: string;
@@ -47,7 +48,9 @@ export class BasicStepArea<T = any> extends OptionsBase {
         const x = xScale.scale;
         const textHeight = getTextHeight(12, 'Arial, Helvetica, sans-serif');
 
-        this.mainGroup.attr('transform', `translate(${this.chartBase.chartMargin.left}, ${this.chartBase.chartMargin.top - (textHeight + 3)})`);
+        // series-group의 영역은 clip-path가 적용 되어 있으나 현재 그룹에서는 적용이 안되어 있으므로 series-group의 clip-path를 가져와 적용함.
+        this.mainGroup.attr('transform', `translate(${this.chartBase.chartMargin.left}, ${this.chartBase.chartMargin.top - (textHeight + 3)})`)
+        .attr('clip-path', this.svg.select(`.${ChartSelector.SERIES_SVG}`).attr('clip-path'));
 
         const elementGroup = this.mainGroup.selectAll('.' + this.selector + '-item')
             .data(this.stepData)

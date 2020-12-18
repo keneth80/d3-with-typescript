@@ -57,7 +57,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
     private restoreCanvas: Selection<BaseType, any, HTMLElement, any>;
 
-    private radius = 4;
+    private radius = 2;
 
     private dotFill = '';
 
@@ -129,7 +129,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         const x: any = xScale.scale;
         const y: any = yScale.scale;
 
-        this.radius = this.config.dot ? this.config.dot.radius ?? 4 : 0;
+        this.radius = this.config.dot ? this.config.dot.radius ?? this.radius : this.radius;
 
         const xmin = xScale.min;
         const xmax = xScale.max;

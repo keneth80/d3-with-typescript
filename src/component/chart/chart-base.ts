@@ -513,6 +513,10 @@ export class ChartBase<T = any> implements IChartBase {
             functions.destroy();
         });
 
+        if (this.chartLegend) {
+            this.chartLegend.destroy();
+        }
+
         this.subscription.unsubscribe();
     }
 
@@ -642,6 +646,10 @@ export class ChartBase<T = any> implements IChartBase {
 
         if (this.selector) {
             this.selector.selectAll('*').remove();
+        }
+
+        if (this.chartLegend) {
+            this.chartLegend.destroy();
         }
 
         this.seriesList.forEach((series: ISeries) => series.destroy());
@@ -990,6 +998,10 @@ export class ChartBase<T = any> implements IChartBase {
             seriesList: this.seriesList,
             margin: this.margin,
             svgGeometry: {
+                width: this.svgWidth,
+                height: this.svgHeight
+            },
+            mainGeometry: {
                 width: this.width,
                 height: this.height
             },

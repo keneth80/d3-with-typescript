@@ -1611,10 +1611,10 @@ const canvasBigDataLineSeriesSample = () => {
                 selector: (seriesColor === '#EA3010' ? 'canvas-trace-alarm' : 'canvas-trace')  + i,
                 xField: 'x',
                 yField: 'y',
-                dot: {
-                    radius: 2,
-                    fill: seriesColor
-                },
+                // dot: {
+                //     radius: 2,
+                //     fill: seriesColor
+                // },
                 line: {
                     strokeColor: seriesColor,
                     // opacity: seriesColor === '#EA3010' ? 1 :  0.9
@@ -1638,7 +1638,7 @@ const canvasBigDataLineSeriesSample = () => {
         selector: '#chart-div',
         data: [],
         legend: {
-            placement: Placement.TOP
+            placement: Placement.RIGHT
         },
         title: {
             placement: Placement.TOP,
