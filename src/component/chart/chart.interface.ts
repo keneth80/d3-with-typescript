@@ -43,7 +43,7 @@ export interface ChartMouseEvent {
 export interface TooltipEvent {
     type: string;
     position: [number, number];
-    data?: any;
+    data?: any[];
     size: {
         width: number,
         height: number

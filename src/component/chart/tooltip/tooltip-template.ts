@@ -5,33 +5,23 @@ export const baseTooltipTemplate = (
     boxStyle?: {fill: string, opacity: number, stroke: string},
     textStyle?: {fiil: number, size: number}
 ) => {
-    const itemGroup = group.selectAll('.tooltip-item-group')
-        .data([{
-            text: ''
-        }])
+    group.selectAll('.tooltip-background')
+        .data(['background'])
         .join(
-            (enter) => enter.append('g').attr('class', 'tooltip-item-group'),
+            (enter) => enter.append('rect').attr('class', 'tooltip-background'),
             (update) => update,
             (exit) => exit.remove()
-        );
+        )
+        .attr('rx', 3)
+        .attr('ry', 3)
+        .attr('x', 0)
+        .attr('y', 0)
+        .attr('width', 60)
+        .attr('height', 20)
+        .style('fill', '#111')
+        .style('fill-opacity', 0.6);
 
-    itemGroup.selectAll('.tooltip-background')
-            .data(['background'])
-            .join(
-                (enter) => enter.append('rect').attr('class', 'tooltip-background'),
-                (update) => update,
-                (exit) => exit.remove()
-            )
-            .attr('rx', 3)
-            .attr('ry', 3)
-            .attr('x', 0)
-            .attr('y', 0)
-            .attr('width', 60)
-            .attr('height', 20)
-            .style('fill', '#111')
-            .style('fill-opacity', 0.6);
-
-    itemGroup.selectAll('.tooltip-text')
+    group.selectAll('.tooltip-text')
         .data(['text'])
         .join(
             (enter) => enter.append('text').attr('class', 'tooltip-text'),
@@ -45,7 +35,7 @@ export const baseTooltipTemplate = (
         .attr('font-size', '14px')
         .attr('font-weight', '100');
 
-    return itemGroup;
+    return group;
 }
 
 export const colorTooltipTemplate = (
@@ -53,32 +43,25 @@ export const colorTooltipTemplate = (
     boxStyle?: {fill: string, opacity: number, stroke: string, strokeWidth?: number},
     textStyle?: {fiil: number, size: number}
 ) => {
-    const itemGroup = group.selectAll('.tooltip-item-group')
-        .data(['tooltip-group'])
+    group.selectAll('.tooltip-background')
+        .data(['tooltip-background'])
         .join(
-            (enter) => enter.append('g').attr('class', 'tooltip-item-group'),
+            (enter) => enter.append('rect').attr('class', 'tooltip-background'),
             (update) => update,
             (exit) => exit.remove()
-        );
-    itemGroup.selectAll('.tooltip-background')
-            .data(['tooltip-background'])
-            .join(
-                (enter) => enter.append('rect').attr('class', 'tooltip-background'),
-                (update) => update,
-                (exit) => exit.remove()
-            )
-            .attr('x', 0)
-            .attr('y', 0)
-            .attr('width', 60)
-            .attr('height', 20)
-            .attr('rx', 0)
-            .attr('ry', 0)
-            .style('stroke', boxStyle?.stroke ?? '#000')
-            .style('stroke-width', boxStyle?.strokeWidth ?? 1)
-            .style('fill', boxStyle?.fill ?? '#111')
-            .style('fill-opacity', boxStyle?.opacity ?? 1);
+        )
+        .attr('x', 0)
+        .attr('y', 0)
+        .attr('width', 60)
+        .attr('height', 20)
+        .attr('rx', 0)
+        .attr('ry', 0)
+        .style('stroke', boxStyle?.stroke ?? '#000')
+        .style('stroke-width', boxStyle?.strokeWidth ?? 1)
+        .style('fill', boxStyle?.fill ?? '#111')
+        .style('fill-opacity', boxStyle?.opacity ?? 1);
 
-    itemGroup.selectAll('.tooltip-text')
+    group.selectAll('.tooltip-text')
         .data(['tooltip-text'])
         .join(
             (enter) => enter.append('text').attr('class', 'tooltip-text'),
@@ -92,5 +75,5 @@ export const colorTooltipTemplate = (
         .style('font-size', textStyle?.size + 'px' ?? '14px')
         .style('font-weight', '100');
 
-    return itemGroup;
+    return group;
 }

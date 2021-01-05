@@ -402,6 +402,28 @@ export const delayExcute = (delayTime: number = 100, callback: any) => {
     });
 }
 
+export const drawSelectionTooltipPointByCircle = (
+    selector: string,
+    targetGroup: Selection<BaseType, any, HTMLElement, any>,
+    position: number[][],
+    style:{radius: number, strokeColor: string, strokeWidth: number}
+) => {
+    targetGroup.selectAll(`.tooltip-point-${selector}`)
+        .data(position)
+        .join(
+            (enter) => enter.append('circle').attr('class', `tooltip-point-${selector}`),
+            (update) => update,
+            (exit) => exit.remove()
+        )
+        .style('stroke-width', style.strokeWidth)
+        .style('stroke', style.strokeColor)
+        .style('fill', '#fff')
+        .attr('type', 'tooltip-point')
+        .attr('cx', (d: number[]) => d[0])
+        .attr('cy', (d: number[]) => d[1])
+        .attr('r', style.radius);
+}
+
 export const drawTooltipPointByCircle = (
     targetGroup: Selection<BaseType, any, HTMLElement, any>,
     position: number[][],

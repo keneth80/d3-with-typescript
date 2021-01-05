@@ -7,7 +7,7 @@ import { quadtree } from 'd3-quadtree';
 import { Scale, ContainerSize, DisplayOption, DisplayType } from '../../chart/chart.interface';
 import { SeriesBase } from '../../chart/series-base';
 import { SeriesConfiguration } from '../../chart/series.interface';
-import { delayExcute, drawTooltipPointByCircle, drawSelectionPointByCircle } from '../../chart/util/d3-svg-util';
+import { delayExcute, drawSelectionPointByCircle, drawSelectionTooltipPointByCircle } from '../../chart/util/d3-svg-util';
 import { ChartSelector } from '../../chart';
 import { setChartTooltipByPosition } from '../../chart/util/tooltip-util';
 
@@ -27,6 +27,15 @@ export interface BasicLineSeriesConfiguration extends SeriesConfiguration {
         isCurve?: boolean; // default : false
     };
     animation?: boolean;
+}
+
+export interface BasicLineSeriesData {
+    data: any;
+    width: number;
+    height: number;
+    strokeColor: string;
+    field: string;
+    displayName: string;
 }
 
 export class BasicLineSeries extends SeriesBase {
@@ -192,7 +201,15 @@ export class BasicLineSeries extends SeriesBase {
             .map((d: any, i: number) => {
                 const xposition = x(d[this.config.xField]) + padding;
                 const yposition = y(d[this.config.yField]);
-                return [xposition, yposition, d, this.radius, this.radius, this.strokeColor, this.config.yField];
+                const obj: BasicLineSeriesData = {
+                    data: d,
+                    width: this.radius,
+                    height: this.radius,
+                    strokeColor: this.strokeColor,
+                    field: this.config.yField,
+                    displayName: this.selector ?? this.displayName
+                };
+                return [xposition, yposition, obj];
             });
         this.originQuadTree = quadtree()
             .extent([[xScale.min, yScale.min], [geometry.width, geometry.height]])
@@ -248,7 +265,7 @@ export class BasicLineSeries extends SeriesBase {
     }
 
     getSeriesDataByPosition(value: number[]) {
-        return this.search(
+        return this.isHide ? [] : this.search(
             this.originQuadTree,
             value[0] - (this.radius * 3),
             value[1] - (this.radius * 3),
@@ -262,7 +279,18 @@ export class BasicLineSeries extends SeriesBase {
         const index = selected.length - 1;
         const selectedItem = selected[index];
 
-        drawTooltipPointByCircle(
+        // drawTooltipPointByCircle(
+        //     this.selectionGroup,
+        //     [selectedItem],
+        //     {
+        //         radius: this.radius * 1.5,
+        //         strokeColor: this.strokeColor,
+        //         strokeWidth: this.dotStrokeWidth + 2
+        //     }
+        // );
+
+        drawSelectionTooltipPointByCircle(
+            this.selector,
             this.selectionGroup,
             [selectedItem],
             {
@@ -283,7 +311,7 @@ export class BasicLineSeries extends SeriesBase {
     }
 
     tooltipText(selectedItem: any[]): string {
-        return `${this.displayName ?? this.config.xField}: ${selectedItem[2][this.config.yField]}`;
+        return `${this.displayName ?? this.config.xField}: ${selectedItem[2].data[this.config.yField]}`;
     }
 
     tooltipStyle(): {fill: string, opacity: number, stroke: string} {

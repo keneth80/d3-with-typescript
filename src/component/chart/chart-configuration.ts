@@ -106,6 +106,7 @@ export interface ChartLegend {
     placement: string; // top, bottom, left, right
     isCheckBox?: boolean; // default: true
     isAll?: boolean; // default: true
+    align?: string;
     // shape?: string;
 }
 

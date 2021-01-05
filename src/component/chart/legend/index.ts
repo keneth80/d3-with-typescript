@@ -1,7 +1,7 @@
 import { Selection, BaseType, select } from 'd3-selection';
 import { Subscription } from 'rxjs';
 
-import { Margin, Placement, Shape } from '../chart-configuration';
+import { Margin, Placement, Shape, Align } from '../chart-configuration';
 import { ContainerSize, LegendItem } from '../chart.interface';
 import { ISeries } from '../series.interface';
 import {
@@ -17,7 +17,8 @@ export interface ChartLegendConfiguration {
     isCheckBox: boolean;
     isAll: boolean;
     addTitleWidth: number;
-    legendPlacement: string;
+    placement: string;
+    align?: string;
     colors: string[];
     defaultLegendStyle: any;
     onLegendLabelItemClickHandler?: any;
@@ -75,9 +76,9 @@ export class ChartLegend {
 
     private totalLegendWidth = 0;
 
-    private legendRowBreakCount: number[] = [];
+    private legendTextWidthList: any[] = [];
 
-    private legendTextWidthList: number[] = [];
+    private paddingQueue: any;
 
     private checkboxPadding: number = 0;
 
@@ -124,8 +125,9 @@ export class ChartLegend {
         // 초기화.
         this.legendItemList.length = 0;
         this.legendTextWidthList.length = 0;
-        this.legendRowBreakCount.length = 0;
         this.totalLegendWidth = 0;
+
+        this.paddingQueue = {};
         this.checkboxPadding = this.configuration.isCheckBox ? this.legendItemSize.width + this.legendPadding : 0;
         this.addAllWidth = this.configuration.isAll ? this.allWidth : 0;
 
@@ -146,38 +148,54 @@ export class ChartLegend {
 
         if (this.configuration.isAll) {
             this.totalLegendWidth = this.allWidth - (this.configuration.isCheckBox ? 0 : 10);
-            this.legendTextWidthList.push(this.totalLegendWidth);
+            this.legendTextWidthList.push({
+                row: 0,
+                breakIndex: -1,
+                width: this.totalLegendWidth
+            });
         }
         this.totalLegendWidth += this.legendPadding;
 
         let compareWidth = this.totalLegendWidth;
-
-        for (let i = 0; i < this.legendItemList.length; i++) {
-            const currentText = this.legendItemList[i].label;
+        let rowNumber = 0;
+        // TODO: reduce로 바꾸고 각 변수를 object key value로 할당 할 것.
+        this.legendItemList.reduce((pre: any, currentItem: LegendItem, currentIndex: number) => {
+            let breakIndex = -1;
+            const currentText = currentItem.label;
             const currentTextWidth = getTextWidth(currentText, this.configuration.defaultLegendStyle.font.size, this.configuration.defaultLegendStyle.font.family);
             const currentItemWidth = (this.configuration.isCheckBox ? this.checkBoxWidth : 0) + currentTextWidth + this.legendItemSize.width + this.legendPadding;
-            this.legendTextWidthList.push(currentItemWidth);
             this.totalLegendWidth += currentItemWidth;
+            
             if (compareWidth + currentItemWidth + this.legendPadding >= checkWidth) {
-                compareWidth =  currentItemWidth;
-                this.legendRowBreakCount.push(i + (this.configuration.isAll ? 1 : 0));
+                breakIndex = currentIndex + (this.configuration.isAll ? 1 : 0);
+                this.paddingQueue[rowNumber + ''] = checkWidth - compareWidth;
+                rowNumber++;
+                compareWidth = currentItemWidth;
             } else {
                 compareWidth += currentItemWidth + this.legendPadding;
             }
-        }
 
+            pre.push({
+                text: currentText,
+                width: currentItemWidth,
+                row: rowNumber,
+                breakIndex
+            });
+            return pre;
+        }, this.legendTextWidthList);
+
+        const lastKey = this.legendTextWidthList[this.legendTextWidthList.length - 1].row || 0;
+        this.paddingQueue[lastKey + ''] = checkWidth - compareWidth;
         this.totalLegendWidth += (this.legendPadding * (this.configuration.seriesList.length - 1)) + ((this.legendItemSize.width + this.legendPadding) * this.configuration.seriesList.length);
 
-        this.legendRowCount = Math.ceil(this.totalLegendWidth / this.configuration.svgGeometry.width);
-
         this.legendContainerSize.width =
-        this.configuration.legendPlacement === Placement.LEFT || this.configuration.legendPlacement === Placement.RIGHT ?
-            this.legendPadding * 2 + this.legendItemSize.width + this.legendPadding + Math.round(targetTextWidth) + (this.configuration.isCheckBox ? this.checkBoxWidth : 0) :
-            (this.legendRowCount > 1 ? this.configuration.svgGeometry.width : this.totalLegendWidth);
+        this.configuration.placement === Placement.LEFT || this.configuration.placement === Placement.RIGHT ?
+            this.legendPadding * 2 + this.legendItemSize.width + this.legendPadding + Math.round(targetTextWidth) + (this.configuration.isCheckBox ? this.checkBoxWidth : 0) + 5 :
+            (lastKey + 1 > 1 ? this.configuration.svgGeometry.width : this.totalLegendWidth);
         this.legendContainerSize.height =
-            this.configuration.legendPlacement === Placement.LEFT || this.configuration.legendPlacement === Placement.RIGHT ?
+            this.configuration.placement === Placement.LEFT || this.configuration.placement === Placement.RIGHT ?
             this.configuration.svgGeometry.height :
-            (this.legendPadding + titleTextHeight) * this.legendRowCount;
+            (this.legendPadding + titleTextHeight) * (lastKey + 1);
 
         if (this.configuration.isAll) {
             this.legendItemList.unshift({
@@ -194,7 +212,7 @@ export class ChartLegend {
     drawLegend(legendGroup: Selection<BaseType, any, BaseType, any>) {
         // clip path 설정
         const clipPathName: string = 'scrollbox-clip-path';
-        legendGroup.attr('clip-path', `url(#${clipPathName})`)
+        legendGroup.attr('clip-path', `url(#${clipPathName})`);
         // scroll로 인한 view position을 지정해주기 위한.group.
         legendGroup.append('g')
             .attr('class', 'legend-item-list-group')
@@ -202,7 +220,7 @@ export class ChartLegend {
 
         let currentRow = 0;
         let currentX = 0;
-
+        let rowStart = 0;
         const legendItemGroup = legendGroup
             .select('.legend-item-list-group')
             .selectAll('.legend-item-group')
@@ -219,28 +237,37 @@ export class ChartLegend {
                     return d.label === 'All' ? 'legend-all-group' : null;
                 })
                 .attr('transform', (d: any, index: number) => {
-                    let x = 0;
+                    if (this.configuration.align) {
+                        const currentRow = this.legendTextWidthList[index].row;
+                        if (this.configuration.align === Align.RIGHT) {
+                            rowStart = (this.paddingQueue[currentRow + ''] ? this.paddingQueue[currentRow + ''] : rowStart) + (currentRow === 0 ? this.legendPadding : 0);
+                        } else if (this.configuration.align === Align.CENTER) {
+                            rowStart = (this.paddingQueue[currentRow + ''] ? this.paddingQueue[currentRow + ''] : rowStart) + (currentRow === 0 ? this.legendPadding : 0);
+                            rowStart = rowStart / 2;
+                        }
+                    }
+                    let x = rowStart;
                     let y = this.legendTopBottmPadding;
-                    if (this.configuration.legendPlacement === Placement.LEFT ||
-                        this.configuration.legendPlacement === Placement.RIGHT) {
-                        if (this.configuration.legendPlacement === Placement.LEFT) {
+                    if (this.configuration.placement === Placement.LEFT ||
+                        this.configuration.placement === Placement.RIGHT) {
+                        if (this.configuration.placement === Placement.LEFT) {
                             x = this.legendPadding;
                         }
-                        x = x + this.configuration.addTitleWidth;
+                        x += this.configuration.addTitleWidth;
                         y = index * 20 + this.legendTopBottmPadding;
                     }
-                    if (this.configuration.legendPlacement === Placement.TOP ||
-                        this.configuration.legendPlacement === Placement.BOTTOM) {
+                    if (this.configuration.placement === Placement.TOP ||
+                        this.configuration.placement === Placement.BOTTOM) {
                         if (index > 0) {
-                            currentX += this.legendTextWidthList[index - 1] + this.legendPadding;
+                            currentX += this.legendTextWidthList[index - 1].width + this.legendPadding;
                         }
 
-                        if (this.legendRowBreakCount.indexOf(index) > -1) {
-                            currentRow = this.legendRowBreakCount.indexOf(index) + 1;
+                        if (index === this.legendTextWidthList[index].breakIndex) {
+                            currentRow = this.legendTextWidthList[index].row;
                             currentX = 0;
                         }
 
-                        x = currentX;
+                        x += currentX;
                         y = (this.legendItemTextHeight + this.legendPadding) * currentRow;
                     }
                     return `translate(${x}, ${y})`;

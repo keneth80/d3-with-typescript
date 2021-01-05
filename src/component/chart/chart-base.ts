@@ -31,7 +31,7 @@ import { clearCanvas } from './util/canvas-util';
 import { axisSetupByScale } from './scale';
 import { drawGridLine } from './grid-line';
 import { makeSeriesByConfigurationType } from './util/chart-util';
-import { setChartTooltipByPosition } from './util/tooltip-util';
+import { setChartTooltipByPosition, setIndexChartTooltipByPosition } from './util/tooltip-util';
 
 console.log('cross filter : ', crossFilter);
 
@@ -174,6 +174,8 @@ export class ChartBase<T = any> implements IChartBase {
 
     private legendPlacement = 'right';
 
+    private legendAlign = 'left';
+
     private legendContainerSize: ContainerSize = {
         width: 0, height: 0
     };
@@ -209,15 +211,11 @@ export class ChartBase<T = any> implements IChartBase {
 
     private webglContext: any;
 
-    private currentChartItem = [];
-
-    private currentSeriesIndex = -1;
-
-    private currentChartItemIndex = -1;
+    private prevCurrentItemHash = '';
 
     private crossFilterObject: any = null;
 
-    private completeSubject: Subject<boolean> = new Subject();
+    private chartLifecycleSubject: Subject<{type: string}> = new Subject();
 
     constructor(
         configuration: ChartConfiguration
@@ -311,8 +309,8 @@ export class ChartBase<T = any> implements IChartBase {
         return this.tooltipEventSubject.asObservable();
     }
 
-    get complete$(): Observable<boolean> {
-        return this.completeSubject.asObservable();
+    get lifecycle$(): Observable<{type: string}> {
+        return this.chartLifecycleSubject.asObservable();
     }
 
     get seriesColors(): string[] {
@@ -405,6 +403,7 @@ export class ChartBase<T = any> implements IChartBase {
         if (configuration.legend) {
             this.isLegend = true;
             this.legendPlacement = configuration.legend.placement;
+            this.legendAlign = configuration.legend.align;
             // this.isLegendCheckBox = configuration.legend.isLegendCheckBox === false ? configuration.legend.isLegendCheckBox : true;
             // this.isLegendAll = configuration.legend.isLegendAll === false ? configuration.legend.isLegendAll : true;
             this.isLegendCheckBox = configuration.legend.isCheckBox ?? true;
@@ -492,6 +491,7 @@ export class ChartBase<T = any> implements IChartBase {
     }
 
     draw() {
+        this.chartLifecycleSubject.next({type: 'initialize'});
         this.updateDisplay();
         return this;
     }
@@ -518,54 +518,6 @@ export class ChartBase<T = any> implements IChartBase {
         }
 
         this.subscription.unsubscribe();
-    }
-
-    showTooltip(
-        boxStyle?: {fill: string, opacity?: number, stroke: string, strokeWidth?: number},
-        textStyle?: {fill: number, size: number}
-    ): Selection<BaseType, any, HTMLElement, any> {
-        // if (this.isTooltipDisplay) {
-        //     return this.tooltipGroup.select('g.tooltip-item-group');;
-        // }
-        // if (!this.isTooltipDisplay) {
-        //     this.isTooltipDisplay = true;
-        //     this.seriesList.forEach((series: ISeries) => {
-        //         series.unSelectItem();
-        //     });
-        //     this.tooltipGroup.style('display', null);
-        //     this.tooltipTemplete(this.tooltipGroup, boxStyle, textStyle);
-        // }
-        this.seriesList.forEach((series: ISeries) => {
-            series.unSelectItem();
-        });
-        this.tooltipGroup.style('display', null);
-        this.tooltipTemplete(this.tooltipGroup, boxStyle, textStyle);
-        return this.tooltipGroup.select('g.tooltip-item-group');
-    }
-
-    hideTooltip(): Selection<BaseType, any, HTMLElement, any> {
-        if (!this.isTooltipDisplay) {
-            return;
-        }
-        // tooltip hide event 발생.
-        if (this.config?.tooltip?.visible === false) {
-            this.tooltipEventSubject.next({
-                type: 'hide',
-                position: [0, 0],
-                size: {
-                    width: 0,
-                    height: 0
-                }
-            });
-        }
-        if (this.isTooltipDisplay) {
-            this.isTooltipDisplay = false;
-            this.seriesList.forEach((series: ISeries) => {
-                series.unSelectItem();
-            });
-            this.tooltipGroup.style('display', 'none');
-        }
-        return this.tooltipGroup;
     }
 
     showTooltipBySeriesSelector(selector: string): Selection<BaseType, any, HTMLElement, any> {
@@ -696,7 +648,6 @@ export class ChartBase<T = any> implements IChartBase {
             index++;
             await this.targetSeriesUpdate(series, index);
         }
-        console.log('series update Done!');
     }
 
     updateSeries(displayType: DisplayType = DisplayType.NORMAL) {
@@ -915,13 +866,11 @@ export class ChartBase<T = any> implements IChartBase {
             const context = (selectionCanvas.node() as any).getContext('2d');
             clearCanvas(context, this.width, this.height);
         }
-
-        this.selectionGroup.selectAll('.tooltip-point').remove();
+        this.selectionGroup.selectAll(`[type='tooltip-point']`).remove();
         this.hideTooltip();
     }
 
     selectionClear() {
-        this.currentSeriesIndex = -1;
         this.selectionGroup.selectAll('.selection-point').remove();
 
         const selectionCanvas = this.selector.select('.' + ChartSelector.SELECTION_CANVAS);
@@ -937,6 +886,43 @@ export class ChartBase<T = any> implements IChartBase {
 
     disableFunction(selector: string) {
 
+    }
+
+    showTooltip(
+        boxStyle?: {fill: string, opacity?: number, stroke: string, strokeWidth?: number},
+        textStyle?: {fill: number, size: number}
+    ): Selection<BaseType, any, HTMLElement, any> {
+        this.seriesList.forEach((series: ISeries) => {
+            series.unSelectItem();
+        });
+        this.tooltipGroup.style('display', null);
+        this.tooltipTemplete(this.tooltipGroup, boxStyle, textStyle);
+        return this.tooltipGroup.select('g.tooltip-item-group');
+    }
+
+    hideTooltip(): Selection<BaseType, any, HTMLElement, any> {
+        if (!this.isTooltipDisplay) {
+            return;
+        }
+        // tooltip hide event 발생.
+        if (this.config?.tooltip?.visible === false) {
+            this.tooltipEventSubject.next({
+                type: 'hide',
+                position: [0, 0],
+                size: {
+                    width: 0,
+                    height: 0
+                }
+            });
+        }
+        if (this.isTooltipDisplay) {
+            this.isTooltipDisplay = false;
+            this.seriesList.forEach((series: ISeries) => {
+                series.unSelectItem();
+            });
+            this.tooltipGroup.style('display', 'none');
+        }
+        return this.tooltipGroup;
     }
 
     protected updateFunctions() {
@@ -992,7 +978,8 @@ export class ChartBase<T = any> implements IChartBase {
             isCheckBox: this.isLegendCheckBox,
             isAll: this.isLegendAll,
             addTitleWidth: this.isTitle && this.titlePlacement === Placement.LEFT ? this.titleContainerSize.width : 0,
-            legendPlacement: this.legendPlacement,
+            placement: this.legendPlacement,
+            align: this.legendAlign,
             colors: this.colors,
             defaultLegendStyle: this.defaultLegendStyle,
             seriesList: this.seriesList,
@@ -1188,6 +1175,8 @@ export class ChartBase<T = any> implements IChartBase {
 
         let isDragStart = false;
         let isMouseLeave = false;
+        const tooltipTargetDataList = [];
+        const tooltipPointerDataList = [];
 
         this.subscription.add(
             this.mouseEvent$.subscribe((chartEvent: ChartMouseEvent) => {
@@ -1199,50 +1188,52 @@ export class ChartBase<T = any> implements IChartBase {
                     case 'mousemove':
                         isMouseLeave = false;
                         this.mouseleaveEventHandler();
+                        // 전에 오버했던 아이템 아웃 이벤트 발생.
+                        if (tooltipTargetDataList.length) {
+                            this.mouseoutEventHandler(tooltipTargetDataList);
+                        }
+                        tooltipTargetDataList.length = 0;
+                        tooltipPointerDataList.length = 0;
                         if (this.config.tooltip && (!isDragStart && !isMouseLeave)) {
                             let maxLength = this.seriesList.length;
                             while(maxLength--) {
                                 const positionData = this.seriesList[maxLength].getSeriesDataByPosition(chartEvent.position);
-                                // TODO: 시리즈 루프 돌면서 해당 포지션에 데이터가 있는지 찾되
-                                // 툴팁을 보여줄 때면 멀티인지 싱글인지 체크 해서 break 여부를 판단하고 해당 시리즈의 메서드 실행.
-                                // multi tooltip이면 break 걸지 않는다.
-                                if (positionData.length && !this.isTooltipDisplay) {
+                                if (positionData.length) {
                                     // TODO: data 있을 시 시리지 하이라이트 기능 여부 고민해 볼 것.
-                                    this.isTooltipDisplay = true;
-                                    this.currentSeriesIndex = maxLength;
-                                    this.currentChartItemIndex = this.seriesList[maxLength].drawPointer(chartEvent.position, positionData);
-                                    if (this.currentChartItemIndex > -1) {
+                                    const currentChartItemIndex = this.seriesList[maxLength].drawPointer(chartEvent.position, positionData);
+                                    if (currentChartItemIndex > -1) {
                                         // tooltip show event 발생
-                                        const currentTooltipData = positionData[this.currentChartItemIndex];
-                                        this.tooltipEventSubject.next({
-                                            type: 'show',
-                                            position: [currentTooltipData[0], currentTooltipData[1]],
-                                            data: [...currentTooltipData],
-                                            size: {
-                                                width: currentTooltipData[3],
-                                                height: currentTooltipData[4]
-                                            }
+                                        const currentTooltipData = [...positionData[currentChartItemIndex]];
+                                        tooltipTargetDataList.push({
+                                            seriesIndex: maxLength,
+                                            tooltipData: currentTooltipData,
+                                            style: this.seriesList[maxLength].tooltipStyle(currentTooltipData),
+                                            pointer: this.seriesList[maxLength].pointerSize(currentTooltipData),
+                                            tooltipText: this.seriesList[maxLength].tooltipText
                                         });
-
-                                        if (this.isTooltip) { // tooltip 출력여부가 true일 경우.
-                                            this.drawTooltip(this.seriesList[maxLength], currentTooltipData);
-                                        }
-
-                                        const newHash = sha1(positionData[this.currentChartItemIndex]);
-                                        if (sha1(this.currentChartItem) !== newHash) {
-                                            // 전에 오버했던 아이템 아웃 이벤트 발생.
-                                            this.mouseoutEventHandler();
-                                            // 오버 이벤트 발생.
-                                            this.mouseoverEventHandler(positionData[this.currentChartItemIndex]);
-                                        }
-                                    } else {
-                                        this.mouseoutEventHandler();
-                                        this.mousemoveDataClear();
+                                        tooltipPointerDataList.push({
+                                            seriesIndex: maxLength,
+                                            position: [...chartEvent.position],
+                                            positionData: [...positionData]
+                                        });
                                     }
-                                    break;
-                                } else {
-                                    this.mousemoveDataClear();
                                 }
+                            }
+                            this.drawTooltipPointer(this.seriesList, tooltipPointerDataList);
+                            this.drawTooltipContents(this.seriesList, tooltipTargetDataList, this.config.tooltip.tooltipTextParser);
+                            // TODO: mouse over event 발생.
+                            const newHash = sha1(tooltipTargetDataList);
+                            if (this.prevCurrentItemHash !== newHash) {
+                                this.prevCurrentItemHash = newHash;
+                                // 전에 오버했던 아이템 아웃 이벤트 발생.
+                                // if (tooltipTargetDataList.length) {
+                                //     this.mouseoutEventHandler(tooltipTargetDataList);
+                                // }
+                            }
+
+                            // 오버 이벤트 발생.
+                            if (tooltipTargetDataList.length) {
+                                this.mouseoverEventHandler(tooltipTargetDataList);
                             }
                         }
                     break;
@@ -1250,14 +1241,19 @@ export class ChartBase<T = any> implements IChartBase {
                     case 'mouseleave':
                         isMouseLeave = true;
                         this.mouseleaveEventHandler();
-                        this.mouseoutEventHandler();
+                        this.drawTooltipContents(this.seriesList, [], undefined);
+                        if (tooltipTargetDataList.length) {
+                            this.mouseoutEventHandler(tooltipTargetDataList);
+                        }
+                        // if (this.currentChartItem.length) {
+                        //     this.mouseoutEventHandler(this.currentChartItem);
+                        // }
                     break;
 
                     case 'click':
                     case 'mouseup':
                         isDragStart = false;
-                        // TODO: multi series 구현시 chart item 이 같은 위치에 분포할 때 의도되지 않는 아이템이 선택되는 현상.
-                        if (this.currentSeriesIndex < 0) {
+                        if (!tooltipPointerDataList.length) {
                             this.selectionClear();
                             this.chartItemEventSubject.next({
                                 type: 'backgroundclick',
@@ -1267,15 +1263,16 @@ export class ChartBase<T = any> implements IChartBase {
                             });
                             return;
                         }
-                        const targetSeries = this.seriesList[this.currentSeriesIndex];
+                        const seriesIndex = tooltipPointerDataList[0].seriesIndex;
+                        const targetSeries = this.seriesList[seriesIndex];
                         const positionDataList = targetSeries.getSeriesDataByPosition(chartEvent.position);
                         if (positionDataList.length) {
                             targetSeries.onSelectItem(chartEvent.position, positionDataList);
                             this.chartItemEventSubject.next({
                                 type: chartEvent.type,
-                                position: [positionDataList[this.currentChartItemIndex][0], positionDataList[this.currentChartItemIndex][1]],
-                                data: positionDataList[this.currentChartItemIndex][2],
-                                etc: positionDataList[this.currentChartItemIndex]
+                                position: [positionDataList[0][0], positionDataList[0][1]],
+                                data: positionDataList[0][2],
+                                etc: positionDataList[0]
                             });
                             break;
                         }
@@ -1304,15 +1301,79 @@ export class ChartBase<T = any> implements IChartBase {
         );
     }
 
-    protected drawTooltip(currentSeries: ISeries, currentTooltipData: any[]) {
+    drawTooltipPointer(seriesList: ISeries[], tooltipTargetList: any[]) {
+        tooltipTargetList.forEach((item: any) => {
+            this.seriesList[item.seriesIndex].drawPointer(item.position, item.positionData);
+        });
+    }
+
+    drawTooltipContents(seriesList: ISeries[], tooltipTargetList: any[], tooltipTextParser: any) {
+        this.tooltipGroup.style('display', null);
+        
+        // TODO: tooltip hide event 체크
+        const itemGroup = this.tooltipGroup.selectAll('g.tooltip-item-group')
+            .data(tooltipTargetList)
+            .join(
+                (enter) => enter.append('g').attr('class', 'tooltip-item-group'),
+                (update) => update,
+                (exit) => exit.remove()
+            ).each((d: any, index: number, nodeList: any) => {
+                const group = select(nodeList[index]);
+                const prevGroup: any = index > 0 ? select(nodeList[index - 1]) : undefined;
+                // style and templete setup
+                this.tooltipTemplete(group, d.style);
+                const positionx = d.tooltipData[0];
+                const positiony = d.tooltipData[1];
+                setIndexChartTooltipByPosition(
+                    group,
+                    tooltipTextParser
+                        ? tooltipTextParser(d.tooltipData)
+                        : d.tooltipText(d.tooltipData),
+                    {
+                        width: this.width,
+                        height: this.height
+                    },
+                    [
+                        positionx,
+                        positiony
+                    ],
+                    {
+                        width: d.pointer.width,
+                        height: d.pointer.height
+                    },
+                    undefined,
+                    prevGroup
+                );
+                // setChartTooltipByPosition(
+                //     group,
+                //     tooltipTextParser
+                //         ? tooltipTextParser(d.tooltipData)
+                //         : d.tooltipText(d.tooltipData),
+                //     {
+                //         width: this.width,
+                //         height: this.height
+                //     },
+                //     [
+                //         positionx,
+                //         positiony
+                //     ],
+                //     {
+                //         width: d.pointer.width,
+                //         height: d.pointer.height
+                //     }
+                // );
+            });
+    }
+
+    protected drawTooltip(currentSeries: ISeries, currentTooltipData: any[], tooltipTextParser: any) {
         const tooltipGroup = this.showTooltip(
             currentSeries.tooltipStyle(currentTooltipData)
         );
         const pointerSize = currentSeries.pointerSize(currentTooltipData);
         setChartTooltipByPosition(
             tooltipGroup,
-            this.config.tooltip.tooltipTextParser
-                ? this.config.tooltip.tooltipTextParser(currentTooltipData)
+            tooltipTextParser
+                ? tooltipTextParser(currentTooltipData)
                 : currentSeries.tooltipText(currentTooltipData),
             {
                 width: this.width,
@@ -1364,37 +1425,56 @@ export class ChartBase<T = any> implements IChartBase {
     }
 
     protected mousemoveDataClear() {
+        // if (this.currentChartItem.length) {
+        //     this.mouseoutEventHandler(this.currentChartItem);
+        // }
         this.pointerClear();
-        this.currentChartItem.length = 0;
-        this.currentSeriesIndex = -1;
-        this.currentChartItemIndex = -1;
     }
 
-    protected mouseoutEventHandler() {
-        if (this.currentChartItem.length) {
-            this.chartItemEventSubject.next({
-                type: 'mouseout',
-                position: [this.currentChartItem[0], this.currentChartItem[1]],
-                data: this.currentChartItem[2],
-                etc: this.currentChartItem
-            });
-            this.currentChartItem.length = 0;
-        }
+    protected mouseoutEventHandler(positionData: any[]) {
+        this.chartItemEventSubject.next({
+            type: 'mouseout',
+            position: [0, 0],
+            data: positionData.map((item: any) => item.tooltipData),
+            etc: positionData
+        });
+        positionData.length = 0;
     }
 
     protected mouseoverEventHandler(positionData: any[]) {
-        // this.currentChartItem = positionData;
-        positionData.forEach((pdata: any) => {
-            this.currentChartItem.push(pdata);
-        });
         // mouseover event 발생
         this.chartItemEventSubject.next({
             type: 'mouseover',
-            position: [this.currentChartItem[0], this.currentChartItem[1]],
-            data: this.currentChartItem[2],
-            etc: this.currentChartItem
+            position: [positionData[0].tooltipData[0], positionData[0].tooltipData[1]],
+            data: positionData.map((item: any) => item.tooltipData),
+            etc: positionData
         });
     }
+
+    // protected mouseoutEventHandler(positionData: any[]) {
+    //     this.chartItemEventSubject.next({
+    //         type: 'mouseout',
+    //         position: [positionData[0], positionData[1]],
+    //         data: positionData[2],
+    //         etc: positionData
+    //     });
+    //     positionData.length = 0;
+    // }
+
+    // protected mouseoverEventHandler(positionData: any[]) {
+    //     // data copy
+    //     // this.currentChartItem.length = 0;
+    //     positionData.forEach((pdata: any) => {
+    //         this.currentChartItem.push(pdata);
+    //     });
+    //     // mouseover event 발생
+    //     this.chartItemEventSubject.next({
+    //         type: 'mouseover',
+    //         position: [positionData[0], positionData[1]],
+    //         data: positionData[2],
+    //         etc: positionData
+    //     });
+    // }
 
     protected updateTitle() {
         if (this.titleGroup) {
@@ -1616,7 +1696,7 @@ export class ChartBase<T = any> implements IChartBase {
                 this.updateSeries(displayType);
                 this.updateOptions();
                 this.updateFunctions();
-                this.completeSubject.next(true);
+                this.chartLifecycleSubject.next({type: 'complete'});
             });
     }
 

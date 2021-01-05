@@ -259,7 +259,7 @@ const customTooltipTemplete = () => {
         selector: '#chart-div',
         tooltip: {
             tooltipTextParser: (d: any) => {
-                return `x: ${d[2].x} \ny: ${d[2].y}\nz: ${d[2].z}`
+                return `x: ${d[2].data.x} \ny: ${d[2].data.y}\nz: ${d[2].data.z}`
             },
             visible: false
         },
@@ -319,7 +319,7 @@ const customTooltipTemplete = () => {
                 .text('Data');
             otherElement
                 .select('span')
-                .text(`${tooltipEvent.data[6]}: ${tooltipEvent.data[2][tooltipEvent.data[6]]}`);
+                .text(`${tooltipEvent.data[2].displayName}: ${tooltipEvent.data[2].data[tooltipEvent.data[2].field]}`);
             centerPositionForTooltipElement(chart, otherElement.node(), tooltipEvent.position);
         } else {
             otherElement.style('pointer-events', 'none');
@@ -377,7 +377,7 @@ const changeTooltipTemplete = () => {
         selector: '#chart-div',
         tooltip: {
             tooltipTextParser: (d: any) => {
-                return `x: ${d[2].x} \ny: ${d[2].y}\nz: ${d[2].z}`
+                return `x: ${d[2].data.x} \ny: ${d[2].data.y}\nz: ${d[2].data.z}`
             }
         },
         data: sampleMockData(20),
@@ -870,7 +870,9 @@ const simpleSvgLineSeriesExample = () => {
         selector: '#chart-div',
         tooltip: {
             tooltipTextParser: (d: any) => {
-                return `x: ${d[2].x} \ny: ${d[2].y}\nz: ${d[2].z}`
+                const currentItem = d[2];
+                const currentData = currentItem.data;
+                return `${currentItem.displayName} \nx: ${currentData['x']}\nvalue: ${currentData[currentItem.field]}`
             }
         },
         data: sampleMockData(20),
@@ -879,7 +881,8 @@ const simpleSvgLineSeriesExample = () => {
             content: 'SVG Line Series'
         },
         legend: {
-            placement: Placement.TOP
+            placement: Placement.TOP,
+            align: Align.RIGHT
         },
         isResize: true,
         axes: [
@@ -921,9 +924,10 @@ const simpleSvgLineSeriesExample = () => {
 
     chart = SvgTraceChart(commonConfiguration, seriesList).draw();
     currentSubscription = chart.chartItemEvent.subscribe((item: ChartItemEvent) => {
-        if (item.type === 'click') {
-            console.log('click => ' + JSON.stringify(item.data));
-        }
+        console.log(item.type, ' => ' + JSON.stringify(item.data));
+        // if (item.type === 'click') {
+        //     console.log('click => ' + JSON.stringify(item.data));
+        // }
     });
 }
 
@@ -1087,7 +1091,9 @@ const simpleCanvasLineSeriesExample = () => {
         },
         tooltip: {
             tooltipTextParser: (d: any) => {
-                return `x: ${d[2].x} \ny: ${d[2].y}\nz: ${d[2].z}`
+                const currentItem = d[2];
+                const currentData = currentItem.data;
+                return `${currentItem.displayName} \nx: ${currentData['x']}\nvalue: ${currentData[currentItem.field]}`
             }
         },
         legend: {
@@ -1179,7 +1185,9 @@ const simpleSvgPlotSeriesExample = () => {
         selector: '#chart-div',
         tooltip: {
             tooltipTextParser: (d: any) => {
-                return `x: ${d[2].x} \ny: ${d[2].y}\nz: ${d[2].z}`
+                const currentItem = d[2];
+                const currentData = currentItem.data;
+                return `${currentItem.displayName} \nx: ${currentData['x']}\nvalue: ${currentData[currentItem.field]}`
             }
         },
         data: sampleMockData(20),
@@ -1617,6 +1625,7 @@ const canvasBigDataLineSeriesSample = () => {
                 // },
                 line: {
                     strokeColor: seriesColor,
+                    strokeWidth: 0.5
                     // opacity: seriesColor === '#EA3010' ? 1 :  0.9
                 },
                 data: seriesData
@@ -1638,7 +1647,8 @@ const canvasBigDataLineSeriesSample = () => {
         selector: '#chart-div',
         data: [],
         legend: {
-            placement: Placement.RIGHT
+            placement: Placement.TOP,
+            align: Align.CENTER
         },
         title: {
             placement: Placement.TOP,
@@ -1646,7 +1656,9 @@ const canvasBigDataLineSeriesSample = () => {
         },
         tooltip: {
             tooltipTextParser: (d: any) => {
-                return `x: ${d[2].x} \ny: ${d[2].y}\nz: ${d[2].i}`
+                const currentItem = d[2];
+                const currentData = currentItem.data;
+                return `${currentItem.displayName} \nx: ${currentData['x']}\nvalue: ${currentData[currentItem.field]}`
             }
         },
         isResize: true,
@@ -1676,10 +1688,14 @@ const canvasBigDataLineSeriesSample = () => {
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
     highlightBlock((select('#json-configuration').node() as any));
 
-    console.time('canvaslinedraw');
+    
     chart = CanvasTraceChart(commonConfiguration, seriesList.concat(alarmSeriesList), optionList);
-    currentSubscription = chart.complete$.subscribe(() => {
-        console.timeEnd('canvaslinedraw');
+    currentSubscription = chart.lifecycle$.subscribe((event: {type: string}) => {
+        if (event.type === 'initialize') {
+            console.time('canvaslinedraw');
+        } else {
+            console.timeEnd('canvaslinedraw');
+        }
     });
     chart.draw();
 };

@@ -28,6 +28,15 @@ export class BasicCanvasTraceModel {
     }
 }
 
+export interface BasicCanvasTraceData {
+    data: any;
+    width: number;
+    height: number;
+    strokeColor: string;
+    field: string;
+    displayName: string;
+}
+
 export interface BasicCanvasTraceConfiguration extends SeriesConfiguration {
     xField: string;
     yField: string;
@@ -167,7 +176,8 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         // context.strokeStyle = this.strokeColor;
         const rgbColor = rgb(this.strokeColor);
         context.strokeStyle = `rgba(${rgbColor.r}, ${rgbColor.g}, ${rgbColor.b}, ${this.config?.line?.strokeOpacity ?? 1})`;
-
+        // context.lineWidth = 0.5;               // sub-pixels all points
+        context.setTransform(1,0,0,1,0.5,0.5); // not so useful for the curve itself
         if (this.config.line) {
             this.strokeWidth = this.config.line.strokeWidth ?? 1;
             context.lineWidth = this.strokeWidth;
@@ -189,7 +199,15 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                 .map((d: BasicCanvasTraceModel, i: number) => {
                     const xposition = x(d[this.config.xField]) + padding;
                     const yposition = y(d[this.config.yField]);
-                    return [xposition, yposition, d, this.radius, this.radius, this.strokeColor];
+                    const obj: BasicCanvasTraceData = {
+                        data: d,
+                        width: this.radius,
+                        height: this.radius,
+                        strokeColor: this.strokeColor,
+                        field: this.config.yField,
+                        displayName: this.selector ?? this.displayName
+                    };
+                    return [xposition, yposition, obj];
                 });
             context.drawImage(this.restoreCanvas.node(), 0, 0);
         } else {
@@ -197,12 +215,20 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                 .map((d: BasicCanvasTraceModel, i: number) => {
                     const xposition = x(d[this.config.xField]) + padding;
                     const yposition = y(d[this.config.yField]);
+                    const obj: BasicCanvasTraceData = {
+                        data: d,
+                        width: this.radius,
+                        height: this.radius,
+                        strokeColor: this.strokeColor,
+                        field: this.config.yField,
+                        displayName: this.selector ?? this.displayName
+                    };
                     // POINT: data 만들면서 포인트 찍는다.
                     if (this.config.dot) {
                         context.fillRect(xposition - this.radius, yposition - this.radius, this.radius * 2, this.radius * 2);
                         // context.arc(xposition, yposition, this.config.dot.radius, 0, 2 * Math.PI, false);
                     }
-                    return [xposition, yposition, d, this.radius];
+                    return [xposition, yposition, obj];
                 });
 
             this.line = line()
@@ -278,13 +304,13 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
     getSeriesDataByPosition(value: number[]) {
         const rectSize = this.radius * 2;
-        return this.search(
+        return this.canvas.style('opacity') !== '0' ? this.search(
             this.originQuadTree,
             value[0] - rectSize,
             value[1] - rectSize,
             value[0] + rectSize,
             value[1] + rectSize
-        );
+        ) : [];
     }
 
     showPointAndTooltip(value: number[], selected: any[]) {
@@ -301,7 +327,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                 this.tooltipGroup,
                 this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser
                     ? this.chartBase.tooltip.tooltipTextParser(selectedItem)
-                    : `${this.config.xField}: ${selectedItem[2][this.config.xField]} \n ${this.config.yField}: ${selectedItem[2][this.config.yField]}`,
+                    : `${this.config.xField}: ${selectedItem[2].data[this.config.xField]} \n ${this.config.yField}: ${selectedItem[2].data[this.config.yField]}`,
                 this.geometry,
                 [
                     selectedItem[0],
