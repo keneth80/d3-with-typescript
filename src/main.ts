@@ -40,7 +40,7 @@ import {
     SvgMultiSeriesChart,
     SvgTopology
 } from './component/chart-generator';
-import { sampleMockData } from './component/mock-data/simple-mock-data';
+import { sampleMockData, sampleMockTimeData } from './component/mock-data/simple-mock-data';
 import { centerPositionForTooltipElement } from './component/chart/util/tooltip-util';
 import { topologyData } from './component/mock-data/topology-data';
 import { TopologyGroupElement, TopologyData } from './component/series';
@@ -133,6 +133,9 @@ const buttonMapping = () => {
                     break;
                     case 'svg-topology':
                         topologyExample();
+                    break;
+                    case 'real-time-series':
+                        realTimeLineSeriesSample();
                     break;
                     default:
                     break;
@@ -1496,6 +1499,92 @@ const webGLBigDataLineSeriesSample = () => {
     chart = WebglTraceChart(commonConfiguration, seriesList.concat(alarmSeriesList), optionList).draw();
 }
 
+const realTimeLineSeriesSample = () => {
+    const yFieldSeries: BasicLineSeriesConfiguration = {
+        selector: 'y-series',
+        xField: 'date',
+        yField: 'y',
+        line: {
+            dashArray: 2
+        },
+        displayName: 'y-series'
+    };
+
+    const zFieldSeries: BasicLineSeriesConfiguration = {
+        selector: 'z-series',
+        xField: 'date',
+        yField: 'z',
+        line: {},
+        displayName: 'z-series'
+    }
+
+    const seriesList = [
+        yFieldSeries,
+        zFieldSeries
+    ];
+
+    const data = sampleMockTimeData(100);
+
+    console.log('data : ', data);
+
+    const commonConfiguration: MiccBaseConfiguration = {
+        selector: '#chart-div',
+        tooltip: {
+            tooltipTextParser: (d: any) => {
+                const currentItem = d[2];
+                const currentData = currentItem.data;
+                return `${currentItem.displayName} \nx: ${currentData['x']}\nvalue: ${currentData[currentItem.field]}`
+            }
+        },
+        data,
+        title: {
+            placement: Placement.TOP,
+            content: 'Real Time SVG Line Series'
+        },
+        legend: {
+            placement: Placement.TOP,
+            align: Align.RIGHT
+        },
+        isResize: true,
+        axes: [
+            {
+                field: 'date',
+                type: ScaleType.TIME,
+                placement: Placement.BOTTOM,
+                gridLine: {
+                    color: '#ddd'
+                },
+                zeroLine: {
+                    color: '#0000ff'
+                },
+                tickSize: 4
+            },
+            {
+                field: 'y',
+                type: ScaleType.NUMBER,
+                placement: Placement.LEFT,
+                min: 0,
+                max: 100,
+                gridLine: {
+                    color: '#ddd'
+                },
+                zeroLine: {
+                    color: '#0000ff'
+                }
+            }
+        ],
+        zoom: {
+            direction: Direction.BOTH
+        }
+    };
+
+    (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
+    highlightBlock((select('#json-configuration').node() as any));
+
+    chart = SvgTraceChart(commonConfiguration, seriesList).draw();
+    chart.realTime(true, 100, 2000);
+}
+
 const canvasBigDataLineSeriesSample = () => {
 
     const stepData = stepInfo.map((step: any) => {
@@ -1597,7 +1686,7 @@ const canvasBigDataLineSeriesSample = () => {
 
             // test data 늘리기
             const tempRow: BasicCanvasTraceModel = seriesData[seriesData.length - 1];
-            for (let index = 1; index < 20000; index++) {
+            for (let index = 1; index < 50000; index++) {
                 const x = tempRow.x + index;
                 const y = tempRow.y;
 
@@ -1659,7 +1748,8 @@ const canvasBigDataLineSeriesSample = () => {
                 const currentItem = d[2];
                 const currentData = currentItem.data;
                 return `${currentItem.displayName} \nx: ${currentData['x']}\nvalue: ${currentData[currentItem.field]}`
-            }
+            },
+            isMultiple: true
         },
         isResize: true,
         axes: [

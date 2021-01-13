@@ -2,7 +2,7 @@
 import { schemeCategory10 } from 'd3-scale-chromatic';
 import { select, Selection, BaseType, event } from 'd3-selection';
 
-import { fromEvent, Subscription, Subject, of, Observable, from, timer, Observer, throwError } from 'rxjs';
+import { fromEvent, Subscription, Subject, of, Observable, from, timer, Observer, throwError, interval } from 'rxjs';
 import { debounceTime, switchMap, map, concatMap, mapTo, tap, delay, retry } from 'rxjs/operators';
 
 import { sha1 } from 'object-hash';
@@ -31,7 +31,7 @@ import { clearCanvas } from './util/canvas-util';
 import { axisSetupByScale } from './scale';
 import { drawGridLine } from './grid-line';
 import { makeSeriesByConfigurationType } from './util/chart-util';
-import { setChartTooltipByPosition, setIndexChartTooltipByPosition } from './util/tooltip-util';
+import { setChartTooltipByPosition, setMultiChartTooltipByPosition } from './util/tooltip-util';
 
 console.log('cross filter : ', crossFilter);
 
@@ -202,6 +202,8 @@ export class ChartBase<T = any> implements IChartBase {
     // multi tooltip 및 series 별 tooltip을 구분할 수 있는 저장소.
     private tooltipItems: {selector: string}[] = [];
 
+    private maxTooltipCount = 4;
+
     private tooltipEventSubject = new Subject<TooltipEvent>();
 
     // series delay display observable
@@ -216,6 +218,10 @@ export class ChartBase<T = any> implements IChartBase {
     private crossFilterObject: any = null;
 
     private chartLifecycleSubject: Subject<{type: string}> = new Subject();
+
+    private isRealTime = false;
+
+    private realTimeSubscription: Subscription;
 
     constructor(
         configuration: ChartConfiguration
@@ -430,6 +436,40 @@ export class ChartBase<T = any> implements IChartBase {
         }
     }
 
+    realTime(isRealTime: boolean, duration: number = 1000, term: number = 1000) {
+        this.isRealTime = isRealTime;
+        if (this.realTimeSubscription) {
+            this.realTimeSubscription.unsubscribe();
+        }
+
+        if (isRealTime) {
+            this.realTimeSubscription = interval(duration)
+            .pipe(
+                delay(500)
+            )
+            .subscribe((value: number) => {
+                // x axis의 domain을 현 시간으로 계속 업데이트 해줘야함.
+                const newTime = new Date().getTime();
+                const axesItem = this.config.axes.find((item: Axes) => item.placement === Placement.BOTTOM || item.placement === Placement.TOP);
+                axesItem.domain = [axesItem.min + term * value, axesItem.max + term * value];
+
+                // TODO: 보이지 않는 시점부터 data는 삭제해야함.
+                if (this.originalData.length && this.originalData[0][axesItem.field] < axesItem.min + term * value) {
+                    const checkDate = this.originalData[0][axesItem.field].getTime();
+                    if (checkDate < axesItem.min + term * value) {
+                        this.originalData.shift();
+                    }
+                }
+                this.updateAxis()
+                .then(() => {
+                    this.updateSeries();
+                });
+            });
+        }
+
+        return this;
+    }
+
     data(data: any[]) {
         this.originalData = data;
         this.updateDisplay();
@@ -438,12 +478,8 @@ export class ChartBase<T = any> implements IChartBase {
 
     // TODO: real time data 적용해 볼 것.
     appendData(data: any, seriesSelector?: string) {
+        // TODO: data 추가가 될 때, min, max도 같이 업데이트 해줄까? 해줘야 performance 가 좋다.
         this.originalData.push(data);
-        this.originalData.shift();
-        this.updateAxis()
-        .then(() => {
-            this.updateSeries();
-        });
     }
 
     series(seriesConfigurations: SeriesConfiguration[]) {
@@ -1204,31 +1240,33 @@ export class ChartBase<T = any> implements IChartBase {
                                     if (currentChartItemIndex > -1) {
                                         // tooltip show event 발생
                                         const currentTooltipData = [...positionData[currentChartItemIndex]];
-                                        tooltipTargetDataList.push({
-                                            seriesIndex: maxLength,
-                                            tooltipData: currentTooltipData,
-                                            style: this.seriesList[maxLength].tooltipStyle(currentTooltipData),
-                                            pointer: this.seriesList[maxLength].pointerSize(currentTooltipData),
-                                            tooltipText: this.seriesList[maxLength].tooltipText
-                                        });
-                                        tooltipPointerDataList.push({
-                                            seriesIndex: maxLength,
-                                            position: [...chartEvent.position],
-                                            positionData: [...positionData]
-                                        });
+                                        if (tooltipTargetDataList.length < 4) {
+                                            tooltipTargetDataList.push({
+                                                seriesIndex: maxLength,
+                                                tooltipData: currentTooltipData,
+                                                style: this.seriesList[maxLength].tooltipStyle(currentTooltipData),
+                                                pointer: this.seriesList[maxLength].pointerSize(currentTooltipData),
+                                                tooltipText: this.seriesList[maxLength].tooltipText,
+                                                tooltipTextStr: this.seriesList[maxLength].tooltipText(currentTooltipData)
+                                            });
+                                            tooltipPointerDataList.push({
+                                                seriesIndex: maxLength,
+                                                position: [...chartEvent.position],
+                                                positionData: [...positionData]
+                                            });
+                                        }
+                                        if (!this.isTooltipMultiple) {
+                                            break;
+                                        }
                                     }
                                 }
                             }
                             this.drawTooltipPointer(this.seriesList, tooltipPointerDataList);
                             this.drawTooltipContents(this.seriesList, tooltipTargetDataList, this.config.tooltip.tooltipTextParser);
-                            // TODO: mouse over event 발생.
+
                             const newHash = sha1(tooltipTargetDataList);
                             if (this.prevCurrentItemHash !== newHash) {
                                 this.prevCurrentItemHash = newHash;
-                                // 전에 오버했던 아이템 아웃 이벤트 발생.
-                                // if (tooltipTargetDataList.length) {
-                                //     this.mouseoutEventHandler(tooltipTargetDataList);
-                                // }
                             }
 
                             // 오버 이벤트 발생.
@@ -1245,9 +1283,6 @@ export class ChartBase<T = any> implements IChartBase {
                         if (tooltipTargetDataList.length) {
                             this.mouseoutEventHandler(tooltipTargetDataList);
                         }
-                        // if (this.currentChartItem.length) {
-                        //     this.mouseoutEventHandler(this.currentChartItem);
-                        // }
                     break;
 
                     case 'click':
@@ -1310,21 +1345,45 @@ export class ChartBase<T = any> implements IChartBase {
     drawTooltipContents(seriesList: ISeries[], tooltipTargetList: any[], tooltipTextParser: any) {
         this.tooltipGroup.style('display', null);
         
-        // TODO: tooltip hide event 체크
         const itemGroup = this.tooltipGroup.selectAll('g.tooltip-item-group')
             .data(tooltipTargetList)
             .join(
                 (enter) => enter.append('g').attr('class', 'tooltip-item-group'),
                 (update) => update,
                 (exit) => exit.remove()
-            ).each((d: any, index: number, nodeList: any) => {
+            )
+            .attr('transform', (d: any) => {
+                return `translate(${d.tooltipData[0]}, ${d.tooltipData[1]})`
+            })
+            .each((d: any, index: number, nodeList: any) => {
+                if (index > this.maxTooltipCount - 1) {
+                    return;
+                }
                 const group = select(nodeList[index]);
                 const prevGroup: any = index > 0 ? select(nodeList[index - 1]) : undefined;
                 // style and templete setup
                 this.tooltipTemplete(group, d.style);
                 const positionx = d.tooltipData[0];
                 const positiony = d.tooltipData[1];
-                setIndexChartTooltipByPosition(
+
+                this.isTooltipMultiple ? 
+                setMultiChartTooltipByPosition(
+                    group,
+                    tooltipTextParser
+                        ? tooltipTextParser(d.tooltipData)
+                        : d.tooltipText(d.tooltipData),
+                    {
+                        width: this.width,
+                        height: this.height
+                    },
+                    [
+                        positionx,
+                        positiony
+                    ],
+                    prevGroup,
+                    index
+                ) :
+                setChartTooltipByPosition(
                     group,
                     tooltipTextParser
                         ? tooltipTextParser(d.tooltipData)
@@ -1340,28 +1399,8 @@ export class ChartBase<T = any> implements IChartBase {
                     {
                         width: d.pointer.width,
                         height: d.pointer.height
-                    },
-                    undefined,
-                    prevGroup
+                    }
                 );
-                // setChartTooltipByPosition(
-                //     group,
-                //     tooltipTextParser
-                //         ? tooltipTextParser(d.tooltipData)
-                //         : d.tooltipText(d.tooltipData),
-                //     {
-                //         width: this.width,
-                //         height: this.height
-                //     },
-                //     [
-                //         positionx,
-                //         positiony
-                //     ],
-                //     {
-                //         width: d.pointer.width,
-                //         height: d.pointer.height
-                //     }
-                // );
             });
     }
 
@@ -1579,7 +1618,8 @@ export class ChartBase<T = any> implements IChartBase {
                 this.axisGroups[scale.orient],
                 this.defaultAxisLabelStyle,
                 this.defaultAxisTitleStyle,
-                this.axisTitleMargin
+                this.axisTitleMargin,
+                this.isRealTime
             );
         });
 
@@ -1718,7 +1758,7 @@ export class ChartBase<T = any> implements IChartBase {
             this.currentScale = [...reScaleAxes];
         }
 
-        return generateScaleByAxis(axes, this.originalData, {width, height}, this.currentScale);
+        return generateScaleByAxis(axes, this.originalData, {width, height}, this.currentScale, this.isRealTime);
     }
 
     // protected updateBrushHandler(orient: string = 'bottom', brush: any) {

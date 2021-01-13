@@ -2,6 +2,8 @@ import { min, max } from 'd3-array';
 import { scaleBand, scaleLinear, scaleTime, scalePoint } from 'd3-scale';
 import { brushX, brushY } from 'd3-brush';
 import { Axis } from 'd3-axis';
+import { transition } from 'd3-transition';
+import { easeLinear } from 'd3-ease';
 
 import { Scale, ContainerSize } from '../chart.interface';
 import { Align, Axes, AxisTitle, Margin, Placement, ScaleType } from '../chart-configuration';
@@ -15,7 +17,8 @@ export const generateScaleByAxis = <T = any>(
     size: ContainerSize = {
         width: 0, height: 0
     },
-    currentScale: {field:string, min: number, max: number}[]
+    currentScale: {field:string, min: number, max: number}[],
+    isRealTime: boolean = false
 ): Scale[] => {
     const returnAxes: Scale[] = [];
     axes.map((axis: Axes) => {
@@ -142,10 +145,11 @@ export const drawAxisByScale = (
     targetGroup: Selection<BaseType, any, HTMLElement, any>,
     defaultAxisLabelStyle: any,
     defaultAxisTitleStyle: any,
-    axisTitleMargin: Margin
+    axisTitleMargin: Margin,
+    isRealTime: boolean = true
 ) => {
     const padding = 10; // 10 는 axis 여백.
-    const orientedAxis: Axis<any> = axisSetupByScale(scale);
+    const orientedAxis: any = axisSetupByScale(scale);
 
     let maxTextWidth = 0;
     let bandWidth = -1;
@@ -154,8 +158,18 @@ export const drawAxisByScale = (
         bandWidth = scale.scale.bandwidth();
     }
 
+    
+
     if (scale.visible) {
-        targetGroup.call(orientedAxis)
+        // TODO: 우선은 x 축만 tansition 적용 텍스트 길이 체크하는 로직이 돌면서 transition 적용은 아직은 어려움.
+        if (isRealTime && 
+            (scale.orient === Placement.BOTTOM || scale.orient === Placement.TOP)) {
+            const transitionObj = transition().duration(500).ease(easeLinear);
+            targetGroup.transition(transitionObj);
+        }
+        targetGroup
+            // .transition(transitionObj)
+            .call(orientedAxis)
             .selectAll('text')
             .style('font-size', defaultAxisLabelStyle.font.size + 'px')
             .style('font-family', defaultAxisLabelStyle.font.family);
@@ -178,6 +192,7 @@ export const drawAxisByScale = (
     // }
 
     // axis의 텍스트가 길어지면 margin도 덩달아 늘어나야함. 단, config.margin이 없을 때
+    // TODO: axis transition을 걸면 delay 때문에 텍스트 길이 체크가 안되니 트랜지션의 duration 만큼 지연이 필요하다.
     if (!isCustomMargin) {
         // 가장 긴 텍스트를 찾아서 사이즈를 저장하고 margin에 더해야함
         let textLength = 0;
