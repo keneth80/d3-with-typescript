@@ -7,7 +7,3 @@ Run `npm install`
 # typescript-webpack-seed
 
 # d3-with-typescript
-
-## test
-
-commit test
