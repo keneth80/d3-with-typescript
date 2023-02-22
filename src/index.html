@@ -1,105 +1,119 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Common Chart</title>
-        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/ocean.min.css">
-    </head>
-    <body>
-        <header>
-            <div class="container-button-bar">
-                <button id="svg-line-series">SVG Line Series</button>
-                <button id="canvas-line-series">Canvas Line Series</button>
-                <button id="webgl-line-series">WebGL Line Series</button>
-                <button id="canvas-bigdata-line-series">Canvas BigData Line Series</button>
-                <button id="webgl-bigdata-line-series">WebGL BigData Line Series</button>
+  <head>
+    <title>Common Chart</title>
+  </head>
+  <body>
+    <header>
+      <div class="container-button-bar">
+        <button id="svg-line-series">SVG Line Series</button>
+        <button id="canvas-line-series">Canvas Line Series</button>
+        <button id="webgl-line-series">WebGL Line Series</button>
+        <button id="canvas-bigdata-line-series">
+          Canvas BigData Line Series
+        </button>
+        <button id="webgl-bigdata-line-series">
+          WebGL BigData Line Series
+        </button>
 
-                <button id="svg-column-series">SVG Column Series</button>
-                <button id="svg-stacked-column-series">SVG Stacked Column Series</button>
+        <button id="svg-column-series">SVG Column Series</button>
+        <button id="svg-stacked-column-series">
+          SVG Stacked Column Series
+        </button>
 
-                <button id="svg-plot-series">SVG Plot Series</button>
-                <button id="svg-area-series">SVG Area Series</button>
-                <button id="svg-multi-series">SVG Multi Series</button>
+        <button id="svg-plot-series">SVG Plot Series</button>
+        <button id="svg-area-series">SVG Area Series</button>
+        <button id="svg-multi-series">SVG Multi Series</button>
 
-                <button id="axis-custom-margin">Axis Custom Margin</button>
+        <button id="axis-custom-margin">Axis Custom Margin</button>
 
-                <button id="tooltip-templete-change">Tooltip Templete Change</button>
-                <button id="tooltip-custom-templete">Tooltip Custom Templete</button>
+        <button id="tooltip-templete-change">Tooltip Templete Change</button>
+        <button id="tooltip-custom-templete">Tooltip Custom Templete</button>
 
-                <button id="svg-topology">Topology</button>
+        <button id="svg-topology">Topology</button>
 
-                <button id="update-series">Update Series</button>
+        <button id="update-series">Update Series</button>
 
-                <button id="update-data">Update Data</button>
+        <button id="update-data">Update Data</button>
 
-                <button id="real-time-series">Real Time Series</button>
+        <button id="real-time-series">Real Time Series</button>
+      </div>
+    </header>
+    <main>
+      <div class="container-main">
+        <div class="container-chart-example">
+          <div class="container-control">
+            <div class="container-control-item">
+              <label>Color</label>
+              <input type="text" style="width: 90px" />
             </div>
-        </header>
-        <main>
-            <div class="container-main">
-                <div class="container-chart-example">
-                    <div class="container-control">
-                        <div class="container-control-item">
-                            <label>Color</label>
-                            <input type="text" style="width: 90px;"/>
-                        </div>
-                        <div class="container-control-item">
-                            <label>Color</label>
-                            <input type="text" style="width: 90px;"/>
-                        </div>
-                        <div class="container-control-item button-apply">
-                            <button id="apply">Apply</button>
-                        </div>
-                        <div class="container-control-configuration">
-                            <pre><code id="json-configuration"></code></pre>
-                        </div>
-                    </div>
-                    <div id="chart-div" class="container-chart">
-                        <!-- 
+            <div class="container-control-item">
+              <label>Color</label>
+              <input type="text" style="width: 90px" />
+            </div>
+            <div class="container-control-item button-apply">
+              <button id="apply">Apply</button>
+            </div>
+            <div class="container-control-configuration">
+              <pre><code id="json-configuration"></code></pre>
+            </div>
+          </div>
+          <div id="chart-div" class="container-chart">
+            <!-- 
                         차트영역
                         <svg id="chart">
                         </svg> 
                         -->
-                        <div class="chart-tip n" 
-                            style="position: absolute; opacity: 0; pointer-events: none; top: 0px; left: 0px; z-index: 999;">
-                            <strong></strong>
-                            <br>
-                            <span style="color:red"></span>
-                        </div>
-                    </div>
-                </div>
-                <div class="back-drop">
-                    <div class="loader"></div>
-                </div>
+            <div
+              class="chart-tip n"
+              style="
+                position: absolute;
+                opacity: 0;
+                pointer-events: none;
+                top: 0px;
+                left: 0px;
+                z-index: 999;
+              "
+            >
+              <strong></strong>
+              <br />
+              <span style="color: red"></span>
             </div>
-        </main>
-        
-        <script id="2d-vertex-shader" type="x-shader/x-vertex">
-            attribute vec2 a_position;
-            
-            uniform vec2 u_resolution;
-            uniform mat3 u_matrix;
-            
-            varying vec2 v_texCoord;
-            
-            void main() {
-            
-               gl_Position = vec4(u_matrix * vec3(a_position, 1), 1);
-               v_texCoord = a_position;
-            }
-        </script>
-        <!-- fragment shader -->
-        <script id="2d-fragment-shader" type="x-shader/x-fragment">
-            precision mediump float;
-            
-            // our texture
-            uniform sampler2D u_image;
-            
-            // the texCoords passed in from the vertex shader.
-            varying vec2 v_texCoord;
-            
-            void main() {
-               gl_FragColor = texture2D(u_image, v_texCoord);
-            }
-        </script>
-    </body>
+          </div>
+        </div>
+        <div class="back-drop">
+          <div class="loader"></div>
+        </div>
+      </div>
+    </main>
+
+    <script id="2d-vertex-shader" type="x-shader/x-vertex">
+      attribute vec2 a_position;
+
+      uniform vec2 u_resolution;
+      uniform mat3 u_matrix;
+
+      varying vec2 v_texCoord;
+
+      void main() {
+
+         gl_Position = vec4(u_matrix * vec3(a_position, 1), 1);
+         v_texCoord = a_position;
+      }
+    </script>
+    <!-- fragment shader -->
+    <script id="2d-fragment-shader" type="x-shader/x-fragment">
+      precision mediump float;
+
+      // our texture
+      uniform sampler2D u_image;
+
+      // the texCoords passed in from the vertex shader.
+      varying vec2 v_texCoord;
+
+      void main() {
+         gl_FragColor = texture2D(u_image, v_texCoord);
+      }
+    </script>
+  </body>
 </html>

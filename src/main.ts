@@ -8,13 +8,6 @@ import { event } from 'd3';
 import { delay, tap } from 'rxjs/operators';
 import { Observable, Observer, Subscription } from 'rxjs';
 
-import hljs from 'highlight.js/lib/core';
-import { highlightBlock } from 'highlight.js/lib/core';
-import json from 'highlight.js/lib/languages/json';
-hljs.registerLanguage('json', json);
-
-// import { highlightBlock } from 'highlight.js';
-
 import { BasicChart } from './component/basic-chart';
 import { BasicLineSeriesConfiguration } from './component/series/svg/basic-line-series';
 import { StackedVerticalBarSeriesConfiguration } from './component/series/svg/stacked-vertical-bar-series';
@@ -208,7 +201,6 @@ const topologyExample = () => {
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    highlightBlock((select('#json-configuration').node() as any));
 
     chart = SvgTopology(commonConfiguration).draw();
 }
@@ -310,7 +302,7 @@ const customTooltipTemplete = () => {
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    highlightBlock((select('#json-configuration').node() as any));
+    
 
     chart = SvgTraceChart(commonConfiguration, seriesList).draw();
     // custom tooltip templete select
@@ -425,7 +417,7 @@ const changeTooltipTemplete = () => {
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    highlightBlock((select('#json-configuration').node() as any));
+    
 
     chart = SvgTraceChart(commonConfiguration, seriesList);
     chart.toolTipTemplete = colorTooltipTemplate;
@@ -523,7 +515,7 @@ const updateSeriesExample = () => {
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    highlightBlock((select('#json-configuration').node() as any));
+    
 
     chart = SvgTraceChart(commonConfiguration, seriesList).draw();
 
@@ -712,7 +704,7 @@ const updateDataExample = () => {
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    highlightBlock((select('#json-configuration').node() as any));
+    
 
     chart = SvgTraceChart(commonConfiguration, seriesList).draw();
 
@@ -815,7 +807,7 @@ const simpleWebglLineSeriesExample = () => {
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    highlightBlock((select('#json-configuration').node() as any));
+    
 
     chart = WebglTraceChart(commonConfiguration, seriesList).draw();
 }
@@ -923,7 +915,7 @@ const simpleSvgLineSeriesExample = () => {
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    highlightBlock((select('#json-configuration').node() as any));
+    
 
     chart = SvgTraceChart(commonConfiguration, seriesList).draw();
     currentSubscription = chart.chartItemEvent.subscribe((item: ChartItemEvent) => {
@@ -981,7 +973,7 @@ const simpleSvgColumnSeriesExample = () => {
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    highlightBlock((select('#json-configuration').node() as any));
+    
 
     chart = SvgGroupedBarChart(commonConfiguration, groupedVerticalColumnSeriesConfiguration).draw();
 }
@@ -1037,7 +1029,7 @@ const simpleSvgStackedColumnSeriesExample = () => {
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    highlightBlock((select('#json-configuration').node() as any));
+    
 
     chart = SvgStackedBarChart(commonConfiguration, stackedVerticalColumnSeries).draw();
     currentSubscription = chart.chartItemEvent.subscribe((item: ChartItemEvent) => {
@@ -1139,7 +1131,7 @@ const simpleCanvasLineSeriesExample = () => {
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    highlightBlock((select('#json-configuration').node() as any));
+    
 
     chart = CanvasTraceChart(commonConfiguration, seriesList).draw();
 }
@@ -1230,7 +1222,7 @@ const simpleSvgPlotSeriesExample = () => {
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    highlightBlock((select('#json-configuration').node() as any));
+    
 
     chart = SvgTraceChart(commonConfiguration, seriesList).draw();
     currentSubscription = chart.chartItemEvent.subscribe((item: ChartItemEvent) => {
@@ -1313,7 +1305,7 @@ const simpleSvgAreaSeriesExample = () => {
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    highlightBlock((select('#json-configuration').node() as any));
+    
 
     chart = SvgAreaChart(commonConfiguration, seriesList).draw();
     currentSubscription = chart.chartItemEvent.subscribe((item: ChartItemEvent) => {
@@ -1494,7 +1486,7 @@ const webGLBigDataLineSeriesSample = () => {
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    highlightBlock((select('#json-configuration').node() as any));
+    
 
     chart = WebglTraceChart(commonConfiguration, seriesList.concat(alarmSeriesList), optionList).draw();
 }
@@ -1579,7 +1571,7 @@ const realTimeLineSeriesSample = () => {
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    highlightBlock((select('#json-configuration').node() as any));
+    
 
     chart = SvgTraceChart(commonConfiguration, seriesList).draw();
     chart.realTime(true, 100, 2000);
@@ -1776,7 +1768,7 @@ const canvasBigDataLineSeriesSample = () => {
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    highlightBlock((select('#json-configuration').node() as any));
+    
 
     
     chart = CanvasTraceChart(commonConfiguration, seriesList.concat(alarmSeriesList), optionList);
@@ -1892,7 +1884,7 @@ const svgMultiSeriesExample = () => {
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    highlightBlock((select('#json-configuration').node() as any));
+    
 
     chart = SvgMultiSeriesChart(commonConfiguration, seriesList).draw();
     currentSubscription = chart.chartItemEvent.subscribe((item: ChartItemEvent) => {
@@ -2072,7 +2064,7 @@ const axisCustomMargin = () => {
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    highlightBlock((select('#json-configuration').node() as any));
+    
 
     chart = CanvasTraceChart(commonConfiguration, seriesList.concat(alarmSeriesList), optionList).draw();
 }
