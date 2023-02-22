@@ -60,7 +60,7 @@ export const generateScaleByAxis = <T = any>(
             if (axis.domain) {
                 scale.domain(axis.domain);
             } else {
-                scale.domain(data.map((item: T) => item[axis.field]));
+                scale.domain(data.map((item: T) => (item as any)[axis.field]));
             }
         } else {
             if (axis.type === ScaleType.TIME) {
