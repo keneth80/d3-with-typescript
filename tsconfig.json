@@ -7,9 +7,7 @@
         "module": "es6",
         // do not transpile stuff like classes, async/await, ...
         "target": "es5",
-        "lib": [
-            "es2015", "es6", "esnext", "dom"
-        ],
+        "lib": ["es2015", "es6", "esnext", "dom"],
         "declaration": true,
         "esModuleInterop": true,
         // produce a source map
@@ -17,16 +15,13 @@
         "baseUrl": ".",
         "outDir": "dist",
         "paths": {
-          "components/*": ["./src/components/*"],
-          "assets/*": ["./src/assets/*"]
+            "components/*": ["./src/components/*"],
+            "assets/*": ["./src/assets/*"]
         },
+        "resolveJsonModule": true,
         "allowSyntheticDefaultImports": true,
         "keyofStringsOnly": true
     },
-    "include": [
-        "./src/**/*"
-    ],
-    "exclude": [
-        "./node_modules/**/*"
-    ]
+    "include": ["./src/**/*"],
+    "exclude": ["./node_modules/**/*"]
 }

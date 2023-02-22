@@ -1,19 +1,19 @@
-"use strict";
+'use strict';
 
-const { merge } = require("webpack-merge");
+const { merge } = require('webpack-merge');
 
-const commonConfig = require("./webpack.config.common");
-const helpers = require("./helpers");
+const commonConfig = require('./webpack.config.common');
+const helpers = require('./helpers');
 
 module.exports = merge(commonConfig, {
-  mode: "development",
+    mode: 'development',
 
-  devtool: "eval-cheap-module-source-map",
+    devtool: 'eval-cheap-module-source-map',
 
-  output: {
-    path: helpers.root("dist"),
-    publicPath: "/",
-    filename: "[name].bundle.js",
-    chunkFilename: "[id].chunk.js",
-  },
+    output: {
+        path: helpers.root('dist'),
+        publicPath: '/',
+        filename: '[name].bundle.js',
+        chunkFilename: '[id].chunk.js',
+    },
 });
