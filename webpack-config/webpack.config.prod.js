@@ -1,6 +1,6 @@
 'use strict';
 
-const { merge } = require('webpack-merge');
+const {merge} = require('webpack-merge');
 const TerserPlugin = require('terser-webpack-plugin');
 const cssnano = require('cssnano');
 
@@ -13,7 +13,7 @@ module.exports = merge(commonConfig, {
         path: helpers.root('dist'),
         publicPath: '/',
         filename: '[hash].js',
-        chunkFilename: '[id].[hash].chunk.js',
+        chunkFilename: '[id].[hash].chunk.js'
     },
 
     optimization: {
@@ -22,9 +22,9 @@ module.exports = merge(commonConfig, {
                 commons: {
                     test: /[\\/]node_modules[\\/]/,
                     name: 'vendors',
-                    chunks: 'all',
-                },
-            },
+                    chunks: 'all'
+                }
+            }
         },
         runtimeChunk: 'single',
         minimizer: [
@@ -35,14 +35,14 @@ module.exports = merge(commonConfig, {
                     warnings: false,
                     compress: {
                         warnings: false,
-                        unused: true,
+                        unused: true
                     },
                     ecma: 6,
                     mangle: true,
-                    unused: true,
+                    unused: true
                 },
-                sourceMap: true,
-            }),
-        ],
-    },
+                sourceMap: true
+            })
+        ]
+    }
 });

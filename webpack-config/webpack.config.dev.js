@@ -1,6 +1,6 @@
 'use strict';
 
-const { merge } = require('webpack-merge');
+const {merge} = require('webpack-merge');
 
 const commonConfig = require('./webpack.config.common');
 const helpers = require('./helpers');
@@ -14,6 +14,6 @@ module.exports = merge(commonConfig, {
         path: helpers.root('dist'),
         publicPath: '/',
         filename: '[name].bundle.js',
-        chunkFilename: '[id].chunk.js',
-    },
+        chunkFilename: '[id].chunk.js'
+    }
 });

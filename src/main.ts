@@ -1,28 +1,31 @@
 import './style.css';
 import '@babel/polyfill';
 
-import { BaseType, select, Selection } from 'd3-selection';
-import { max } from 'd3-array';
-import { event } from 'd3';
+import {BaseType, select, Selection} from 'd3-selection';
+import {max} from 'd3-array';
+import {event} from 'd3';
 
-import { delay, tap } from 'rxjs/operators';
-import { Observable, Observer, Subscription } from 'rxjs';
+import {delay, tap} from 'rxjs/operators';
+import {Observable, Observer, Subscription} from 'rxjs';
 
-import { BasicChart } from './component/basic-chart';
-import { BasicLineSeriesConfiguration } from './component/series/svg/basic-line-series';
-import { StackedVerticalBarSeriesConfiguration } from './component/series/svg/stacked-vertical-bar-series';
-import { GroupedVerticalBarSeriesConfiguration } from './component/series/svg/grouped-vertical-bar-series';
-import { BasicAreaSeriesConfiguration } from './component/series/svg/basic-area-series';
-import { tracePoints, stepInfo } from './component/mock-data/trace-data';
+import {BasicChart} from './component/basic-chart';
+import {BasicLineSeriesConfiguration} from './component/series/svg/basic-line-series';
+import {StackedVerticalBarSeriesConfiguration} from './component/series/svg/stacked-vertical-bar-series';
+import {GroupedVerticalBarSeriesConfiguration} from './component/series/svg/grouped-vertical-bar-series';
+import {BasicAreaSeriesConfiguration} from './component/series/svg/basic-area-series';
+import {tracePoints, stepInfo} from './component/mock-data/trace-data';
 
-import { Placement, Align, ScaleType, Direction } from './component/chart/chart-configuration';
+import {Placement, Align, ScaleType, Direction} from './component/chart/chart-configuration';
 
-import { BasicCanvasWebglLineSeriesOneConfiguration, BasicCanvasWebglLineSeriesOneModel } from './component/series/webgl/basic-canvas-webgl-line-series-one';
-import { BasicCanvasTraceModel, BasicCanvasTraceConfiguration } from './component/series/canvas/basic-canvas-trace';
+import {
+    BasicCanvasWebglLineSeriesOneConfiguration,
+    BasicCanvasWebglLineSeriesOneModel
+} from './component/series/webgl/basic-canvas-webgl-line-series-one';
+import {BasicCanvasTraceModel, BasicCanvasTraceConfiguration} from './component/series/canvas/basic-canvas-trace';
 
-import { delayExcute } from './component/chart/util/d3-svg-util';
-import { OptionConfiguration, MiccBaseConfiguration } from './component/mi-chart';
-import { ChartItemEvent, colorTooltipTemplate, SeriesType, TooltipEvent } from './component/chart';
+import {delayExcute} from './component/chart/util/d3-svg-util';
+import {OptionConfiguration, MiccBaseConfiguration} from './component/mi-chart';
+import {ChartItemEvent, colorTooltipTemplate, SeriesType, TooltipEvent} from './component/chart';
 import {
     CanvasTraceChart,
     SvgGroupedBarChart,
@@ -33,11 +36,10 @@ import {
     SvgMultiSeriesChart,
     SvgTopology
 } from './component/chart-generator';
-import { sampleMockData, sampleMockTimeData } from './component/mock-data/simple-mock-data';
-import { centerPositionForTooltipElement } from './component/chart/util/tooltip-util';
-import { topologyData } from './component/mock-data/topology-data';
-import { TopologyGroupElement, TopologyData } from './component/series';
-
+import {sampleMockData, sampleMockTimeData} from './component/mock-data/simple-mock-data';
+import {centerPositionForTooltipElement} from './component/chart/util/tooltip-util';
+import {topologyData} from './component/mock-data/topology-data';
+import {TopologyGroupElement, TopologyData} from './component/series';
 
 let chart: BasicChart;
 let currentSubscription: Subscription;
@@ -51,15 +53,15 @@ const clear = () => {
     if (currentSubscription) {
         currentSubscription.unsubscribe();
     }
-}
+};
 
 const hideLoader = () => {
     select('.back-drop').classed('show', false);
-}
+};
 
 const showLoader = () => {
     select('.back-drop').classed('show', true);
-}
+};
 
 const buttonMapping = () => {
     select('.container-button-bar').on('click', () => {
@@ -69,97 +71,104 @@ const buttonMapping = () => {
             observ.next(true);
             observ.complete();
         })
-        .pipe(
-            tap(() => {
-                if (seriesId) {
-                    showLoader();
-                    clear();
-                }
-            }),
-            delay(200),
-            tap(() => {
-                switch (seriesId) {
-                    case 'svg-line-series':
-                        simpleSvgLineSeriesExample();
-                    break;
-                    case 'webgl-line-series':
-                        simpleWebglLineSeriesExample();
-                    break;
-                    case 'webgl-bigdata-line-series':
-                        webGLBigDataLineSeriesSample();
-                    break;
-                    case 'canvas-line-series':
-                        simpleCanvasLineSeriesExample();
-                    break;
-                    case 'canvas-bigdata-line-series':
-                        canvasBigDataLineSeriesSample();
-                    break;
-                    case 'svg-column-series':
-                        simpleSvgColumnSeriesExample();
-                    break;
-                    case 'svg-stacked-column-series':
-                        simpleSvgStackedColumnSeriesExample();
-                    break;
-                    case 'svg-plot-series':
-                        simpleSvgPlotSeriesExample();
-                    break;
-                    case 'svg-area-series':
-                        simpleSvgAreaSeriesExample();
-                    break;
-                    case 'axis-custom-margin':
-                        axisCustomMargin();
-                    break;
-                    case 'svg-multi-series':
-                        svgMultiSeriesExample();
-                    break;
-                    case 'update-series':
-                        updateSeriesExample();
-                    break;
-                    case 'update-data':
-                        updateDataExample();
-                    break;
-                    case 'tooltip-templete-change':
-                        changeTooltipTemplete();
-                    break;
-                    case 'tooltip-custom-templete':
-                        customTooltipTemplete();
-                    break;
-                    case 'svg-topology':
-                        topologyExample();
-                    break;
-                    case 'real-time-series':
-                        realTimeLineSeriesSample();
-                    break;
-                    default:
-                    break;
-                }
-            }),
-            delay(300),
-            tap(() => {
-                hideLoader();
-            })
-        )
-        .subscribe(() => {
-            console.log('exec => ', seriesId);
-        });
+            .pipe(
+                tap(() => {
+                    if (seriesId) {
+                        showLoader();
+                        clear();
+                    }
+                }),
+                delay(200),
+                tap(() => {
+                    switch (seriesId) {
+                        case 'svg-line-series':
+                            simpleSvgLineSeriesExample();
+                            break;
+                        case 'webgl-line-series':
+                            simpleWebglLineSeriesExample();
+                            break;
+                        case 'webgl-bigdata-line-series':
+                            webGLBigDataLineSeriesSample();
+                            break;
+                        case 'canvas-line-series':
+                            simpleCanvasLineSeriesExample();
+                            break;
+                        case 'canvas-bigdata-line-series':
+                            canvasBigDataLineSeriesSample();
+                            break;
+                        case 'svg-column-series':
+                            simpleSvgColumnSeriesExample();
+                            break;
+                        case 'svg-stacked-column-series':
+                            simpleSvgStackedColumnSeriesExample();
+                            break;
+                        case 'svg-plot-series':
+                            simpleSvgPlotSeriesExample();
+                            break;
+                        case 'svg-area-series':
+                            simpleSvgAreaSeriesExample();
+                            break;
+                        case 'axis-custom-margin':
+                            axisCustomMargin();
+                            break;
+                        case 'svg-multi-series':
+                            svgMultiSeriesExample();
+                            break;
+                        case 'update-series':
+                            updateSeriesExample();
+                            break;
+                        case 'update-data':
+                            updateDataExample();
+                            break;
+                        case 'tooltip-templete-change':
+                            changeTooltipTemplete();
+                            break;
+                        case 'tooltip-custom-templete':
+                            customTooltipTemplete();
+                            break;
+                        case 'svg-topology':
+                            topologyExample();
+                            break;
+                        case 'real-time-series':
+                            realTimeLineSeriesSample();
+                            break;
+                        default:
+                            break;
+                    }
+                }),
+                delay(300),
+                tap(() => {
+                    hideLoader();
+                })
+            )
+            .subscribe(() => {
+                console.log('exec => ', seriesId);
+            });
     });
-}
+};
 
 const setSeriesColor = (item: any) => {
     const seriesFaultType = item.referenceYn === 'Y' ? '' : item.segmentStatus;
-    if (item.referenceYn === 'N' && item.fdtaFaultYn === 'Y' && seriesFaultType === 'F' && item.primeYn === 'N') { // selectedAlarm
+    if (item.referenceYn === 'N' && item.fdtaFaultYn === 'Y' && seriesFaultType === 'F' && item.primeYn === 'N') {
+        // selectedAlarm
         return '#EA3010';
-    } else if (item.referenceYn === 'N' && item.fdtaFaultYn === 'N' && seriesFaultType === 'F' && item.primeYn === 'N') { // Fault
+    } else if (item.referenceYn === 'N' && item.fdtaFaultYn === 'N' && seriesFaultType === 'F' && item.primeYn === 'N') {
+        // Fault
         return '#f57416';
-    } else if (item.referenceYn === 'N' && item.fdtaFaultYn === 'N' && seriesFaultType === 'W' && item.primeYn === 'N') { // Warning
+    } else if (item.referenceYn === 'N' && item.fdtaFaultYn === 'N' && seriesFaultType === 'W' && item.primeYn === 'N') {
+        // Warning
         return '#f7ba00';
-    } else if (item.referenceYn === 'N' && item.fdtaFaultYn === 'N' && seriesFaultType === 'S' && item.primeYn === 'N') { // Safe
+    } else if (item.referenceYn === 'N' && item.fdtaFaultYn === 'N' && seriesFaultType === 'S' && item.primeYn === 'N') {
+        // Safe
         return '#0dac09';
-    } else if (item.referenceYn === 'Y' && item.fdtaFaultYn === 'Y' && seriesFaultType === '' && item.primeYn === 'N') { // referenceAlarm
+    } else if (item.referenceYn === 'Y' && item.fdtaFaultYn === 'Y' && seriesFaultType === '' && item.primeYn === 'N') {
+        // referenceAlarm
         return '#970f94';
-    } else if (item.referenceYn === 'Y' && item.fdtaFaultYn === 'N' && seriesFaultType === '' && item.primeYn === 'N') { // referenceNonAlarm
+    } else if (item.referenceYn === 'Y' && item.fdtaFaultYn === 'N' && seriesFaultType === '' && item.primeYn === 'N') {
+        // referenceNonAlarm
         return '#3766c7';
-    } else if (item.referenceYn === 'Y' && item.fdtaFaultYn === 'N' && seriesFaultType === '' && item.primeYn === 'Y') { // primeReference
+    } else if (item.referenceYn === 'Y' && item.fdtaFaultYn === 'N' && seriesFaultType === '' && item.primeYn === 'Y') {
+        // primeReference
         return '#3766c7';
     } else {
         return '#EA3010';
@@ -178,7 +187,7 @@ const topologyExample = () => {
             fullName: item.fullName
         };
         return new TopologyGroupElement(item.fullName, 0, 0, 50, 50, 5, 5, currentData, item.members);
-    })
+    });
     // .filter((item: TopologyGroupElement, index: number) => index === 0);
 
     const machines = topologyData.result.machines.map((item: any) => {
@@ -187,9 +196,7 @@ const topologyExample = () => {
 
     const commonConfiguration: MiccBaseConfiguration = {
         selector: '#chart-div',
-        data: [
-            new TopologyData(groups, machines)
-        ],
+        data: [new TopologyData(groups, machines)],
         margin: {
             top: 5,
             left: 10,
@@ -203,7 +210,7 @@ const topologyExample = () => {
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
 
     chart = SvgTopology(commonConfiguration).draw();
-}
+};
 
 const customTooltipTemplete = () => {
     const yFieldSeries: BasicLineSeriesConfiguration = {
@@ -230,7 +237,7 @@ const customTooltipTemplete = () => {
             radius: 3
         },
         displayName: 'z-series'
-    }
+    };
 
     const xFieldSeries: BasicLineSeriesConfiguration = {
         selector: 'x-series',
@@ -242,19 +249,15 @@ const customTooltipTemplete = () => {
             selector: 'basic-line-x-series-dot'
         },
         displayName: 'x-series'
-    }
+    };
 
-    const seriesList = [
-        yFieldSeries,
-        zFieldSeries,
-        xFieldSeries
-    ];
+    const seriesList = [yFieldSeries, zFieldSeries, xFieldSeries];
 
     const commonConfiguration: MiccBaseConfiguration = {
         selector: '#chart-div',
         tooltip: {
             tooltipTextParser: (d: any) => {
-                return `x: ${d[2].data.x} \ny: ${d[2].data.y}\nz: ${d[2].data.z}`
+                return `x: ${d[2].data.x} \ny: ${d[2].data.y}\nz: ${d[2].data.z}`;
             },
             visible: false
         },
@@ -302,26 +305,21 @@ const customTooltipTemplete = () => {
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    
 
     chart = SvgTraceChart(commonConfiguration, seriesList).draw();
     // custom tooltip templete select
     otherElement = select('#chart-div').select('.chart-tip');
     currentSubscription = chart.tooltipEvent$.subscribe((tooltipEvent: TooltipEvent) => {
         if (tooltipEvent.type === 'show') {
-            otherElement
-                .select('strong')
-                .text('Data');
-            otherElement
-                .select('span')
-                .text(`${tooltipEvent.data[2].displayName}: ${tooltipEvent.data[2].data[tooltipEvent.data[2].field]}`);
+            otherElement.select('strong').text('Data');
+            otherElement.select('span').text(`${tooltipEvent.data[2].displayName}: ${tooltipEvent.data[2].data[tooltipEvent.data[2].field]}`);
             centerPositionForTooltipElement(chart, otherElement.node(), tooltipEvent.position);
         } else {
             otherElement.style('pointer-events', 'none');
             otherElement.style('opacity', 0);
         }
     });
-}
+};
 
 const changeTooltipTemplete = () => {
     const yFieldSeries: BasicLineSeriesConfiguration = {
@@ -348,7 +346,7 @@ const changeTooltipTemplete = () => {
             radius: 3
         },
         displayName: 'z-series'
-    }
+    };
 
     const xFieldSeries: BasicLineSeriesConfiguration = {
         selector: 'x-series',
@@ -360,19 +358,15 @@ const changeTooltipTemplete = () => {
             selector: 'basic-line-x-series-dot'
         },
         displayName: 'x-series'
-    }
+    };
 
-    const seriesList = [
-        yFieldSeries,
-        zFieldSeries,
-        xFieldSeries
-    ];
+    const seriesList = [yFieldSeries, zFieldSeries, xFieldSeries];
 
     const commonConfiguration: MiccBaseConfiguration = {
         selector: '#chart-div',
         tooltip: {
             tooltipTextParser: (d: any) => {
-                return `x: ${d[2].data.x} \ny: ${d[2].data.y}\nz: ${d[2].data.z}`
+                return `x: ${d[2].data.x} \ny: ${d[2].data.y}\nz: ${d[2].data.z}`;
             }
         },
         data: sampleMockData(20),
@@ -413,16 +407,15 @@ const changeTooltipTemplete = () => {
         zoom: {
             direction: Direction.BOTH
         },
-        mouseGuideLine:{}
+        mouseGuideLine: {}
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    
 
     chart = SvgTraceChart(commonConfiguration, seriesList);
     chart.toolTipTemplete = colorTooltipTemplate;
     chart.draw();
-}
+};
 
 const updateSeriesExample = () => {
     const yFieldSeries: BasicLineSeriesConfiguration = {
@@ -449,7 +442,7 @@ const updateSeriesExample = () => {
             radius: 3
         },
         displayName: 'z-series'
-    }
+    };
 
     const xFieldSeries: BasicLineSeriesConfiguration = {
         selector: 'x-series',
@@ -461,19 +454,15 @@ const updateSeriesExample = () => {
             selector: 'basic-line-x-series-dot'
         },
         displayName: 'x-series'
-    }
+    };
 
-    const seriesList = [
-        yFieldSeries,
-        zFieldSeries,
-        xFieldSeries
-    ];
+    const seriesList = [yFieldSeries, zFieldSeries, xFieldSeries];
 
     const commonConfiguration: MiccBaseConfiguration = {
         selector: '#chart-div',
         tooltip: {
             tooltipTextParser: (d: any) => {
-                return `x: ${d[2].x} \ny: ${d[2].y}\nz: ${d[2].z}`
+                return `x: ${d[2].x} \ny: ${d[2].y}\nz: ${d[2].z}`;
             }
         },
         data: sampleMockData(20),
@@ -511,11 +500,10 @@ const updateSeriesExample = () => {
                 }
             }
         ],
-        mouseGuideLine:{}
+        mouseGuideLine: {}
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    
 
     chart = SvgTraceChart(commonConfiguration, seriesList).draw();
 
@@ -523,89 +511,85 @@ const updateSeriesExample = () => {
         observ.next(true);
         observ.complete();
     })
-    .pipe(
-        delay(3000),
-        tap(() => {
-            const yFieldPlotSeries: BasicLineSeriesConfiguration = {
-                type: SeriesType.SVG_LINE,
-                selector: 'y-series',
-                xField: 'x',
-                yField: 'y',
-                dot: {
-                    selector: 'basic-line-y-series-dot',
-                    radius: 3
-                },
-                displayName: 'y-series'
-            };
+        .pipe(
+            delay(3000),
+            tap(() => {
+                const yFieldPlotSeries: BasicLineSeriesConfiguration = {
+                    type: SeriesType.SVG_LINE,
+                    selector: 'y-series',
+                    xField: 'x',
+                    yField: 'y',
+                    dot: {
+                        selector: 'basic-line-y-series-dot',
+                        radius: 3
+                    },
+                    displayName: 'y-series'
+                };
 
-            const zFieldPlotSeries: BasicLineSeriesConfiguration = {
-                type: SeriesType.SVG_LINE,
-                selector: 'z-series',
-                xField: 'x',
-                yField: 'z',
-                dot: {
-                    selector: 'basic-line-z-series-dot',
-                    radius: 3
-                },
-                displayName: 'z-series'
-            }
+                const zFieldPlotSeries: BasicLineSeriesConfiguration = {
+                    type: SeriesType.SVG_LINE,
+                    selector: 'z-series',
+                    xField: 'x',
+                    yField: 'z',
+                    dot: {
+                        selector: 'basic-line-z-series-dot',
+                        radius: 3
+                    },
+                    displayName: 'z-series'
+                };
 
-            const xFieldPlotSeries: BasicLineSeriesConfiguration = {
-                type: SeriesType.SVG_LINE,
-                selector: 'x-series',
-                xField: 'x',
-                yField: 'x',
-                dot: {
-                    radius: 3,
-                    selector: 'basic-line-x-series-dot'
-                },
-                displayName: 'x-series'
-            }
+                const xFieldPlotSeries: BasicLineSeriesConfiguration = {
+                    type: SeriesType.SVG_LINE,
+                    selector: 'x-series',
+                    xField: 'x',
+                    yField: 'x',
+                    dot: {
+                        radius: 3,
+                        selector: 'basic-line-x-series-dot'
+                    },
+                    displayName: 'x-series'
+                };
 
-            chart.series([
-                yFieldPlotSeries,
-                // zFieldPlotSeries,
-                xFieldPlotSeries
-            ]);
-        }),
-        delay(3000),
-        tap(() => {
-            const yFieldAreaSeries: BasicAreaSeriesConfiguration = {
-                type: SeriesType.SVG_AREA,
-                selector: 'y-series',
-                xField: 'x',
-                yField: 'y',
-                displayName: 'y-series',
-            };
+                chart.series([
+                    yFieldPlotSeries,
+                    // zFieldPlotSeries,
+                    xFieldPlotSeries
+                ]);
+            }),
+            delay(3000),
+            tap(() => {
+                const yFieldAreaSeries: BasicAreaSeriesConfiguration = {
+                    type: SeriesType.SVG_AREA,
+                    selector: 'y-series',
+                    xField: 'x',
+                    yField: 'y',
+                    displayName: 'y-series'
+                };
 
-            const zFieldAreaSeries: BasicAreaSeriesConfiguration = {
-                type: SeriesType.SVG_AREA,
-                selector: 'z-series',
-                xField: 'x',
-                yField: 'z',
-                displayName: 'z-series'
-            };
+                const zFieldAreaSeries: BasicAreaSeriesConfiguration = {
+                    type: SeriesType.SVG_AREA,
+                    selector: 'z-series',
+                    xField: 'x',
+                    yField: 'z',
+                    displayName: 'z-series'
+                };
 
-            const xFieldAreaSeries: BasicAreaSeriesConfiguration = {
-                type: SeriesType.SVG_AREA,
-                selector: 'x-series',
-                xField: 'x',
-                yField: 'x',
-                displayName: 'x-series'
-            };
+                const xFieldAreaSeries: BasicAreaSeriesConfiguration = {
+                    type: SeriesType.SVG_AREA,
+                    selector: 'x-series',
+                    xField: 'x',
+                    yField: 'x',
+                    displayName: 'x-series'
+                };
 
-            chart.series([
-                yFieldAreaSeries,
-                zFieldAreaSeries,
-                xFieldAreaSeries
-            ]);
-        })
-    )
-    .subscribe(() => {
-        console.log('display complete!');
-        chart.title('Update Title');
-    });
-}
+                chart.series([yFieldAreaSeries, zFieldAreaSeries, xFieldAreaSeries]);
+            })
+        )
+        .subscribe(() => {
+            console.log('display complete!');
+            chart.title('Update Title');
+        });
+};
 
 const updateDataExample = () => {
     const yFieldSeries: BasicLineSeriesConfiguration = {
@@ -634,7 +618,7 @@ const updateDataExample = () => {
         },
         displayName: 'z-series',
         animation: true
-    }
+    };
 
     const xFieldSeries: BasicLineSeriesConfiguration = {
         selector: 'x-series',
@@ -647,19 +631,15 @@ const updateDataExample = () => {
         },
         displayName: 'x-series',
         animation: true
-    }
+    };
 
-    const seriesList = [
-        yFieldSeries,
-        zFieldSeries,
-        xFieldSeries
-    ];
+    const seriesList = [yFieldSeries, zFieldSeries, xFieldSeries];
 
     const commonConfiguration: MiccBaseConfiguration = {
         selector: '#chart-div',
         tooltip: {
             tooltipTextParser: (d: any) => {
-                return `x: ${d[2].x} \ny: ${d[2].y}\nz: ${d[2].z}`
+                return `x: ${d[2].x} \ny: ${d[2].y}\nz: ${d[2].z}`;
             }
         },
         data: sampleMockData(20),
@@ -700,11 +680,10 @@ const updateDataExample = () => {
         zoom: {
             direction: Direction.BOTH
         },
-        mouseGuideLine:{}
+        mouseGuideLine: {}
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    
 
     chart = SvgTraceChart(commonConfiguration, seriesList).draw();
 
@@ -712,22 +691,22 @@ const updateDataExample = () => {
         observ.next(true);
         observ.complete();
     })
-    .pipe(
-        delay(3000),
-        tap(() => {
+        .pipe(
+            delay(3000),
+            tap(() => {
+                chart.data(sampleMockData(20));
+            }),
+            delay(3000),
+            tap(() => {
+                chart.data(sampleMockData(20));
+            })
+        )
+        .subscribe(() => {
             chart.data(sampleMockData(20));
-        }),
-        delay(3000),
-        tap(() => {
-            chart.data(sampleMockData(20));
-        })
-    )
-    .subscribe(() => {
-        chart.data(sampleMockData(20));
-        chart.toolTipTemplete = colorTooltipTemplate;
-        console.log('update complete!');
-    });
-}
+            chart.toolTipTemplete = colorTooltipTemplate;
+            console.log('update complete!');
+        });
+};
 
 const simpleWebglLineSeriesExample = () => {
     const yFieldSeries: BasicCanvasWebglLineSeriesOneConfiguration = {
@@ -738,7 +717,7 @@ const simpleWebglLineSeriesExample = () => {
             radius: 6
         },
         line: {
-            strokeColor: '#4d8700',
+            strokeColor: '#4d8700'
         }
     };
 
@@ -750,9 +729,9 @@ const simpleWebglLineSeriesExample = () => {
             radius: 6
         },
         line: {
-            strokeColor: '#ff9421',
+            strokeColor: '#ff9421'
         }
-    }
+    };
 
     const xFieldSeries: BasicCanvasWebglLineSeriesOneConfiguration = {
         selector: 'z-series',
@@ -762,15 +741,11 @@ const simpleWebglLineSeriesExample = () => {
             radius: 6
         },
         line: {
-            strokeColor: '#2137ff',
+            strokeColor: '#2137ff'
         }
-    }
+    };
 
-    const seriesList = [
-        yFieldSeries,
-        zFieldSeries,
-        xFieldSeries
-    ];
+    const seriesList = [yFieldSeries, zFieldSeries, xFieldSeries];
 
     const commonConfiguration: MiccBaseConfiguration = {
         selector: '#chart-div',
@@ -781,7 +756,7 @@ const simpleWebglLineSeriesExample = () => {
         },
         tooltip: {
             tooltipTextParser: (d: any) => {
-                return `x: ${d[2].x} \ny: ${d[2].y}\nz: ${d[2].z}`
+                return `x: ${d[2].x} \ny: ${d[2].y}\nz: ${d[2].z}`;
             }
         },
         isResize: true,
@@ -807,10 +782,9 @@ const simpleWebglLineSeriesExample = () => {
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    
 
     chart = WebglTraceChart(commonConfiguration, seriesList).draw();
-}
+};
 
 const simpleSvgLineSeriesExample = () => {
     const yFieldSeries: BasicLineSeriesConfiguration = {
@@ -837,7 +811,7 @@ const simpleSvgLineSeriesExample = () => {
             radius: 3
         },
         displayName: 'z-series'
-    }
+    };
 
     const xFieldSeries: BasicLineSeriesConfiguration = {
         selector: 'x-series',
@@ -853,13 +827,9 @@ const simpleSvgLineSeriesExample = () => {
         //     strokeColor: '#ccc'
         // },
         displayName: 'x-series'
-    }
+    };
 
-    const seriesList = [
-        yFieldSeries,
-        zFieldSeries,
-        xFieldSeries
-    ];
+    const seriesList = [yFieldSeries, zFieldSeries, xFieldSeries];
 
     const commonConfiguration: MiccBaseConfiguration = {
         selector: '#chart-div',
@@ -867,7 +837,7 @@ const simpleSvgLineSeriesExample = () => {
             tooltipTextParser: (d: any) => {
                 const currentItem = d[2];
                 const currentData = currentItem.data;
-                return `${currentItem.displayName} \nx: ${currentData['x']}\nvalue: ${currentData[currentItem.field]}`
+                return `${currentItem.displayName} \nx: ${currentData['x']}\nvalue: ${currentData[currentItem.field]}`;
             }
         },
         data: sampleMockData(20),
@@ -915,7 +885,6 @@ const simpleSvgLineSeriesExample = () => {
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    
 
     chart = SvgTraceChart(commonConfiguration, seriesList).draw();
     currentSubscription = chart.chartItemEvent.subscribe((item: ChartItemEvent) => {
@@ -924,7 +893,7 @@ const simpleSvgLineSeriesExample = () => {
         //     console.log('click => ' + JSON.stringify(item.data));
         // }
     });
-}
+};
 
 const simpleSvgColumnSeriesExample = () => {
     const columns = ['x', 'y', 'z'];
@@ -949,7 +918,7 @@ const simpleSvgColumnSeriesExample = () => {
             tooltipTextParser: (d: any) => {
                 const item: any = d[2];
                 const key = d[7];
-                return `${key}: ${item[key]}`
+                return `${key}: ${item[key]}`;
             }
         },
         isResize: true,
@@ -967,16 +936,15 @@ const simpleSvgColumnSeriesExample = () => {
                 tickFormat: 's',
                 isRound: true,
                 min: 0, // 여러개의 field를 참조해야할 경우에는 min, max를 지정해야 정상작동을 한다.
-                max: 50,
+                max: 50
             }
         ]
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    
 
     chart = SvgGroupedBarChart(commonConfiguration, groupedVerticalColumnSeriesConfiguration).draw();
-}
+};
 
 const simpleSvgStackedColumnSeriesExample = () => {
     const stackedVerticalColumnSeries: StackedVerticalBarSeriesConfiguration = {
@@ -998,7 +966,7 @@ const simpleSvgStackedColumnSeriesExample = () => {
             tooltipTextParser: (d: any) => {
                 const item: any = d[2];
                 const key = d[7];
-                return `${key}: ${item[key]}`
+                return `${key}: ${item[key]}`;
             }
         },
         axes: [
@@ -1029,13 +997,12 @@ const simpleSvgStackedColumnSeriesExample = () => {
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    
 
     chart = SvgStackedBarChart(commonConfiguration, stackedVerticalColumnSeries).draw();
     currentSubscription = chart.chartItemEvent.subscribe((item: ChartItemEvent) => {
         console.log('selected item : ', item);
-    })
-}
+    });
+};
 
 const simpleCanvasLineSeriesExample = () => {
     const yFieldSeries: BasicCanvasTraceConfiguration = {
@@ -1058,7 +1025,7 @@ const simpleCanvasLineSeriesExample = () => {
             radius: 3
         },
         displayName: 'z-series'
-    }
+    };
 
     const xFieldSeries: BasicCanvasTraceConfiguration = {
         selector: 'x-series',
@@ -1071,13 +1038,9 @@ const simpleCanvasLineSeriesExample = () => {
             radius: 3
         },
         displayName: 'x-series'
-    }
+    };
 
-    const seriesList = [
-        yFieldSeries,
-        zFieldSeries,
-        xFieldSeries
-    ];
+    const seriesList = [yFieldSeries, zFieldSeries, xFieldSeries];
 
     const commonConfiguration: MiccBaseConfiguration = {
         selector: '#chart-div',
@@ -1088,7 +1051,7 @@ const simpleCanvasLineSeriesExample = () => {
             tooltipTextParser: (d: any) => {
                 const currentItem = d[2];
                 const currentData = currentItem.data;
-                return `${currentItem.displayName} \nx: ${currentData['x']}\nvalue: ${currentData[currentItem.field]}`
+                return `${currentItem.displayName} \nx: ${currentData['x']}\nvalue: ${currentData[currentItem.field]}`;
             }
         },
         legend: {
@@ -1108,7 +1071,7 @@ const simpleCanvasLineSeriesExample = () => {
                 min: 0,
                 max: 21,
                 gridLine: {
-                    dasharray: 2,
+                    dasharray: 2
                 }
             },
             {
@@ -1118,7 +1081,7 @@ const simpleCanvasLineSeriesExample = () => {
                 min: -5,
                 max: 30,
                 gridLine: {
-                    dasharray: 2,
+                    dasharray: 2
                 },
                 zeroLine: {
                     color: '#000'
@@ -1131,10 +1094,9 @@ const simpleCanvasLineSeriesExample = () => {
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    
 
     chart = CanvasTraceChart(commonConfiguration, seriesList).draw();
-}
+};
 
 const simpleSvgPlotSeriesExample = () => {
     const yFieldSeries: BasicLineSeriesConfiguration = {
@@ -1157,7 +1119,7 @@ const simpleSvgPlotSeriesExample = () => {
             selector: 'basic-line-z-series-dot'
         },
         displayName: 'z-series'
-    }
+    };
 
     const xFieldSeries: BasicLineSeriesConfiguration = {
         selector: 'x-series',
@@ -1168,13 +1130,9 @@ const simpleSvgPlotSeriesExample = () => {
             selector: 'basic-line-x-series-dot'
         },
         displayName: 'x-series'
-    }
+    };
 
-    const seriesList = [
-        yFieldSeries,
-        zFieldSeries,
-        xFieldSeries
-    ];
+    const seriesList = [yFieldSeries, zFieldSeries, xFieldSeries];
 
     const commonConfiguration: MiccBaseConfiguration = {
         selector: '#chart-div',
@@ -1182,7 +1140,7 @@ const simpleSvgPlotSeriesExample = () => {
             tooltipTextParser: (d: any) => {
                 const currentItem = d[2];
                 const currentData = currentItem.data;
-                return `${currentItem.displayName} \nx: ${currentData['x']}\nvalue: ${currentData[currentItem.field]}`
+                return `${currentItem.displayName} \nx: ${currentData['x']}\nvalue: ${currentData[currentItem.field]}`;
             }
         },
         data: sampleMockData(20),
@@ -1222,7 +1180,6 @@ const simpleSvgPlotSeriesExample = () => {
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    
 
     chart = SvgTraceChart(commonConfiguration, seriesList).draw();
     currentSubscription = chart.chartItemEvent.subscribe((item: ChartItemEvent) => {
@@ -1230,14 +1187,14 @@ const simpleSvgPlotSeriesExample = () => {
             alert('click =>' + JSON.stringify(item.data));
         }
     });
-}
+};
 
 const simpleSvgAreaSeriesExample = () => {
     const yFieldSeries: BasicAreaSeriesConfiguration = {
         selector: 'y-series',
         xField: 'x',
         yField: 'y',
-        displayName: 'y-series',
+        displayName: 'y-series'
     };
 
     const zFieldSeries: BasicAreaSeriesConfiguration = {
@@ -1245,26 +1202,22 @@ const simpleSvgAreaSeriesExample = () => {
         xField: 'x',
         yField: 'z',
         displayName: 'z-series'
-    }
+    };
 
     const xFieldSeries: BasicAreaSeriesConfiguration = {
         selector: 'x-series',
         xField: 'x',
         yField: 'x',
         displayName: 'x-series'
-    }
+    };
 
-    const seriesList = [
-        yFieldSeries,
-        zFieldSeries,
-        xFieldSeries
-    ];
+    const seriesList = [yFieldSeries, zFieldSeries, xFieldSeries];
 
     const commonConfiguration: MiccBaseConfiguration = {
         selector: '#chart-div',
         tooltip: {
             tooltipTextParser: (d: any) => {
-                return `x: ${d[2].x} \ny: ${d[2].y}\nz: ${d[2].z}`
+                return `x: ${d[2].x} \ny: ${d[2].y}\nz: ${d[2].z}`;
             }
         },
         data: sampleMockData(20),
@@ -1305,7 +1258,6 @@ const simpleSvgAreaSeriesExample = () => {
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    
 
     chart = SvgAreaChart(commonConfiguration, seriesList).draw();
     currentSubscription = chart.chartItemEvent.subscribe((item: ChartItemEvent) => {
@@ -1313,7 +1265,7 @@ const simpleSvgAreaSeriesExample = () => {
             alert('click =>' + JSON.stringify(item.data));
         }
     });
-}
+};
 
 const webGLBigDataLineSeriesSample = () => {
     const stepData = stepInfo.map((step: any) => {
@@ -1369,12 +1321,7 @@ const webGLBigDataLineSeriesSample = () => {
                     ymax = y;
                 }
 
-                return new BasicCanvasWebglLineSeriesOneModel(
-                    x,
-                    y,
-                    i,
-                    rowData
-                );
+                return new BasicCanvasWebglLineSeriesOneModel(x, y, i, rowData);
             });
             // test data 늘리기
             // const tempRow: BasicCanvasWebglLineSeriesOneModel = seriesData[seriesData.length - 1];
@@ -1391,7 +1338,7 @@ const webGLBigDataLineSeriesSample = () => {
             // type별 컬러 지정.
             const seriesColor = setSeriesColor(tempData);
             const configuration: BasicCanvasWebglLineSeriesOneConfiguration = {
-                selector: (seriesColor === '#EA3010' ? 'webgl-trace-alarm' : 'webgl-trace')  + i,
+                selector: (seriesColor === '#EA3010' ? 'webgl-trace-alarm' : 'webgl-trace') + i,
                 xField: 'x',
                 yField: 'y',
                 dot: {
@@ -1399,11 +1346,11 @@ const webGLBigDataLineSeriesSample = () => {
                     fill: seriesColor
                 },
                 line: {
-                    strokeColor: seriesColor,
+                    strokeColor: seriesColor
                     // opacity: seriesColor === '#EA3010' ? 1 :  0.9
                 },
                 data: seriesData
-            }
+            };
 
             if (seriesColor === '#EA3010') {
                 alarmSeriesList.push(configuration);
@@ -1411,7 +1358,7 @@ const webGLBigDataLineSeriesSample = () => {
                 seriesList.push(configuration);
             }
         }
-    }
+    };
 
     parseData();
 
@@ -1458,7 +1405,7 @@ const webGLBigDataLineSeriesSample = () => {
         },
         tooltip: {
             tooltipTextParser: (d: BasicCanvasWebglLineSeriesOneModel) => {
-                return `x: ${d[2].x} \ny: ${d[2].y}\ni: ${d[2].i}`
+                return `x: ${d[2].x} \ny: ${d[2].y}\ni: ${d[2].i}`;
             }
         },
         isResize: true,
@@ -1467,8 +1414,8 @@ const webGLBigDataLineSeriesSample = () => {
                 field: 'x',
                 type: ScaleType.NUMBER,
                 placement: Placement.BOTTOM,
-                min: xmin - (xmax * 0.01),
-                max: xmax + (xmax * 0.01)
+                min: xmin - xmax * 0.01,
+                max: xmax + xmax * 0.01
             },
             {
                 field: 'y',
@@ -1486,10 +1433,9 @@ const webGLBigDataLineSeriesSample = () => {
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    
 
     chart = WebglTraceChart(commonConfiguration, seriesList.concat(alarmSeriesList), optionList).draw();
-}
+};
 
 const realTimeLineSeriesSample = () => {
     const yFieldSeries: BasicLineSeriesConfiguration = {
@@ -1508,12 +1454,9 @@ const realTimeLineSeriesSample = () => {
         yField: 'z',
         line: {},
         displayName: 'z-series'
-    }
+    };
 
-    const seriesList = [
-        yFieldSeries,
-        zFieldSeries
-    ];
+    const seriesList = [yFieldSeries, zFieldSeries];
 
     const data = sampleMockTimeData(100);
 
@@ -1525,7 +1468,7 @@ const realTimeLineSeriesSample = () => {
             tooltipTextParser: (d: any) => {
                 const currentItem = d[2];
                 const currentData = currentItem.data;
-                return `${currentItem.displayName} \nx: ${currentData['x']}\nvalue: ${currentData[currentItem.field]}`
+                return `${currentItem.displayName} \nx: ${currentData['x']}\nvalue: ${currentData[currentItem.field]}`;
             }
         },
         data,
@@ -1571,14 +1514,12 @@ const realTimeLineSeriesSample = () => {
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    
 
     chart = SvgTraceChart(commonConfiguration, seriesList).draw();
     chart.realTime(true, 100, 2000);
-}
+};
 
 const canvasBigDataLineSeriesSample = () => {
-
     const stepData = stepInfo.map((step: any) => {
         return {
             start: step.startCountSlot,
@@ -1668,12 +1609,7 @@ const canvasBigDataLineSeriesSample = () => {
                     ymax = y;
                 }
 
-                return new BasicCanvasTraceModel(
-                    x,
-                    y,
-                    i,
-                    rowData
-                );
+                return new BasicCanvasTraceModel(x, y, i, rowData);
             });
 
             // test data 늘리기
@@ -1686,18 +1622,13 @@ const canvasBigDataLineSeriesSample = () => {
                     xmax = x;
                 }
 
-                seriesData.push(new BasicCanvasTraceModel(
-                    x,
-                    y,
-                    i,
-                    tempRow
-                ));
+                seriesData.push(new BasicCanvasTraceModel(x, y, i, tempRow));
             }
 
             // type별 컬러 지정.
             const seriesColor = setSeriesColor(tempData);
             const configuration: BasicCanvasTraceConfiguration = {
-                selector: (seriesColor === '#EA3010' ? 'canvas-trace-alarm' : 'canvas-trace')  + i,
+                selector: (seriesColor === '#EA3010' ? 'canvas-trace-alarm' : 'canvas-trace') + i,
                 xField: 'x',
                 yField: 'y',
                 // dot: {
@@ -1710,7 +1641,7 @@ const canvasBigDataLineSeriesSample = () => {
                     // opacity: seriesColor === '#EA3010' ? 1 :  0.9
                 },
                 data: seriesData
-            }
+            };
 
             if (seriesColor === '#EA3010') {
                 alarmSeriesList.push(configuration);
@@ -1720,7 +1651,7 @@ const canvasBigDataLineSeriesSample = () => {
                 // seriesList.push(new BasicCanvasTrace(configuration));
             }
         }
-    }
+    };
 
     parseData();
 
@@ -1739,7 +1670,7 @@ const canvasBigDataLineSeriesSample = () => {
             tooltipTextParser: (d: any) => {
                 const currentItem = d[2];
                 const currentData = currentItem.data;
-                return `${currentItem.displayName} \nx: ${currentData['x']}\nvalue: ${currentData[currentItem.field]}`
+                return `${currentItem.displayName} \nx: ${currentData['x']}\nvalue: ${currentData[currentItem.field]}`;
             },
             isMultiple: true
         },
@@ -1749,8 +1680,8 @@ const canvasBigDataLineSeriesSample = () => {
                 field: 'x',
                 type: ScaleType.NUMBER,
                 placement: 'bottom',
-                min: xmin - (xmax * 0.01),
-                max: xmax + (xmax * 0.01)
+                min: xmin - xmax * 0.01,
+                max: xmax + xmax * 0.01
             },
             {
                 field: 'y',
@@ -1768,9 +1699,7 @@ const canvasBigDataLineSeriesSample = () => {
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    
 
-    
     chart = CanvasTraceChart(commonConfiguration, seriesList.concat(alarmSeriesList), optionList);
     currentSubscription = chart.lifecycle$.subscribe((event: {type: string}) => {
         if (event.type === 'initialize') {
@@ -1807,7 +1736,7 @@ const svgMultiSeriesExample = () => {
             selector: 'basic-line-z-series-dot'
         },
         displayName: 'z-series'
-    }
+    };
 
     const xFieldSeries: BasicLineSeriesConfiguration = {
         type: SeriesType.SVG_LINE,
@@ -1820,7 +1749,7 @@ const svgMultiSeriesExample = () => {
             selector: 'basic-line-x-series-dot'
         },
         displayName: 'x-series'
-    }
+    };
 
     const columns = ['z'];
 
@@ -1842,7 +1771,7 @@ const svgMultiSeriesExample = () => {
         selector: '#chart-div',
         tooltip: {
             tooltipTextParser: (d: any) => {
-                return `x: ${d[2].x} \ny: ${d[2].y}\nz: ${d[2].z}`
+                return `x: ${d[2].x} \ny: ${d[2].y}\nz: ${d[2].z}`;
             }
         },
         data: sampleMockData(20),
@@ -1863,7 +1792,7 @@ const svgMultiSeriesExample = () => {
                 gridLine: {
                     dasharray: 2
                 },
-                zeroLine : {
+                zeroLine: {
                     color: '#0000ff'
                 }
             },
@@ -1876,7 +1805,7 @@ const svgMultiSeriesExample = () => {
                 gridLine: {
                     dasharray: 2
                 },
-                zeroLine : {
+                zeroLine: {
                     color: '#0000ff'
                 }
             }
@@ -1884,7 +1813,6 @@ const svgMultiSeriesExample = () => {
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    
 
     chart = SvgMultiSeriesChart(commonConfiguration, seriesList).draw();
     currentSubscription = chart.chartItemEvent.subscribe((item: ChartItemEvent) => {
@@ -1892,7 +1820,7 @@ const svgMultiSeriesExample = () => {
             console.log('click =>' + JSON.stringify(item.data));
         }
     });
-}
+};
 
 const axisCustomMargin = () => {
     const stepData = stepInfo.map((step: any) => {
@@ -1984,18 +1912,13 @@ const axisCustomMargin = () => {
                     ymax = y;
                 }
 
-                return new BasicCanvasTraceModel(
-                    x,
-                    y,
-                    i,
-                    rowData
-                );
+                return new BasicCanvasTraceModel(x, y, i, rowData);
             });
 
             // type별 컬러 지정.
             const seriesColor = setSeriesColor(tempData);
             const configuration: BasicCanvasTraceConfiguration = {
-                selector: (seriesColor === '#EA3010' ? 'canvas-trace-alarm' : 'canvas-trace')  + i,
+                selector: (seriesColor === '#EA3010' ? 'canvas-trace-alarm' : 'canvas-trace') + i,
                 xField: 'x',
                 yField: 'y',
                 dot: {
@@ -2003,11 +1926,11 @@ const axisCustomMargin = () => {
                     fill: seriesColor
                 },
                 line: {
-                    strokeColor: seriesColor,
+                    strokeColor: seriesColor
                     // opacity: seriesColor === '#EA3010' ? 1 :  0.9
                 },
                 data: seriesData
-            }
+            };
 
             if (seriesColor === '#EA3010') {
                 alarmSeriesList.push(configuration);
@@ -2015,7 +1938,7 @@ const axisCustomMargin = () => {
                 seriesList.push(configuration);
             }
         }
-    }
+    };
 
     parseData();
 
@@ -2032,7 +1955,7 @@ const axisCustomMargin = () => {
         },
         tooltip: {
             tooltipTextParser: (d: any) => {
-                return `x: ${d[2].x} \ny: ${d[2].y}\nz: ${d[2].i}`
+                return `x: ${d[2].x} \ny: ${d[2].y}\nz: ${d[2].i}`;
             }
         },
         isResize: true,
@@ -2041,8 +1964,8 @@ const axisCustomMargin = () => {
                 field: 'x',
                 type: ScaleType.NUMBER,
                 placement: 'bottom',
-                min: xmin - (xmax * 0.01),
-                max: xmax + (xmax * 0.01)
+                min: xmin - xmax * 0.01,
+                max: xmax + xmax * 0.01
             },
             {
                 field: 'y',
@@ -2064,10 +1987,9 @@ const axisCustomMargin = () => {
     };
 
     (select('#json-configuration').node() as any).innerHTML = JSON.stringify(commonConfiguration, null, '\t');
-    
 
     chart = CanvasTraceChart(commonConfiguration, seriesList.concat(alarmSeriesList), optionList).draw();
-}
+};
 
 delayExcute(200, () => {
     buttonMapping();
