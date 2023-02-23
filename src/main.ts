@@ -3,7 +3,6 @@ import '@babel/polyfill';
 
 import {BaseType, select, Selection} from 'd3-selection';
 import {max} from 'd3-array';
-import {event} from 'd3';
 
 import {delay, tap} from 'rxjs/operators';
 import {Observable, Observer, Subscription} from 'rxjs';
@@ -64,8 +63,8 @@ const showLoader = () => {
 };
 
 const buttonMapping = () => {
-    select('.container-button-bar').on('click', () => {
-        const seriesId = event.target.id;
+    select('.container-button-bar').on('click', (event: PointerEvent) => {
+        const seriesId = (event.target as HTMLElement).id;
 
         new Observable((observ: Observer<any>) => {
             observ.next(true);

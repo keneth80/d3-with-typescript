@@ -1,12 +1,12 @@
-import { Selection, select, BaseType, mouse } from 'd3-selection';
-import { scaleOrdinal } from 'd3-scale';
-import { stack } from 'd3-shape';
-import { format } from 'd3-format';
+import {Selection, select, BaseType, pointer} from 'd3-selection';
+import {scaleOrdinal} from 'd3-scale';
+import {stack} from 'd3-shape';
+import {format} from 'd3-format';
 
-import { Scale, ContainerSize } from '../../chart/chart.interface';
-import { SeriesBase } from '../../chart/series-base';
-import { colorDarker } from '../../chart/util/d3-svg-util';
-import { SeriesConfiguration } from '../../chart/series.interface';
+import {Scale, ContainerSize} from '../../chart/chart.interface';
+import {SeriesBase} from '../../chart/series-base';
+import {colorDarker} from '../../chart/util/d3-svg-util';
+import {SeriesConfiguration} from '../../chart/series.interface';
 
 export interface StackedHorizontalBarSeriesConfiguration extends SeriesConfiguration {
     xField: string;
@@ -34,8 +34,7 @@ export class StackedHorizontalBarSeries extends SeriesBase {
         this.numberFmt = format(',d');
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
-                  mainGroup: Selection<BaseType, any, HTMLElement, any>) {
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
         this.rootGroup = mainGroup;
         if (!mainGroup.select(`.${this.selector}-group`).node()) {
@@ -43,7 +42,8 @@ export class StackedHorizontalBarSeries extends SeriesBase {
         }
 
         if (!mainGroup.select('.legend-group').node()) {
-            this.legendGroup = this.rootGroup.append('g')
+            this.legendGroup = this.rootGroup
+                .append('g')
                 .attr('class', 'legend-group')
                 .attr('font-family', 'sans-serif')
                 .attr('font-size', 10)
@@ -56,77 +56,86 @@ export class StackedHorizontalBarSeries extends SeriesBase {
         const y: any = scales.find((scale: Scale) => scale.orient === this.yDirection).scale;
 
         // set the colors
-        const z = scaleOrdinal()
-        .range(['#98abc5', '#8a89a6', '#7b6888', '#6b486b', '#a05d56', '#d0743c', '#ff8c00']);
+        const z = scaleOrdinal().range(['#98abc5', '#8a89a6', '#7b6888', '#6b486b', '#a05d56', '#d0743c', '#ff8c00']);
 
         const keys = this.columns;
 
         z.domain(keys);
 
-        this.mainGroup.selectAll('.stacked-horizontal-group')
+        this.mainGroup
+            .selectAll('.stacked-horizontal-group')
             .data(stack().keys(keys)(chartData))
             .join(
-                (enter) => enter.append('g')
-                            .attr('class', 'stacked-horizontal-group'),
+                (enter) => enter.append('g').attr('class', 'stacked-horizontal-group'),
                 (update) => update,
                 (exit) => exit.remove()
             )
-            .attr('fill', (d: any) => { return z(d.key) + ''; })
-            .attr('column', (d: any) => { return d.key; }) // point
+            .attr('fill', (d: any) => {
+                return z(d.key) + '';
+            })
+            .attr('column', (d: any) => {
+                return d.key;
+            }) // point
             .selectAll('.stacked-horizontal-item')
-                .data((d: any) => { return d; })
-                .join(
-                    (enter) => enter.append('rect').attr('class', 'stacked-horizontal-item')
-                        .on('mouseover', (d: any, i, nodeList: any) => {
-                            const target: any = nodeList[i];
+            .data((d: any) => {
+                return d;
+            })
+            .join(
+                (enter) =>
+                    enter
+                        .append('rect')
+                        .attr('class', 'stacked-horizontal-item')
+                        .on('mouseover', (event: PointerEvent, d: any) => {
+                            const target: any = event.target;
                             const column: string = target.parentNode.getAttribute('column');
                             const fill: string = z(column) + '';
 
-                            select(nodeList[i])
-                                .style('fill', () => colorDarker(fill, 2)) // point
-                                // .style('stroke', '#f5330c')
-                                // .style('stroke-width', 2);
+                            select(target).style('fill', () => colorDarker(fill, 2)); // point
+                            // .style('stroke', '#f5330c')
+                            // .style('stroke-width', 2);
 
                             this.tooltipGroup = this.chartBase.showTooltip();
-                            select(nodeList[i]).classed('tooltip', true);
-
+                            select(target).classed('tooltip', true);
                         })
-                        .on('mouseout', (d: any, i, nodeList: any) => {
-                            const target: any = nodeList[i];
+                        .on('mouseout', (event: PointerEvent, d: any) => {
+                            const target: any = event.target;
                             const column: string = target.parentNode.getAttribute('column');
                             const fill: string = z(column) + '';
 
-                            select(nodeList[i])
-                                .style('fill', () => fill) // point
-                                // .style('stroke', null)
-                                // .style('stroke-width', null);
+                            select(target).style('fill', () => fill); // point
+                            // .style('stroke', null)
+                            // .style('stroke-width', null);
 
                             this.chartBase.hideTooltip();
-                            select(nodeList[i]).classed('tooltip', false);
+                            select(target).classed('tooltip', false);
                         })
-                        .on('mousemove', (d: any, i, nodeList: any) => {
-                            const target: any = nodeList[i];
+                        .on('mousemove', (event: PointerEvent, d: any) => {
+                            const target: any = event.target;
                             const column: string = target.parentNode.getAttribute('column');
-                            const xPosition = mouse(target)[0] + 10;
-                            const yPosition = mouse(target)[1] - 10;
-                            const textElement: any = this.tooltipGroup.select('text')
-                                .text(`${column}: ${this.numberFmt(d.data[column])}`);
+                            const xPosition = pointer(target)[0] + 10;
+                            const yPosition = pointer(target)[1] - 10;
+                            const textElement: any = this.tooltipGroup.select('text').text(`${column}: ${this.numberFmt(d.data[column])}`);
 
                             this.tooltipGroup.attr('transform', `translate(${this.chartBase.chartMargin.left + xPosition}, ${yPosition})`);
-                            this.tooltipGroup.selectAll('rect')
-                                .attr('width', textElement.node().getComputedTextLength() + 10);
+                            this.tooltipGroup.selectAll('rect').attr('width', textElement.node().getComputedTextLength() + 10);
                             // this.tooltipGroup.select('text').text(`${d[1] - d[0]}`);
                             // console.log('d : ', d, target, parent);
                         }),
-                    (update) => update,
-                    (exit) => exit.remove()
-                )
-                .attr('x', (d: any) => { return x(d.data[this.config.xField]); })
-                .attr('height', (d: any) => { return y(d[0]) - y(d[1]); })
-                .attr('y', (d: any) => { return (d[1] < 0 ? y(0) : y(d[1])); })
-                // TODO: 계산 적용해 볼 것.
-                // .attr('height', (d: any) => { return Math.abs(y(d[0]) - y(d[1]) - y(0)); })
-                .attr('width', x.bandwidth());
+                (update) => update,
+                (exit) => exit.remove()
+            )
+            .attr('x', (d: any) => {
+                return x(d.data[this.config.xField]);
+            })
+            .attr('height', (d: any) => {
+                return y(d[0]) - y(d[1]);
+            })
+            .attr('y', (d: any) => {
+                return d[1] < 0 ? y(0) : y(d[1]);
+            })
+            // TODO: 계산 적용해 볼 것.
+            // .attr('height', (d: any) => { return Math.abs(y(d[0]) - y(d[1]) - y(0)); })
+            .attr('width', x.bandwidth());
         // this.drawLegend(keys, z, geometry.width);
     }
 

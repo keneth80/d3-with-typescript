@@ -1,19 +1,17 @@
-import { color } from 'd3-color';
-import { select, event, Selection, BaseType } from 'd3-selection';
-import { line } from 'd3-shape';
-import { Placement } from '../chart-configuration';
-import { axisTop, axisLeft, axisRight, axisBottom } from 'd3-axis';
-import { ContainerSize, LegendItem } from '../chart.interface';
-import { Observable, Observer } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import {color} from 'd3-color';
+import {select, Selection, BaseType} from 'd3-selection';
+import {line} from 'd3-shape';
+import {Placement} from '../chart-configuration';
+import {axisTop, axisLeft, axisRight, axisBottom} from 'd3-axis';
+import {ContainerSize, LegendItem} from '../chart.interface';
+import {Observable, Observer} from 'rxjs';
+import {delay} from 'rxjs/operators';
 
 export const getTransformByArray = (transform: string = 'translate(0, 0)'): string[] => {
     const translateString = transform.substring(transform.indexOf('translate('), transform.indexOf(')') + 1);
     let translate = ['0', '0'];
     const agent = navigator.userAgent.toLowerCase();
-    if ((navigator.appName === 'Netscape' && agent.indexOf('trident') !== -1) ||
-        (agent.indexOf('msie') !== -1) ||
-        (agent.indexOf('edge') !== -1)) {
+    if ((navigator.appName === 'Netscape' && agent.indexOf('trident') !== -1) || agent.indexOf('msie') !== -1 || agent.indexOf('edge') !== -1) {
         // ie일 경우
         const parseTranslate = translateString.replace('translate(', '').replace(')', '');
         translate = parseTranslate.split(/\s+/);
@@ -37,9 +35,7 @@ export const getTransformByArray = (transform: string = 'translate(0, 0)'): stri
 export const isIE = (): boolean => {
     let returnValue: boolean = false;
     const agent = navigator.userAgent.toLowerCase();
-    if ((navigator.appName === 'Netscape' && agent.indexOf('trident') !== -1) ||
-        (agent.indexOf('msie') !== -1) ||
-        (agent.indexOf('edge') !== -1)) {
+    if ((navigator.appName === 'Netscape' && agent.indexOf('trident') !== -1) || agent.indexOf('msie') !== -1 || agent.indexOf('edge') !== -1) {
         // ie일 경우
         returnValue = true;
     }
@@ -55,14 +51,12 @@ export const guid = () => {
         return Math.floor((1 + Math.random()) * 0x10000)
             .toString(16)
             .substring(1);
-    }
-    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-    s4() + '-' + s4() + s4() + s4();
+    };
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
 };
 
 export const textWrapping = (text: any, width: number) => {
     text.each((d: any, index: number, node: any) => {
-
         const targetText = select(node[index]);
         let lines = [];
         // const words = text.text().split(/\s+/).reverse();
@@ -73,12 +67,13 @@ export const textWrapping = (text: any, width: number) => {
         const x = text.attr('x') ?? 0;
         const y = text.attr('y') ?? 0;
         const dy = parseFloat(text.attr('dy') ?? '0');
-        let tspan = text.text(null)
-                        .append('tspan')
-                        .attr('x', x)
-                        .attr('y', y)
-                        .attr('dy', dy + 'em');
-        while (word = words.pop()) {
+        let tspan = text
+            .text(null)
+            .append('tspan')
+            .attr('x', x)
+            .attr('y', y)
+            .attr('dy', dy + 'em');
+        while ((word = words.pop())) {
             lines.push(word);
             tspan.text(lines.join(''));
             if (tspan.node().getComputedTextLength() > width) {
@@ -87,19 +82,20 @@ export const textWrapping = (text: any, width: number) => {
                 lines = [word];
                 // line.length = 0;
                 // line.concat([word]);
-                tspan = text.append('tspan')
-                            .attr('x', x)
-                            .attr('y', y)
-                            .attr('dy', ++lineNumber * lineHeight + dy + 'em')
-                            .text(word);
+                tspan = text
+                    .append('tspan')
+                    .attr('x', x)
+                    .attr('y', y)
+                    .attr('dy', ++lineNumber * lineHeight + dy + 'em')
+                    .text(word);
             }
         }
     });
-}
+};
 
-export const textBreak = (target: any, pattern: any = /\s+/) => { // /(\n|\r\n)/g
+export const textBreak = (target: any, pattern: any = /\s+/) => {
+    // /(\n|\r\n)/g
     target.each((d: any, index: number, node: any) => {
-
         const text = select(node[index]);
         let lines = [];
         const words = text.text().split(pattern).reverse();
@@ -110,12 +106,13 @@ export const textBreak = (target: any, pattern: any = /\s+/) => { // /(\n|\r\n)/
         const x = text.attr('x') ?? 0;
         const y = text.attr('y') ?? 0;
         const dy = parseFloat(text.attr('dy') ?? '0');
-        let tspan = text.text(null)
-                        .append('tspan')
-                        .attr('x', x)
-                        .attr('y', y)
-                        .attr('dy', dy + 'em');
-        while (word = words.pop()) {
+        let tspan = text
+            .text(null)
+            .append('tspan')
+            .attr('x', x)
+            .attr('y', y)
+            .attr('dy', dy + 'em');
+        while ((word = words.pop())) {
             lines.push(word);
             tspan.text(lines.join(''));
             lines.pop();
@@ -123,14 +120,15 @@ export const textBreak = (target: any, pattern: any = /\s+/) => { // /(\n|\r\n)/
             lines = [word];
             // line.length = 0;
             // line.concat([word]);
-            tspan = text.append('tspan')
-                        .attr('x', x)
-                        .attr('y', y)
-                        .attr('dy', ++lineNumber * lineHeight + dy + 'em')
-                        .text(word);
+            tspan = text
+                .append('tspan')
+                .attr('x', x)
+                .attr('y', y)
+                .attr('dy', ++lineNumber * lineHeight + dy + 'em')
+                .text(word);
         }
     });
-}
+};
 
 export const getOsName = () => {
     let OSName = 'Unknown';
@@ -143,12 +141,12 @@ export const getOsName = () => {
     // if (window.navigator.userAgent.indexOf('Mac')            != -1) OSName='Mac/iOS';
     // if (window.navigator.userAgent.indexOf('X11')            != -1) OSName='UNIX';
     // if (window.navigator.userAgent.indexOf('Linux')          != -1) OSName='Linux';
-    if (window.navigator.userAgent.indexOf('Windows') !== -1) OSName='Windows';
-    if (window.navigator.userAgent.indexOf('Mac') !== -1) OSName='Mac/iOS';
-    if (window.navigator.userAgent.indexOf('X11') !== -1) OSName='UNIX';
-    if (window.navigator.userAgent.indexOf('Linux') !== -1) OSName='Linux';
+    if (window.navigator.userAgent.indexOf('Windows') !== -1) OSName = 'Windows';
+    if (window.navigator.userAgent.indexOf('Mac') !== -1) OSName = 'Mac/iOS';
+    if (window.navigator.userAgent.indexOf('X11') !== -1) OSName = 'UNIX';
+    if (window.navigator.userAgent.indexOf('Linux') !== -1) OSName = 'Linux';
     return OSName;
-}
+};
 
 const osName: string = getOsName();
 
@@ -169,17 +167,28 @@ export const wrapTextByRowLimit = (text: any, width: number, limitRowCount: numb
     let lines = [];
     let lineNumber = 0;
     let lineCount = 1;
-    let tspan = text.text(null).append('tspan').attr('x', 2).attr('y', y).attr('dy', dy + 'em');
+    let tspan = text
+        .text(null)
+        .append('tspan')
+        .attr('x', 2)
+        .attr('y', y)
+        .attr('dy', dy + 'em');
     let isOver = false;
     while ((word = words.pop()) && !isOver) {
         lines.push(word);
         tspan.text(lines.join(''));
-        if (tspan.node().getComputedTextLength() > width - compare) { // OS에 따라 ...의 사이즈 차이가 있음.
+        if (tspan.node().getComputedTextLength() > width - compare) {
+            // OS에 따라 ...의 사이즈 차이가 있음.
             lineCount++;
             lines.pop();
             tspan.text(lines.join(''));
             lines = [word];
-            tspan = text.append('tspan').attr('x', 2).attr('y', y).attr('dy', ++lineNumber * lineHeight + dy + 'em').text(word);
+            tspan = text
+                .append('tspan')
+                .attr('x', 2)
+                .attr('y', y)
+                .attr('dy', ++lineNumber * lineHeight + dy + 'em')
+                .text(word);
             if (lineCount > limitRowCount) {
                 isOver = true;
                 const targetText = text.selectAll('tspan').filter((d: any, i: number) => i === limitRowCount - 1);
@@ -242,11 +251,19 @@ export const drawSvgCheckBox = <T = any>(
     boxStrokeWidth: number = 1,
     checked: boolean = true
 ): Selection<BaseType, any, BaseType, any> => {
-
-    const g: Selection<BaseType, any, BaseType, any> = selection.selectAll('.checkbox-group')
+    const g: Selection<BaseType, any, BaseType, any> = selection
+        .selectAll('.checkbox-group')
         .data((d: T) => [
             {
-                size, x, y, rx, ry, markStrokeWidth, boxStrokeWidth, checked, data: d
+                size,
+                x,
+                y,
+                rx,
+                ry,
+                markStrokeWidth,
+                boxStrokeWidth,
+                checked,
+                data: d
             }
         ])
         .join(
@@ -255,7 +272,8 @@ export const drawSvgCheckBox = <T = any>(
             (exit) => exit.remove()
         );
 
-    const box = g.selectAll('.checkbox-background')
+    const box = g
+        .selectAll('.checkbox-background')
         .data((d: any) => [d])
         .join(
             (enter) => enter.append('rect').attr('class', 'checkbox-background'),
@@ -274,16 +292,21 @@ export const drawSvgCheckBox = <T = any>(
         .style('shape-rendering', 'crispEdges');
 
     const coordinates: any[] = [
-        [x + (size / 8), y + (size / 3)],
-        [x + (size / 2.2), (y + size) - (size / 4)],
-        [(x + size) - (size / 8), (y + (size / 10))]
+        [x + size / 8, y + size / 3],
+        [x + size / 2.2, y + size - size / 4],
+        [x + size - size / 8, y + size / 10]
     ];
 
     const lineObj = line()
-            .x((d: any) => { return d[0]; })
-            .y((d: any) => { return d[1]; });
+        .x((d: any) => {
+            return d[0];
+        })
+        .y((d: any) => {
+            return d[1];
+        });
 
-    const mark = g.selectAll('.checkbox-mark')
+    const mark = g
+        .selectAll('.checkbox-mark')
         .data((d: any) => [d])
         .join(
             (enter) => enter.append('path').attr('class', 'checkbox-mark'),
@@ -295,13 +318,14 @@ export const drawSvgCheckBox = <T = any>(
         .style('stroke-width', (d: any) => d.markStrokeWidth)
         .style('stroke', 'black')
         .style('fill', 'none')
-        .style('opacity', (d: any) => (d.checked)? 1 : 0);
+        .style('opacity', (d: any) => (d.checked ? 1 : 0));
 
-    g.on('click', (d: any, index: number, nodeList: any) => {
+    g.on('click', (event: PointerEvent, d: any) => {
         d.checked = !d.checked;
-        mark.style('opacity', (d.checked)? 1 : 0);
+        mark.style('opacity', d.checked ? 1 : 0);
 
         if (clickEvent) {
+            const {index, nodeList} = getElementInfoByEvent(event);
             clickEvent(d.data, index, nodeList);
         }
         event.stopPropagation();
@@ -324,91 +348,94 @@ export const getAxisByPlacement = (placement: string, scale: any) => {
 
 export const drawLegendColorItemByRect = (
     targetGroup: Selection<BaseType, LegendItem, BaseType, any>,
-    legendItemSize: {width: number, height: number},
+    legendItemSize: {width: number; height: number},
     keys: LegendItem[] = [],
     colors: string[] = []
 ) => {
-    return targetGroup.selectAll('.legend-item')
-            .data((d: LegendItem) => [d])
-            .join(
-                (enter) => enter.append('rect').attr('class', 'legend-item'),
-                (update) => update,
-                (exit) => exit.remove()
-            )
-            .attr('width', legendItemSize.width)
-            .attr('height', legendItemSize.height)
-            .attr('fill', (d: LegendItem) => {
-                const index = keys.findIndex((key: LegendItem) => d.label === key.label);
-                // return colors[index];
-                return d.color ?? colors[index];
-            });
+    return targetGroup
+        .selectAll('.legend-item')
+        .data((d: LegendItem) => [d])
+        .join(
+            (enter) => enter.append('rect').attr('class', 'legend-item'),
+            (update) => update,
+            (exit) => exit.remove()
+        )
+        .attr('width', legendItemSize.width)
+        .attr('height', legendItemSize.height)
+        .attr('fill', (d: LegendItem) => {
+            const index = keys.findIndex((key: LegendItem) => d.label === key.label);
+            // return colors[index];
+            return d.color ?? colors[index];
+        });
 };
 
 export const drawLegendColorItemByCircle = (
     targetGroup: Selection<BaseType, LegendItem, BaseType, any>,
-    legendItemSize: {width: number, height: number},
+    legendItemSize: {width: number; height: number},
     keys: LegendItem[] = [],
     colors: string[] = []
 ) => {
-    return targetGroup.selectAll('.legend-item')
-            .data((d: LegendItem) => [d])
-            .join(
-                (enter) => enter.append('circle').attr('class', 'legend-item'),
-                (update) => update,
-                (exit) => exit.remove()
-            )
-            .attr('r', legendItemSize.width / 2)
-            .attr('cx', legendItemSize.width / 2)
-            .attr('cy', legendItemSize.width / 2)
-            .attr('fill', (d: LegendItem) => {
-                const index = keys.findIndex((key: LegendItem) => d.label === key.label);
-                // return colors[index];
-                return d.color ?? colors[index];
-            });
+    return targetGroup
+        .selectAll('.legend-item')
+        .data((d: LegendItem) => [d])
+        .join(
+            (enter) => enter.append('circle').attr('class', 'legend-item'),
+            (update) => update,
+            (exit) => exit.remove()
+        )
+        .attr('r', legendItemSize.width / 2)
+        .attr('cx', legendItemSize.width / 2)
+        .attr('cy', legendItemSize.width / 2)
+        .attr('fill', (d: LegendItem) => {
+            const index = keys.findIndex((key: LegendItem) => d.label === key.label);
+            // return colors[index];
+            return d.color ?? colors[index];
+        });
 };
 
 export const drawLegendColorItemByLine = (
     targetGroup: Selection<BaseType, LegendItem, BaseType, any>,
-    legendItemSize: {width: number, height: number},
+    legendItemSize: {width: number; height: number},
     keys: LegendItem[] = [],
     colors: string[] = []
 ) => {
-    return targetGroup.selectAll('.legend-item')
-            .data((d: LegendItem) => [d])
-            .join(
-                (enter) => enter.append('rect').attr('class', 'legend-item'),
-                (update) => update,
-                (exit) => exit.remove()
-            )
-            .attr('width', legendItemSize.width)
-            .attr('height', 3)
-            .attr('y', legendItemSize.width / 2 - 1)
-            .attr('fill', (d: LegendItem) => {
-                const index = keys.findIndex((key: LegendItem) => d.label === key.label);
-                // return colors[index];
-                return d.color ?? colors[index];
-            });
-}
+    return targetGroup
+        .selectAll('.legend-item')
+        .data((d: LegendItem) => [d])
+        .join(
+            (enter) => enter.append('rect').attr('class', 'legend-item'),
+            (update) => update,
+            (exit) => exit.remove()
+        )
+        .attr('width', legendItemSize.width)
+        .attr('height', 3)
+        .attr('y', legendItemSize.width / 2 - 1)
+        .attr('fill', (d: LegendItem) => {
+            const index = keys.findIndex((key: LegendItem) => d.label === key.label);
+            // return colors[index];
+            return d.color ?? colors[index];
+        });
+};
 
 export const delayExcute = (delayTime: number = 100, callback: any) => {
     return new Observable((observ: Observer<boolean>) => {
         observ.next(true);
         observ.complete();
     })
-    .pipe(
-        delay(delayTime)
-    ).subscribe(() => {
-        callback();
-    });
-}
+        .pipe(delay(delayTime))
+        .subscribe(() => {
+            callback();
+        });
+};
 
 export const drawSelectionTooltipPointByCircle = (
     selector: string,
     targetGroup: Selection<BaseType, any, HTMLElement, any>,
     position: number[][],
-    style:{radius: number, strokeColor: string, strokeWidth: number}
+    style: {radius: number; strokeColor: string; strokeWidth: number}
 ) => {
-    targetGroup.selectAll(`.tooltip-point-${selector}`)
+    targetGroup
+        .selectAll(`.tooltip-point-${selector}`)
         .data(position)
         .join(
             (enter) => enter.append('circle').attr('class', `tooltip-point-${selector}`),
@@ -422,14 +449,15 @@ export const drawSelectionTooltipPointByCircle = (
         .attr('cx', (d: number[]) => d[0])
         .attr('cy', (d: number[]) => d[1])
         .attr('r', style.radius);
-}
+};
 
 export const drawTooltipPointByCircle = (
     targetGroup: Selection<BaseType, any, HTMLElement, any>,
     position: number[][],
-    style:{radius: number, strokeColor: string, strokeWidth: number}
+    style: {radius: number; strokeColor: string; strokeWidth: number}
 ) => {
-    targetGroup.selectAll('.tooltip-point')
+    targetGroup
+        .selectAll('.tooltip-point')
         .data(position)
         .join(
             (enter) => enter.append('circle').attr('class', 'tooltip-point'),
@@ -442,15 +470,17 @@ export const drawTooltipPointByCircle = (
         .attr('cx', (d: number[]) => d[0])
         .attr('cy', (d: number[]) => d[1])
         .attr('r', style.radius);
-}
+};
 
 export const drawSelectionPointByCircle = (
     targetGroup: Selection<BaseType, any, HTMLElement, any>,
     position: number[][],
-    style:{fill: string, radius: number}
+    style: {fill: string; radius: number}
 ) => {
     targetGroup.selectAll('.selection-point').remove();
-    targetGroup.append('circle').attr('class', 'selection-point')
+    targetGroup
+        .append('circle')
+        .attr('class', 'selection-point')
         .style('stroke-width', 3)
         .style('stroke', colorDarker(style.fill, 2))
         .attr('fill', colorDarker(style.fill, 1))
@@ -470,15 +500,16 @@ export const drawSelectionPointByCircle = (
     //     .attr('cx', (d: number[]) => d[0])
     //     .attr('cy', (d: number[]) => d[1])
     //     .attr('r', style.radius);
-}
+};
 
 export const drawTooltipPointByRect = (
     targetGroup: Selection<BaseType, any, HTMLElement, any>,
     position: number[][],
     itemSize: ContainerSize,
-    style:{fill: string}
+    style: {fill: string}
 ) => {
-    targetGroup.selectAll('.tooltip-point')
+    targetGroup
+        .selectAll('.tooltip-point')
         .data(position)
         .join(
             (enter) => enter.append('rect').attr('class', 'tooltip-point'),
@@ -490,16 +521,18 @@ export const drawTooltipPointByRect = (
         .attr('height', itemSize.height)
         .attr('width', itemSize.width)
         .attr('fill', colorDarker(style.fill, 2));
-}
+};
 
 export const drawSelectionPointByRect = (
     targetGroup: Selection<BaseType, any, HTMLElement, any>,
     position: number[][],
     itemSize: ContainerSize,
-    style:{fill: string}
+    style: {fill: string}
 ) => {
     targetGroup.selectAll('.selection-point').remove();
-    targetGroup.append('rect').attr('class', 'selection-point')
+    targetGroup
+        .append('rect')
+        .attr('class', 'selection-point')
         .style('stroke-width', 3)
         .style('stroke', colorDarker(style.fill, 2))
         .attr('fill', colorDarker(style.fill, 1))
@@ -521,4 +554,12 @@ export const drawSelectionPointByRect = (
     //     .attr('y', (d: number[]) => d[1])
     //     .attr('height', itemSize.height)
     //     .attr('width', itemSize.width);
-}
+};
+
+export const getElementInfoByEvent = (event: any, selector: string = '*') => {
+    const nodes = select(event.target.parentNode as HTMLElement)
+        .selectAll(selector)
+        .nodes();
+    const index = nodes.indexOf(event.target);
+    return {index, nodeList: nodes};
+};
