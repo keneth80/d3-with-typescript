@@ -5,6 +5,7 @@ import {interpolateSpectral} from 'd3-scale-chromatic';
 import {BaseType, select, Selection} from 'd3-selection';
 import {arc, pie} from 'd3-shape';
 import {transition} from 'd3-transition';
+import {ChartSelector} from '../../chart';
 
 import {ContainerSize, Scale} from '../../chart/chart.interface';
 import {SeriesBase} from '../../chart/series-base';
@@ -26,13 +27,13 @@ export class BasicDonutSeries extends SeriesBase {
 
     private pieShape: any;
 
-    private pieSeriesGroup: Selection<BaseType, any, HTMLElement, any>;
+    private pieSeriesGroup: Selection<BaseType, any, BaseType, any>;
 
-    private pieLabelGroup: Selection<BaseType, any, HTMLElement, any>;
+    private pieLabelGroup: Selection<BaseType, any, BaseType, any>;
 
-    private pieLineGroup: Selection<BaseType, any, HTMLElement, any>;
+    private pieLineGroup: Selection<BaseType, any, BaseType, any>;
 
-    private tooltipGroup: Selection<BaseType, any, HTMLElement, any>;
+    private tooltipGroup: Selection<BaseType, any, BaseType, any>;
 
     private numberFmt: any;
 
@@ -62,16 +63,37 @@ export class BasicDonutSeries extends SeriesBase {
         this.svg = svg;
         if (!mainGroup.select(`.${this.selector}-group`).node()) {
             this.mainGroup = mainGroup.append('g').attr('class', `${this.selector}-group`);
+            this.pieSeriesGroup = this.mainGroup
+                .selectAll(`.${this.selector}-pie-series-group`)
+                .data([`${this.selector}-pie-series-group`])
+                .join(
+                    (enter) => enter.append('g').attr('class', `${this.selector}-pie-series-group`),
+                    (update) => update,
+                    (exite) => exite.remove()
+                );
+
+            this.pieLabelGroup = this.mainGroup
+                .selectAll(`.${this.selector}-pie-label-group`)
+                .data([`${this.selector}-pie-label-group`])
+                .join(
+                    (enter) => enter.append('g').attr('class', `${this.selector}-pie-label-group`),
+                    (update) => update,
+                    (exite) => exite.remove()
+                );
+
+            this.pieLineGroup = this.mainGroup
+                .selectAll(`.${this.selector}-pie-line-group`)
+                .data([`${this.selector}-pie-line-group`])
+                .join(
+                    (enter) => enter.append('g').attr('class', `${this.selector}-pie-line-group`),
+                    (update) => update,
+                    (exite) => exite.remove()
+                );
         }
-
-        this.pieSeriesGroup = this.mainGroup.append('g').attr('class', `${this.selector}-pie-series-group`);
-
-        this.pieLabelGroup = this.mainGroup.append('g').attr('class', `${this.selector}-pie-label-group`);
-
-        this.pieLineGroup = this.mainGroup.append('g').attr('class', `${this.selector}-pie-line-group`);
     }
 
     drawSeries(chartData: any[], scales: Scale[], geometry: ContainerSize) {
+        this.svg.select('.' + ChartSelector.ZOOM_SVG).lower();
         const radius = Math.min(geometry.width, geometry.height) / 2;
 
         const arcs = this.pieShape(chartData);
@@ -109,9 +131,9 @@ export class BasicDonutSeries extends SeriesBase {
                     // .style('stroke', '#f5330c')
                     // .style('stroke-width', 2);
 
-                    this.tooltipGroup = this.chartBase.showTooltip();
+                    // this.tooltipGroup = this.chartBase.showTooltip();
 
-                    select(node).classed('tooltip', true);
+                    // select(node).classed('tooltip', true);
                 }
             })
             .on('mouseout', (event: PointerEvent, d: any) => {
@@ -122,8 +144,8 @@ export class BasicDonutSeries extends SeriesBase {
                     // .style('stroke-width', null);
                 }
 
-                this.chartBase.hideTooltip();
-                select(node).classed('tooltip', false);
+                // this.chartBase.hideTooltip();
+                // select(node).classed('tooltip', false);
             })
             .on('mousemove', (event: PointerEvent, d: any) => {
                 const textElement: any = this.tooltipGroup
@@ -143,7 +165,7 @@ export class BasicDonutSeries extends SeriesBase {
                     xPosition = xPosition - textWidth;
                 }
 
-                this.tooltipGroup.attr('transform', `translate(${xPosition}, ${yPosition})`).selectAll('rect').attr('width', textWidth);
+                // this.tooltipGroup.attr('transform', `translate(${xPosition}, ${yPosition})`).selectAll('rect').attr('width', textWidth);
             });
 
         let currentSeries = null;

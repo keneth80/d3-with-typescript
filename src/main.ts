@@ -62,12 +62,13 @@ const donutChart = () => {
     });
 
     const donutSeries = new BasicDonutSeries({
+        selector: 'donut-series',
         categoryField: 'label',
         valueField: 'value'
     });
 
     const basicPieChart = new BasicChart({
-        selector: '#donut',
+        selector: '#chart-div',
         data: pieData,
         margin: {
             left: 10,
