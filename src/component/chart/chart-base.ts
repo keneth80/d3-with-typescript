@@ -1,39 +1,39 @@
 // import './chart.css';
 import {schemeCategory10} from 'd3-scale-chromatic';
-import {select, Selection, BaseType, event} from 'd3-selection';
+import {BaseType, select, Selection} from 'd3-selection';
 
-import {fromEvent, Subscription, Subject, of, Observable, from, timer, Observer, throwError, interval} from 'rxjs';
-import {debounceTime, switchMap, map, concatMap, mapTo, tap, delay, retry} from 'rxjs/operators';
+import {from, fromEvent, interval, Observable, Observer, of, Subject, Subscription, timer} from 'rxjs';
+import {concatMap, debounceTime, delay, map, mapTo, switchMap, tap} from 'rxjs/operators';
 
-import {sha1} from 'object-hash';
 import crossFilter from 'crossfilter2';
+import {sha1} from 'object-hash';
 
+import {drawAxisByScale, generateScaleByAxis, setupZeroLine} from './axis';
+import {Axes, ChartConfiguration, ChartTitle, ChartTooltip, Margin, Placement, PlacementByElement} from './chart-configuration';
+import {ChartSelector} from './chart-selector-variable';
 import {
-    IChartBase,
-    Scale,
-    ContainerSize,
-    LegendItem,
+    ChartItemEvent,
     ChartMouseEvent,
     ChartZoomEvent,
+    ContainerSize,
     DisplayType,
-    ChartItemEvent,
+    IChartBase,
+    LegendItem,
+    Scale,
     TooltipEvent
 } from './chart.interface';
-import {ChartConfiguration, Axes, Margin, Placement, ChartTitle, ChartTooltip, PlacementByElement, AxisTitle} from './chart-configuration';
-import {ISeries, SeriesConfiguration} from './series.interface';
 import {IFunctions} from './functions.interface';
-import {IOptions} from './options.interface';
-import {baseTooltipTemplate} from './tooltip/tooltip-template';
-import {guid, delayExcute, getTransformByArray, getElementInfoByEvent} from './util/d3-svg-util';
-import {drawAxisByScale, generateScaleByAxis, setupZeroLine} from './axis';
-import {ChartSelector} from './chart-selector-variable';
-import {ChartLegend} from './legend';
-import {setupWebglContext} from './util/webgl-util';
-import {clearCanvas} from './util/canvas-util';
-import {axisSetupByScale} from './scale';
 import {drawGridLine} from './grid-line';
+import {ChartLegend} from './legend';
+import {IOptions} from './options.interface';
+import {axisSetupByScale} from './scale';
+import {ISeries, SeriesConfiguration} from './series.interface';
+import {baseTooltipTemplate} from './tooltip/tooltip-template';
+import {clearCanvas} from './util/canvas-util';
 import {makeSeriesByConfigurationType} from './util/chart-util';
+import {delayExcute, getElementInfoByEvent, getTransformByArray, guid} from './util/d3-svg-util';
 import {setChartTooltipByPosition, setMultiChartTooltipByPosition} from './util/tooltip-util';
+import {setupWebglContext} from './util/webgl-util';
 
 console.log('cross filter : ', crossFilter);
 
@@ -673,7 +673,7 @@ export class ChartBase<T = any> implements IChartBase {
         }
     }
 
-    targetSeriesUpdate(series: ISeries, index: number) {
+    targetSeriesUpdate(series: ISeries, index: number): Promise<void> {
         return new Promise((resolve) => {
             series.chartBase = this;
             series.setSvgElement(this.svg, this.seriesGroup, index);
@@ -1587,7 +1587,7 @@ export class ChartBase<T = any> implements IChartBase {
         }
     }
 
-    protected updateAxis() {
+    protected updateAxis(): Promise<void> {
         const maxTextWidth = {};
         const padding = 10; // 10 는 axis 여백.
 

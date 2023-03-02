@@ -1,16 +1,15 @@
-import { schemeDark2, interpolateSpectral } from 'd3-scale-chromatic';
-import { Selection, BaseType, select, event } from 'd3-selection';
-import { pie, arc } from 'd3-shape';
-import { scaleOrdinal, } from 'd3-scale';
-import { transition } from 'd3-transition';
-import { quantize, interpolate } from 'd3-interpolate';
-import { format } from 'd3-format';
+import {format} from 'd3-format';
+import {interpolate, quantize} from 'd3-interpolate';
+import {scaleOrdinal} from 'd3-scale';
+import {interpolateSpectral} from 'd3-scale-chromatic';
+import {BaseType, select, Selection} from 'd3-selection';
+import {arc, pie} from 'd3-shape';
+import {transition} from 'd3-transition';
 
-import { colorDarker } from '../../chart/util/d3-svg-util';
-import { Scale, ContainerSize } from '../../chart/chart.interface';
-import { SeriesBase } from '../../chart/series-base';
-import { isIE } from '../../chart/util/d3-svg-util';
-import { SeriesConfiguration } from '../../chart/series.interface';
+import {ContainerSize, Scale} from '../../chart/chart.interface';
+import {SeriesBase} from '../../chart/series-base';
+import {SeriesConfiguration} from '../../chart/series.interface';
+import {colorDarker, isIE} from '../../chart/util/d3-svg-util';
 
 export interface BasicDonutSeriesConfiguration extends SeriesConfiguration {
     selector?: string;
@@ -51,8 +50,7 @@ export class BasicDonutSeries extends SeriesBase {
 
         this.numberFmt = format(',.4f');
 
-        this.transition = transition()
-        .duration(750);
+        this.transition = transition().duration(750);
         // .ease(easeQuadIn);
 
         this.pieShape = pie()
@@ -60,23 +58,17 @@ export class BasicDonutSeries extends SeriesBase {
             .value((d: any) => d[this.valueField]);
     }
 
-    setSvgElement(
-        svg: Selection<BaseType, any, HTMLElement, any>,
-        mainGroup: Selection<BaseType, any, HTMLElement, any>
-    ) {
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
         if (!mainGroup.select(`.${this.selector}-group`).node()) {
             this.mainGroup = mainGroup.append('g').attr('class', `${this.selector}-group`);
         }
 
-        this.pieSeriesGroup = this.mainGroup.append('g')
-            .attr('class', `${this.selector}-pie-series-group`);
+        this.pieSeriesGroup = this.mainGroup.append('g').attr('class', `${this.selector}-pie-series-group`);
 
-        this.pieLabelGroup = this.mainGroup.append('g')
-            .attr('class', `${this.selector}-pie-label-group`);
+        this.pieLabelGroup = this.mainGroup.append('g').attr('class', `${this.selector}-pie-label-group`);
 
-        this.pieLineGroup = this.mainGroup.append('g')
-            .attr('class', `${this.selector}-pie-line-group`);
+        this.pieLineGroup = this.mainGroup.append('g').attr('class', `${this.selector}-pie-line-group`);
     }
 
     drawSeries(chartData: any[], scales: Scale[], geometry: ContainerSize) {
@@ -85,8 +77,8 @@ export class BasicDonutSeries extends SeriesBase {
         const arcs = this.pieShape(chartData);
 
         const colors = scaleOrdinal()
-            .domain(chartData.map(d => d[this.categoryField]))
-            .range(quantize(t => interpolateSpectral(t * 0.8 + 0.1), chartData.length).reverse());
+            .domain(chartData.map((d) => d[this.categoryField]))
+            .range(quantize((t) => interpolateSpectral(t * 0.8 + 0.1), chartData.length).reverse());
 
         const innerArc = arc()
             .outerRadius(radius * 0.8)
@@ -99,39 +91,44 @@ export class BasicDonutSeries extends SeriesBase {
         this.mainGroup.attr('transform', `translate(${geometry.width / 2},${geometry.height / 2})`);
 
         // ------- pie series -------
-        const series = this.pieSeriesGroup.selectAll(`.${this.selector}-path`)
-            .data(arcs, (d: any) => { return d.data[this.categoryField];})
+        const series = this.pieSeriesGroup
+            .selectAll(`.${this.selector}-path`)
+            .data(arcs, (d: any) => {
+                return d.data[this.categoryField];
+            })
             .join(
                 (enter) => enter.append('path').attr('class', `${this.selector}-path`),
                 (update) => update,
                 (exit) => exit.remove()
             )
             .attr('fill', (d: any) => colors(d.data[this.categoryField]) + '')
-            .on('mouseover', (d: any, i, nodeList: any) => {
-                if (nodeList[i]) {
-                    select(nodeList[i])
-                        .style('fill', () => colorDarker(colors(d.data[this.categoryField]), 2)) // point
-                        // .style('stroke', '#f5330c')
-                        // .style('stroke-width', 2);
+            .on('mouseover', (event: PointerEvent, d: any) => {
+                const node = event.target as HTMLElement;
+                if (node) {
+                    select(node).style('fill', () => colorDarker(colors(d.data[this.categoryField]), 2)); // point
+                    // .style('stroke', '#f5330c')
+                    // .style('stroke-width', 2);
 
                     this.tooltipGroup = this.chartBase.showTooltip();
 
-                    select(nodeList[i]).classed('tooltip', true);
+                    select(node).classed('tooltip', true);
                 }
             })
-            .on('mouseout', (d: any, i, nodeList: any) => {
-                if (nodeList[i]) {
-                    select(nodeList[i])
-                        .style('fill', () => colors(d.data[this.categoryField]) + '') // point
-                        // .style('stroke', null)
-                        // .style('stroke-width', null);
+            .on('mouseout', (event: PointerEvent, d: any) => {
+                const node = event.target as HTMLElement;
+                if (node) {
+                    select(node).style('fill', () => colors(d.data[this.categoryField]) + ''); // point
+                    // .style('stroke', null)
+                    // .style('stroke-width', null);
                 }
 
                 this.chartBase.hideTooltip();
-                select(nodeList[i]).classed('tooltip', false);
+                select(node).classed('tooltip', false);
             })
-            .on('mousemove', (d: any, i: number, nodeList: any) => {
-                const textElement: any = this.tooltipGroup.select('text').text(`${d.data[this.categoryField]}: ${this.numberFmt(d.data[this.valueField])}`);
+            .on('mousemove', (event: PointerEvent, d: any) => {
+                const textElement: any = this.tooltipGroup
+                    .select('text')
+                    .text(`${d.data[this.categoryField]}: ${this.numberFmt(d.data[this.valueField])}`);
                 const textWidth = textElement.node().getComputedTextLength() + 10;
 
                 let xPosition = event.x;
@@ -150,7 +147,8 @@ export class BasicDonutSeries extends SeriesBase {
             });
 
         let currentSeries = null;
-        series.transition()
+        series
+            .transition()
             .duration(1000)
             .attrTween('d', (d: any) => {
                 currentSeries = currentSeries ?? d;
@@ -162,8 +160,11 @@ export class BasicDonutSeries extends SeriesBase {
             });
 
         // ------- labels -------
-        const labels = this.pieLabelGroup.selectAll(`.${this.selector}-label`)
-            .data(arcs, (d: any) => { return d.data[this.categoryField];})
+        const labels = this.pieLabelGroup
+            .selectAll(`.${this.selector}-label`)
+            .data(arcs, (d: any) => {
+                return d.data[this.categoryField];
+            })
             .join(
                 (enter) => enter.append('text').attr('class', `${this.selector}-label`),
                 (update) => update,
@@ -175,7 +176,9 @@ export class BasicDonutSeries extends SeriesBase {
             });
 
         let currentLabel = null;
-        labels.transition().duration(1000)
+        labels
+            .transition()
+            .duration(1000)
             .attrTween('transform', (d: any) => {
                 currentLabel = currentLabel ?? d;
                 const interpolateMng = interpolate(currentLabel, d);
@@ -198,8 +201,11 @@ export class BasicDonutSeries extends SeriesBase {
             });
 
         // ------- poly lines -------
-        const lines = this.pieLineGroup.selectAll(`.${this.selector}-line`)
-            .data(arcs, (d: any) => { return d.data[this.categoryField];})
+        const lines = this.pieLineGroup
+            .selectAll(`.${this.selector}-line`)
+            .data(arcs, (d: any) => {
+                return d.data[this.categoryField];
+            })
             .join(
                 (enter) => enter.append('polyline').attr('class', `${this.selector}-line`),
                 (update) => update,
@@ -211,7 +217,9 @@ export class BasicDonutSeries extends SeriesBase {
             .style('fill', 'none');
 
         let currentLine = null;
-        lines.transition().duration(1000)
+        lines
+            .transition()
+            .duration(1000)
             .attrTween('points', (d: any) => {
                 currentLine = currentLine ?? d;
                 const interpolateMng = interpolate(currentLine, d);
@@ -226,6 +234,6 @@ export class BasicDonutSeries extends SeriesBase {
     }
 
     midAngle = (d: any) => {
-		return d.startAngle + (d.endAngle - d.startAngle)/2;
-	}
+        return d.startAngle + (d.endAngle - d.startAngle) / 2;
+    };
 }
