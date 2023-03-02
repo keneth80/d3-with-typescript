@@ -39,6 +39,7 @@ import {sampleMockData, sampleMockTimeData} from './component/mock-data/simple-m
 import {centerPositionForTooltipElement} from './component/chart/util/tooltip-util';
 import {topologyData} from './component/mock-data/topology-data';
 import {TopologyGroupElement, TopologyData} from './component/series';
+import {BasicDonutSeries} from './component/series/svg/basic-donut-series';
 
 let chart: BasicChart;
 let currentSubscription: Subscription;
@@ -52,6 +53,34 @@ const clear = () => {
     if (currentSubscription) {
         currentSubscription.unsubscribe();
     }
+};
+
+const donutChart = () => {
+    const labels = ['Lorem ipsum', 'dolor sit', 'amet', 'consectetur', 'adipisicing', 'elit', 'sed', 'do', 'eiusmod', 'tempor', 'incididunt'];
+    const pieData = labels.map((label) => {
+        return {label, value: Math.random()};
+    });
+
+    const donutSeries = new BasicDonutSeries({
+        categoryField: 'label',
+        valueField: 'value'
+    });
+
+    const basicPieChart = new BasicChart({
+        selector: '#donut',
+        data: pieData,
+        margin: {
+            left: 10,
+            right: 10,
+            top: 10,
+            bottom: 10
+        },
+        min: 0,
+        max: max(pieData, (d: any) => d.value),
+        isResize: true,
+        axes: [],
+        series: [donutSeries]
+    }).draw();
 };
 
 const hideLoader = () => {
@@ -130,6 +159,9 @@ const buttonMapping = () => {
                             break;
                         case 'real-time-series':
                             realTimeLineSeriesSample();
+                            break;
+                        case 'svg-donut-series':
+                            donutChart();
                             break;
                         default:
                             break;
