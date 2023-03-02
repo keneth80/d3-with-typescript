@@ -1,10 +1,10 @@
-import { Selection, BaseType, mouse } from 'd3-selection';
-import { Subject, Subscription } from 'rxjs';
-import { debounceTime } from 'rxjs/operators';
+import {Selection, BaseType, pointer} from 'd3-selection';
+import {Subject, Subscription} from 'rxjs';
+import {debounceTime} from 'rxjs/operators';
 
-import { Scale, ContainerSize } from '../chart/chart.interface';
-import { FunctionsBase } from '../chart/functions-base';
-import { ChartBase, ChartSelector } from '../chart';
+import {Scale, ContainerSize} from '../chart/chart.interface';
+import {FunctionsBase} from '../chart/functions-base';
+import {ChartBase, ChartSelector} from '../chart';
 
 export interface BasicCanvasMouseHandlerConfiguration {
     isMoveEvent?: boolean;
@@ -37,9 +37,7 @@ export class BasicCanvasMouseHandler extends FunctionsBase {
         // this.addEvent();
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
-                  mainGroup: Selection<BaseType, any, HTMLElement, any>,
-                  index: number) {
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, mainGroup: Selection<BaseType, any, HTMLElement, any>, index: number) {
         this.svg = svg;
         this.mainGroup = mainGroup;
         if (!this.chartBase.chartContainer.select('.' + ChartSelector.POINTER_CANVAS).node()) {
@@ -69,39 +67,39 @@ export class BasicCanvasMouseHandler extends FunctionsBase {
 
         if (this.isMoveEvent) {
             this.pointerCanvas.on('mousemove', () => {
-                const mouseEvent = mouse(this.pointerCanvas.node() as any);
+                const mouseEvent = pointer(this.pointerCanvas.node() as any);
                 this.move$.next(mouseEvent);
             });
         }
 
         this.pointerCanvas
-        .on('mouseleave', () => {
-            const mouseEvent = mouse(this.pointerCanvas.node() as any);
+            .on('mouseleave', () => {
+                const mouseEvent = pointer(this.pointerCanvas.node() as any);
 
-            this.chartBase.mouseEventSubject.next({
-                type: 'mouseleave',
-                position: mouseEvent,
-                target: this.pointerCanvas
-            });
-        })
-        .on('mousedown', () => {
-            const mouseEvent = mouse(this.pointerCanvas.node() as any);
+                this.chartBase.mouseEventSubject.next({
+                    type: 'mouseleave',
+                    position: mouseEvent,
+                    target: this.pointerCanvas
+                });
+            })
+            .on('mousedown', () => {
+                const mouseEvent = pointer(this.pointerCanvas.node() as any);
 
-            this.chartBase.mouseEventSubject.next({
-                type: 'mousedown',
-                position: mouseEvent,
-                target: this.pointerCanvas
-            });
-        })
-        .on('mouseup', () => {
-            const mouseEvent = mouse(this.pointerCanvas.node() as any);
+                this.chartBase.mouseEventSubject.next({
+                    type: 'mousedown',
+                    position: mouseEvent,
+                    target: this.pointerCanvas
+                });
+            })
+            .on('mouseup', () => {
+                const mouseEvent = pointer(this.pointerCanvas.node() as any);
 
-            this.chartBase.mouseEventSubject.next({
-                type: 'mouseup',
-                position: mouseEvent,
-                target: this.pointerCanvas
+                this.chartBase.mouseEventSubject.next({
+                    type: 'mouseup',
+                    position: mouseEvent,
+                    target: this.pointerCanvas
+                });
             });
-        });
     }
 
     disable() {
@@ -110,14 +108,10 @@ export class BasicCanvasMouseHandler extends FunctionsBase {
         }
 
         if (this.isMoveEvent) {
-            this.pointerCanvas
-                .on('mousemove', null);
+            this.pointerCanvas.on('mousemove', null);
         }
 
-        this.pointerCanvas
-            .on('mouseleave', null)
-            .on('mousedown', null)
-            .on('mouseup', null);
+        this.pointerCanvas.on('mouseleave', null).on('mousedown', null).on('mouseup', null);
 
         this.isEnable = false;
     }
@@ -135,19 +129,17 @@ export class BasicCanvasMouseHandler extends FunctionsBase {
                     type: 'mousemove',
                     position: value,
                     target: this.pointerCanvas
-                })
+                });
             });
         }
 
-        this.subscription.add(
-            this.moveSubscription
-        );
+        this.subscription.add(this.moveSubscription);
     }
 
     private setContainerPosition(geometry: ContainerSize, chartBase: ChartBase) {
         this.pointerCanvas
             .attr('width', geometry.width - 1)
             .attr('height', geometry.height - 1)
-            .style('transform', `translate(${(chartBase.chartMargin.left + 1)}px, ${(chartBase.chartMargin.top + 1)}px)`);
+            .style('transform', `translate(${chartBase.chartMargin.left + 1}px, ${chartBase.chartMargin.top + 1}px)`);
     }
 }

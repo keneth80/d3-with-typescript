@@ -1,12 +1,12 @@
-import { Selection, BaseType, mouse, select } from 'd3-selection';
+import {Selection, BaseType, pointer, select} from 'd3-selection';
 
-import { fromEvent } from 'rxjs';
-import { debounceTime } from 'rxjs/operators';
+import {fromEvent} from 'rxjs';
+import {debounceTime} from 'rxjs/operators';
 
-import { Scale, ContainerSize } from '../chart/chart.interface';
-import { FunctionsBase } from '../chart/functions-base';
-import { Direction, Placement } from '../chart/chart-configuration';
-import { ChartSelector } from '../chart';
+import {Scale, ContainerSize} from '../chart/chart.interface';
+import {FunctionsBase} from '../chart/functions-base';
+import {Direction, Placement} from '../chart/chart-configuration';
+import {ChartSelector} from '../chart';
 
 export interface BasicSvgMouseGuideLineHandlerConfiguration {
     xDirection?: string; // bottom or top
@@ -40,20 +40,14 @@ export class BasicSvgMouseGuideLineHandler extends FunctionsBase {
         }
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
-                  mainGroup: Selection<BaseType, any, HTMLElement, any>,
-                  index: number) {
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, mainGroup: Selection<BaseType, any, HTMLElement, any>, index: number) {
         this.svg = svg;
         this.mainGroup = mainGroup;
 
         this.pointerGroup = this.svg.select('.' + ChartSelector.ZOOM_SVG);
 
         if (!this.pointerGroup.select('.mouse-line').node()) {
-            this.pointerGroup.append('path')
-                .attr('class', 'mouse-line')
-                .style('stroke', 'black')
-                .style('stroke-width', '1px')
-                .style('opacity', 0);
+            this.pointerGroup.append('path').attr('class', 'mouse-line').style('stroke', 'black').style('stroke-width', '1px').style('opacity', 0);
         }
     }
 
@@ -80,116 +74,132 @@ export class BasicSvgMouseGuideLineHandler extends FunctionsBase {
         );
 
         this.pointerGroup
-        .on('mouseleave', () => {
-            const mouseEvent = mouse(this.pointerGroup.node() as any);
+            .on('mouseleave', () => {
+                const mouseEvent = pointer(this.pointerGroup.node() as any);
 
-            this.chartBase.mouseEventSubject.next({
-                type: 'mouseleave',
-                position: mouseEvent,
-                target: this.pointerGroup
+                this.chartBase.mouseEventSubject.next({
+                    type: 'mouseleave',
+                    position: mouseEvent,
+                    target: this.pointerGroup
+                });
+            })
+            .on('mousedown', () => {
+                const mouseEvent = pointer(this.pointerGroup.node() as any);
+
+                this.chartBase.mouseEventSubject.next({
+                    type: 'mousedown',
+                    position: mouseEvent,
+                    target: this.pointerGroup
+                });
+            })
+            .on('mouseup', () => {
+                console.log('mouseup');
+                const mouseEvent = pointer(this.pointerGroup.node() as any);
+
+                this.chartBase.mouseEventSubject.next({
+                    type: 'mouseup',
+                    position: mouseEvent,
+                    target: this.pointerGroup
+                });
+            })
+            .on('click', () => {
+                console.log('click');
+                const mouseEvent = pointer(this.pointerGroup.node() as any);
+
+                this.chartBase.mouseEventSubject.next({
+                    type: 'click',
+                    position: mouseEvent,
+                    target: this.pointerGroup
+                });
             });
-        })
-        .on('mousedown', () => {
-            const mouseEvent = mouse(this.pointerGroup.node() as any);
 
-            this.chartBase.mouseEventSubject.next({
-                type: 'mousedown',
-                position: mouseEvent,
-                target: this.pointerGroup
+        const targetList = this.svg
+            .select('g.' + ChartSelector.SERIES_SVG)
+            .selectAll('path')
+            .filter((d: any, index: number, nodeList: any) => {
+                return select(nodeList[index]).style('fill') === 'none';
             });
-        })
-        .on('mouseup', () => {
-            console.log('mouseup');
-            const mouseEvent = mouse(this.pointerGroup.node() as any);
 
-            this.chartBase.mouseEventSubject.next({
-                type: 'mouseup',
-                position: mouseEvent,
-                target: this.pointerGroup
-            });
-        }).on('click', () => {
-            console.log('click');
-            const mouseEvent = mouse(this.pointerGroup.node() as any);
-
-            this.chartBase.mouseEventSubject.next({
-                type: 'click',
-                position: mouseEvent,
-                target: this.pointerGroup
-            });
-        });
-
-        const targetList = this.svg.select('g.' + ChartSelector.SERIES_SVG).selectAll('path').filter((d: any, index: number, nodeList: any) => {
-            return select(nodeList[index]).style('fill') === 'none';
-        });
-
-        const targetGroup = this.svg.select('g.' + ChartSelector.SERIES_SVG)
-                .selectAll('.mouse-per-line')
-                .data(targetList.nodes().map((d: any, i: number) => i))
-                .join(
-                    (enter) => enter.append('g').attr('class', 'mouse-per-line'),
-                    (update) => update,
-                    (exit) => exit.remove()
-                )
-                .style('opacity', 0);
-        targetGroup.append('circle')
+        const targetGroup = this.svg
+            .select('g.' + ChartSelector.SERIES_SVG)
+            .selectAll('.mouse-per-line')
+            .data(targetList.nodes().map((d: any, i: number) => i))
+            .join(
+                (enter) => enter.append('g').attr('class', 'mouse-per-line'),
+                (update) => update,
+                (exit) => exit.remove()
+            )
+            .style('opacity', 0);
+        targetGroup
+            .append('circle')
             .attr('r', 7)
             .style('fill', 'none')
             .style('stroke-width', '2px')
             .style('stroke', (data: number) => this.chartBase.getColorByIndex(data));
-        targetGroup.append('text')
-            .attr('transform', 'translate(10,3)');
+        targetGroup.append('text').attr('transform', 'translate(10,3)');
 
         this.pointerGroup
-        .on('mousemove', () => {
-            const mouseEvent = mouse(this.pointerGroup.node() as any);
-            this.pointerGroup.select('.mouse-line')
-                .attr('d', () => {
+            .on('mousemove', () => {
+                const mouseEvent = pointer(this.pointerGroup.node() as any);
+                this.pointerGroup.select('.mouse-line').attr('d', () => {
                     let d = 'M' + mouseEvent[0] + ',' + geometry.height;
                     d += ' ' + mouseEvent[0] + ',' + 0;
                     return d;
                 });
 
-            this.svg.select('g.' + ChartSelector.SERIES_SVG).selectAll('.mouse-per-line')
-                .attr('transform', (d: any, index: number, nodeList: any) => {
-                    const currentTarget = (targetList.nodes()[index] as any);
-                    if (!currentTarget) {
-                        return 'translate(' + (-50) + ',' + (-50) +')';
-                    }
-                    
-                    let beginning = 0;
-                    let endIndex = currentTarget.getTotalLength();
-                    let target = null;
-                    let pos: any = null;
-                    while (true){
-                        target = Math.floor((beginning + endIndex) / 2);
-                        pos = currentTarget.getPointAtLength(target);
-                        if ((target === endIndex || target === beginning) && pos.x !== mouseEvent[0]) {
-                            break;
+                this.svg
+                    .select('g.' + ChartSelector.SERIES_SVG)
+                    .selectAll('.mouse-per-line')
+                    .attr('transform', (d: any, index: number, nodeList: any) => {
+                        const currentTarget = targetList.nodes()[index] as any;
+                        if (!currentTarget) {
+                            return 'translate(' + -50 + ',' + -50 + ')';
                         }
-                        if (pos.x > mouseEvent[0]) endIndex = target;
-                        else if (pos.x < mouseEvent[0]) beginning = target;
-                        else break;
-                    }
 
-                    select(nodeList[index]).select('text')
-                    // .text(Math.round(y.invert(pos.y)));
-                    .text(y.invert(pos.y).toFixed(1));
+                        let beginning = 0;
+                        let endIndex = currentTarget.getTotalLength();
+                        let target = null;
+                        let pos: any = null;
+                        while (true) {
+                            target = Math.floor((beginning + endIndex) / 2);
+                            pos = currentTarget.getPointAtLength(target);
+                            if ((target === endIndex || target === beginning) && pos.x !== mouseEvent[0]) {
+                                break;
+                            }
+                            if (pos.x > mouseEvent[0]) endIndex = target;
+                            else if (pos.x < mouseEvent[0]) beginning = target;
+                            else break;
+                        }
 
-                    return 'translate(' + mouseEvent[0] + ',' + pos.y +')';
-                });
-        })
-        .on('mouseover', () => {
-            this.pointerGroup.select('.mouse-line').style('opacity', 1);
-            this.svg.select('g.' + ChartSelector.SERIES_SVG).selectAll('.mouse-per-line').style('opacity', 1);
-        })
-        .on('mouseout', () => {
-            this.pointerGroup.select('.mouse-line').style('opacity', 0);
-            this.svg.select('g.' + ChartSelector.SERIES_SVG).selectAll('.mouse-per-line').style('opacity', 0);
-        });
+                        select(nodeList[index])
+                            .select('text')
+                            // .text(Math.round(y.invert(pos.y)));
+                            .text(y.invert(pos.y).toFixed(1));
+
+                        return 'translate(' + mouseEvent[0] + ',' + pos.y + ')';
+                    });
+            })
+            .on('mouseover', () => {
+                this.pointerGroup.select('.mouse-line').style('opacity', 1);
+                this.svg
+                    .select('g.' + ChartSelector.SERIES_SVG)
+                    .selectAll('.mouse-per-line')
+                    .style('opacity', 1);
+            })
+            .on('mouseout', () => {
+                this.pointerGroup.select('.mouse-line').style('opacity', 0);
+                this.svg
+                    .select('g.' + ChartSelector.SERIES_SVG)
+                    .selectAll('.mouse-per-line')
+                    .style('opacity', 0);
+            });
     }
 
     destroy() {
-        this.svg.select('g.' + ChartSelector.SERIES_SVG).selectAll('g.mouse-per-line').remove();
+        this.svg
+            .select('g.' + ChartSelector.SERIES_SVG)
+            .selectAll('g.mouse-per-line')
+            .remove();
         this.subscription.unsubscribe();
     }
 }

@@ -1,6 +1,6 @@
-import { ISeries } from './series.interface';
-import { IFunctions } from './functions.interface';
-import { IOptions } from './options.interface';
+import {ISeries} from './series.interface';
+import {IFunctions} from './functions.interface';
+import {IOptions} from './options.interface';
 
 export enum Direction {
     BOTH = 'both',
@@ -44,7 +44,7 @@ export interface AxisTitle {
         size?: number;
         color?: string;
         font?: string;
-    }
+    };
 }
 
 export interface Axes {
@@ -68,7 +68,7 @@ export interface Axes {
     };
     isZoom?: boolean;
     min?: number; // only type is number
-    max?: number;  // only type is number
+    max?: number; // only type is number
     title?: AxisTitle;
 }
 
@@ -99,7 +99,7 @@ export interface ChartTitle {
         size?: number;
         color?: string;
         font?: string;
-    }
+    };
 }
 
 export interface ChartLegend {
@@ -132,6 +132,8 @@ export interface ChartConfiguration<T = any> {
 
     isResize?: boolean; // default: true
 
+    isZoom?: boolean;
+
     legend?: ChartLegend; // legend display
 
     margin?: Margin; // custom margin
@@ -148,13 +150,13 @@ export interface ChartConfiguration<T = any> {
 
     colors?: string[]; // custom color (default: d3.schemeCategory10, size: 10)
 
-    min?: number, // only type is number
+    min?: number; // only type is number
 
-    max?: number  // only type is number
+    max?: number; // only type is number
 
     calcField?: string; // for only min max configration
 
     displayDelay?: {
         delayTime: number;
-    }
+    };
 }

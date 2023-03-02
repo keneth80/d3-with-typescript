@@ -1,14 +1,13 @@
-import { Selection, BaseType, select, mouse } from 'd3-selection';
-import { drag } from 'd3-drag';
-import { min, max } from 'd3-array';
-import { Subject, Subscription } from 'rxjs';
-import { debounceTime } from 'rxjs/operators';
+import {max, min} from 'd3-array';
+import {drag} from 'd3-drag';
+import {BaseType, pointer, Selection} from 'd3-selection';
+import {Subject, Subscription} from 'rxjs';
+import {debounceTime} from 'rxjs/operators';
 
-import { Scale, ContainerSize } from '../chart/chart.interface';
-import { FunctionsBase } from '../chart/functions-base';
-import { ChartBase, ChartSelector } from '../chart';
-import { Direction, ScaleType, Placement } from '../chart/chart-configuration';
-
+import {ChartBase, ChartSelector} from '../chart';
+import {Direction, Placement, ScaleType} from '../chart/chart-configuration';
+import {ContainerSize, Scale} from '../chart/chart.interface';
+import {FunctionsBase} from '../chart/functions-base';
 
 export interface BasicCanvasMouseZoomHandlerConfiguration {
     xDirection?: string; // bottom or top
@@ -73,9 +72,7 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
         // this.addEvent();
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
-                  mainGroup: Selection<BaseType, any, HTMLElement, any>,
-                  index: number) {
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, mainGroup: Selection<BaseType, any, HTMLElement, any>, index: number) {
         this.svg = svg;
         this.mainGroup = mainGroup;
         if (!this.chartBase.chartContainer.select('.zoom-canvas').node()) {
@@ -152,185 +149,191 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
         const zoomContext = (this.zoomCanvas.node() as any).getContext('2d');
 
         const start = {
-            x: 0, y: 0
+            x: 0,
+            y: 0
         };
         const end = {
-            x: 0, y: 0
+            x: 0,
+            y: 0
         };
 
         if (this.isMoveEvent) {
-            this.pointerCanvas.on('mousemove', () => {
-                const mouseEvent = mouse(this.pointerCanvas.node() as any);
+            this.pointerCanvas.on('mousemove', (event: any) => {
+                // const mouseEvent = pointer(this.pointerCanvas.node() as any);
+                const mouseEvent: any = [event.x, event.y];
                 this.move$.next(mouseEvent);
             });
         }
 
-        this.pointerCanvas.on('click', () => {
-            const mouseEvent = mouse(this.pointerCanvas.node() as any);
+        this.pointerCanvas
+            .on('click', (event: any) => {
+                // const mouseEvent = pointer(this.pointerCanvas.node() as any);
+                const mouseEvent: any = [event.x, event.y];
 
-            this.chartBase.mouseEventSubject.next({
-                type: 'click',
-                position: mouseEvent,
-                target: this.pointerCanvas
-            });
-        }).on('mouseleave', () => {
-            const mouseEvent = mouse(this.pointerCanvas.node() as any);
+                this.chartBase.mouseEventSubject.next({
+                    type: 'click',
+                    position: mouseEvent,
+                    target: this.pointerCanvas
+                });
+            })
+            .on('mouseleave', (event: any) => {
+                // const mouseEvent = pointer(this.pointerCanvas.node() as any);
+                const mouseEvent: any = [event.x, event.y];
 
-            this.chartBase.mouseEventSubject.next({
-                type: 'mouseleave',
-                position: mouseEvent,
-                target: this.pointerCanvas
-            });
-        })
-        .on('mousedown', () => {
-            const mouseEvent = mouse(this.pointerCanvas.node() as any);
+                this.chartBase.mouseEventSubject.next({
+                    type: 'mouseleave',
+                    position: mouseEvent,
+                    target: this.pointerCanvas
+                });
+            })
+            .on('mousedown', (event: any) => {
+                // const mouseEvent = pointer(this.pointerCanvas.node() as any);
+                const mouseEvent: any = [event.x, event.y];
 
-            this.chartBase.mouseEventSubject.next({
-                type: 'mousedown',
-                position: mouseEvent,
-                target: this.pointerCanvas
-            });
-        })
-        .on('mouseup', () => {
-            const mouseEvent = mouse(this.pointerCanvas.node() as any);
+                this.chartBase.mouseEventSubject.next({
+                    type: 'mousedown',
+                    position: mouseEvent,
+                    target: this.pointerCanvas
+                });
+            })
+            .on('mouseup', (event: any) => {
+                // const mouseEvent = pointer(this.pointerCanvas.node() as any);
+                const mouseEvent: any = [event.x, event.y];
 
-            this.chartBase.mouseEventSubject.next({
-                type: 'mouseup',
-                position: mouseEvent,
-                target: this.pointerCanvas
+                this.chartBase.mouseEventSubject.next({
+                    type: 'mouseup',
+                    position: mouseEvent,
+                    target: this.pointerCanvas
+                });
             });
-        });
 
         this.pointerCanvas.call(
             drag()
-            .on('start', () => {
-                const mouseEvent = mouse(this.pointerCanvas.node() as any);
-                startX = mouseEvent[0];
-                startY = mouseEvent[1];
+                .on('start', (event: any) => {
+                    // const mouseEvent = pointer(event);
+                    const mouseEvent: any = [event.x, event.y];
+                    startX = mouseEvent[0];
+                    startY = mouseEvent[1];
 
-                this.chartBase.zoomEventSubject.next({
-                    type: 'dragstart',
-                    position: mouseEvent,
-                    target: this.pointerCanvas
-                });
-            })
-            .on('drag', () => {
-                const mouseEvent = mouse(this.pointerCanvas.node() as any);
-                const moveX = mouseEvent[0];
-                const moveY = mouseEvent[1];
+                    this.chartBase.zoomEventSubject.next({
+                        type: 'dragstart',
+                        position: mouseEvent,
+                        target: this.pointerCanvas
+                    });
+                })
+                .on('drag', (event: any) => {
+                    // const mouseEvent = pointer(event);
+                    const mouseEvent: any = [event.x, event.y];
+                    const moveX = mouseEvent[0];
+                    const moveY = mouseEvent[1];
 
-                zoomContext.clearRect(0, 0, geometry.width, geometry.height);
+                    zoomContext.clearRect(0, 0, geometry.width, geometry.height);
 
-                if (this.direction === Direction.HORIZONTAL) {
-                    start.x = min([startX, moveX]);
-                    start.y = 0;
+                    if (this.direction === Direction.HORIZONTAL) {
+                        start.x = min([startX, moveX]);
+                        start.y = 0;
 
-                    end.x = max([startX, moveX]);
-                    end.y = geometry.height;
-                } else if (this.direction === Direction.VERTICAL) {
-                    start.x = 0;
-                    start.y = min([startY, moveY]);
+                        end.x = max([startX, moveX]);
+                        end.y = geometry.height;
+                    } else if (this.direction === Direction.VERTICAL) {
+                        start.x = 0;
+                        start.y = min([startY, moveY]);
 
-                    end.x = geometry.width;
-                    end.y = max([startY, moveY]);
-                } else {
-                    start.x = min([startX, moveX]);
-                    start.y = min([startY, moveY]);
-
-                    end.x = max([startX, moveX]);
-                    end.y = max([startY, moveY]);
-                }
-
-                if (start.x <= 0) {
-                    start.x = 1;
-                }
-
-                if (end.x > geometry.width) {
-                    end.x = geometry.width - 1;
-                }
-
-                if (start.y <= 0) {
-                    start.y = 1;
-                }
-
-                if (end.y > geometry.height) {
-                    end.y = geometry.height - 1;
-                }
-
-                this.drawZoomBox(
-                    zoomContext,
-                    start,
-                    end,
-                    geometry,
-                    startX > moveX && startY > moveY
-                );
-
-                this.chartBase.zoomEventSubject.next({
-                    type: 'drag',
-                    position: mouseEvent,
-                    target: this.pointerCanvas
-                });
-            })
-            .on('end', () => {
-                const mouseEvent = mouse(this.pointerCanvas.node() as any);
-                endX = mouseEvent[0];
-                endY = mouseEvent[1];
-                zoomContext.clearRect(0, 0, geometry.width, geometry.height);
-
-                let isZoomArea = true;
-
-                if (this.direction === Direction.VERTICAL) {
-                    isZoomArea = Math.abs(startY - endY) > 4;
-                } else if (this.direction === Direction.HORIZONTAL) {
-                    isZoomArea = Math.abs(startX - endX) > 4;
-                } else {
-                    isZoomArea = Math.abs(startX - endX) > 4 && Math.abs(startY - endY) > 4;
-                }
-
-                if (this.isZoom && isZoomArea) {
-                    const xStartValue = xScale.type === ScaleType.TIME ? x.invert(start.x).getTime() : x.invert(start.x);
-                    const yStartValue = xScale.type === ScaleType.TIME ? y.invert(start.y) : y.invert(start.y);
-                    const xEndValue = xScale.type === ScaleType.TIME ? x.invert(end.x).getTime() : x.invert(end.x);
-                    const yEndValue = xScale.type === ScaleType.TIME ? y.invert(end.y) : y.invert(end.y);
-
-                    if (startX < endX && startY < endY) {
-                        this.chartBase.zoomEventSubject.next({
-                            type: 'zoomin',
-                            position: [endX, endY],
-                            target: this.pointerCanvas,
-                            zoom: {
-                                direction: this.direction,
-                                field: {
-                                    x: xScale.field,
-                                    y: yScale.field
-                                },
-                                start: {
-                                    x: xStartValue,
-                                    y: yEndValue
-                                },
-                                end: {
-                                    x: xEndValue,
-                                    y: yStartValue
-                                }
-                            }
-                        });
+                        end.x = geometry.width;
+                        end.y = max([startY, moveY]);
                     } else {
-                        if (this.xMaxValue === xmax && this.yMaxValue === ymax) {
+                        start.x = min([startX, moveX]);
+                        start.y = min([startY, moveY]);
+
+                        end.x = max([startX, moveX]);
+                        end.y = max([startY, moveY]);
+                    }
+
+                    if (start.x <= 0) {
+                        start.x = 1;
+                    }
+
+                    if (end.x > geometry.width) {
+                        end.x = geometry.width - 1;
+                    }
+
+                    if (start.y <= 0) {
+                        start.y = 1;
+                    }
+
+                    if (end.y > geometry.height) {
+                        end.y = geometry.height - 1;
+                    }
+
+                    this.drawZoomBox(zoomContext, start, end, geometry, startX > moveX && startY > moveY);
+
+                    this.chartBase.zoomEventSubject.next({
+                        type: 'drag',
+                        position: mouseEvent,
+                        target: this.pointerCanvas
+                    });
+                })
+                .on('end', (event: any) => {
+                    // const mouseEvent = pointer(event);
+                    const mouseEvent: any = [event.x, event.y];
+                    endX = mouseEvent[0];
+                    endY = mouseEvent[1];
+                    zoomContext.clearRect(0, 0, geometry.width, geometry.height);
+
+                    let isZoomArea = true;
+
+                    if (this.direction === Direction.VERTICAL) {
+                        isZoomArea = Math.abs(startY - endY) > 4;
+                    } else if (this.direction === Direction.HORIZONTAL) {
+                        isZoomArea = Math.abs(startX - endX) > 4;
+                    } else {
+                        isZoomArea = Math.abs(startX - endX) > 4 && Math.abs(startY - endY) > 4;
+                    }
+
+                    if (this.isZoom && isZoomArea) {
+                        const xStartValue = xScale.type === ScaleType.TIME ? x.invert(start.x).getTime() : x.invert(start.x);
+                        const yStartValue = xScale.type === ScaleType.TIME ? y.invert(start.y) : y.invert(start.y);
+                        const xEndValue = xScale.type === ScaleType.TIME ? x.invert(end.x).getTime() : x.invert(end.x);
+                        const yEndValue = xScale.type === ScaleType.TIME ? y.invert(end.y) : y.invert(end.y);
+
+                        if (startX < endX && startY < endY) {
                             this.chartBase.zoomEventSubject.next({
-                                type: 'not',
+                                type: 'zoomin',
+                                position: [endX, endY],
+                                target: this.pointerCanvas,
+                                zoom: {
+                                    direction: this.direction,
+                                    field: {
+                                        x: xScale.field,
+                                        y: yScale.field
+                                    },
+                                    start: {
+                                        x: xStartValue,
+                                        y: yEndValue
+                                    },
+                                    end: {
+                                        x: xEndValue,
+                                        y: yStartValue
+                                    }
+                                }
+                            });
+                        } else {
+                            if (this.xMaxValue === xmax && this.yMaxValue === ymax) {
+                                this.chartBase.zoomEventSubject.next({
+                                    type: 'not',
+                                    position: [endX, endY],
+                                    target: this.pointerCanvas
+                                });
+                                return;
+                            }
+                            this.chartBase.zoomEventSubject.next({
+                                type: 'zoomout',
                                 position: [endX, endY],
                                 target: this.pointerCanvas
                             });
-                            return;
                         }
-                        this.chartBase.zoomEventSubject.next({
-                            type: 'zoomout',
-                            position: [endX, endY],
-                            target: this.pointerCanvas
-                        });
                     }
-                }
-            })
+                })
         );
     }
 
@@ -340,18 +343,9 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
         }
 
         if (this.pointerCanvas) {
-            this.pointerCanvas
-                .on('mouseleave', null)
-                .on('mousedown', null)
-                .on('mouseup', null)
-                .on('mousemove', null);
+            this.pointerCanvas.on('mouseleave', null).on('mousedown', null).on('mouseup', null).on('mousemove', null);
 
-            this.pointerCanvas.call(
-                drag()
-                .on('start', null)
-                .on('drag', null)
-                .on('end', null)
-            );
+            this.pointerCanvas.call(drag().on('start', null).on('drag', null).on('end', null));
         }
 
         this.isEnable = false;
@@ -371,19 +365,17 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
                     type: 'mousemove',
                     position: value,
                     target: this.pointerCanvas
-                })
+                });
             });
         }
 
-        this.subscription.add(
-            this.moveSubscription
-        );
+        this.subscription.add(this.moveSubscription);
     }
 
     private drawZoomBox(
         zoomContext: any,
-        start: {x: number, y: number},
-        end: {x: number, y: number},
+        start: {x: number; y: number},
+        end: {x: number; y: number},
         size: ContainerSize,
         isRestore: boolean = false
     ) {
@@ -420,11 +412,11 @@ export class BasicCanvasMouseZoomHandler extends FunctionsBase {
         this.zoomCanvas
             .attr('width', geometry.width - 1)
             .attr('height', geometry.height - 1)
-            .style('transform', `translate(${(chartBase.chartMargin.left + 1)}px, ${(chartBase.chartMargin.top + 1)}px)`);
+            .style('transform', `translate(${chartBase.chartMargin.left + 1}px, ${chartBase.chartMargin.top + 1}px)`);
 
         this.pointerCanvas
             .attr('width', geometry.width - 1)
             .attr('height', geometry.height - 1)
-            .style('transform', `translate(${(chartBase.chartMargin.left + 1)}px, ${(chartBase.chartMargin.top + 1)}px)`);
+            .style('transform', `translate(${chartBase.chartMargin.left + 1}px, ${chartBase.chartMargin.top + 1}px)`);
     }
 }

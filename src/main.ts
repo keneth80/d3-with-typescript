@@ -3,7 +3,6 @@ import '@babel/polyfill';
 
 import {BaseType, select, Selection} from 'd3-selection';
 import {max} from 'd3-array';
-import {event} from 'd3';
 
 import {delay, tap} from 'rxjs/operators';
 import {Observable, Observer, Subscription} from 'rxjs';
@@ -40,6 +39,7 @@ import {sampleMockData, sampleMockTimeData} from './component/mock-data/simple-m
 import {centerPositionForTooltipElement} from './component/chart/util/tooltip-util';
 import {topologyData} from './component/mock-data/topology-data';
 import {TopologyGroupElement, TopologyData} from './component/series';
+import {BasicDonutSeries} from './component/series/svg/basic-donut-series';
 
 let chart: BasicChart;
 let currentSubscription: Subscription;
@@ -55,6 +55,35 @@ const clear = () => {
     }
 };
 
+const donutChart = () => {
+    const labels = ['Lorem ipsum', 'dolor sit', 'amet', 'consectetur', 'adipisicing', 'elit', 'sed', 'do', 'eiusmod', 'tempor', 'incididunt'];
+    const pieData = labels.map((label) => {
+        return {label, value: Math.random()};
+    });
+
+    const donutSeries = new BasicDonutSeries({
+        selector: 'donut-series',
+        categoryField: 'label',
+        valueField: 'value'
+    });
+
+    const basicPieChart = new BasicChart({
+        selector: '#chart-div',
+        data: pieData,
+        margin: {
+            left: 10,
+            right: 10,
+            top: 10,
+            bottom: 10
+        },
+        min: 0,
+        max: max(pieData, (d: any) => d.value),
+        isResize: true,
+        axes: [],
+        series: [donutSeries]
+    }).draw();
+};
+
 const hideLoader = () => {
     select('.back-drop').classed('show', false);
 };
@@ -64,8 +93,8 @@ const showLoader = () => {
 };
 
 const buttonMapping = () => {
-    select('.container-button-bar').on('click', () => {
-        const seriesId = event.target.id;
+    select('.container-button-bar').on('click', (event: PointerEvent) => {
+        const seriesId = (event.target as HTMLElement).id;
 
         new Observable((observ: Observer<any>) => {
             observ.next(true);
@@ -131,6 +160,9 @@ const buttonMapping = () => {
                             break;
                         case 'real-time-series':
                             realTimeLineSeriesSample();
+                            break;
+                        case 'svg-donut-series':
+                            donutChart();
                             break;
                         default:
                             break;

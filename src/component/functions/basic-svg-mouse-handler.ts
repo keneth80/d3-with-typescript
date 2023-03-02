@@ -1,10 +1,10 @@
-import { Selection, BaseType, mouse } from 'd3-selection';
+import {Selection, BaseType, pointer} from 'd3-selection';
 
-import { Scale, ContainerSize } from '../chart/chart.interface';
-import { FunctionsBase } from '../chart/functions-base';
-import { ChartBase, ChartSelector } from '../chart';
-import { fromEvent } from 'rxjs';
-import { debounceTime } from 'rxjs/operators';
+import {Scale, ContainerSize} from '../chart/chart.interface';
+import {FunctionsBase} from '../chart/functions-base';
+import {ChartBase, ChartSelector} from '../chart';
+import {fromEvent} from 'rxjs';
+import {debounceTime} from 'rxjs/operators';
 
 export interface BasicSvgMouseHandlerConfiguration {
     isMoveEvent?: boolean;
@@ -27,9 +27,7 @@ export class BasicSvgMouseHandler extends FunctionsBase {
         }
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
-                  mainGroup: Selection<BaseType, any, HTMLElement, any>,
-                  index: number) {
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, mainGroup: Selection<BaseType, any, HTMLElement, any>, index: number) {
         this.svg = svg;
         this.mainGroup = mainGroup;
         this.pointerGroup = this.svg.select('.' + ChartSelector.ZOOM_SVG);
@@ -70,31 +68,31 @@ export class BasicSvgMouseHandler extends FunctionsBase {
         }
 
         this.pointerGroup
-        .on('mousedown', () => {
-            const mouseEvent = mouse(this.pointerGroup.node() as any);
-            this.chartBase.mouseEventSubject.next({
-                type: 'mousedown',
-                position: mouseEvent,
-                target: this.pointerGroup
-            });
-        })
-        .on('mouseup', () => {
-            // const mouseEvent = mouse(this.pointerGroup.node() as any);
+            .on('mousedown', () => {
+                const mouseEvent = pointer(this.pointerGroup.node() as any);
+                this.chartBase.mouseEventSubject.next({
+                    type: 'mousedown',
+                    position: mouseEvent,
+                    target: this.pointerGroup
+                });
+            })
+            .on('mouseup', () => {
+                // const mouseEvent = mouse(this.pointerGroup.node() as any);
+                // this.chartBase.mouseEventSubject.next({
+                //     type: 'mouseup',
+                //     position: mouseEvent,
+                //     target: this.pointerGroup
+                // });
+            })
+            .on('click', () => {
+                const mouseEvent = pointer(this.pointerGroup.node() as any);
 
-            // this.chartBase.mouseEventSubject.next({
-            //     type: 'mouseup',
-            //     position: mouseEvent,
-            //     target: this.pointerGroup
-            // });
-        }).on('click', () => {
-            const mouseEvent = mouse(this.pointerGroup.node() as any);
-
-            this.chartBase.mouseEventSubject.next({
-                type: 'click',
-                position: mouseEvent,
-                target: this.pointerGroup
+                this.chartBase.mouseEventSubject.next({
+                    type: 'click',
+                    position: mouseEvent,
+                    target: this.pointerGroup
+                });
             });
-        });
     }
 
     destroy() {
@@ -106,6 +104,6 @@ export class BasicSvgMouseHandler extends FunctionsBase {
         this.pointerGroup
             .attr('width', geometry.width - 1)
             .attr('height', geometry.height - 1)
-            .style('transform', `translate(${(chartBase.chartMargin.left + 1)}px, ${(chartBase.chartMargin.top + 1)}px)`);
+            .style('transform', `translate(${chartBase.chartMargin.left + 1}px, ${chartBase.chartMargin.top + 1}px)`);
     }
 }

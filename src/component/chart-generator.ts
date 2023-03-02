@@ -1,40 +1,39 @@
-import { BasicChart } from './basic-chart';
-import { ChartConfiguration,
-         Direction
-} from './chart/chart-configuration';
+import {BasicChart} from './basic-chart';
+import {ChartConfiguration, Direction} from './chart/chart-configuration';
 
-import { IFunctions } from './chart/functions.interface';
+import {IFunctions} from './chart/functions.interface';
 
-import { SeriesConfiguration } from './chart/series.interface';
+import {SeriesConfiguration} from './chart/series.interface';
 
-import { BasicCanvasTraceConfiguration, BasicCanvasTrace } from './series/canvas/basic-canvas-trace';
-import { BasicCanvasWebglLineSeriesOneConfiguration, BasicCanvasWebgLineSeriesOne } from './series/webgl/basic-canvas-webgl-line-series-one';
+import {BasicCanvasTraceConfiguration, BasicCanvasTrace} from './series/canvas/basic-canvas-trace';
+import {BasicCanvasWebglLineSeriesOneConfiguration, BasicCanvasWebgLineSeriesOne} from './series/webgl/basic-canvas-webgl-line-series-one';
 
-import { BasicCanvasMouseZoomHandler } from './functions/basic-canvas-mouse-zoom-handler';
-import { BasicCanvasMouseHandler } from './functions/basic-canvas-mouse-handler';
-import { IOptions } from './chart/options.interface';
-import { BasicSpecArea } from './options/basic-svg-spec-area';
-import { BasicStepLine } from './options/basic-svg-step-line';
-import { BasicStepArea } from './options/basic-svg-step-area';
-import { BasicLineSeries, BasicLineSeriesConfiguration, BasicTopology } from './series';
-import { BasicSvgMouseZoomHandler } from './functions/basic-svg-mouse-zoom-handler';
-import { BasicSvgMouseHandler } from './functions/basic-svg-mouse-handler';
-import { GroupedVerticalBarSeriesConfiguration, GroupedVerticalBarSeries } from './series/svg/grouped-vertical-bar-series';
-import { GroupedHorizontalBarSeriesConfiguration, GroupedHorizontalBarSeries } from './series/svg/grouped-horizontal-bar-series';
-import { StackedHorizontalBarSeriesConfiguration, StackedHorizontalBarSeries } from './series/svg/stacked-horizontal-bar-series';
-import { StackedVerticalBarSeriesConfiguration, StackedVerticalBarSeries } from './series/svg/stacked-vertical-bar-series';
-import { MiccBaseConfiguration, OptionConfiguration, ZoomConfiguration } from './mi-chart';
-import { BasicAreaSeries, BasicAreaSeriesConfiguration } from './series/svg/basic-area-series';
-import { BasicSvgMouseGuideLineHandler } from './functions/basic-svg-mouse-guide-line-handler';
-import { makeSeriesByConfigurationType } from './chart/util/chart-util';
+import {BasicCanvasMouseZoomHandler} from './functions/basic-canvas-mouse-zoom-handler';
+import {BasicCanvasMouseHandler} from './functions/basic-canvas-mouse-handler';
+import {IOptions} from './chart/options.interface';
+import {BasicSpecArea} from './options/basic-svg-spec-area';
+import {BasicStepLine} from './options/basic-svg-step-line';
+import {BasicStepArea} from './options/basic-svg-step-area';
+import {BasicLineSeries, BasicLineSeriesConfiguration, BasicTopology} from './series';
+import {BasicSvgMouseZoomHandler} from './functions/basic-svg-mouse-zoom-handler';
+import {BasicSvgMouseHandler} from './functions/basic-svg-mouse-handler';
+import {GroupedVerticalBarSeriesConfiguration, GroupedVerticalBarSeries} from './series/svg/grouped-vertical-bar-series';
+import {GroupedHorizontalBarSeriesConfiguration, GroupedHorizontalBarSeries} from './series/svg/grouped-horizontal-bar-series';
+import {StackedHorizontalBarSeriesConfiguration, StackedHorizontalBarSeries} from './series/svg/stacked-horizontal-bar-series';
+import {StackedVerticalBarSeriesConfiguration, StackedVerticalBarSeries} from './series/svg/stacked-vertical-bar-series';
+import {MiccBaseConfiguration, OptionConfiguration, ZoomConfiguration} from './mi-chart';
+import {BasicAreaSeries, BasicAreaSeriesConfiguration} from './series/svg/basic-area-series';
+import {BasicSvgMouseGuideLineHandler} from './functions/basic-svg-mouse-guide-line-handler';
+import {makeSeriesByConfigurationType} from './chart/util/chart-util';
+import {BasicDonutSeries, BasicDonutSeriesConfiguration} from './series/svg/basic-donut-series';
 
 /*
-* desc: 캔버스 시리즈 출력 설정정보 맵핑.
-* argument:
-* 1. configuration: chart 설정정보
-* 2. series: 출력되는 시리즈 설정정보
-* 3. options: 시리즈 외에 출력되는 시리즈 설정정보
-*/
+ * desc: 캔버스 시리즈 출력 설정정보 맵핑.
+ * argument:
+ * 1. configuration: chart 설정정보
+ * 2. series: 출력되는 시리즈 설정정보
+ * 3. options: 시리즈 외에 출력되는 시리즈 설정정보
+ */
 export const CanvasTraceChart = (
     configuration: MiccBaseConfiguration,
     series: BasicCanvasTraceConfiguration[] = [],
@@ -51,7 +50,7 @@ export const CanvasTraceChart = (
     chartConfiguration.functions = generatorCanvasFunctions(configuration);
 
     return new BasicChart(chartConfiguration);
-}
+};
 
 // webgl 시리즈 출력 설정정보 맵핑.
 export const WebglTraceChart = (
@@ -70,7 +69,7 @@ export const WebglTraceChart = (
     chartConfiguration.functions = generatorCanvasFunctions(configuration);
 
     return new BasicChart(chartConfiguration);
-}
+};
 
 // svg 시리즈 출력 설정정보 맵핑.
 export const SvgTraceChart = (
@@ -89,7 +88,25 @@ export const SvgTraceChart = (
     chartConfiguration.functions = generatorFunctions(configuration);
 
     return new BasicChart(chartConfiguration);
-}
+};
+
+export const SvgDonuttChart = (
+    configuration: MiccBaseConfiguration,
+    series: BasicDonutSeriesConfiguration[] = [],
+    options: OptionConfiguration[] = []
+): BasicChart => {
+    const chartConfiguration: ChartConfiguration = generatorCommomConfiguration(configuration);
+
+    chartConfiguration.series = series.map((seriesConfiguration: BasicDonutSeriesConfiguration) => {
+        return new BasicDonutSeries(seriesConfiguration);
+    });
+
+    chartConfiguration.options = generatorOptions(options);
+
+    chartConfiguration.functions = generatorFunctions(configuration);
+
+    return new BasicChart(chartConfiguration);
+};
 
 export const SvgAreaChart = (
     configuration: MiccBaseConfiguration,
@@ -107,7 +124,7 @@ export const SvgAreaChart = (
     chartConfiguration.functions = generatorFunctions(configuration);
 
     return new BasicChart(chartConfiguration);
-}
+};
 
 // svg 시리즈 출력 설정정보 맵핑.
 export const SvgGroupedBarChart = (
@@ -118,16 +135,14 @@ export const SvgGroupedBarChart = (
 ): BasicChart => {
     const chartConfiguration: ChartConfiguration = generatorCommomConfiguration(configuration);
 
-    chartConfiguration.series = [
-        direction === Direction.VERTICAL ? new GroupedVerticalBarSeries(series) : new GroupedHorizontalBarSeries(series)
-    ];
+    chartConfiguration.series = [direction === Direction.VERTICAL ? new GroupedVerticalBarSeries(series) : new GroupedHorizontalBarSeries(series)];
 
     chartConfiguration.options = generatorOptions(options);
 
     chartConfiguration.functions = generatorFunctions(configuration);
 
     return new BasicChart(chartConfiguration);
-}
+};
 
 export const SvgStackedBarChart = (
     configuration: MiccBaseConfiguration,
@@ -137,16 +152,14 @@ export const SvgStackedBarChart = (
 ): BasicChart => {
     const chartConfiguration: ChartConfiguration = generatorCommomConfiguration(configuration);
 
-    chartConfiguration.series = [
-        direction === Direction.VERTICAL ? new StackedVerticalBarSeries(series) : new StackedHorizontalBarSeries(series)
-    ];
+    chartConfiguration.series = [direction === Direction.VERTICAL ? new StackedVerticalBarSeries(series) : new StackedHorizontalBarSeries(series)];
 
     chartConfiguration.options = generatorOptions(options);
 
     chartConfiguration.functions = generatorFunctions(configuration);
 
     return new BasicChart(chartConfiguration);
-}
+};
 
 export const SvgMultiSeriesChart = (
     configuration: MiccBaseConfiguration,
@@ -163,23 +176,21 @@ export const SvgMultiSeriesChart = (
     chartConfiguration.functions = generatorFunctions(configuration);
 
     return new BasicChart(chartConfiguration);
-}
+};
 
-export const SvgTopology = (
-    configuration: MiccBaseConfiguration
-) => {
+export const SvgTopology = (configuration: MiccBaseConfiguration) => {
     const chartConfiguration: ChartConfiguration = generatorCommomConfiguration(configuration);
-    chartConfiguration.series = [new BasicTopology({
-        selector: 'topology'
-    })];
+    chartConfiguration.series = [
+        new BasicTopology({
+            selector: 'topology'
+        })
+    ];
 
     return new BasicChart(chartConfiguration);
-}
+};
 
 // 마우스 이벤트 같은 이벤트 함수설정 정보 맵핑.
-export const generatorCanvasFunctions = (
-    config: MiccBaseConfiguration
-): IFunctions[] => {
+export const generatorCanvasFunctions = (config: MiccBaseConfiguration): IFunctions[] => {
     const functions: IFunctions[] = [];
     if (config.zoom) {
         functions.push(new BasicCanvasMouseZoomHandler(config.zoom));
@@ -187,22 +198,22 @@ export const generatorCanvasFunctions = (
         functions.push(new BasicCanvasMouseHandler({isMoveEvent: true}));
     }
     return functions;
-}
+};
 
 // 마우스 이벤트 같은 이벤트 함수설정 정보 맵핑.
-export const generatorFunctions = (
-    config: MiccBaseConfiguration
-): IFunctions[] => {
+export const generatorFunctions = (config: MiccBaseConfiguration): IFunctions[] => {
     const functions: IFunctions[] = [];
     if (config.zoom) {
         config.zoom.delayTime = 50;
         // functions.push(new BasicSvgMouseZoomHandler(config.zoom));
         functions.push(new BasicCanvasMouseZoomHandler(config.zoom));
     } else {
-        functions.push(new BasicSvgMouseHandler({
-            isMoveEvent: true,
-            delayTime: 50
-        }));
+        functions.push(
+            new BasicSvgMouseHandler({
+                isMoveEvent: true,
+                delayTime: 50
+            })
+        );
     }
 
     if (config.mouseGuideLine) {
@@ -210,23 +221,21 @@ export const generatorFunctions = (
     }
 
     return functions;
-}
+};
 
 // external 기능 출력 설정정보 맵핑.
-export const generatorOptions = (
-    optionConfiguraions: OptionConfiguration[]
-): IOptions[] => {
-    const options: IOptions[] = optionConfiguraions.map((option: OptionConfiguration) => {
-        return retriveOptionClass(option.name, option.configuration)
-    }).filter((option: IOptions) => option);
+export const generatorOptions = (optionConfiguraions: OptionConfiguration[]): IOptions[] => {
+    const options: IOptions[] = optionConfiguraions
+        .map((option: OptionConfiguration) => {
+            return retriveOptionClass(option.name, option.configuration);
+        })
+        .filter((option: IOptions) => option);
 
     return options;
-}
+};
 
 // 공통부분 설정정보 맵핑
-export const generatorCommomConfiguration = (
-    configuration: MiccBaseConfiguration
-): ChartConfiguration => {
+export const generatorCommomConfiguration = (configuration: MiccBaseConfiguration): ChartConfiguration => {
     const chartConfiguration: ChartConfiguration = {
         selector: configuration.selector,
         style: configuration.style,
@@ -237,10 +246,10 @@ export const generatorCommomConfiguration = (
         margin: configuration.margin,
         axes: configuration.axes,
         data: configuration.data,
-        displayDelay: configuration.displayDelay,
-    }
+        displayDelay: configuration.displayDelay
+    };
     return chartConfiguration;
-}
+};
 
 export const retriveOptionClass = (className: string, configuration: any): IOptions => {
     let optionItem: IOptions;
@@ -256,4 +265,4 @@ export const retriveOptionClass = (className: string, configuration: any): IOpti
         }
     }
     return optionItem;
-}
+};

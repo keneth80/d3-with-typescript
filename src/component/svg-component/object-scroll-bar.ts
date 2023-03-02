@@ -1,7 +1,7 @@
-import { select, event, Selection, BaseType } from 'd3-selection';
-import { zoom, ZoomBehavior } from 'd3-zoom';
-import { drag } from 'd3-drag';
-import { Subject, Observable } from 'rxjs';
+import {drag} from 'd3-drag';
+import {BaseType, Selection} from 'd3-selection';
+import {zoom, ZoomBehavior} from 'd3-zoom';
+import {Observable, Subject} from 'rxjs';
 
 export interface SCROLL_BAR_MODEL {
     x: number;
@@ -16,7 +16,7 @@ export interface SCROLL_BAR_MODEL {
 
 export interface ScrollBarConfiguration {
     rootGroup: Selection<BaseType, any, BaseType, any>; // 상위 element group
-    scrollAreaSize: {width: number, height: number}; // scroll 영역 사이즈
+    scrollAreaSize: {width: number; height: number}; // scroll 영역 사이즈
     clipPathName?: string;
     viewPortBackground?: Selection<BaseType, any, BaseType, any>; // item이 리스팅 되는 group (<g>) element 의 background
     padding?: number;
@@ -67,8 +67,8 @@ export class ObjectScrollBar {
     draw() {
         // 전부 그린 후 scrollbar 를 setup.
         this.SCROLL_BAR_MODEL = this.setupFunctionListScrollbar(
-            this.listViewRootGroup, 
-            this.containerViewGroup, 
+            this.listViewRootGroup,
+            this.containerViewGroup,
             this.scrollGroup,
             this.config.scrollAreaSize,
             {
@@ -85,25 +85,18 @@ export class ObjectScrollBar {
 
     private init() {
         // scroll wheel event
-        const notZoom: ZoomBehavior<Element, {}> = zoom()
-            .scaleExtent([1, 1])
-            .on('zoom', null);
+        const notZoom: ZoomBehavior<Element, {}> = zoom().scaleExtent([1, 1]).on('zoom', null);
 
         // wheel event만 살리고 zoom은 처리 안하기 위함.
-        this.listViewRootGroup.call(notZoom)
-            .on('wheel.zoom', this.scrollWheelEventHandler);
+        this.listViewRootGroup.call(notZoom).on('wheel.zoom', this.scrollWheelEventHandler);
 
         this.setScrollClipPath(this.listViewRootGroup, this.config.scrollAreaSize, this.config.clipPathName);
 
-        this.listViewRootGroup.append('rect')
-            .attr('class', 'scroll-bar-background')
-            .style('fill', '#aaa');
+        this.listViewRootGroup.append('rect').attr('class', 'scroll-bar-background').style('fill', '#aaa');
 
         this.scrollGroup = this.listViewRootGroup.append('g').attr('class', 'scroll-group');
         this.scrollGroup.append('rect').attr('class', 'scroll-bar');
-        this.scrollGroup.call(
-            drag().touchable(true).on('drag', this.scrollDragEventHandler)
-        );
+        this.scrollGroup.call(drag().touchable(true).on('drag', this.scrollDragEventHandler));
     }
 
     /**
@@ -114,11 +107,11 @@ export class ObjectScrollBar {
      * @param scrollingWidth : scroll영역의 가로 사이즈
      */
     private setupFunctionListScrollbar(
-        rootGroup: Selection<BaseType, any, BaseType, any>, 
-        container: Selection<BaseType, any, BaseType, any>, 
+        rootGroup: Selection<BaseType, any, BaseType, any>,
+        container: Selection<BaseType, any, BaseType, any>,
         scrollButtonGroup: Selection<BaseType, any, BaseType, any>,
-        scrollingAreaSize: {width: number, height: number},
-        scrollBarSize: {width: number, height: number, padding: number}
+        scrollingAreaSize: {width: number; height: number},
+        scrollBarSize: {width: number; height: number; padding: number}
     ): SCROLL_BAR_MODEL {
         // 전체 사이즈 기준 element
         let totalTargetElement = (rootGroup.node() as any).getBBox();
@@ -128,7 +121,7 @@ export class ObjectScrollBar {
         // } else { // else is html element
         //     totalTargetElement = (rootGroup.node() as any).getBoundingClientRect();
         // }
-        
+
         const totalWidth: number = totalTargetElement.width;
         const totalHeight: number = totalTargetElement.height + scrollBarSize.padding; // bottom padding
 
@@ -141,17 +134,19 @@ export class ObjectScrollBar {
         let scrollBarHeight = height - (totalHeight - height);
 
         let x: number = width - scrollBarWidth;
-        
+
         // scroll 여부.
         if (totalHeight - scrollBarSize.padding > height) {
-            rootGroup.select('rect.scroll-bar-background')
+            rootGroup
+                .select('rect.scroll-bar-background')
                 .attr('x', width - scrollBarWidth)
                 .attr('y', 0)
                 .attr('width', scrollBarWidth)
                 .attr('height', height);
-            
+
             scrollButtonGroup.attr('transform', `translate(${x}, 0)`);
-            scrollButtonGroup.select('rect.scroll-bar')
+            scrollButtonGroup
+                .select('rect.scroll-bar')
                 .style('fill', '#333')
                 .attr('width', scrollBarWidth)
                 .attr('height', scrollBarHeight < 0 ? scrollBarSize.height : scrollBarHeight)
@@ -162,14 +157,9 @@ export class ObjectScrollBar {
                 container.attr('width', scrollingAreaSize.width);
             }
         } else {
-            rootGroup.select('rect.scroll-bar-background')
-                .attr('width', 0)
-                .attr('height', 0);
+            rootGroup.select('rect.scroll-bar-background').attr('width', 0).attr('height', 0);
 
-            scrollButtonGroup.select('rect.scroll-bar')
-                .style('fill', 'none')
-                .attr('width', 0)
-                .attr('height', 0);
+            scrollButtonGroup.select('rect.scroll-bar').style('fill', 'none').attr('width', 0).attr('height', 0);
 
             if (container) {
                 container.attr('width', scrollingAreaSize.width - scrollBarSize.width);
@@ -192,19 +182,17 @@ export class ObjectScrollBar {
     }
 
     /**
-     * 
+     *
      * @param svg : svg element
      */
     private setScrollClipPath(
-        target: Selection<BaseType, any, BaseType, any>, 
-        containerSize: {width: number, height: number} = {width: 150, height: 50},
+        target: Selection<BaseType, any, BaseType, any>,
+        containerSize: {width: number; height: number} = {width: 150, height: 50},
         clipPathName: string = 'scrollbox-clip-path'
     ) {
         const width: number = containerSize.width;
         const height: number = containerSize.height;
-        const clipRect = target.append('clipPath')
-            .attr('id', clipPathName)
-            .append('rect');
+        const clipRect = target.append('clipPath').attr('id', clipPathName).append('rect');
         clipRect
             .attr('x', 0)
             .attr('y', 0)
@@ -214,9 +202,10 @@ export class ObjectScrollBar {
 
     private scrollUpdate(diff: number) {
         if (this.SCROLL_BAR_MODEL.height >= this.SCROLL_BAR_MODEL.containerHeight) return;
-        
-        let max: number = this.SCROLL_BAR_MODEL.containerHeight - (this.SCROLL_BAR_MODEL.height < 0 ? this.MIN_SCROLLBAR_HEIGHT : this.SCROLL_BAR_MODEL.height);
-        
+
+        let max: number =
+            this.SCROLL_BAR_MODEL.containerHeight - (this.SCROLL_BAR_MODEL.height < 0 ? this.MIN_SCROLLBAR_HEIGHT : this.SCROLL_BAR_MODEL.height);
+
         this.SCROLL_BAR_MODEL.y += diff;
         this.SCROLL_BAR_MODEL.y = Math.max(0, this.SCROLL_BAR_MODEL.y);
         this.SCROLL_BAR_MODEL.y = Math.min(max, this.SCROLL_BAR_MODEL.y);
@@ -226,13 +215,13 @@ export class ObjectScrollBar {
         let compare = 0;
         if (this.SCROLL_BAR_MODEL.height < 0) {
             compare = this.SCROLL_BAR_MODEL.y / (this.SCROLL_BAR_MODEL.containerHeight - this.MIN_SCROLLBAR_HEIGHT); // 10은 scrollbar height
-            compare = (this.SCROLL_BAR_MODEL.totalHeight) * compare - (this.SCROLL_BAR_MODEL.y + (this.MIN_SCROLLBAR_HEIGHT * compare)); // 10은 scrollbar height
+            compare = this.SCROLL_BAR_MODEL.totalHeight * compare - (this.SCROLL_BAR_MODEL.y + this.MIN_SCROLLBAR_HEIGHT * compare); // 10은 scrollbar height
         } else {
             compare = this.SCROLL_BAR_MODEL.y;
         }
 
         this.scroller.next(compare);
-        
+
         // this.functionListViewGroup.select('.function-item-group')
         //     .attr('transform', `translate(10, ${-1*(compare)})`);
     }
@@ -240,15 +229,15 @@ export class ObjectScrollBar {
     /**
      * @description : scroll bar move event handler
      */
-    private scrollDragEventHandler = () => {
+    private scrollDragEventHandler = (event: any) => {
         this.scrollUpdate(event.dy);
-    }
+    };
 
     /**
      * @description : scroll bar wheel event handler
      */
-    private scrollWheelEventHandler = () => {
+    private scrollWheelEventHandler = (event: any) => {
         event.stopPropagation();
         this.scrollUpdate(event.deltaY);
-    }
+    };
 }
