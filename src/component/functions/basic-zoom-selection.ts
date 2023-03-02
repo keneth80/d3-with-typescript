@@ -1,15 +1,15 @@
 import { Selection, BaseType, select, event } from 'd3-selection';
 import { zoom } from 'd3-zoom';
 
-import { Scale } from '../chart/chart-base';
+import { Scale, ContainerSize } from '../chart/chart.interface';
 import { FunctionsBase } from '../chart/functions-base';
 
 export interface BasicZoomSelectionConfiguration {
     targetGroup: string;
     xField: string;
     yField: string;
-    xDirection: string;
-    yDirection: string;
+    xDirection?: string;
+    yDirection?: string;
     direction?: string; // both, x, y default: both
 }
 
@@ -63,7 +63,7 @@ export class BasicZoomSelection extends FunctionsBase {
         }
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
                   mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
         this.mainGroup = mainGroup;
@@ -72,27 +72,27 @@ export class BasicZoomSelection extends FunctionsBase {
                 .style('fill', 'none')
                 .style('pointer-events', 'all');
             this.zoomTarget.lower();
-        }   
+        }
     }
 
-    drawFunctions(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {
-        const x: any = scales.find((scale: Scale) => scale.orinet === this.xDirection).scale;
-        const y: any = scales.find((scale: Scale) => scale.orinet === this.yDirection).scale;
+    drawFunctions(chartData: any[], scales: Scale[], geometry: ContainerSize) {
+        const x: any = scales.find((scale: Scale) => scale.orient === this.xDirection).scale;
+        const y: any = scales.find((scale: Scale) => scale.orient === this.yDirection).scale;
 
         Object.assign(this.originScaleX, x);
         Object.assign(this.originScaleY, y);
 
         this.zoomTarget
-            .attr('width', width)
-            .attr('height', height);
+            .attr('width', geometry.width)
+            .attr('height', geometry.height);
 
         this.targetElements = this.mainGroup.select(`.${this.targetGroup}`).selectAll('*');
 
         const updateChart = () => {
             const newX = event.transform.rescaleX(x);
             const newY = event.transform.rescaleY(y);
-            scales.find((scale: Scale) => scale.orinet === this.xDirection).scale = newX;
-            scales.find((scale: Scale) => scale.orinet === this.yDirection).scale = newY;
+            scales.find((scale: Scale) => scale.orient === this.xDirection).scale = newX;
+            scales.find((scale: Scale) => scale.orient === this.yDirection).scale = newY;
             this.chartBase.updateRescaleAxis();
             this.chartBase.updateSeries();
         };
@@ -100,7 +100,7 @@ export class BasicZoomSelection extends FunctionsBase {
         this.mainGroup.call(
             zoom()
             .scaleExtent([0.5, 10])
-            .extent([ [0, 0], [width, height] ]) // initialise the brush area: start at 0,0 and finishes at width,height: it means I select the whole graph area
+            .extent([ [0, 0], [geometry.width, geometry.height] ]) // initialise the brush area: start at 0,0 and finishes at width,height: it means I select the whole graph area
             .on('zoom', updateChart)
         );
     }

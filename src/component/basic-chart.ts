@@ -1,16 +1,14 @@
-import { ChartBase } from './chart/chart-base';
 import { ChartConfiguration } from './chart/chart-configuration';
+import { ChartBase } from './chart/chart-base';
 
-export class BasicChart extends ChartBase {
+export class BasicChart<T = any> extends ChartBase {
+    protected originalData: T[];
+
     constructor(configuration: ChartConfiguration) {
         super(configuration);
     }
 
-    bootstrap() {
-        super.bootstrap();
-    }
-
-    updateAxis() {
-        super.updateAxis();
+    bootstrap(configuration: ChartConfiguration) {
+        super.bootstrap(configuration);
     }
 }

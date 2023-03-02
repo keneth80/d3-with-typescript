@@ -1,7 +1,8 @@
 import { Selection, BaseType } from 'd3-selection';
-import { Subject, Observable } from 'rxjs';
+import { Subject, Observable, Subscription } from 'rxjs';
 
-import { ChartBase, Scale } from './chart-base';
+import { ChartBase } from './chart-base';
+import { Scale, ContainerSize } from '../chart/chart.interface';
 import { IFunctions } from './functions.interface';
 
 export class FunctionsBase implements IFunctions {
@@ -10,6 +11,10 @@ export class FunctionsBase implements IFunctions {
     protected mainGroup: Selection<BaseType, any, HTMLElement, any>;
 
     protected itemClickSubject: Subject<any> = new Subject();
+
+    protected subscription: Subscription = new Subscription();
+
+    protected isEnable = false;
 
     private chart: ChartBase;
 
@@ -27,12 +32,18 @@ export class FunctionsBase implements IFunctions {
         return this.itemClickSubject.asObservable();
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
-        mainGroup: Selection<BaseType, any, HTMLElement, any>) {
+    enable(data: any[], scales: Scale[], geometry: ContainerSize) {}
 
-    }
+    disable() {}
 
-    drawFunctions(chartData: Array<any>, scales: Array<Scale>, width: number, height: number) {
+    changeConfiguration(configuration: any) {}
 
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
+        mainGroup: Selection<BaseType, any, HTMLElement, any>, index: number) {}
+
+    drawFunctions(chartData: any[], scales: Scale[], geometry: ContainerSize) {}
+
+    destroy() {
+        this.subscription.unsubscribe();
     }
 }

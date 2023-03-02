@@ -1,0 +1,62 @@
+svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.basic-line-sales { 
+    fill: none;
+    stroke: #ffab00;
+    stroke-width: 2px;
+}
+
+.basic-line-sales-dot {
+    stroke: #fff;
+    fill: #ffab00;
+}
+
+.basic-line-assets {
+    fill: none;
+    stroke: #09ff00;
+    stroke-width: 2px;
+}
+
+.basic-line-assets-dot {
+    stroke: #fff;
+    fill: #09ff00;
+}
+
+.sales-label {
+    fill: #777;
+}
+
+.bollinger-line {
+    fill: none;
+    stroke: black;
+    stroke-width: 1.5px;
+}
+
+.bollinger-line.bands {
+    stroke: #6c949f;
+    stroke-opacity: 0.6;
+}
+
+.area.bands {
+    fill: #6c949f;
+    fill-opacity: 0.3;
+    stroke: none;
+}
+
+path.tooltip {
+    stroke: #f5330c;
+    stroke-width: 2;
+}
+
+rect.tooltip {
+    stroke: #f5330c;
+    stroke-width: 2;
+}
+
+text {
+    font: 10px sans-serif;
+}

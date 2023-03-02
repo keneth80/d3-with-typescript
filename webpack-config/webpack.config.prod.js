@@ -1,16 +1,14 @@
 'use strict';
 
-const webpackMerge            = require('webpack-merge');
-const UglifyJsPlugin          = require('uglifyjs-webpack-plugin');
-const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
-const cssnano                 = require('cssnano');
+const {merge} = require('webpack-merge');
+const TerserPlugin = require('terser-webpack-plugin');
+const cssnano = require('cssnano');
 
-const commonConfig            = require('./webpack.config.common');
-const helpers                 = require('./helpers');
+const commonConfig = require('./webpack.config.common');
+const helpers = require('./helpers');
 
-module.exports = webpackMerge(commonConfig, {
+module.exports = merge(commonConfig, {
     mode: 'production',
-
     output: {
         path: helpers.root('dist'),
         publicPath: '/',
@@ -19,31 +17,31 @@ module.exports = webpackMerge(commonConfig, {
     },
 
     optimization: {
-        noEmitOnErrors: true,
         splitChunks: {
             cacheGroups: {
                 commons: {
-                  test: /[\\/]node_modules[\\/]/,
-                  name: 'vendors',
-                  chunks: 'all'
+                    test: /[\\/]node_modules[\\/]/,
+                    name: 'vendors',
+                    chunks: 'all'
                 }
             }
         },
         runtimeChunk: 'single',
         minimizer: [
-            new UglifyJsPlugin({
+            new TerserPlugin({
                 cache: true,
-                parallel: true
-            }),
-
-            new OptimizeCSSAssetsPlugin({
-                cssProcessor: cssnano,
-                cssProcessorOptions: {
-                    discardComments: {
-                        removeAll: true
-                    }
+                parallel: true,
+                terserOptions: {
+                    warnings: false,
+                    compress: {
+                        warnings: false,
+                        unused: true
+                    },
+                    ecma: 6,
+                    mangle: true,
+                    unused: true
                 },
-                canPrint: false
+                sourceMap: true
             })
         ]
     }
