@@ -55,6 +55,7 @@ export class BasicDonutSeries extends SeriesBase {
         // .ease(easeQuadIn);
 
         this.pieShape = pie()
+            .padAngle(0.02)
             .sort(null)
             .value((d: any) => d[this.valueField]);
     }
