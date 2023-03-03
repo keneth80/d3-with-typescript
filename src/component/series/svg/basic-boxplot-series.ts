@@ -1,9 +1,8 @@
-import { Selection, BaseType } from 'd3-selection';
-import { Subject, Observable } from 'rxjs';
+import {BaseType, Selection} from 'd3-selection';
 
-import { Scale, ContainerSize } from '../../chart/chart.interface';
-import { SeriesBase } from '../../chart/series-base';
-import { SeriesConfiguration } from '../../chart/series.interface';
+import {ContainerSize, Scale} from '../../chart/chart.interface';
+import {SeriesBase} from '../../chart/series-base';
+import {SeriesConfiguration} from '../../chart/series.interface';
 
 export interface BasicBoxplotSeriesConfiguration extends SeriesConfiguration {
     xField: string;
@@ -11,7 +10,7 @@ export interface BasicBoxplotSeriesConfiguration extends SeriesConfiguration {
     style?: {
         stroke?: string;
         fill?: string;
-    }
+    };
 }
 
 export interface BoxplotModel {
@@ -43,10 +42,7 @@ export class BasicBoxplotSeries extends SeriesBase {
         return null;
     }
 
-    setSvgElement(
-        svg: Selection<BaseType, any, HTMLElement, any>,
-        mainGroup: Selection<BaseType, any, HTMLElement, any>
-    ) {
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
         if (!mainGroup.select(`.${this.selector}-group`).node()) {
             this.mainGroup = mainGroup.append('g').attr('class', `${this.selector}-group`);
@@ -70,23 +66,33 @@ export class BasicBoxplotSeries extends SeriesBase {
         }
 
         // Draw the box plot vertical lines
-        this.mainGroup.selectAll('.verticalLines')
+        this.mainGroup
+            .selectAll('.verticalLines')
             .data(chartData)
             .join(
                 (enter) => enter.append('line').attr('class', 'verticalLines'),
                 (update) => update,
                 (exit) => exit.remove()
             )
-            .attr('x1', (datum: any) => { return x(datum.key) + padding; })
-            .attr('y1', (datum: any) => { return y(datum.whiskers[0]); })
-            .attr('x2', (datum: any) => { return x(datum.key) + padding; })
-            .attr('y2', (datum: any) => { return y(datum.whiskers[1]); })
+            .attr('x1', (datum: any) => {
+                return x(datum.key) + padding;
+            })
+            .attr('y1', (datum: any) => {
+                return y(datum.whiskers[0]);
+            })
+            .attr('x2', (datum: any) => {
+                return x(datum.key) + padding;
+            })
+            .attr('y2', (datum: any) => {
+                return y(datum.whiskers[1]);
+            })
             .attr('stroke', '#000')
             .attr('stroke-width', 1)
             .attr('fill', 'none');
 
         // Draw the boxes of the box plot, filled and on top of vertical lines
-        this.mainGroup.selectAll('.quartile')
+        this.mainGroup
+            .selectAll('.quartile')
             .data(chartData)
             .join(
                 (enter) => enter.append('rect').attr('class', 'quartile'),
@@ -99,9 +105,15 @@ export class BasicBoxplotSeries extends SeriesBase {
                 const height = y(quartiles[0]) - y(quartiles[2]);
                 return height;
             })
-            .attr('x', (datum: any) => { return x(datum.key) + padding - (barWidth/2); })
-            .attr('y', (datum: any) => { return y(datum.quartile[2]); })
-            .attr('fill', (datum: any) => { return datum.color; })
+            .attr('x', (datum: any) => {
+                return x(datum.key) + padding - barWidth / 2;
+            })
+            .attr('y', (datum: any) => {
+                return y(datum.quartile[2]);
+            })
+            .attr('fill', (datum: any) => {
+                return datum.color;
+            })
             .attr('stroke', '#000')
             .attr('stroke-width', 1);
 
@@ -110,34 +122,59 @@ export class BasicBoxplotSeries extends SeriesBase {
             // Top whisker
             {
                 type: 'top',
-                x1: (datum: any) => { return x(datum.key) + padding - barWidth/2 },
-                y1: (datum: any) => { return y(datum.whiskers[0]) },
-                x2: (datum: any) => { return x(datum.key) + padding + barWidth/2 },
-                y2: (datum: any) => { return y(datum.whiskers[0]) }
+                x1: (datum: any) => {
+                    return x(datum.key) + padding - barWidth / 2;
+                },
+                y1: (datum: any) => {
+                    return y(datum.whiskers[0]);
+                },
+                x2: (datum: any) => {
+                    return x(datum.key) + padding + barWidth / 2;
+                },
+                y2: (datum: any) => {
+                    return y(datum.whiskers[0]);
+                }
             },
             // Median line
             {
                 type: 'median',
-                x1: (datum: any) => { return x(datum.key) + padding - barWidth/2 },
-                y1: (datum: any) => { return y(datum.quartile[1]) },
-                x2: (datum: any) => { return x(datum.key) + padding + barWidth/2 },
-                y2: (datum: any) => { return y(datum.quartile[1]) }
+                x1: (datum: any) => {
+                    return x(datum.key) + padding - barWidth / 2;
+                },
+                y1: (datum: any) => {
+                    return y(datum.quartile[1]);
+                },
+                x2: (datum: any) => {
+                    return x(datum.key) + padding + barWidth / 2;
+                },
+                y2: (datum: any) => {
+                    return y(datum.quartile[1]);
+                }
             },
             // Bottom whisker
             {
                 type: 'bottom',
-                x1: (datum: any) => { return x(datum.key) + padding - barWidth/2 },
-                y1: (datum: any) => { return y(datum.whiskers[1]) },
-                x2: (datum: any) => { return x(datum.key) + padding + barWidth/2 },
-                y2: (datum: any) => { return y(datum.whiskers[1]) }
+                x1: (datum: any) => {
+                    return x(datum.key) + padding - barWidth / 2;
+                },
+                y1: (datum: any) => {
+                    return y(datum.whiskers[1]);
+                },
+                x2: (datum: any) => {
+                    return x(datum.key) + padding + barWidth / 2;
+                },
+                y2: (datum: any) => {
+                    return y(datum.whiskers[1]);
+                }
             }
         ];
 
-        for(let i = 0; i < horizontalLineConfigs.length; i++) {
+        for (let i = 0; i < horizontalLineConfigs.length; i++) {
             const lineConfig = horizontalLineConfigs[i];
 
             // Draw the whiskers at the min for this series
-            this.mainGroup.selectAll(`.whiskers-${lineConfig.type}`)
+            this.mainGroup
+                .selectAll(`.whiskers-${lineConfig.type}`)
                 .data(chartData)
                 .join(
                     (enter) => enter.append('line').attr('class', `whiskers-${lineConfig.type}`),

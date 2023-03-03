@@ -91,7 +91,7 @@ export interface BasicTopologyConfiguration extends SeriesConfiguration {
 }
 
 export class BasicTopology extends SeriesBase {
-    protected linkGroup: Selection<BaseType, any, HTMLElement, any>;
+    protected linkGroup: Selection<any, any, HTMLElement, any>;
 
     private currentSector: any;
 
@@ -388,10 +388,10 @@ export class BasicTopology extends SeriesBase {
         // member opacity 조정
         this.mainGroup
             .selectAll(`g.${this.selector}-member-group`)
-            .filter((item: TopologyGroupElement, i: number, node: any) => {
+            .filter((item: any, i: number, node: any) => {
                 const memeberId = select(node[i]).attr('id');
                 return (
-                    links.findIndex((link: any[]) => {
+                    links.findIndex((link: any) => {
                         return link[0].data === memeberId && link[1].data === machineAlias;
                     }) === -1
                 );
@@ -401,10 +401,10 @@ export class BasicTopology extends SeriesBase {
         // member filter
         this.mainGroup
             .selectAll(`g.${this.selector}-member-group`)
-            .filter((item: TopologyGroupElement, i: number, node: any) => {
+            .filter((item: any, i: number, node: any) => {
                 const memeberId = select(node[i]).attr('id');
                 return (
-                    links.findIndex((link: any[]) => {
+                    links.findIndex((link: any) => {
                         return link[0].data === memeberId && link[1].data === machineAlias;
                     }) > -1
                 );
@@ -420,7 +420,7 @@ export class BasicTopology extends SeriesBase {
         // machine opacity 조정.
         this.mainGroup
             .selectAll(`g.${this.selector}-sector-machine-group`)
-            .filter((item: TopologyGroupElement) => item.id !== data.id)
+            .filter((item: any) => item.id !== data.id)
             .style('opacity', 0.5);
 
         event.stopPropagation();
@@ -449,35 +449,35 @@ export class BasicTopology extends SeriesBase {
         // machine filter
         this.mainGroup
             .selectAll(`g.${this.selector}-sector-machine-group`)
-            .filter((item: TopologyGroupElement) => selectIps.indexOf(item.data.machineID) > -1)
+            .filter((item: any) => selectIps.indexOf(item.data.machineID) > -1)
             .style('stroke', this.boldColor);
 
         // machine opacity 조정.
         this.mainGroup
             .selectAll(`g.${this.selector}-sector-machine-group`)
-            .filter((item: TopologyGroupElement) => selectIps.indexOf(item.data.machineID) === -1)
+            .filter((item: any) => selectIps.indexOf(item.data.machineID) === -1)
             .style('opacity', 0.5);
 
         this.mainGroup
             .selectAll(`g.${this.selector}-sector-top-group`)
-            .filter((item: TopologyGroupElement) => data.id !== item.id)
+            .filter((item: any) => data.id !== item.id)
             .style('opacity', 0.5);
 
         this.mainGroup
             .selectAll(`g.${this.selector}-sector-bottom-group`)
-            .filter((item: TopologyGroupElement) => data.id !== item.id)
+            .filter((item: any) => data.id !== item.id)
             .style('opacity', 0.5);
 
         this.linkGroup
             .selectAll(`.${this.selector}-machine-link`)
-            .filter((item: any[]) => {
+            .filter((item: any) => {
                 return data.members.findIndex((member: any) => member.memberID.toLowerCase() === item[0].data) > -1;
             })
             .style('stroke', this.boldColor);
 
         this.linkGroup
             .selectAll(`.${this.selector}-machine-link`)
-            .filter((item: any[]) => {
+            .filter((item: any) => {
                 return data.members.findIndex((member: any) => member.memberID.toLowerCase() === item[0].data) === -1;
             })
             .style('opacity', 0.5);
@@ -498,23 +498,23 @@ export class BasicTopology extends SeriesBase {
 
         const machineData: any = this.mainGroup
             .selectAll(`g.${this.selector}-sector-machine-group`)
-            .filter((item: TopologyGroupElement) => memberData.machineIP === item.data.machineID)
+            .filter((item: any) => memberData.machineIP === item.data.machineID)
             .data()[0];
 
         // machine filter
         this.mainGroup
             .selectAll(`g.${this.selector}-sector-machine-group`)
-            .filter((item: TopologyGroupElement) => memberData.machineIP === item.data.machineID)
+            .filter((item: any) => memberData.machineIP === item.data.machineID)
             .style('stroke', this.boldColor);
 
         // machine opacity 조정.
         this.mainGroup
             .selectAll(`g.${this.selector}-sector-machine-group`)
-            .filter((item: TopologyGroupElement) => memberData.machineIP !== item.data.machineID)
+            .filter((item: any) => memberData.machineIP !== item.data.machineID)
             .style('opacity', 0.5);
 
         // 선택된 타깃 bold
-        this.currentSector = select(nodeList[index]).style('stroke', this.boldColor);
+        this.currentSector = select(event.target as HTMLElement).style('stroke', this.boldColor);
 
         // 맴버에 연결된 라인 bold
         this.linkGroup.select(`#${memberData.memberID.toLowerCase()}-${machineData.data.machineAlias.toLowerCase()}`).style('stroke', this.boldColor);
@@ -522,18 +522,18 @@ export class BasicTopology extends SeriesBase {
         // 선택된 맴버를 제외한 나머지 맴버의 opacity를 조정.
         this.mainGroup
             .selectAll(`g.${this.selector}-sector-top-group`)
-            .filter((item: TopologyGroupElement) => item.data.frameworkID === memberData.frameworkID)
+            .filter((item: any) => item.data.frameworkID === memberData.frameworkID)
             .selectAll(`g.${this.selector}-member-group`)
-            .filter((item: TopologyGroupElement, i: number) => {
+            .filter((item: any, i: number) => {
                 return i !== index;
             })
             .style('opacity', 0.5);
 
         this.mainGroup
             .selectAll(`g.${this.selector}-sector-bottom-group`)
-            .filter((item: TopologyGroupElement) => item.data.frameworkID === memberData.frameworkID)
+            .filter((item: any) => item.data.frameworkID === memberData.frameworkID)
             .selectAll(`g.${this.selector}-member-group`)
-            .filter((item: TopologyGroupElement, i: number) => {
+            .filter((item: any, i: number) => {
                 return i !== index;
             })
             .style('opacity', 0.5);
@@ -541,19 +541,19 @@ export class BasicTopology extends SeriesBase {
         // 선택된 맴버가 속하지 않는 framework opacity 조정.
         this.mainGroup
             .selectAll(`g.${this.selector}-sector-top-group`)
-            .filter((item: TopologyGroupElement) => data.id !== item.id)
+            .filter((item: any) => data.id !== item.id)
             .style('opacity', 0.5);
 
         // 선택된 맴버가 속하지 않는 framework opacity 조정.
         this.mainGroup
             .selectAll(`g.${this.selector}-sector-bottom-group`)
-            .filter((item: TopologyGroupElement) => data.id !== item.id)
+            .filter((item: any) => data.id !== item.id)
             .style('opacity', 0.5);
 
         // 다른 라인들의 opacity 조정.
         this.linkGroup
             .selectAll(`.${this.selector}-machine-link`)
-            .filter((item: any[]) => {
+            .filter((item: any) => {
                 return memberData.memberID.toLowerCase() !== item[0].data;
             })
             .style('opacity', 0.5);
@@ -574,14 +574,14 @@ export class BasicTopology extends SeriesBase {
         const memberData = data.members[index];
         this.mainGroup
             .selectAll(`g.${this.selector}-sector-top-group`)
-            .filter((item: TopologyGroupElement) => item.data.frameworkID === memberData.frameworkID)
+            .filter((item: any) => item.data.frameworkID === memberData.frameworkID)
             .selectAll(`g.${this.selector}-member-group`)
             .filter((item: any) => item.memberID !== memberData.memberID)
             .style('opacity', '');
 
         this.mainGroup
             .selectAll(`g.${this.selector}-sector-bottom-group`)
-            .filter((item: TopologyGroupElement) => item.data.frameworkID === memberData.frameworkID)
+            .filter((item: any) => item.data.frameworkID === memberData.frameworkID)
             .selectAll(`g.${this.selector}-member-group`)
             .filter((item: any) => item.memberID !== memberData.memberID)
             .style('opacity', '');

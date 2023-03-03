@@ -1,12 +1,12 @@
-import {Selection, select, BaseType, pointer} from 'd3-selection';
-import {scaleOrdinal} from 'd3-scale';
-import {stack} from 'd3-shape';
 import {format} from 'd3-format';
+import {scaleOrdinal} from 'd3-scale';
+import {BaseType, pointer, select, Selection} from 'd3-selection';
+import {stack} from 'd3-shape';
 
-import {Scale, ContainerSize} from '../../chart/chart.interface';
+import {ContainerSize, Scale} from '../../chart/chart.interface';
 import {SeriesBase} from '../../chart/series-base';
-import {colorDarker} from '../../chart/util/d3-svg-util';
 import {SeriesConfiguration} from '../../chart/series.interface';
+import {colorDarker} from '../../chart/util/d3-svg-util';
 
 export interface StackedHorizontalBarSeriesConfiguration extends SeriesConfiguration {
     xField: string;
@@ -19,7 +19,7 @@ export class StackedHorizontalBarSeries extends SeriesBase {
 
     private rootGroup: Selection<BaseType, any, HTMLElement, any>;
 
-    private legendGroup: Selection<BaseType, any, HTMLElement, any>;
+    private legendGroup: Selection<any, any, HTMLElement, any>;
 
     private tooltipGroup: Selection<BaseType, any, HTMLElement, any>;
 

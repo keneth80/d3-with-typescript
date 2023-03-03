@@ -1,8 +1,8 @@
-import { BaseType, Selection } from 'd3-selection';
-import { axisLeft, axisTop } from 'd3-axis';
+import {BaseType, Selection} from 'd3-selection';
+import {axisLeft, axisTop} from 'd3-axis';
 
-import { Placement } from '../chart-configuration';
-import { ContainerSize, Scale } from '../chart.interface';
+import {Placement} from '../chart-configuration';
+import {ContainerSize, Scale} from '../chart.interface';
 
 export const drawGridLine = (
     svgGeometry: ContainerSize,
@@ -14,8 +14,8 @@ export const drawGridLine = (
         opacity: number;
     }
 ) => {
-    const gridLineGroup: Selection<BaseType, any, BaseType, any> =
-        targetGroup.selectAll(`g.${scale.orient}-grid-line`)
+    const gridLineGroup: Selection<BaseType, any, BaseType, any> = targetGroup
+        .selectAll(`g.${scale.orient}-grid-line`)
         .data([scale])
         .join(
             (enter) => enter.append('g').attr('class', `${scale.orient}-grid-line`),
@@ -30,13 +30,9 @@ export const drawGridLine = (
     const tickFmt: any = '';
     let targetAxis: any;
     if (scale.orient === Placement.TOP || scale.orient === Placement.BOTTOM) {
-        targetAxis = axisTop(scale.scale)
-            .tickFormat(tickFmt)
-            .tickSize(-svgGeometry.height);
+        targetAxis = axisTop(scale.scale).tickFormat(tickFmt).tickSize(-svgGeometry.height);
     } else {
-        targetAxis = axisLeft(scale.scale)
-            .tickFormat(tickFmt)
-            .tickSize(-svgGeometry.width);
+        targetAxis = axisLeft(scale.scale).tickFormat(tickFmt).tickSize(-svgGeometry.width);
     }
 
     if (scale.tickSize) {
@@ -45,11 +41,10 @@ export const drawGridLine = (
 
     const gridLines = gridLineGroup.call(targetAxis);
     gridLines.select('path').remove();
-    if (scale.orient === Placement.LEFT ||
-        scale.orient === Placement.RIGHT) {
+    if (scale.orient === Placement.LEFT || scale.orient === Placement.RIGHT) {
         gridLines.select('g').remove();
     }
     gridLines.selectAll('line').style('stroke', option.color);
     gridLines.lower();
     return gridLines;
-}
+};

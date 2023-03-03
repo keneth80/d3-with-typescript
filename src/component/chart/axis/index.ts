@@ -1,40 +1,29 @@
-import { min, max } from 'd3-array';
-import { scaleBand, scaleLinear, scaleTime, scalePoint } from 'd3-scale';
-import { brushX, brushY } from 'd3-brush';
-import { Axis } from 'd3-axis';
-import { transition } from 'd3-transition';
-import { easeLinear } from 'd3-ease';
+import {max, min} from 'd3-array';
+import {brushX, brushY} from 'd3-brush';
+import {easeLinear} from 'd3-ease';
+import {scaleBand, scaleLinear, scalePoint, scaleTime} from 'd3-scale';
+import {transition} from 'd3-transition';
 
-import { Scale, ContainerSize } from '../chart.interface';
-import {
-    Align,
-    Axes,
-    AxisTitle,
-    Margin,
-    Placement,
-    ScaleType,
-} from '../chart-configuration';
-import { BaseType, select, Selection } from 'd3-selection';
-import { delayExcute, textWrapping } from '../util';
-import { axisSetupByScale } from '../scale';
+import {BaseType, select, Selection} from 'd3-selection';
+import {Align, Axes, AxisTitle, Margin, Placement, ScaleType} from '../chart-configuration';
+import {ContainerSize, Scale} from '../chart.interface';
+import {axisSetupByScale} from '../scale';
+import {delayExcute, textWrapping} from '../util';
 
 export const generateScaleByAxis = <T = any>(
     axes: Axes[] = [],
     data: T[] = [],
     size: ContainerSize = {
         width: 0,
-        height: 0,
+        height: 0
     },
-    currentScale: { field: string; min: number; max: number }[],
+    currentScale: {field: string; min: number; max: number}[],
     isRealTime: boolean = false
 ): Scale[] => {
     const returnAxes: Scale[] = [];
     axes.map((axis: Axes) => {
         let range: any = [];
-        if (
-            axis.placement === Placement.BOTTOM ||
-            axis.placement === Placement.TOP
-        ) {
+        if (axis.placement === Placement.BOTTOM || axis.placement === Placement.TOP) {
             range = [0, size.width];
         } else {
             range = [size.height, 0];
@@ -76,38 +65,24 @@ export const generateScaleByAxis = <T = any>(
             // POINT: zoom 시 현재 scale을 유지하기 위함.
             // min max setup
             if (currentScale.length) {
-                const tempScale = currentScale.find(
-                    (scaleItem: any) => scaleItem.field === axis.field
-                );
+                const tempScale = currentScale.find((scaleItem: any) => scaleItem.field === axis.field);
                 minValue = tempScale ? tempScale.min : 0;
                 maxValue = tempScale ? tempScale.max : 0;
             } else {
                 if (!axis.hasOwnProperty('max')) {
                     if (axis.type === ScaleType.TIME) {
-                        axis.max = max(
-                            data.map((item: T) =>
-                                new Date(item[axis.field]).getTime()
-                            )
-                        );
+                        axis.max = max(data.map((item: T) => new Date(item[axis.field]).getTime()));
                     } else {
-                        axis.max = max(
-                            data.map((item: T) => parseFloat(item[axis.field]))
-                        );
+                        axis.max = max(data.map((item: T) => parseFloat(item[axis.field])));
                         axis.max += Math.round(axis.max * 0.05);
                     }
                 }
 
                 if (!axis.hasOwnProperty('min')) {
                     if (axis.type === ScaleType.TIME) {
-                        axis.min = min(
-                            data.map((item: T) =>
-                                new Date(item[axis.field]).getTime()
-                            )
-                        );
+                        axis.min = min(data.map((item: T) => new Date(item[axis.field]).getTime()));
                     } else {
-                        axis.min = min(
-                            data.map((item: T) => parseFloat(item[axis.field]))
-                        );
+                        axis.min = min(data.map((item: T) => parseFloat(item[axis.field])));
                         axis.min -= Math.round(axis.min * 0.05);
                     }
                 }
@@ -122,9 +97,7 @@ export const generateScaleByAxis = <T = any>(
             } else {
                 // POINT: zoom 시 적용될 scale
                 if (currentScale.length) {
-                    const reScale = currentScale.find(
-                        (d: any) => d.field === axis.field
-                    );
+                    const reScale = currentScale.find((d: any) => d.field === axis.field);
                     minValue = reScale.min;
                     maxValue = reScale.max;
                 }
@@ -149,16 +122,14 @@ export const generateScaleByAxis = <T = any>(
             type: axis.type,
             visible: axis.visible === false ? false : true,
             tickFormat: axis.tickFormat ? axis.tickFormat : undefined,
-            tickTextParser: axis.tickTextParser
-                ? axis.tickTextParser
-                : undefined,
+            tickTextParser: axis.tickTextParser ? axis.tickTextParser : undefined,
             tickSize: axis.tickSize ? axis.tickSize : undefined,
             gridLine: axis.gridLine,
             zeroLine: axis.zeroLine,
             isZoom: axis.isZoom === true ? true : false,
             min: minValue,
             max: maxValue,
-            title: axis.title,
+            title: axis.title
         });
     });
 
@@ -188,11 +159,7 @@ export const drawAxisByScale = (
 
     if (scale.visible) {
         // TODO: 우선은 x 축만 tansition 적용 텍스트 길이 체크하는 로직이 돌면서 transition 적용은 아직은 어려움.
-        if (
-            isRealTime &&
-            (scale.orient === Placement.BOTTOM ||
-                scale.orient === Placement.TOP)
-        ) {
+        if (isRealTime && (scale.orient === Placement.BOTTOM || scale.orient === Placement.TOP)) {
             const transitionObj = transition().duration(500).ease(easeLinear);
             targetGroup.transition(transitionObj);
         }
@@ -209,7 +176,7 @@ export const drawAxisByScale = (
 
     if (scale.tickTextParser) {
         delayExcute(50, () => {
-            targetGroup.selectAll('text').text((d: string) => {
+            targetGroup.selectAll('text').text((d: any) => {
                 return scale.tickTextParser(d);
             });
         });
@@ -225,56 +192,41 @@ export const drawAxisByScale = (
         // 가장 긴 텍스트를 찾아서 사이즈를 저장하고 margin에 더해야함
         let textLength = 0;
         let longTextNode: any = null;
-        if (
-            scale.orient === Placement.LEFT ||
-            scale.orient === Placement.RIGHT
-        ) {
-            targetGroup
-                .selectAll('.tick')
-                .each((d: any, index: number, node: any[]) => {
-                    const currentTextSize = (d + '').length;
-                    if (textLength < currentTextSize) {
-                        textLength = currentTextSize;
-                        longTextNode = node[index];
-                    }
-                });
+        if (scale.orient === Placement.LEFT || scale.orient === Placement.RIGHT) {
+            targetGroup.selectAll('.tick').each((d: any, index: number, node: any) => {
+                const currentTextSize = (d + '').length;
+                if (textLength < currentTextSize) {
+                    textLength = currentTextSize;
+                    longTextNode = node[index];
+                }
+            });
 
             if (longTextNode) {
-                const textWidth = Math.round(
-                    longTextNode.getBoundingClientRect().width
-                );
+                const textWidth = Math.round(longTextNode.getBoundingClientRect().width);
                 if (maxTextWidth < textWidth) {
                     maxTextWidth = textWidth;
                 }
             }
         } else {
-            targetGroup
-                .selectAll('.tick')
-                .each((d: any, index: number, node: any[]) => {
-                    // string일 때 bandWidth 보다 텍스트 사이즈가 더 크면 wordrap한다.
-                    if (bandWidth > 0) {
-                        const textNode: any = select(node[index]).select(
-                            'text'
-                        );
-                        const textNodeWidth = textNode
-                            .node()
-                            .getComputedTextLength();
-                        const currentTextSize = (d + '').length;
-                        if (textNodeWidth > bandWidth) {
-                            textWrapping(textNode, bandWidth);
-                        }
-
-                        if (textLength < currentTextSize) {
-                            textLength = currentTextSize;
-                            longTextNode = node[index];
-                        }
+            targetGroup.selectAll('.tick').each((d: any, index: number, node: any) => {
+                // string일 때 bandWidth 보다 텍스트 사이즈가 더 크면 wordrap한다.
+                if (bandWidth > 0) {
+                    const textNode: any = select(node[index]).select('text');
+                    const textNodeWidth = textNode.node().getComputedTextLength();
+                    const currentTextSize = (d + '').length;
+                    if (textNodeWidth > bandWidth) {
+                        textWrapping(textNode, bandWidth);
                     }
-                });
+
+                    if (textLength < currentTextSize) {
+                        textLength = currentTextSize;
+                        longTextNode = node[index];
+                    }
+                }
+            });
 
             if (longTextNode) {
-                const textHeight = Math.round(
-                    longTextNode.getBoundingClientRect().height
-                );
+                const textHeight = Math.round(longTextNode.getBoundingClientRect().height);
                 if (maxTextWidth < textHeight) {
                     maxTextWidth = textHeight;
                 }
@@ -285,9 +237,7 @@ export const drawAxisByScale = (
     if (scale.zeroLine && scale.min < 0) {
         setupZeroLine(svgGeometry, scale, targetGroup);
     } else {
-        targetGroup
-            .selectAll(`.${scale.orient}-${scale.field}-zero-line`)
-            .remove();
+        targetGroup.selectAll(`.${scale.orient}-${scale.field}-zero-line`).remove();
     }
 
     if (scale.title) {
@@ -295,10 +245,7 @@ export const drawAxisByScale = (
             .selectAll(`.axis-${scale.orient}-title`)
             .data([scale.title])
             .join(
-                (enter) =>
-                    enter
-                        .append('text')
-                        .attr('class', `axis-${scale.orient}-title`),
+                (enter) => enter.append('text').attr('class', `axis-${scale.orient}-title`),
                 (update) => update,
                 (exit) => exit.remove()
             )
@@ -324,10 +271,7 @@ export const drawAxisByScale = (
                 return d.content;
             })
             .attr('transform', (d: AxisTitle) => {
-                return scale.orient === Placement.LEFT ||
-                    scale.orient === Placement.RIGHT
-                    ? 'rotate(-90)'
-                    : '';
+                return scale.orient === Placement.LEFT || scale.orient === Placement.RIGHT ? 'rotate(-90)' : '';
             })
             .attr('y', (d: AxisTitle, index: number, node: any) => {
                 const titlePadding = 5;
@@ -345,10 +289,7 @@ export const drawAxisByScale = (
             })
             .attr('x', (d: AxisTitle) => {
                 let x = 0;
-                if (
-                    scale.orient === Placement.LEFT ||
-                    scale.orient === Placement.RIGHT
-                ) {
+                if (scale.orient === Placement.LEFT || scale.orient === Placement.RIGHT) {
                     if (d.align === Align.TOP) {
                         x = 0;
                     } else if (d.align === Align.BOTTOM) {
@@ -356,10 +297,7 @@ export const drawAxisByScale = (
                     } else {
                         x = 0 - svgGeometry.height / 2;
                     }
-                } else if (
-                    scale.orient === Placement.BOTTOM ||
-                    scale.orient === Placement.TOP
-                ) {
+                } else if (scale.orient === Placement.BOTTOM || scale.orient === Placement.TOP) {
                     if (d.align === Align.LEFT) {
                         x = padding;
                     } else if (d.align === Align.RIGHT) {
@@ -383,24 +321,13 @@ export const setupZeroLine = (
     const zeroLine = targetGroup
         .selectAll(`.${scale.orient}-${scale.field}-zero-line`)
         .data([scale])
-        .join((enter) =>
-            enter
-                .append('line')
-                .attr('class', `${scale.orient}-${scale.field}-zero-line`)
-        )
+        .join((enter) => enter.append('line').attr('class', `${scale.orient}-${scale.field}-zero-line`))
         .style('stroke', scale.zeroLine.color ?? '#000')
         .style('stroke-width', 1);
     if (scale.orient === Placement.LEFT || scale.orient === Placement.RIGHT) {
-        zeroLine
-            .attr('y1', scale.scale(0))
-            .attr('y2', scale.scale(0))
-            .attr('x2', svgGeometry.width);
+        zeroLine.attr('y1', scale.scale(0)).attr('y2', scale.scale(0)).attr('x2', svgGeometry.width);
     } else {
-        zeroLine
-            .attr('x1', scale.scale(0))
-            .attr('y1', -svgGeometry.height)
-            .attr('x2', scale.scale(0))
-            .attr('y2', 0);
+        zeroLine.attr('x1', scale.scale(0)).attr('y1', -svgGeometry.height).attr('x2', scale.scale(0)).attr('y2', 0);
     }
 
     return zeroLine;
@@ -415,10 +342,7 @@ export const setupBrush = (
 ) => {
     let brush = null;
     if (scale.type === ScaleType.NUMBER || scale.type === ScaleType.TIME) {
-        if (
-            scale.orient === Placement.RIGHT ||
-            scale.orient === Placement.LEFT
-        ) {
+        if (scale.orient === Placement.RIGHT || scale.orient === Placement.LEFT) {
             let left = 0;
             let width = 0;
 
@@ -430,7 +354,7 @@ export const setupBrush = (
 
             brush = brushY().extent([
                 [left, 0],
-                [width, svgGeometry.height],
+                [width, svgGeometry.height]
             ]);
         } else {
             let top = 0;
@@ -445,7 +369,7 @@ export const setupBrush = (
 
             brush = brushX().extent([
                 [0, top],
-                [svgGeometry.width, height],
+                [svgGeometry.width, height]
             ]);
         }
         brush.on('end', () => {

@@ -1,9 +1,9 @@
-import { axisBottom, axisLeft, axisTop, axisRight, Axis } from 'd3-axis';
-import { format } from 'd3-format';
-import { timeFormat } from 'd3-time-format';
+import {axisBottom, axisLeft, axisTop, axisRight, Axis} from 'd3-axis';
+import {format} from 'd3-format';
+import {timeFormat} from 'd3-time-format';
 
-import { Scale } from '../chart.interface';
-import { Placement, ScaleType } from '../chart-configuration';
+import {Scale} from '../chart.interface';
+import {Placement, ScaleType} from '../chart-configuration';
 
 export const axisSetupByScale = (scale: Scale): Axis<any> => {
     let orientedAxis: any = null;
@@ -37,4 +37,4 @@ export const axisSetupByScale = (scale: Scale): Axis<any> => {
     // orientedAxis.tickSize(0);
 
     return orientedAxis;
-}
+};

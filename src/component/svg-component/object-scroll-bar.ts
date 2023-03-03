@@ -1,6 +1,6 @@
 import {drag} from 'd3-drag';
-import {BaseType, Selection} from 'd3-selection';
-import {zoom, ZoomBehavior} from 'd3-zoom';
+import {Selection} from 'd3-selection';
+import {zoom} from 'd3-zoom';
 import {Observable, Subject} from 'rxjs';
 
 export interface SCROLL_BAR_MODEL {
@@ -15,10 +15,10 @@ export interface SCROLL_BAR_MODEL {
 }
 
 export interface ScrollBarConfiguration {
-    rootGroup: Selection<BaseType, any, BaseType, any>; // 상위 element group
+    rootGroup: Selection<any, any, any, any>; // 상위 element group
     scrollAreaSize: {width: number; height: number}; // scroll 영역 사이즈
     clipPathName?: string;
-    viewPortBackground?: Selection<BaseType, any, BaseType, any>; // item이 리스팅 되는 group (<g>) element 의 background
+    viewPortBackground?: Selection<any, any, any, any>; // item이 리스팅 되는 group (<g>) element 의 background
     padding?: number;
     scrollBarWidth?: number;
 }
@@ -29,9 +29,9 @@ export class ObjectScrollBar {
     private ITEM_PADDING: number = 0;
 
     private config: ScrollBarConfiguration;
-    private listViewRootGroup: Selection<BaseType, any, BaseType, any>;
-    private containerViewGroup: Selection<BaseType, any, BaseType, any>;
-    private scrollGroup: Selection<BaseType, any, BaseType, any>;
+    private listViewRootGroup: Selection<any, any, any, any>;
+    private containerViewGroup: Selection<any, any, any, any>;
+    private scrollGroup: Selection<any, any, any, any>;
 
     // scrollbar information
     private SCROLL_BAR_MODEL: SCROLL_BAR_MODEL = {
@@ -85,7 +85,7 @@ export class ObjectScrollBar {
 
     private init() {
         // scroll wheel event
-        const notZoom: ZoomBehavior<Element, {}> = zoom().scaleExtent([1, 1]).on('zoom', null);
+        const notZoom: any = zoom().scaleExtent([1, 1]).on('zoom', null);
 
         // wheel event만 살리고 zoom은 처리 안하기 위함.
         this.listViewRootGroup.call(notZoom).on('wheel.zoom', this.scrollWheelEventHandler);
@@ -107,9 +107,9 @@ export class ObjectScrollBar {
      * @param scrollingWidth : scroll영역의 가로 사이즈
      */
     private setupFunctionListScrollbar(
-        rootGroup: Selection<BaseType, any, BaseType, any>,
-        container: Selection<BaseType, any, BaseType, any>,
-        scrollButtonGroup: Selection<BaseType, any, BaseType, any>,
+        rootGroup: Selection<any, any, any, any>,
+        container: Selection<any, any, any, any>,
+        scrollButtonGroup: Selection<any, any, any, any>,
         scrollingAreaSize: {width: number; height: number},
         scrollBarSize: {width: number; height: number; padding: number}
     ): SCROLL_BAR_MODEL {
@@ -186,7 +186,7 @@ export class ObjectScrollBar {
      * @param svg : svg element
      */
     private setScrollClipPath(
-        target: Selection<BaseType, any, BaseType, any>,
+        target: Selection<any, any, any, any>,
         containerSize: {width: number; height: number} = {width: 150, height: 50},
         clipPathName: string = 'scrollbox-clip-path'
     ) {

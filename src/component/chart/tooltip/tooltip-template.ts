@@ -1,11 +1,12 @@
-import { Selection, BaseType } from 'd3-selection';
+import {Selection, BaseType} from 'd3-selection';
 
 export const baseTooltipTemplate = (
     group: Selection<BaseType, any, HTMLElement, any>,
-    boxStyle?: {fill: string, opacity: number, stroke: string},
-    textStyle?: {fiil: number, size: number}
+    boxStyle?: {fill: string; opacity: number; stroke: string},
+    textStyle?: {fiil: number; size: number}
 ) => {
-    group.selectAll('.tooltip-background')
+    group
+        .selectAll('.tooltip-background')
         .data(['background'])
         .join(
             (enter) => enter.append('rect').attr('class', 'tooltip-background'),
@@ -21,7 +22,8 @@ export const baseTooltipTemplate = (
         .style('fill', '#111')
         .style('fill-opacity', 0.6);
 
-    group.selectAll('.tooltip-text')
+    group
+        .selectAll('.tooltip-text')
         .data(['text'])
         .join(
             (enter) => enter.append('text').attr('class', 'tooltip-text'),
@@ -36,14 +38,15 @@ export const baseTooltipTemplate = (
         .attr('font-weight', '100');
 
     return group;
-}
+};
 
 export const colorTooltipTemplate = (
     group: Selection<BaseType, any, HTMLElement, any>,
-    boxStyle?: {fill: string, opacity: number, stroke: string, strokeWidth?: number},
-    textStyle?: {fiil: number, size: number}
+    boxStyle?: {fill: string; opacity: number; stroke: string; strokeWidth?: number},
+    textStyle?: {fiil: number; size: number}
 ) => {
-    group.selectAll('.tooltip-background')
+    group
+        .selectAll('.tooltip-background')
         .data(['tooltip-background'])
         .join(
             (enter) => enter.append('rect').attr('class', 'tooltip-background'),
@@ -61,7 +64,8 @@ export const colorTooltipTemplate = (
         .style('fill', boxStyle?.fill ?? '#111')
         .style('fill-opacity', boxStyle?.opacity ?? 1);
 
-    group.selectAll('.tooltip-text')
+    group
+        .selectAll('.tooltip-text')
         .data(['tooltip-text'])
         .join(
             (enter) => enter.append('text').attr('class', 'tooltip-text'),
@@ -76,4 +80,4 @@ export const colorTooltipTemplate = (
         .style('font-weight', '100');
 
     return group;
-}
+};

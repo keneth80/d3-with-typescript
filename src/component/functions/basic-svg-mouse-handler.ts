@@ -39,7 +39,7 @@ export class BasicSvgMouseHandler extends FunctionsBase {
             this.subscription.add(
                 fromEvent(this.pointerGroup.node() as any, 'mousemove')
                     .pipe(debounceTime(this.delayTime))
-                    .subscribe((e: MouseEvent) => {
+                    .subscribe((e: any) => {
                         const x = e.offsetX - this.chartBase.chartMargin.left - 1;
                         const y = e.offsetY - this.chartBase.chartMargin.top - 1;
                         const mouseEvent: [number, number] = [x, y];
@@ -54,7 +54,7 @@ export class BasicSvgMouseHandler extends FunctionsBase {
             this.subscription.add(
                 fromEvent(this.pointerGroup.node() as any, 'mouseleave')
                     .pipe(debounceTime(this.delayTime + 10))
-                    .subscribe((e: MouseEvent) => {
+                    .subscribe((e: any) => {
                         const x = e.offsetX - this.chartBase.chartMargin.left - 1;
                         const y = e.offsetY - this.chartBase.chartMargin.top - 1;
                         const mouseEvent: [number, number] = [x, y];

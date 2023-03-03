@@ -18,9 +18,9 @@ export interface BasicCanvasMouseZoomHandlerConfiguration {
 }
 
 export class BasicCanvasMouseZoomHandler extends FunctionsBase {
-    protected zoomCanvas: Selection<BaseType, any, HTMLElement, any>;
+    protected zoomCanvas: Selection<HTMLCanvasElement, any, HTMLElement, any>;
 
-    protected pointerCanvas: Selection<BaseType, any, HTMLElement, any>;
+    protected pointerCanvas: Selection<any, any, any, any>;
 
     private xDirection: string = Placement.BOTTOM;
 

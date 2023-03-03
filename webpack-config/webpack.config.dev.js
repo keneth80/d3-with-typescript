@@ -11,9 +11,17 @@ module.exports = merge(commonConfig, {
     devtool: 'eval-cheap-module-source-map',
 
     output: {
-        path: helpers.root('dist'),
+        path: helpers.root('examples/' + example + '/'),
         publicPath: '/',
-        filename: '[name].bundle.js',
+        filename: 'js/[name].[fullhash].bundle.js',
         chunkFilename: '[id].chunk.js'
+    },
+    optimization: {
+        noEmitOnErrors: true
+    },
+
+    devServer: {
+        historyApiFallback: true,
+        stats: 'minimal'
     }
 });

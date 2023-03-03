@@ -1,15 +1,15 @@
-import { Selection, BaseType } from 'd3-selection';
-import { arc, line, curveLinear } from 'd3-shape';
-import { scaleLinear } from 'd3-scale';
-import { range } from 'd3-array';
-import { easeElastic } from 'd3-ease';
-import { interpolateHsl } from 'd3-interpolate';
-import { format } from 'd3-format';
-import { color, rgb } from 'd3-color';
+import {range} from 'd3-array';
+import {rgb} from 'd3-color';
+import {easeElastic} from 'd3-ease';
+import {format} from 'd3-format';
+import {interpolateHsl} from 'd3-interpolate';
+import {scaleLinear} from 'd3-scale';
+import {BaseType, Selection} from 'd3-selection';
+import {arc, curveLinear, line} from 'd3-shape';
 
-import { Scale, ContainerSize } from '../../chart/chart.interface';
-import { SeriesBase } from '../../chart/series-base';
-import { SeriesConfiguration } from '../../chart/series.interface';
+import {ContainerSize, Scale} from '../../chart/chart.interface';
+import {SeriesBase} from '../../chart/series-base';
+import {SeriesConfiguration} from '../../chart/series.interface';
 
 export interface BasicGaugeSeriesConfiguration extends SeriesConfiguration {
     clipWidth: number;
@@ -90,13 +90,9 @@ export class BasicGaugeSeries extends SeriesBase {
                 return 1 / this.config.majorTicks;
             });
         }
-
     }
 
-    setSvgElement(
-        svg: Selection<BaseType, any, HTMLElement, any>,
-        mainGroup: Selection<BaseType, any, HTMLElement, any>
-    ) {
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
         svg.select('.series-group').attr('clip-path', null);
         if (!mainGroup.select(`.${this.selector}-group`).node()) {
@@ -116,14 +112,15 @@ export class BasicGaugeSeries extends SeriesBase {
             .outerRadius(this.r - this.config.ringInset)
             .startAngle((d, i) => {
                 const ratio = +d * i;
-                return this.deg2rad(this.config.minAngle + (ratio * this.range));
+                return this.deg2rad(this.config.minAngle + ratio * this.range);
             })
             .endAngle((d, i) => {
                 const ratio = +d * (i + 1);
-                return this.deg2rad(this.config.minAngle + (ratio * this.range));
+                return this.deg2rad(this.config.minAngle + ratio * this.range);
             });
 
-        this.arcGroup.selectAll(`.${this.selector}-path`)
+        this.arcGroup
+            .selectAll(`.${this.selector}-path`)
             .data(this.tickData)
             .join(
                 (enter) => enter.append('path').attr('class', `${this.selector}-path`),
@@ -135,7 +132,8 @@ export class BasicGaugeSeries extends SeriesBase {
             })
             .attr('d', this.arc);
 
-        this.labelGroup.selectAll(`.${this.selector}-label`)
+        this.labelGroup
+            .selectAll(`.${this.selector}-label`)
             .data(this.ticks)
             .join(
                 (enter) => enter.append('text').attr('class', `${this.selector}-label`),
@@ -148,7 +146,7 @@ export class BasicGaugeSeries extends SeriesBase {
             .style('fill', '#aaa')
             .attr('transform', (d) => {
                 const ratio = this.scale(d);
-                const angleValue = this.config.minAngle + (ratio * this.range);
+                const angleValue = this.config.minAngle + ratio * this.range;
                 return `rotate(${angleValue}) translate(0, ${this.config.labelInset - this.r})`;
             })
             .text(this.config.labelFormat);
@@ -175,40 +173,40 @@ export class BasicGaugeSeries extends SeriesBase {
 
         this.labelGroup.attr('transform', centerTx);
 
-        const pg = this.pointerGroup.selectAll(`.${this.selector}-pointer`)
-                .data([lineData])
-                .join(
-                    (enter) => enter.append('g').attr('class', `${this.selector}-pointer`),
-                    (update) => update,
-                    (exit) => exit.remove()
-                )
-                .style('fill', '#e85116')
-                .style('stroke', '#b64011')
-                .attr('transform', centerTx);
+        const pg = this.pointerGroup
+            .selectAll(`.${this.selector}-pointer`)
+            .data([lineData])
+            .join(
+                (enter) => enter.append('g').attr('class', `${this.selector}-pointer`),
+                (update) => update,
+                (exit) => exit.remove()
+            )
+            .style('fill', '#e85116')
+            .style('stroke', '#b64011')
+            .attr('transform', centerTx);
 
         if (!this.pointer) {
             this.pointer = pg.append('path');
         }
 
+        this.pointer.attr('d', pointerLine).attr('transform', `rotate(${this.config.minAngle})`);
+
+        const mainRatio = this.scale(chartData[0] === undefined ? 0 : chartData[0]);
+        const newAngle = this.config.minAngle + mainRatio * this.range;
+
         this.pointer
-            .attr('d', pointerLine)
-            .attr('transform', `rotate(${this.config.minAngle})`);
-
-        const mainRatio = this.scale(chartData[0] === undefined ? 0: chartData[0]);
-        const newAngle = this.config.minAngle + (mainRatio * this.range);
-
-        this.pointer.transition()
+            .transition()
             .duration(this.config.transitionMs)
             .ease(easeElastic)
-            .attr('transform', 'rotate(' +newAngle +')');
+            .attr('transform', 'rotate(' + newAngle + ')');
     }
 
     private deg2rad(deg: number) {
-      return deg * Math.PI / 180;
+        return (deg * Math.PI) / 180;
     }
 
     private centerTransition(elementWidth: number, svgWidth: number, r: number) {
         const x = svgWidth / 2 - elementWidth / 2;
-        return `translate(${x}, ${r / 2})`
+        return `translate(${x}, ${r / 2})`;
     }
 }

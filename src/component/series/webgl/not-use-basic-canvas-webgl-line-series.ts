@@ -1,16 +1,16 @@
-import { Selection, BaseType, select } from 'd3-selection';
-import { quadtree } from 'd3-quadtree';
-import { scaleLinear } from 'd3-scale';
-import { Subject } from 'rxjs';
+import {Selection, BaseType, select} from 'd3-selection';
+import {quadtree} from 'd3-quadtree';
+import {scaleLinear} from 'd3-scale';
+import {Subject} from 'rxjs';
 
-import { Scale, ContainerSize, DisplayOption, DisplayType } from '../../chart/chart.interface';
-import { SeriesBase } from '../../chart/series-base';
-import { SeriesConfiguration } from '../../chart/series.interface';
-import { textBreak } from '../../chart/util/d3-svg-util';
-import { delayExcute } from '../../chart/util/d3-svg-util';
-import { Placement } from '../../chart/chart-configuration';
-import { createProgramFromSources, hexToRgb } from '../../chart/util/webgl-util';
-import { ChartSelector } from '../../chart';
+import {Scale, ContainerSize, DisplayOption, DisplayType} from '../../chart/chart.interface';
+import {SeriesBase} from '../../chart/series-base';
+import {SeriesConfiguration} from '../../chart/series.interface';
+import {textBreak} from '../../chart/util/d3-svg-util';
+import {delayExcute} from '../../chart/util/d3-svg-util';
+import {Placement} from '../../chart/chart-configuration';
+import {createProgramFromSources, hexToRgb} from '../../chart/util/webgl-util';
+import {ChartSelector} from '../../chart';
 
 export class BasicCanvasWebglLineSeriesModel {
     x: number;
@@ -53,7 +53,7 @@ export interface BasicCanvasWebglLineSeriesConfiguration extends SeriesConfigura
 }
 
 export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
-    protected canvas: Selection<BaseType, any, HTMLElement, any>;
+    protected canvas: Selection<HTMLCanvasElement, any, HTMLElement, any>;
 
     private tooltipGroup: Selection<BaseType, any, HTMLElement, any>;
 
@@ -81,7 +81,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
     private shaderProgram: any;
 
     // ================= zoom 관련 변수 ================ //
-    private restoreCanvas: Selection<BaseType, any, HTMLElement, any>;
+    private restoreCanvas: any;
 
     // ================= style 관련 변수 =============== //
     private radius = 4;
@@ -105,11 +105,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         }
     }
 
-    setSvgElement(
-        svg: Selection<BaseType, any, HTMLElement, any>,
-        mainGroup: Selection<BaseType, any, HTMLElement, any>,
-        index: number
-    ) {
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, mainGroup: Selection<BaseType, any, HTMLElement, any>, index: number) {
         this.seriesIndex = index;
 
         this.svg = svg;
@@ -118,11 +114,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
 
         this.setTooltipCanvas(this.svg);
 
-        if (
-            !this.chartBase.chartContainer
-                .select('.' + ChartSelector.DRAWING_CANVAS)
-                .node()
-        ) {
+        if (!this.chartBase.chartContainer.select('.' + ChartSelector.DRAWING_CANVAS).node()) {
             this.canvas = this.chartBase.chartContainer
                 .append('canvas')
                 .datum({
@@ -136,11 +128,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
             this.canvas = this.chartBase.chartContainer.select('.' + ChartSelector.DRAWING_CANVAS);
         }
 
-        if (
-            !this.chartBase.chartContainer
-                .select('.' + ChartSelector.SELECTION_CANVAS)
-                .node()
-        ) {
+        if (!this.chartBase.chartContainer.select('.' + ChartSelector.SELECTION_CANVAS).node()) {
             this.chartBase.chartContainer
                 .append('canvas')
                 .datum({
@@ -183,10 +171,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
             padding = x.bandwidth() / 2;
         }
 
-        const lineData: any[] = (!this.dataFilter
-            ? chartData
-            : chartData.filter((item: T) => this.dataFilter(item))
-        ).filter(
+        const lineData: any[] = (!this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item))).filter(
             (d: T) =>
                 d[this.config.xField] >= xmin - xmin * 0.01 &&
                 d[this.config.xField] <= xmax + xmax * 0.01 &&
@@ -198,24 +183,20 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         this.canvas
             .attr('width', geometry.width)
             .attr('height', geometry.height)
-            .style(
-                'transform',
-                `translate(${this.chartBase.chartMargin.left + 1}px, ${this.chartBase.chartMargin.top}px)`
-            );
+            .style('transform', `translate(${this.chartBase.chartMargin.left + 1}px, ${this.chartBase.chartMargin.top}px)`);
 
         this.chartBase.chartContainer
             .select('.' + ChartSelector.SELECTION_CANVAS)
             .attr('width', geometry.width)
             .attr('height', geometry.height)
-            .style(
-                'transform',
-                `translate(${this.chartBase.chartMargin.left + 1}px, ${this.chartBase.chartMargin.top}px)`
-            );
+            .style('transform', `translate(${this.chartBase.chartMargin.left + 1}px, ${this.chartBase.chartMargin.top}px)`);
 
         if (this.restoreCanvas && option.displayType === DisplayType.ZOOMOUT) {
-            (this.canvas.node() as any).getContext('2d').drawImage(this.restoreCanvas.node(), 0, 0, geometry.width, geometry.height, 0, 0, geometry.width, geometry.height);
+            (this.canvas.node() as any)
+                .getContext('2d')
+                .drawImage(this.restoreCanvas.node(), 0, 0, geometry.width, geometry.height, 0, 0, geometry.width, geometry.height);
         } else {
-            this.webGLStart(lineData, { min: xmin, max: xmax }, { min: ymin, max: ymax }, geometry, this.lineColor);
+            this.webGLStart(lineData, {min: xmin, max: xmax}, {min: ymin, max: ymax}, geometry, this.lineColor);
         }
 
         // canvas로 drawImage 했을때 라인이 픽셀로 지그재그로 보이는 현상이 있음 antialicing 적용방법이 필요함.
@@ -228,14 +209,24 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         delayExcute(150, () => {
             // TODO: restore 시에만 적용.
             if (option.displayType === DisplayType.ZOOMOUT) {
-                (this.canvas.node() as any).getContext('2d').drawImage(this.chartBase.webglCanvasElement.node(), 0, 0, geometry.width * 6, geometry.height * 6, 0, 0, geometry.width * 6, geometry.height * 6);
+                (this.canvas.node() as any)
+                    .getContext('2d')
+                    .drawImage(
+                        this.chartBase.webglCanvasElement.node(),
+                        0,
+                        0,
+                        geometry.width * 6,
+                        geometry.height * 6,
+                        0,
+                        0,
+                        geometry.width * 6,
+                        geometry.height * 6
+                    );
             }
 
             if (option.displayType === DisplayType.ZOOMOUT && !this.restoreCanvas) {
                 this.restoreCanvas = select(document.createElement('CANVAS'));
-                this.restoreCanvas
-                    .attr('width', geometry.width)
-                    .attr('height', geometry.height);
+                this.restoreCanvas.attr('width', geometry.width).attr('height', geometry.height);
                 (this.restoreCanvas.node() as any).getContext('2d').drawImage(this.chartBase.webglCanvasElement.node(), 0, 0);
             }
         });
@@ -283,13 +274,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
     }
 
     getSeriesDataByPosition(value: number[]) {
-        return this.search(
-            this.originQuadTree,
-            value[0] - this.radius,
-            value[1] - this.radius,
-            value[0] + this.radius,
-            value[1] + this.radius
-        );
+        return this.search(this.originQuadTree, value[0] - this.radius, value[1] - this.radius, value[0] + this.radius, value[1] + this.radius);
     }
 
     showPointAndTooltip(value: number[], selected: any[]) {
@@ -315,8 +300,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         return index;
     }
 
-    onSelectItem(selectedItem: any[], position: any[]) {
-    }
+    onSelectItem(selectedItem: any[], position: any[]) {}
 
     clear() {
         this.viewClear();
@@ -324,7 +308,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
 
     // TEST
     getCanvasNode() {
-        return (this.canvas.node() as any);
+        return this.canvas.node() as any;
     }
 
     // TEST
@@ -381,13 +365,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
             .attr('height', textHeight);
     }
 
-    private webGLStart(
-        chartData: T[],
-        xAxis: { min: number; max: number },
-        yAxis: { min: number; max: number },
-        geometry: ContainerSize,
-        color: string
-    ) {
+    private webGLStart(chartData: T[], xAxis: {min: number; max: number}, yAxis: {min: number; max: number}, geometry: ContainerSize, color: string) {
         const endCount = chartData.length;
 
         // data generate
@@ -495,9 +473,9 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         // ];
 
         const tempColor = hexToRgb(color);
-        const colorStr = `${(tempColor[0] / 255).toFixed(1)}, ${(tempColor[1] / 255).toFixed(1)}, ${(
-            tempColor[2] / 255
-        ).toFixed(1)}, ${alpha === 1 ? '1.0' : alpha + ''}`;
+        const colorStr = `${(tempColor[0] / 255).toFixed(1)}, ${(tempColor[1] / 255).toFixed(1)}, ${(tempColor[2] / 255).toFixed(1)}, ${
+            alpha === 1 ? '1.0' : alpha + ''
+        }`;
         const fragCode = `
         precision mediump float;
         void main(void) {
@@ -555,13 +533,9 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
 
     private makeVertices(chartData: T[], xAxis: any, yAxis: any) {
         // data 만들기
-        const xScale = scaleLinear()
-            .domain([xAxis.min, xAxis.max])
-            .range([-1, 1]); // [-0.99, 0.99]
+        const xScale = scaleLinear().domain([xAxis.min, xAxis.max]).range([-1, 1]); // [-0.99, 0.99]
 
-        const yScale = scaleLinear()
-            .domain([yAxis.min, yAxis.max])
-            .range([-1, 1]); // [-0.99, 0.99]
+        const yScale = scaleLinear().domain([yAxis.min, yAxis.max]).range([-1, 1]); // [-0.99, 0.99]
 
         const vertices = [];
 
@@ -704,11 +678,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         // provide texture coordinates for the rectangle.
         const positionBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-        gl.bufferData(
-            gl.ARRAY_BUFFER,
-            new Float32Array([0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0]),
-            gl.STATIC_DRAW
-        );
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0]), gl.STATIC_DRAW);
         gl.enableVertexAttribArray(positionLocation);
         gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
@@ -746,7 +716,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
     private drawTooltipPoint(
         geometry: ContainerSize,
         selectedItem: [number, number, any][],
-        style: { radius: number; strokeColor: string; strokeWidth: number }
+        style: {radius: number; strokeColor: string; strokeWidth: number}
     ) {
         const selectionCanvas = this.chartBase.chartContainer.select('.' + ChartSelector.SELECTION_CANVAS);
         const context = (selectionCanvas.node() as any).getContext('2d');

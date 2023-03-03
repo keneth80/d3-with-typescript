@@ -1,7 +1,7 @@
-import { Selection, BaseType } from 'd3-selection';
+import {BaseType, Selection} from 'd3-selection';
 
-import { Scale, ContainerSize } from '../chart/chart.interface';
-import { OptionsBase } from '../chart/options-base';
+import {ContainerSize, Scale} from '../chart/chart.interface';
+import {OptionsBase} from '../chart/options-base';
 
 export interface BasicSpecAreaConfiguration<T = any> {
     selector: string;
@@ -11,7 +11,7 @@ export interface BasicSpecAreaConfiguration<T = any> {
     data?: T[];
     style?: {
         color: string;
-    }
+    };
 }
 
 export class BasicSpecArea<T = any> extends OptionsBase {
@@ -54,36 +54,38 @@ export class BasicSpecArea<T = any> extends OptionsBase {
         const compareScale: Scale = scales.find((scale: Scale) => scale.orient === this.placement);
         const axis = compareScale.scale;
 
-        const elementGroup = this.mainGroup.selectAll('.' + this.selector + '-group')
+        const elementGroup = this.mainGroup
+            .selectAll('.' + this.selector + '-group')
             .data(this.stepData)
-                .join(
-                    (enter) => enter.append('g').attr('class', this.selector + '-group'),
-                    (update) => update,
-                     (exit) => exit.remove
-                )
-                .attr('transform', (data: T) => {
-                    const x = this.placement === 'bottom' ? axis(data[this.startField]) : 0;
-                    const y = this.placement === 'bottom' ? 0 : axis(data[this.startField]);
-                    const translate = `translate(${(x < 0 ? 0 : x) + 1}, ${(y > geometry.height ? geometry.height : y)})`;
-                    return translate;
-                });
+            .join(
+                (enter) => enter.append('g').attr('class', this.selector + '-group'),
+                (update) => update,
+                (exit) => exit.remove
+            )
+            .attr('transform', (data: T) => {
+                const x = this.placement === 'bottom' ? axis(data[this.startField]) : 0;
+                const y = this.placement === 'bottom' ? 0 : axis(data[this.startField]);
+                const translate = `translate(${(x < 0 ? 0 : x) + 1}, ${y > geometry.height ? geometry.height : y})`;
+                return translate;
+            });
 
-        elementGroup.selectAll('.' + this.selector + '-box')
+        elementGroup
+            .selectAll('.' + this.selector + '-box')
             .data((data: T) => [data])
-                .join(
-                    (enter) => enter.append('rect').attr('class', this.selector + '-box'),
-                    (update) => update,
-                    (exit) => exit.remove
-                )
-                .style('fill', '#f9e1fa')
-                .attr('width', (data: T) => {
-                    const targetWidth = this.placement === 'bottom' ? axis(data[this.endField]) - axis(data[this.startField]) : geometry.width;
-                    return (targetWidth > geometry.width ? geometry.width : targetWidth) - 1;
-                })
-                .attr('height', (data: T) => {
-                    const targetHeight = this.placement === 'bottom' ? geometry.height: axis(data[this.endField]) - axis(data[this.startField]);
-                    return (targetHeight > geometry.height ? geometry.height : targetHeight);
-                });
+            .join(
+                (enter) => enter.append('rect').attr('class', this.selector + '-box'),
+                (update) => update,
+                (exit) => exit.remove
+            )
+            .style('fill', '#f9e1fa')
+            .attr('width', (data: T) => {
+                const targetWidth = this.placement === 'bottom' ? axis(data[this.endField]) - axis(data[this.startField]) : geometry.width;
+                return (targetWidth > geometry.width ? geometry.width : targetWidth) - 1;
+            })
+            .attr('height', (data: T) => {
+                const targetHeight = this.placement === 'bottom' ? geometry.height : axis(data[this.endField]) - axis(data[this.startField]);
+                return targetHeight > geometry.height ? geometry.height : targetHeight;
+            });
     }
 
     select(displayName: string, isSelected: boolean) {

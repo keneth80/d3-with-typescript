@@ -12,7 +12,7 @@ export interface BasicCanvasMouseHandlerConfiguration {
 }
 
 export class BasicCanvasMouseHandler extends FunctionsBase {
-    protected pointerCanvas: Selection<BaseType, any, HTMLElement, any>;
+    protected pointerCanvas: Selection<any, any, HTMLElement, any>;
 
     private isMoveEvent = false;
 

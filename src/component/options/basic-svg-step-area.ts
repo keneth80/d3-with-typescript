@@ -1,10 +1,10 @@
-import { select, Selection, BaseType } from 'd3-selection';
+import {BaseType, Selection} from 'd3-selection';
 
-import { Scale, ContainerSize, ChartMouseEvent } from '../chart/chart.interface';
-import { Placement } from '../chart/chart-configuration';
-import { OptionsBase } from '../chart/options-base';
-import { getTextHeight } from '../chart/util';
-import { ChartBase, ChartSelector } from '../..';
+import {ChartSelector} from '../chart';
+import {Placement} from '../chart/chart-configuration';
+import {ContainerSize, Scale} from '../chart/chart.interface';
+import {OptionsBase} from '../chart/options-base';
+import {getTextHeight} from '../chart/util';
 
 export interface BasicStepAreaConfiguration<T = any> {
     selector: string;
@@ -49,48 +49,52 @@ export class BasicStepArea<T = any> extends OptionsBase {
         const textHeight = getTextHeight(12, 'Arial, Helvetica, sans-serif');
 
         // series-group의 영역은 clip-path가 적용 되어 있으나 현재 그룹에서는 적용이 안되어 있으므로 series-group의 clip-path를 가져와 적용함.
-        this.mainGroup.attr('transform', `translate(${this.chartBase.chartMargin.left}, ${this.chartBase.chartMargin.top - (textHeight + 3)})`)
-        .attr('clip-path', this.svg.select(`.${ChartSelector.SERIES_SVG}`).attr('clip-path'));
+        this.mainGroup
+            .attr('transform', `translate(${this.chartBase.chartMargin.left}, ${this.chartBase.chartMargin.top - (textHeight + 3)})`)
+            .attr('clip-path', this.svg.select(`.${ChartSelector.SERIES_SVG}`).attr('clip-path'));
 
-        const elementGroup = this.mainGroup.selectAll('.' + this.selector + '-item')
+        const elementGroup = this.mainGroup
+            .selectAll('.' + this.selector + '-item')
             .data(this.stepData)
-                .join(
-                    (enter) => enter.append('g').attr('class', this.selector + '-item'),
-                    (update) => update,
-                     (exit) => exit.remove
-                )
-                .attr('transform', (data: T) => {
-                    return `translate(${x(data[this.startField])}, 1)`;
-                });
+            .join(
+                (enter) => enter.append('g').attr('class', this.selector + '-item'),
+                (update) => update,
+                (exit) => exit.remove
+            )
+            .attr('transform', (data: T) => {
+                return `translate(${x(data[this.startField])}, 1)`;
+            });
 
-        elementGroup.selectAll('.' + this.selector + '-label')
+        elementGroup
+            .selectAll('.' + this.selector + '-label')
             .data((data: T) => [data])
-                .join(
-                    (enter) => enter.append('text').attr('class', this.selector + '-label'),
-                    (update) => update,
-                    (exit) => exit.remove
-                )
-                .style('font-size', '12px')
-                .style('font-family', 'Arial, Helvetica, sans-serif')
-                .attr('dy', '0.71em')
-                .attr('x', 2)
-                // .attr('y', this.chartBase.chartMargin.top / 2)
-                .text((data: T) => data[this.labelField]);
+            .join(
+                (enter) => enter.append('text').attr('class', this.selector + '-label'),
+                (update) => update,
+                (exit) => exit.remove
+            )
+            .style('font-size', '12px')
+            .style('font-family', 'Arial, Helvetica, sans-serif')
+            .attr('dy', '0.71em')
+            .attr('x', 2)
+            // .attr('y', this.chartBase.chartMargin.top / 2)
+            .text((data: T) => data[this.labelField]);
 
-        elementGroup.selectAll('.' + this.selector + '-box')
+        elementGroup
+            .selectAll('.' + this.selector + '-box')
             .data((data: T) => [data])
-                .join(
-                    (enter) => enter.append('rect').attr('class', this.selector + '-box'),
-                    (update) => update,
-                    (exit) => exit.remove
-                )
-                // .style('stroke', '#000')
-                // .style('fill', '#fff')
-                .style('fill-opacity', 0)
-                .attr('width', (data: T) => { 
-                    return x(data[this.endField]) - x(data[this.startField]);
-                })
-                .attr('height', textHeight);
+            .join(
+                (enter) => enter.append('rect').attr('class', this.selector + '-box'),
+                (update) => update,
+                (exit) => exit.remove
+            )
+            // .style('stroke', '#000')
+            // .style('fill', '#fff')
+            .style('fill-opacity', 0)
+            .attr('width', (data: T) => {
+                return x(data[this.endField]) - x(data[this.startField]);
+            })
+            .attr('height', textHeight);
 
         elementGroup
             .on('mouseover', (data: any) => {

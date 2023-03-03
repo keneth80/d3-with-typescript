@@ -1,8 +1,8 @@
-import { Selection, BaseType, select, event } from 'd3-selection';
-import { zoom } from 'd3-zoom';
+import {BaseType, Selection} from 'd3-selection';
+import {zoom} from 'd3-zoom';
 
-import { Scale, ContainerSize } from '../chart/chart.interface';
-import { FunctionsBase } from '../chart/functions-base';
+import {ContainerSize, Scale} from '../chart/chart.interface';
+import {FunctionsBase} from '../chart/functions-base';
 
 export interface BasicZoomSelectionConfiguration {
     targetGroup: string;
@@ -28,7 +28,7 @@ export class BasicZoomSelection extends FunctionsBase {
 
     private direction: string = 'both';
 
-    private zoomTarget: Selection<BaseType, any, HTMLElement, any>;
+    private zoomTarget: Selection<any, any, any, any>;
 
     private originScaleX: any = {};
 
@@ -63,14 +63,11 @@ export class BasicZoomSelection extends FunctionsBase {
         }
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
-                  mainGroup: Selection<BaseType, any, HTMLElement, any>) {
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
         this.mainGroup = mainGroup;
         if (!this.zoomTarget) {
-            this.zoomTarget = this.mainGroup.append('rect')
-                .style('fill', 'none')
-                .style('pointer-events', 'all');
+            this.zoomTarget = this.mainGroup.append('rect').style('fill', 'none').style('pointer-events', 'all');
             this.zoomTarget.lower();
         }
     }
@@ -82,13 +79,11 @@ export class BasicZoomSelection extends FunctionsBase {
         Object.assign(this.originScaleX, x);
         Object.assign(this.originScaleY, y);
 
-        this.zoomTarget
-            .attr('width', geometry.width)
-            .attr('height', geometry.height);
+        this.zoomTarget.attr('width', geometry.width).attr('height', geometry.height);
 
         this.targetElements = this.mainGroup.select(`.${this.targetGroup}`).selectAll('*');
 
-        const updateChart = () => {
+        const updateChart = (event: any) => {
             const newX = event.transform.rescaleX(x);
             const newY = event.transform.rescaleY(y);
             scales.find((scale: Scale) => scale.orient === this.xDirection).scale = newX;
@@ -99,9 +94,12 @@ export class BasicZoomSelection extends FunctionsBase {
 
         this.mainGroup.call(
             zoom()
-            .scaleExtent([0.5, 10])
-            .extent([ [0, 0], [geometry.width, geometry.height] ]) // initialise the brush area: start at 0,0 and finishes at width,height: it means I select the whole graph area
-            .on('zoom', updateChart)
+                .scaleExtent([0.5, 10])
+                .extent([
+                    [0, 0],
+                    [geometry.width, geometry.height]
+                ]) // initialise the brush area: start at 0,0 and finishes at width,height: it means I select the whole graph area
+                .on('zoom', updateChart)
         );
     }
 }

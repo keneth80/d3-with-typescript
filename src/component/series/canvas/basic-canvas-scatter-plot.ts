@@ -1,14 +1,14 @@
-import { Selection, BaseType, select, mouse } from 'd3-selection';
-import { quadtree, Quadtree } from 'd3-quadtree';
-import { min, max, range } from 'd3-array';
-import { timer, of, from, Observable, Observer, Subscription } from 'rxjs';
-import { switchMap, map, concatMap, mapTo, delay } from 'rxjs/operators';
+import {range} from 'd3-array';
+import {quadtree} from 'd3-quadtree';
+import {BaseType, Selection} from 'd3-selection';
+import {from, of, Subscription, timer} from 'rxjs';
+import {concatMap, map, mapTo, switchMap} from 'rxjs/operators';
 
-import { Scale, ContainerSize, DisplayOption } from '../../chart/chart.interface';
-import { SeriesBase } from '../../chart/series-base';
-import { SeriesConfiguration } from '../../chart/series.interface';
-import { ChartBase } from '../../chart/chart-base';
-import { delayExcute } from '../../chart/util/d3-svg-util';
+import {ChartBase} from '../../chart/chart-base';
+import {ContainerSize, DisplayOption, Scale} from '../../chart/chart.interface';
+import {SeriesBase} from '../../chart/series-base';
+import {SeriesConfiguration} from '../../chart/series.interface';
+import {delayExcute} from '../../chart/util/d3-svg-util';
 
 export class BasicCanvasScatterPlotModel {
     x: number;
@@ -27,7 +27,12 @@ export class BasicCanvasScatterPlotModel {
         obj: any
     ) {
         Object.assign(this, {
-            x, y, z, i, selected, obj
+            x,
+            y,
+            z,
+            i,
+            selected,
+            obj
         });
     }
 }
@@ -36,16 +41,16 @@ export interface BasicCanvasScatterPlotConfiguration extends SeriesConfiguration
     xField: string;
     yField: string;
     pointer?: {
-        radius: number,
+        radius: number;
         stroke?: {
-            color: string,
-            strokeWidth: number
-        }
-    }
+            color: string;
+            strokeWidth: number;
+        };
+    };
 }
 
 export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
-    protected canvas: Selection<BaseType, any, HTMLElement, any>;
+    protected canvas: Selection<HTMLCanvasElement, any, HTMLElement, any>;
 
     private prevCanvas: any = null;
 
@@ -97,10 +102,7 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
 
     setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
-        this.chartBase.chartContainer
-            .select('svg')
-            .style('z-index', 1)
-            .style('position', 'absolute');
+        this.chartBase.chartContainer.select('svg').style('z-index', 1).style('position', 'absolute');
         if (!this.canvas) {
             this.canvas = this.chartBase.chartContainer
                 .append('canvas')
@@ -144,10 +146,10 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
         // const pointerContext = (this.pointerCanvas.node() as any).getContext('2d');
 
         const context = (this.canvas.node() as any).getContext('2d');
-            context.clearRect(0, 0, geometry.width, geometry.height);
-            context.fillStyle = 'steelblue';
-            context.strokeWidth = this.strokeWidth;
-            context.strokeStyle = this.strokeColor;
+        context.clearRect(0, 0, geometry.width, geometry.height);
+        context.fillStyle = 'steelblue';
+        context.strokeWidth = this.strokeWidth;
+        context.strokeStyle = this.strokeColor;
 
         console.time('filterdata');
         let initialize = false;
@@ -159,16 +161,19 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
         if (this.isRestore) {
             generateData = this.originData;
         } else {
-            const filterData = this.xMaxValue === xmax && this.yMaxValue === ymax ? chartData : chartData
-                // .filter((d: T) => d[this.config.xField] >= xmin && d[this.config.xField] <= xmax && d[this.config.yField] >= ymin && d[this.config.yField] <= ymax)
-                .map((d: T, i: number) => {
-                    const xposition = x(d[this.config.xField]);
-                    const yposition = y(d[this.config.yField]);
-                    if (initialize) {
-                        this.originData.push([xposition, yposition, d]);
-                    }
-                    return [xposition, yposition, d];
-                });
+            const filterData =
+                this.xMaxValue === xmax && this.yMaxValue === ymax
+                    ? chartData
+                    : chartData
+                          // .filter((d: T) => d[this.config.xField] >= xmin && d[this.config.xField] <= xmax && d[this.config.yField] >= ymin && d[this.config.yField] <= ymax)
+                          .map((d: T, i: number) => {
+                              const xposition = x(d[this.config.xField]);
+                              const yposition = y(d[this.config.yField]);
+                              if (initialize) {
+                                  this.originData.push([xposition, yposition, d]);
+                              }
+                              return [xposition, yposition, d];
+                          });
             generateData = filterData;
         }
 
@@ -200,52 +205,55 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
                 const arrayAsObservable = of(null).pipe(
                     switchMap(() => this.getObjectWithArrayInPromise(range(shareCount))),
                     map((val: any) => {
-                        return (val.data);
+                        return val.data;
                     }),
-                    switchMap(val => from(val))
+                    switchMap((val) => from(val))
                 );
 
                 const eachElementAsObservable = arrayAsObservable.pipe(
-                    concatMap(value => timer(400).pipe(mapTo(value))), // Not working : we want to wait 500ms for each value
-                    map(val => {
+                    concatMap((value) => timer(400).pipe(mapTo(value))), // Not working : we want to wait 500ms for each value
+                    map((val) => {
                         return val;
                     })
                 );
 
-                eachElementAsObservable.subscribe(val => {
-                    const currentIndex = +val;
-                    const start = Math.round(currentIndex * (totalCount / shareCount));
-                    const end = (currentIndex + 1) * (totalCount / shareCount) > totalCount ? totalCount : Math.round((currentIndex + 1) * (totalCount / shareCount));
+                eachElementAsObservable.subscribe(
+                    (val) => {
+                        const currentIndex = +val;
+                        const start = Math.round(currentIndex * (totalCount / shareCount));
+                        const end =
+                            (currentIndex + 1) * (totalCount / shareCount) > totalCount
+                                ? totalCount
+                                : Math.round((currentIndex + 1) * (totalCount / shareCount));
 
-                    console.time('pointdraw');
-                    for (let j = start; j < end; j++ ) {
-                        // this.drawPoint(chartData[j], this.pointerRadius, x, y, context);
-                        this.drawCircle(generateData[j], this.pointerRadius, context);
-                    }
-                    console.timeEnd('pointdraw');
+                        console.time('pointdraw');
+                        for (let j = start; j < end; j++) {
+                            // this.drawPoint(chartData[j], this.pointerRadius, x, y, context);
+                            this.drawCircle(generateData[j], this.pointerRadius, context);
+                        }
+                        console.timeEnd('pointdraw');
 
-                    this.drawProgress(
-                        totalCount,
-                        (currentIndex + 1) * (totalCount / shareCount),
-                        {
+                        this.drawProgress(totalCount, (currentIndex + 1) * (totalCount / shareCount), {
                             width: svgWidth,
                             height: svgHeight,
                             target: progressSvg
+                        });
+                    },
+                    (error) => {
+                        console.log('scatter plot Error', error);
+                    },
+                    () => {
+                        if (!this.bufferCanvas) {
+                            this.bufferCanvas = document.createElement('canvas');
+                            this.bufferCanvas.width = (this.canvas.node() as any).width;
+                            this.bufferCanvas.height = (this.canvas.node() as any).height;
+                            this.bufferCanvas.setAttribute('style', 'opacity: 0.5;');
+                            this.bufferCanvas.getContext('2d').drawImage(this.canvas.node(), 0, 0);
                         }
-                    );
-                }, (error) => {
-                    console.log('scatter plot Error', error);
-                }, () => {
-                    if (!this.bufferCanvas) {
-                        this.bufferCanvas = document.createElement('canvas');
-                        this.bufferCanvas.width = (this.canvas.node() as any).width;
-                        this.bufferCanvas.height = (this.canvas.node() as any).height;
-                        this.bufferCanvas.setAttribute('style', 'opacity: 0.5;');
-                        this.bufferCanvas.getContext('2d').drawImage(this.canvas.node(), 0, 0);
+                        context.closePath();
+                        progressSvg.remove();
                     }
-                    context.closePath();
-                    progressSvg.remove();
-                });
+                );
             } else {
                 this.isZoom = false;
                 for (let i = 0; i < generateData.length; i++) {
@@ -264,7 +272,10 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
         if (!this.originQuadTree) {
             delayExcute(50, () => {
                 this.originQuadTree = quadtree()
-                    .extent([[-1, -1], [geometry.width + 1, geometry.height + 1]])
+                    .extent([
+                        [-1, -1],
+                        [geometry.width + 1, geometry.height + 1]
+                    ])
                     .addAll(generateData);
             });
         }
@@ -286,86 +297,94 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
         let startY = 0;
         let endX = 0;
         let endY = 0;
-        this.subscription.add(this.chartBase.mouseEvent$.subscribe((event: {type: string, position: [number, number], target: Selection<BaseType, any, HTMLElement, any>}) => {
-            if (event.type === 'mousemove') {
+        this.subscription.add(
+            this.chartBase.mouseEvent$.subscribe(
+                (event: {type: string; position: [number, number]; target: Selection<BaseType, any, HTMLElement, any>}) => {
+                    if (event.type === 'mousemove') {
+                    } else if (event.type === 'mouseup') {
+                        endX = event.position[0];
+                        endY = event.position[1];
 
-            } else if (event.type === 'mouseup') {
-                endX = event.position[0];
-                endY = event.position[1];
+                        const selected = this.search(
+                            this.originQuadTree,
+                            endX - this.pointerRadius,
+                            endY - this.pointerRadius,
+                            endX + this.pointerRadius,
+                            endY + this.pointerRadius
+                        );
 
-                const selected = this.search(this.originQuadTree, endX - this.pointerRadius, endY - this.pointerRadius, endX + this.pointerRadius, endY + this.pointerRadius);
+                        if (selected.length) {
+                            const selectedItem = selected[0];
+                            const selectX = selectedItem[0];
+                            const selectY = selectedItem[1];
+                            // const selectX = Math.round(selected[selected.length - 1][0]);
+                            // const selectY = Math.round(selected[selected.length - 1][1]);
 
-                if (selected.length) {
-                    const selectedItem = selected[0];
-                    const selectX = selectedItem[0];
-                    const selectY = selectedItem[1];
-                    // const selectX = Math.round(selected[selected.length - 1][0]);
-                    // const selectY = Math.round(selected[selected.length - 1][1]);
+                            if (selectedItem) {
+                                const pointerContext = (event.target.node() as any).getContext('2d');
+                                pointerContext.fillStyle = 'red';
+                                pointerContext.strokeStyle = 'white';
+                                this.drawCircle([selectX, selectY], this.pointerRadius, pointerContext);
+                            }
+                        }
+                    } else if (event.type === 'mousedown') {
+                        startX = event.position[0];
+                        startY = event.position[1];
+                    } else if (event.type === 'zoomin') {
+                        this.isRestore = false;
+                        endX = event.position[0];
+                        endY = event.position[1];
 
-                    if (selectedItem) {
-                        const pointerContext = (event.target.node() as any).getContext('2d');
-                        pointerContext.fillStyle = 'red';
-                        pointerContext.strokeStyle = 'white';
-                        this.drawCircle([selectX, selectY], this.pointerRadius, pointerContext);
+                        // TODO: zoom 스케일이 깊어질 수록 정확도가 떨어짐.
+                        const xStartValue = x.invert(startX);
+                        const yStartValue = y.invert(startY);
+                        const xEndValue = x.invert(endX);
+                        const yEndValue = y.invert(endY);
+                        // this.chartBase.updateAxisForZoom([
+                        //     {
+                        //         field: this.xField,
+                        //         min: xStartValue,
+                        //         max: xEndValue
+                        //     },
+                        //     {
+                        //         field: this.yField,
+                        //         min: yEndValue,
+                        //         max: yStartValue
+                        //     }
+                        // ]);
+                    } else if (event.type === 'zoomout') {
+                        this.isRestore = true;
+                        // delayExcute(50, () => {
+                        //     this.chartBase.updateAxisForZoom([]);
+                        // });
+                    } else {
                     }
                 }
-            } else if (event.type === 'mousedown') {
-                startX = event.position[0];
-                startY = event.position[1];
-            } else if (event.type === 'zoomin') {
-                this.isRestore = false;
-                endX = event.position[0];
-                endY = event.position[1];
-
-                // TODO: zoom 스케일이 깊어질 수록 정확도가 떨어짐.
-                const xStartValue = x.invert(startX);
-                const yStartValue = y.invert(startY);
-                const xEndValue = x.invert(endX);
-                const yEndValue = y.invert(endY);
-                // this.chartBase.updateAxisForZoom([
-                //     {
-                //         field: this.xField,
-                //         min: xStartValue,
-                //         max: xEndValue
-                //     },
-                //     {
-                //         field: this.yField,
-                //         min: yEndValue,
-                //         max: yStartValue
-                //     }
-                // ]);
-            } else if (event.type === 'zoomout') {
-                this.isRestore = true;
-                // delayExcute(50, () => {
-                //     this.chartBase.updateAxisForZoom([]);
-                // });
-            } else {
-
-            }
-        }));
+            )
+        );
     }
 
     private setContainerPosition(geometry: ContainerSize, chartBase: ChartBase) {
         this.canvas
             .attr('width', geometry.width - 1)
             .attr('height', geometry.height - 1)
-            .style('transform', `translate(${(chartBase.chartMargin.left + 1)}px, ${(chartBase.chartMargin.top + 1)}px)`);
+            .style('transform', `translate(${chartBase.chartMargin.left + 1}px, ${chartBase.chartMargin.top + 1}px)`);
     }
 
     private getObjectWithArrayInPromise(list: any[]) {
-		const data = list.map((item: any, index: number) => index);
-        return new Promise(resolve => {
-            setTimeout(() => resolve({
-                data
-            }), 20);
+        const data = list.map((item: any, index: number) => index);
+        return new Promise((resolve) => {
+            setTimeout(
+                () =>
+                    resolve({
+                        data
+                    }),
+                20
+            );
         });
     }
 
-    private drawZoomBox(
-        pointerContext: any,
-        startX: number, startY: number,
-        endX: number, endY: number
-    ) {
+    private drawZoomBox(pointerContext: any, startX: number, startY: number, endX: number, endY: number) {
         pointerContext.strokeStyle = 'blue';
         pointerContext.fillStyle = 'rgba(5,222,255,0.5)';
         pointerContext.beginPath();

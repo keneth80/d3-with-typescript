@@ -1,13 +1,13 @@
-import { Selection, BaseType } from 'd3-selection';
-import { Subject, Observable, Subscription } from 'rxjs';
+import {Selection} from 'd3-selection';
+import {Subscription} from 'rxjs';
 
-import { ChartSelector } from './chart-selector-variable';
-import { ISeries, SeriesConfiguration } from './series.interface';
-import { Scale, ContainerSize, DisplayOption } from './chart.interface';
-import { guid } from './util/d3-svg-util';
-import { Quadtree } from 'd3-quadtree';
-import { ChartBase } from './chart-base';
-import { Placement } from './chart-configuration';
+import {Quadtree} from 'd3-quadtree';
+import {ChartBase} from './chart-base';
+import {Placement} from './chart-configuration';
+import {ChartSelector} from './chart-selector-variable';
+import {ContainerSize, DisplayOption, Scale} from './chart.interface';
+import {ISeries, SeriesConfiguration} from './series.interface';
+import {guid} from './util/d3-svg-util';
 
 export class SeriesBase implements ISeries {
     type: string = 'series';
@@ -24,9 +24,9 @@ export class SeriesBase implements ISeries {
 
     colors: string[];
 
-    protected svg: Selection<BaseType, any, HTMLElement, any>;
+    protected svg: Selection<any, any, HTMLElement, any>;
 
-    protected mainGroup: Selection<BaseType, any, HTMLElement, any>;
+    protected mainGroup: Selection<any, any, HTMLElement, any>;
 
     protected subscription: Subscription = new Subscription();
 
@@ -40,7 +40,7 @@ export class SeriesBase implements ISeries {
 
     protected geometry: ContainerSize;
 
-    protected originQuadTree: Quadtree<any[]> = undefined;
+    protected originQuadTree: any = undefined;
 
     protected xDirection: string = Placement.BOTTOM;
 
@@ -48,7 +48,7 @@ export class SeriesBase implements ISeries {
 
     private chart: ChartBase;
 
-    private clipPath: Selection<BaseType, any, HTMLElement, any>;
+    private clipPath: any;
 
     private maskId = '';
 
@@ -94,15 +94,15 @@ export class SeriesBase implements ISeries {
 
     unSelectItem() {}
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
-        mainGroup: Selection<BaseType, any, HTMLElement, any>, index: number) {}
+    setSvgElement(svg: Selection<any, any, HTMLElement, any>, mainGroup: Selection<any, any, HTMLElement, any>, index: number) {}
 
     drawSeries(chartData: any[], scales: Scale[], geometry: ContainerSize, displayOption: DisplayOption) {}
 
-    setTooltipCanvas(svg: Selection<BaseType, any, HTMLElement, any>) {
+    setTooltipCanvas(svg: Selection<any, any, HTMLElement, any>) {
         // return this.svg.select('.tooltip-group');
-        if(!this.chartBase.chartContainer.select('.' + ChartSelector.TOOLTIP_CANVAS).node()) {
-            const targetSvg = this.chartBase.chartContainer.append('svg')
+        if (!this.chartBase.chartContainer.select('.' + ChartSelector.TOOLTIP_CANVAS).node()) {
+            const targetSvg = this.chartBase.chartContainer
+                .append('svg')
                 .attr('class', ChartSelector.TOOLTIP_CANVAS)
                 .style('z-index', 3)
                 .style('position', 'absolute')
@@ -111,16 +111,18 @@ export class SeriesBase implements ISeries {
 
             if (!this.clipPath) {
                 this.maskId = guid();
-                this.clipPath = targetSvg.append('defs')
+                this.clipPath = targetSvg
+                    .append('defs')
                     .append('svg:clipPath')
-                        .attr('id', this.maskId)
-                        .append('rect')
-                        .attr('clas', 'option-mask')
-                        .attr('x', 0)
-                        .attr('y', 0);
+                    .attr('id', this.maskId)
+                    .append('rect')
+                    .attr('clas', 'option-mask')
+                    .attr('x', 0)
+                    .attr('y', 0);
             }
 
-            const toolTipGroup = targetSvg.append('g')
+            const toolTipGroup = targetSvg
+                .append('g')
                 .attr('class', 'tooltip-group')
                 .attr('transform', `translate(${this.chartBase.chartMargin.left}, ${this.chartBase.chartMargin.top})`);
             this.chartBase.toolTipTarget = toolTipGroup;
@@ -159,7 +161,7 @@ export class SeriesBase implements ISeries {
         return 'Tooltip Text';
     }
 
-    tooltipStyle(selected: any[]): {fill: string, opacity: number, stroke: string} {
+    tooltipStyle(selected: any[]): {fill: string; opacity: number; stroke: string} {
         return null;
     }
 
@@ -169,15 +171,12 @@ export class SeriesBase implements ISeries {
         this.subscription.unsubscribe();
     }
 
-    drawProgress(
-        totalCount: number,
-        currentCount: number,
-        canvas: {width: number, height: number, target: Selection<BaseType, any, BaseType, any>}
-    ) {
+    drawProgress(totalCount: number, currentCount: number, canvas: {width: number; height: number; target: Selection<any, any, any, any>}) {
         const progressWidth = canvas.width / 4;
         const progressHeight = 6;
         if (totalCount > currentCount) {
-            canvas.target.selectAll('.progress-background')
+            canvas.target
+                .selectAll('.progress-background')
                 .data(['progress-background'])
                 .join(
                     (enter) => enter.append('rect').attr('class', 'progress-background'),
@@ -189,11 +188,14 @@ export class SeriesBase implements ISeries {
                 .attr('width', canvas.width)
                 .attr('height', canvas.height);
 
-            const group = canvas.target.selectAll('.progress-bar-group')
-                .data([{
-                    totalCount,
-                    currentCount
-                }])
+            const group = canvas.target
+                .selectAll('.progress-bar-group')
+                .data([
+                    {
+                        totalCount,
+                        currentCount
+                    }
+                ])
                 .join(
                     (enter) => enter.append('g').attr('class', 'progress-bar-group'),
                     (update) => update,
@@ -201,7 +203,8 @@ export class SeriesBase implements ISeries {
                 )
                 .attr('transform', `translate(${canvas.width / 2 - progressWidth / 2}, ${canvas.height / 2 - progressHeight / 2})`);
 
-            group.selectAll('.progress-bar')
+            group
+                .selectAll('.progress-bar')
                 .data((d: any) => [d])
                 .join(
                     (enter) => enter.append('rect').attr('class', 'progress-bar'),
@@ -213,7 +216,8 @@ export class SeriesBase implements ISeries {
                 .attr('width', progressWidth)
                 .attr('height', progressHeight);
 
-            group.selectAll('.progress-bar-value')
+            group
+                .selectAll('.progress-bar-value')
                 .data((d: any) => [d])
                 .join(
                     (enter) => enter.append('rect').attr('class', 'progress-bar-value'),

@@ -62,9 +62,9 @@ export interface BasicCanvasLineSeriesConfiguration extends SeriesConfiguration 
 }
 
 export class BasicCanvasLineSeries<T = any> extends SeriesBase {
-    protected canvas: Selection<BaseType, any, HTMLElement, any>;
+    protected canvas: Selection<HTMLCanvasElement, any, HTMLElement, any>;
 
-    protected pointerCanvas: Selection<BaseType, any, HTMLElement, any>;
+    protected pointerCanvas: Selection<any, any, HTMLElement, any>;
 
     private tooltipGroup: Selection<BaseType, any, HTMLElement, any>;
 
@@ -78,7 +78,7 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
 
     // private isAnimation: boolean = false;
 
-    private memoryCanvas: Selection<BaseType, any, HTMLElement, any>;
+    private memoryCanvas: Selection<HTMLCanvasElement, any, HTMLElement, any>;
 
     private move$: Subject<any> = new Subject();
 

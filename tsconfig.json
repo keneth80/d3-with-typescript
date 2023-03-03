@@ -4,19 +4,35 @@
         "module": "es6",
         "target": "es5",
         "lib": ["es2015", "es6", "esnext", "dom"],
+        "sourceMap": true,
         "declaration": true,
         "esModuleInterop": true,
-        "sourceMap": true,
+        "declarationDir": "dist/types",
+        "declarationMap": true,
         "baseUrl": ".",
         "outDir": "dist",
         "paths": {
             "components/*": ["./src/components/*"],
             "assets/*": ["./src/assets/*"]
         },
+        "noImplicitAny": false,
         "resolveJsonModule": true,
         "allowSyntheticDefaultImports": true,
-        "keyofStringsOnly": true
+        "importHelpers": true,
+        "keyofStringsOnly": true,
+        "skipLibCheck": true,
+        "strict": true,
+        "strictNullChecks": false,
+        "strictPropertyInitialization": false,
+        "plugins": [
+            {"transform": "typescript-transform-paths"},
+            {
+                "transform": "typescript-transform-paths",
+                "afterDeclarations": true
+            }
+        ],
+        "types": ["node"]
     },
     "include": ["./src/**/*"],
-    "exclude": ["./node_modules/**/*"]
+    "exclude": ["tmp", "dist", "./node_modules/**/*"]
 }

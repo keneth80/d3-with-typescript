@@ -1,8 +1,6 @@
-import { Selection, BaseType } from 'd3-selection';
-import { BasicLineSeries, GroupedVerticalBarSeries } from '../series';
-import { ChartBase } from './chart-base';
-import { Scale, DisplayOption, ContainerSize } from './chart.interface';
-
+import {BaseType, Selection} from 'd3-selection';
+import {ChartBase} from './chart-base';
+import {ContainerSize, DisplayOption, Scale} from './chart.interface';
 
 export enum SeriesType {
     SVG_LINE = 'BasicLineSeries',
@@ -55,7 +53,7 @@ export interface ISeries<T = any> {
 
     pointerSize(selected: any[]): ContainerSize;
 
-    tooltipStyle(selected: any[]): {fill: string, opacity: number, stroke: string};
+    tooltipStyle(selected: any[]): {fill: string; opacity: number; stroke: string};
 
     tooltipText(selectedItem: any[]): string;
 

@@ -17,7 +17,7 @@ export class GroupedHorizontalBarSeries extends SeriesBase {
 
     private rootGroup: Selection<BaseType, any, HTMLElement, any>;
 
-    private legendGroup: Selection<BaseType, any, HTMLElement, any>;
+    private legendGroup: Selection<any, any, HTMLElement, any>;
 
     private tooltipGroup: Selection<BaseType, any, HTMLElement, any>;
 

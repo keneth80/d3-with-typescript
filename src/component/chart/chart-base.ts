@@ -1,6 +1,6 @@
 // import './chart.css';
 import {schemeCategory10} from 'd3-scale-chromatic';
-import {BaseType, select, Selection} from 'd3-selection';
+import {select, Selection} from 'd3-selection';
 
 import {from, fromEvent, interval, Observable, Observer, of, Subject, Subscription, timer} from 'rxjs';
 import {concatMap, debounceTime, delay, map, mapTo, switchMap, tap} from 'rxjs/operators';
@@ -61,23 +61,23 @@ export class ChartBase<T = any> implements IChartBase {
 
     protected originalData: T[] = [];
 
-    protected svg: Selection<BaseType, any, HTMLElement, any>;
+    protected svg: Selection<any, any, HTMLElement, any>;
 
-    protected selector: Selection<BaseType, any, HTMLElement, any>;
+    protected selector: Selection<any, any, HTMLElement, any>;
 
-    protected mainGroup: Selection<BaseType, any, HTMLElement, any>;
+    protected mainGroup: Selection<any, any, HTMLElement, any>;
 
-    protected zoomGroup: Selection<BaseType, any, HTMLElement, any>; // svg용 zoom handler group
+    protected zoomGroup: Selection<any, any, HTMLElement, any>; // svg용 zoom handler group
 
-    protected selectionGroup: Selection<BaseType, any, HTMLElement, any>; // svg용 select item group
+    protected selectionGroup: Selection<any, any, HTMLElement, any>; // svg용 select item group
 
-    protected optionGroup: Selection<BaseType, any, HTMLElement, any>;
+    protected optionGroup: Selection<any, any, HTMLElement, any>;
 
-    protected seriesGroup: Selection<BaseType, any, HTMLElement, any>;
+    protected seriesGroup: Selection<any, any, HTMLElement, any>;
 
-    protected titleGroup: Selection<BaseType, any, BaseType, any>;
+    protected titleGroup: Selection<any, any, any, any>;
 
-    protected legendGroup: Selection<BaseType, any, BaseType, any>;
+    protected legendGroup: Selection<any, any, any, any>;
 
     protected seriesList: ISeries[] = [];
 
@@ -89,7 +89,7 @@ export class ChartBase<T = any> implements IChartBase {
 
     protected chartClickSubject: Subject<any> = new Subject();
 
-    protected tooltipGroup: Selection<BaseType, any, HTMLElement, any>;
+    protected tooltipGroup: Selection<any, any, HTMLElement, any>;
 
     protected tooltipTemplete: any = baseTooltipTemplate;
 
@@ -138,7 +138,7 @@ export class ChartBase<T = any> implements IChartBase {
 
     private isTooltipMultiple = false;
 
-    private clipPath: Selection<BaseType, any, HTMLElement, any>;
+    private clipPath: Selection<any, any, HTMLElement, any>;
 
     private originDomains: any = {};
 
@@ -225,7 +225,7 @@ export class ChartBase<T = any> implements IChartBase {
     // series delay display observable
     private eachElementAsObservableSubscription: Subscription = new Subscription();
 
-    private webglCanvas: Selection<BaseType, any, HTMLElement, any>;
+    private webglCanvas: Selection<any, any, HTMLElement, any>;
 
     private webglContext: any;
 
@@ -253,7 +253,7 @@ export class ChartBase<T = any> implements IChartBase {
         this.draw();
     }
 
-    get chartContainer(): Selection<BaseType, any, HTMLElement, any> {
+    get chartContainer(): Selection<any, any, HTMLElement, any> {
         return this.selector;
     }
 
@@ -298,7 +298,7 @@ export class ChartBase<T = any> implements IChartBase {
         this.tooltipTemplete = value;
     }
 
-    set toolTipTarget(value: Selection<BaseType, any, HTMLElement, any>) {
+    set toolTipTarget(value: any) {
         this.tooltipGroup = value;
     }
 
@@ -570,7 +570,7 @@ export class ChartBase<T = any> implements IChartBase {
         this.subscription.unsubscribe();
     }
 
-    showTooltipBySeriesSelector(selector: string): Selection<BaseType, any, HTMLElement, any> {
+    showTooltipBySeriesSelector(selector: string): Selection<any, any, HTMLElement, any> {
         const series: ISeries = this.seriesList.find((item: ISeries) => item.selector === selector);
         if (series) {
             this.tooltipItems.push({
@@ -585,7 +585,7 @@ export class ChartBase<T = any> implements IChartBase {
         return this.tooltipGroup;
     }
 
-    hideTooltipBySeriesSelector(selector: string): Selection<BaseType, any, HTMLElement, any> {
+    hideTooltipBySeriesSelector(selector: string): Selection<any, any, HTMLElement, any> {
         const targetIndex = this.seriesList.findIndex((item: ISeries) => item.selector === selector);
         if (targetIndex > -1) {
             const delIndex = this.tooltipItems.findIndex((item: any) => item.selector === selector);
@@ -946,7 +946,7 @@ export class ChartBase<T = any> implements IChartBase {
     showTooltip(
         boxStyle?: {fill: string; opacity?: number; stroke: string; strokeWidth?: number},
         textStyle?: {fill: number; size: number}
-    ): Selection<BaseType, any, HTMLElement, any> {
+    ): Selection<any, any, HTMLElement, any> {
         this.seriesList.forEach((series: ISeries) => {
             series.unSelectItem();
         });
@@ -955,7 +955,7 @@ export class ChartBase<T = any> implements IChartBase {
         return this.tooltipGroup.select('g.tooltip-item-group');
     }
 
-    hideTooltip(): Selection<BaseType, any, HTMLElement, any> {
+    hideTooltip(): Selection<any, any, HTMLElement, any> {
         if (!this.isTooltipDisplay) {
             return;
         }
@@ -1567,7 +1567,7 @@ export class ChartBase<T = any> implements IChartBase {
                 })
                 .text((d: ChartTitle) => d.content)
                 .attr('dy', '0em')
-                .attr('transform', (d: ChartTitle, index: number, nodeList: any[]) => {
+                .attr('transform', (d: ChartTitle, index: number, nodeList: any) => {
                     const textNode = nodeList[index].getBoundingClientRect();
                     const textHeight = textNode.height;
 
@@ -1893,14 +1893,14 @@ export class ChartBase<T = any> implements IChartBase {
 
         this.legendGroup
             .selectAll('.legend-label-group')
-            .filter((item: LegendItem) => item.label !== 'All')
-            .each((item: LegendItem, i: number, node: any) => {
+            .filter((item: any) => item.label !== 'All')
+            .each((item: any) => {
                 item.isHide = d.isHide;
             });
 
         this.legendGroup
             .selectAll('.legend-item-group')
-            .filter((item: LegendItem) => item.label !== 'All')
+            .filter((item: any) => item.label !== 'All')
             .selectAll('.checkbox-mark')
             .each((item: any, i: number, node: any) => {
                 item.checked = !d.isHide;
@@ -1909,7 +1909,7 @@ export class ChartBase<T = any> implements IChartBase {
 
         if (this.isLegendAllHide) {
             // select 해제
-            this.legendGroup.selectAll('.legend-label-group').each((item: LegendItem, i: number, node: any) => {
+            this.legendGroup.selectAll('.legend-label-group').each((item: any, i: number, node: any) => {
                 item.selected = true;
                 select(node[i]).style('opacity', 1);
             });
@@ -1955,7 +1955,7 @@ export class ChartBase<T = any> implements IChartBase {
                     let allCount = 0;
                     this.legendGroup
                         .selectAll('.legend-item-group')
-                        .filter((item: LegendItem) => item.label !== 'All')
+                        .filter((item: any) => item.label !== 'All')
                         .selectAll('.checkbox-mark')
                         .each((item: any, i: number, node: any) => {
                             if (item.checked) {
@@ -2021,7 +2021,7 @@ export class ChartBase<T = any> implements IChartBase {
         this.legendGroup
             .selectAll('.legend-label-group')
             .style('opacity', d.selected === false ? 0.5 : null)
-            .each((item: LegendItem) => {
+            .each((item: any) => {
                 item.selected = d.selected;
             });
 

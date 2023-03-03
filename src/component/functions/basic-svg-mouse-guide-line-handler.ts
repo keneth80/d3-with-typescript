@@ -60,7 +60,7 @@ export class BasicSvgMouseGuideLineHandler extends FunctionsBase {
         this.subscription.add(
             fromEvent(this.pointerGroup.node() as any, 'mousemove')
                 .pipe(debounceTime(this.delayTime))
-                .subscribe((e: MouseEvent) => {
+                .subscribe((e: any) => {
                     const mouseEvent: [number, number] = [
                         e.offsetX - this.chartBase.chartMargin.left - 1,
                         e.offsetY - this.chartBase.chartMargin.top - 1

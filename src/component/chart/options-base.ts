@@ -1,17 +1,16 @@
-import { select, Selection, BaseType } from 'd3-selection';
-import { Subject, Observable, Subscription } from 'rxjs';
+import {BaseType, Selection} from 'd3-selection';
+import {Observable, Subject, Subscription} from 'rxjs';
 
-import { ChartBase } from './chart-base';
-import { Scale, ContainerSize } from '../chart/chart.interface';
-import { IOptions } from './options.interface';
-import { guid } from './util/d3-svg-util';
+import {ContainerSize, Scale} from '../chart/chart.interface';
+import {ChartBase} from './chart-base';
+import {IOptions} from './options.interface';
 
 export class OptionsBase implements IOptions {
     selector: string;
 
     protected svg: Selection<BaseType, any, HTMLElement, any>;
 
-    protected mainGroup: Selection<BaseType, any, HTMLElement, any>;
+    protected mainGroup: Selection<any, any, HTMLElement, any>;
 
     protected itemClickSubject: Subject<any> = new Subject();
 
@@ -19,7 +18,7 @@ export class OptionsBase implements IOptions {
 
     private chart: ChartBase;
 
-    constructor() { }
+    constructor() {}
 
     set chartBase(value: ChartBase) {
         this.chart = value;
@@ -35,14 +34,9 @@ export class OptionsBase implements IOptions {
 
     changeConfiguration(configuration: any) {}
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, 
-        mainGroup: Selection<BaseType, any, HTMLElement, any>, index: number) {
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, mainGroup: Selection<BaseType, any, HTMLElement, any>, index: number) {}
 
-    }
-
-    drawOptions(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {
-
-    }
+    drawOptions(chartData: Array<any>, scales: Array<Scale>, geometry: ContainerSize) {}
 
     destroy() {
         this.subscription.unsubscribe();

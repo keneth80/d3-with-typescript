@@ -1,14 +1,14 @@
-import { Selection, BaseType, select } from 'd3-selection';
-import { line, curveMonotoneX } from 'd3-shape';
-import { quadtree } from 'd3-quadtree';
-import { rgb } from 'd3-color';
+import {rgb} from 'd3-color';
+import {quadtree} from 'd3-quadtree';
+import {BaseType, select, Selection} from 'd3-selection';
+import {curveMonotoneX, line} from 'd3-shape';
 
-import { Scale, ContainerSize, DisplayOption, DisplayType } from '../../chart/chart.interface';
-import { SeriesBase } from '../../chart/series-base';
-import { SeriesConfiguration } from '../../chart/series.interface';
-import { textBreak, delayExcute, colorDarker } from '../../chart/util/d3-svg-util';
-import { ChartSelector } from '../../chart';
-import { setChartTooltipByPosition } from '../../chart/util/tooltip-util';
+import {ChartSelector} from '../../chart';
+import {ContainerSize, DisplayOption, DisplayType, Scale} from '../../chart/chart.interface';
+import {SeriesBase} from '../../chart/series-base';
+import {SeriesConfiguration} from '../../chart/series.interface';
+import {colorDarker, delayExcute} from '../../chart/util/d3-svg-util';
+import {setChartTooltipByPosition} from '../../chart/util/tooltip-util';
 
 export class BasicCanvasTraceModel {
     x: number;
@@ -23,7 +23,10 @@ export class BasicCanvasTraceModel {
         data: any
     ) {
         Object.assign(this, {
-            x, y, i, data
+            x,
+            y,
+            i,
+            data
         });
     }
 }
@@ -56,15 +59,15 @@ export interface BasicCanvasTraceConfiguration extends SeriesConfiguration {
 }
 
 export class BasicCanvasTrace<T = any> extends SeriesBase {
-    protected canvas: Selection<BaseType, any, HTMLElement, any>;
+    protected canvas: Selection<HTMLCanvasElement, any, HTMLElement, any>;
 
-    private tooltipGroup: Selection<BaseType, any, HTMLElement, any>;
+    private tooltipGroup: Selection<any, any, HTMLElement, any>;
 
     private line: any;
 
     private config: BasicCanvasTraceConfiguration;
 
-    private restoreCanvas: Selection<BaseType, any, HTMLElement, any>;
+    private restoreCanvas: Selection<any, any, HTMLElement, any>;
 
     private radius = 2;
 
@@ -88,9 +91,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         return this.config.yField;
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
-                  mainGroup: Selection<BaseType, any, HTMLElement, any>,
-                  index: number) {
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, mainGroup: Selection<BaseType, any, HTMLElement, any>, index: number) {
         this.svg = svg;
 
         if (!this.tooltipGroup) {
@@ -100,9 +101,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
             this.tooltipGroup.style('z-index', index + 2);
         }
 
-        this.svg
-            .style('z-index', 0)
-            .style('position', 'absolute');
+        this.svg.style('z-index', 0).style('position', 'absolute');
 
         if (!this.canvas) {
             this.canvas = this.chartBase.chartContainer
@@ -123,7 +122,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                 .style('z-index', index + 2)
                 .style('position', 'absolute');
         } else {
-            this.chartBase.chartContainer.select('.' + ChartSelector.SELECTION_CANVAS).style('z-index', index + 3)
+            this.chartBase.chartContainer.select('.' + ChartSelector.SELECTION_CANVAS).style('z-index', index + 3);
         }
     }
 
@@ -146,8 +145,8 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         const ymax = yScale.max;
 
         let generateData: any[];
-        const lineData: any[] = (!this.config.filter ? chartData : chartData.filter((item: T) => this.config.filter(item)))
-            // .filter((d: T) => d[this.config.xField] >= (xmin - xmin * 0.02) && d[this.config.xField] <= (xmax + xmax * 0.02) && d[this.config.yField] >= ymin && d[this.config.yField] <= ymax);
+        const lineData: any[] = !this.config.filter ? chartData : chartData.filter((item: T) => this.config.filter(item));
+        // .filter((d: T) => d[this.config.xField] >= (xmin - xmin * 0.02) && d[this.config.xField] <= (xmax + xmax * 0.02) && d[this.config.yField] >= ymin && d[this.config.yField] <= ymax);
 
         let padding = 0;
 
@@ -162,12 +161,13 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         this.canvas
             .attr('width', geometry.width)
             .attr('height', geometry.height)
-            .style('transform', `translate(${(this.chartBase.chartMargin.left + 1)}px, ${(this.chartBase.chartMargin.top)}px)`);
+            .style('transform', `translate(${this.chartBase.chartMargin.left + 1}px, ${this.chartBase.chartMargin.top}px)`);
 
-        this.chartBase.chartContainer.select('.' + ChartSelector.SELECTION_CANVAS)
+        this.chartBase.chartContainer
+            .select('.' + ChartSelector.SELECTION_CANVAS)
             .attr('width', geometry.width)
             .attr('height', geometry.height)
-            .style('transform', `translate(${(this.chartBase.chartMargin.left + 1)}px, ${(this.chartBase.chartMargin.top)}px)`);
+            .style('transform', `translate(${this.chartBase.chartMargin.left + 1}px, ${this.chartBase.chartMargin.top}px)`);
 
         const context = (this.canvas.node() as any).getContext('2d');
         context.fillStyle = this.dotFill;
@@ -177,7 +177,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         const rgbColor = rgb(this.strokeColor);
         context.strokeStyle = `rgba(${rgbColor.r}, ${rgbColor.g}, ${rgbColor.b}, ${this.config?.line?.strokeOpacity ?? 1})`;
         // context.lineWidth = 0.5;               // sub-pixels all points
-        context.setTransform(1,0,0,1,0.5,0.5); // not so useful for the curve itself
+        context.setTransform(1, 0, 0, 1, 0.5, 0.5); // not so useful for the curve itself
         if (this.config.line) {
             this.strokeWidth = this.config.line.strokeWidth ?? 1;
             context.lineWidth = this.strokeWidth;
@@ -195,41 +195,39 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         // ctx.fillStyle = "rgba(0, 0, 0, 0)";
         // ctx.fillRect(left, top, width, height);
         if (option.displayType === DisplayType.ZOOMOUT && this.restoreCanvas) {
-            generateData = lineData
-                .map((d: BasicCanvasTraceModel, i: number) => {
-                    const xposition = x(d[this.config.xField]) + padding;
-                    const yposition = y(d[this.config.yField]);
-                    const obj: BasicCanvasTraceData = {
-                        data: d,
-                        width: this.radius,
-                        height: this.radius,
-                        strokeColor: this.strokeColor,
-                        field: this.config.yField,
-                        displayName: this.selector ?? this.displayName
-                    };
-                    return [xposition, yposition, obj];
-                });
+            generateData = lineData.map((d: BasicCanvasTraceModel, i: number) => {
+                const xposition = x(d[this.config.xField]) + padding;
+                const yposition = y(d[this.config.yField]);
+                const obj: BasicCanvasTraceData = {
+                    data: d,
+                    width: this.radius,
+                    height: this.radius,
+                    strokeColor: this.strokeColor,
+                    field: this.config.yField,
+                    displayName: this.selector ?? this.displayName
+                };
+                return [xposition, yposition, obj];
+            });
             context.drawImage(this.restoreCanvas.node(), 0, 0);
         } else {
-            generateData = lineData
-                .map((d: BasicCanvasTraceModel, i: number) => {
-                    const xposition = x(d[this.config.xField]) + padding;
-                    const yposition = y(d[this.config.yField]);
-                    const obj: BasicCanvasTraceData = {
-                        data: d,
-                        width: this.radius,
-                        height: this.radius,
-                        strokeColor: this.strokeColor,
-                        field: this.config.yField,
-                        displayName: this.selector ?? this.displayName
-                    };
-                    // POINT: data 만들면서 포인트 찍는다.
-                    if (this.config.dot) {
-                        context.fillRect(xposition - this.radius, yposition - this.radius, this.radius * 2, this.radius * 2);
-                        // context.arc(xposition, yposition, this.config.dot.radius, 0, 2 * Math.PI, false);
-                    }
-                    return [xposition, yposition, obj];
-                });
+            generateData = lineData.map((d: BasicCanvasTraceModel, i: number) => {
+                const xposition = x(d[this.config.xField]) + padding;
+                const yposition = y(d[this.config.yField]);
+                const obj: BasicCanvasTraceData = {
+                    data: d,
+                    width: this.radius,
+                    height: this.radius,
+                    strokeColor: this.strokeColor,
+                    field: this.config.yField,
+                    displayName: this.selector ?? this.displayName
+                };
+                // POINT: data 만들면서 포인트 찍는다.
+                if (this.config.dot) {
+                    context.fillRect(xposition - this.radius, yposition - this.radius, this.radius * 2, this.radius * 2);
+                    // context.arc(xposition, yposition, this.config.dot.radius, 0, 2 * Math.PI, false);
+                }
+                return [xposition, yposition, obj];
+            });
 
             this.line = line()
                 .x((data: any) => {
@@ -247,12 +245,9 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
             }
         }
 
-        if ((option.displayType === DisplayType.NORMAL ||
-                option.displayType === DisplayType.ZOOMOUT && !this.restoreCanvas)) {
+        if (option.displayType === DisplayType.NORMAL || (option.displayType === DisplayType.ZOOMOUT && !this.restoreCanvas)) {
             this.restoreCanvas = select(document.createElement('CANVAS'));
-            this.restoreCanvas
-                .attr('width', geometry.width)
-                .attr('height', geometry.height);
+            this.restoreCanvas.attr('width', geometry.width).attr('height', geometry.height);
             (this.restoreCanvas.node() as any).getContext('2d').drawImage(this.canvas.node(), 0, 0);
         }
 
@@ -262,8 +257,11 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
         const makeQuadtree = () => {
             this.originQuadTree = quadtree()
-            .extent([[0, 0], [geometry.width, geometry.height]])
-            .addAll(generateData);
+                .extent([
+                    [0, 0],
+                    [geometry.width, geometry.height]
+                ])
+                .addAll(generateData);
         };
 
         if (generateData.length >= 500000) {
@@ -304,13 +302,9 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
     getSeriesDataByPosition(value: number[]) {
         const rectSize = this.radius * 2;
-        return this.canvas.style('opacity') !== '0' ? this.search(
-            this.originQuadTree,
-            value[0] - rectSize,
-            value[1] - rectSize,
-            value[0] + rectSize,
-            value[1] + rectSize
-        ) : [];
+        return this.canvas.style('opacity') !== '0'
+            ? this.search(this.originQuadTree, value[0] - rectSize, value[1] - rectSize, value[0] + rectSize, value[1] + rectSize)
+            : [];
     }
 
     showPointAndTooltip(value: number[], selected: any[]) {
@@ -327,12 +321,11 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                 this.tooltipGroup,
                 this.chartBase.tooltip && this.chartBase.tooltip.tooltipTextParser
                     ? this.chartBase.tooltip.tooltipTextParser(selectedItem)
-                    : `${this.config.xField}: ${selectedItem[2].data[this.config.xField]} \n ${this.config.yField}: ${selectedItem[2].data[this.config.yField]}`,
+                    : `${this.config.xField}: ${selectedItem[2].data[this.config.xField]} \n ${this.config.yField}: ${
+                          selectedItem[2].data[this.config.yField]
+                      }`,
                 this.geometry,
-                [
-                    selectedItem[0],
-                    selectedItem[1]
-                ],
+                [selectedItem[0], selectedItem[1]],
                 {
                     width: this.radius,
                     height: this.radius
@@ -341,7 +334,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
                     left: this.chartBase.chartMargin.left,
                     top: this.chartBase.chartMargin.top
                 }
-            )
+            );
         }
 
         return index;
@@ -349,28 +342,17 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
 
     onSelectItem(value: number[], selected: any[]) {
         const selectedItem = selected[0];
-        this.drawSelectionPoint(
-            [
-                selectedItem[0],
-                selectedItem[1]
-            ],
-            this.geometry,
-            {
-                fill: this.strokeColor,
-                radius: this.radius * 2
-            }
-        );
+        this.drawSelectionPoint([selectedItem[0], selectedItem[1]], this.geometry, {
+            fill: this.strokeColor,
+            radius: this.radius * 2
+        });
     }
 
     private checkSeriesColor() {
         return this.config.line && this.config.line.strokeColor ? this.config.line.strokeColor : undefined;
     }
 
-    private drawTooltipPoint(
-        geometry: ContainerSize,
-        position: number[],
-        style:{radius: number, strokeColor: string, strokeWidth: number}
-    ) {
+    private drawTooltipPoint(geometry: ContainerSize, position: number[], style: {radius: number; strokeColor: string; strokeWidth: number}) {
         const selectionCanvas = this.chartBase.chartContainer.select('.' + ChartSelector.POINTER_CANVAS);
         const context = (selectionCanvas.node() as any).getContext('2d');
         context.clearRect(0, 0, geometry.width, geometry.height);
@@ -394,11 +376,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         context.stroke();
     }
 
-    private drawSelectionPoint(
-        position: number[],
-        geometry: ContainerSize,
-        style:{fill: string, radius: number}
-    ) {
+    private drawSelectionPoint(position: number[], geometry: ContainerSize, style: {fill: string; radius: number}) {
         const selectionCanvas = this.chartBase.chartContainer.select('.' + ChartSelector.SELECTION_CANVAS);
         const context = (selectionCanvas.node() as any).getContext('2d');
         context.clearRect(0, 0, geometry.width, geometry.height);

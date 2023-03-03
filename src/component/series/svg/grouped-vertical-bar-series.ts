@@ -1,14 +1,12 @@
-import { Selection, BaseType, } from 'd3-selection';
-import { scaleOrdinal, scaleBand } from 'd3-scale';
-import { format } from 'd3-format';
-import { quadtree } from 'd3-quadtree';
+import {quadtree} from 'd3-quadtree';
+import {scaleBand, scaleOrdinal} from 'd3-scale';
+import {BaseType, Selection} from 'd3-selection';
 
-import { Scale, ContainerSize } from '../../chart/chart.interface';
-import { SeriesBase } from '../../chart/series-base';
-import { delayExcute, drawSelectionPointByRect, drawTooltipPointByRect } from '../../chart/util/d3-svg-util';
-import { SeriesConfiguration } from '../../chart/series.interface';
-import { ChartSelector } from '../../chart';
-import { setChartTooltipByPosition } from '../../chart/util/tooltip-util';
+import {ChartSelector} from '../../chart';
+import {ContainerSize, Scale} from '../../chart/chart.interface';
+import {SeriesBase} from '../../chart/series-base';
+import {SeriesConfiguration} from '../../chart/series.interface';
+import {drawSelectionPointByRect, drawTooltipPointByRect} from '../../chart/util/d3-svg-util';
 
 export interface GroupedVerticalBarSeriesConfiguration extends SeriesConfiguration {
     xField: string;
@@ -18,7 +16,6 @@ export interface GroupedVerticalBarSeriesConfiguration extends SeriesConfigurati
 }
 
 export class GroupedVerticalBarSeries extends SeriesBase {
-
     protected selectionGroup: Selection<BaseType, any, HTMLElement, any>;
 
     private columns: string[];
@@ -49,8 +46,7 @@ export class GroupedVerticalBarSeries extends SeriesBase {
         return null;
     }
 
-    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>,
-                  mainGroup: Selection<BaseType, any, HTMLElement, any>) {
+    setSvgElement(svg: Selection<BaseType, any, HTMLElement, any>, mainGroup: Selection<BaseType, any, HTMLElement, any>) {
         this.svg = svg;
         this.rootGroup = mainGroup;
         this.selectionGroup = this.svg.select('.' + ChartSelector.SELECTION_SVG);
@@ -64,9 +60,7 @@ export class GroupedVerticalBarSeries extends SeriesBase {
         const x: any = scales.find((scale: Scale) => scale.orient === this.xDirection).scale;
         const y: any = scales.find((scale: Scale) => scale.orient === this.yDirection).scale;
 
-        const barx: any = scaleBand()
-            .domain(this.columns)
-            .rangeRound([0, x.bandwidth()]);
+        const barx: any = scaleBand().domain(this.columns).rangeRound([0, x.bandwidth()]);
 
         this.currentBarWidth = barx.bandwidth();
         this.geometry = {
@@ -77,16 +71,15 @@ export class GroupedVerticalBarSeries extends SeriesBase {
         this.geometry.height = geometry.height;
 
         // set the colors
-        const z = scaleOrdinal()
-            .range(this.chartBase.seriesColors);
+        const z = scaleOrdinal().range(this.chartBase.seriesColors);
 
         z.domain(this.columns);
 
-        this.mainGroup.selectAll('.grouped-bar-item-group')
+        this.mainGroup
+            .selectAll('.grouped-bar-item-group')
             .data(chartData)
             .join(
-                (enter) => enter.append('g')
-                            .attr('class', 'grouped-bar-item-group'),
+                (enter) => enter.append('g').attr('class', 'grouped-bar-item-group'),
                 (update) => update,
                 (exit) => exit.remove()
             )
@@ -94,23 +87,33 @@ export class GroupedVerticalBarSeries extends SeriesBase {
                 return `translate( ${x(d[this.config.xField])} ,0)`;
             })
             .selectAll('.grouped-bar-item')
-                .data((data: any) => {
-                    return this.columns.map(
-                        (key: string, index: number) => { return {key, value: data[key], data, index}; }
-                    );
-                })
-                .join(
-                    (enter) => enter.append('rect').attr('class', 'grouped-bar-item'),
-                    (update) => update,
-                    (exit) => exit.remove()
-                )
-                .attr('column', (d: any) => { return d.key; })
-                .attr('index', (d: any, index: number) => { return index; })
-                .attr('x', (d: any) => { return barx(d.key); })
-                .attr('y', (d: any) => { return (d.value < 0 ? y(0) : y(d.value)); })
-                .attr('height', (d: any) => { return Math.abs(y(d.value) - y(0)); })
-                .attr('width', barx.bandwidth())
-                .attr('fill', (d: any) => z(d.key) + '');
+            .data((data: any) => {
+                return this.columns.map((key: string, index: number) => {
+                    return {key, value: data[key], data, index};
+                });
+            })
+            .join(
+                (enter) => enter.append('rect').attr('class', 'grouped-bar-item'),
+                (update) => update,
+                (exit) => exit.remove()
+            )
+            .attr('column', (d: any) => {
+                return d.key;
+            })
+            .attr('index', (d: any, index: number) => {
+                return index;
+            })
+            .attr('x', (d: any) => {
+                return barx(d.key);
+            })
+            .attr('y', (d: any) => {
+                return d.value < 0 ? y(0) : y(d.value);
+            })
+            .attr('height', (d: any) => {
+                return Math.abs(y(d.value) - y(0));
+            })
+            .attr('width', barx.bandwidth())
+            .attr('fill', (d: any) => z(d.key) + '');
 
         if (this.originQuadTree) {
             this.originQuadTree = undefined;
@@ -128,21 +131,15 @@ export class GroupedVerticalBarSeries extends SeriesBase {
                 const itemy = d[key] < 0 ? y(0) : y(d[key]);
                 // POINT: quadtree 에 저장 되는 데이터는
                 // [아이템의 x축, y축, 아이템의 데이터, 막대의 가로 사이즈, 막대의 세로 사이즈, 색상, 컬럼인덱스, 그룹키]
-                generateData.push([
-                    itemx,
-                    itemy,
-                    d,
-                    barx.bandwidth(),
-                    Math.abs(y(d[key]) - y(0)),
-                    z(key) + '',
-                    j,
-                    key
-                ]);
+                generateData.push([itemx, itemy, d, barx.bandwidth(), Math.abs(y(d[key]) - y(0)), z(key) + '', j, key]);
             }
         }
 
         this.originQuadTree = quadtree()
-            .extent([[0, 0], [geometry.width, geometry.height]])
+            .extent([
+                [0, 0],
+                [geometry.width, geometry.height]
+            ])
             .addAll(generateData);
     }
 
@@ -180,13 +177,7 @@ export class GroupedVerticalBarSeries extends SeriesBase {
     }
 
     getSeriesDataByPosition(value: number[]) {
-        const findItem = this.search(
-            this.originQuadTree,
-            value[0] - this.currentBarWidth,
-            0,
-            value[0],
-            this.geometry.height
-        );
+        const findItem = this.search(this.originQuadTree, value[0] - this.currentBarWidth, 0, value[0], this.geometry.height);
 
         // y좌표에 대해서 체크하여 영역안에 있지 않으면 툴팁을 보여주지 않는다.
         // why? 바의 높이는 제각각 다른데 quadtree는 좌표만을 가지고 위치를 찾는다.
@@ -221,7 +212,7 @@ export class GroupedVerticalBarSeries extends SeriesBase {
         return {
             width: selectedItem[3],
             height: selectedItem[4]
-        }
+        };
     }
 
     tooltipText(selectedItem: any[]): string {
@@ -230,7 +221,7 @@ export class GroupedVerticalBarSeries extends SeriesBase {
         return `${this.displayName ?? this.config.xField}: ${tooltipData[dataKey]}`;
     }
 
-    tooltipStyle(selectedItem: any): {fill: string, opacity: number, stroke: string} {
+    tooltipStyle(selectedItem: any): {fill: string; opacity: number; stroke: string} {
         return {
             fill: selectedItem[5],
             opacity: 1,

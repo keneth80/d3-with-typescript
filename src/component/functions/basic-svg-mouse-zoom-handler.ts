@@ -1,14 +1,14 @@
-import {Selection, BaseType, pointer} from 'd3-selection';
+import {max, min} from 'd3-array';
 import {drag} from 'd3-drag';
-import {min, max} from 'd3-array';
+import {BaseType, pointer, Selection} from 'd3-selection';
 
 import {fromEvent, Subscription} from 'rxjs';
 import {debounceTime} from 'rxjs/operators';
 
-import {Scale, ContainerSize} from '../chart/chart.interface';
-import {FunctionsBase} from '../chart/functions-base';
-import {Direction, ScaleType, Placement} from '../chart/chart-configuration';
 import {ChartSelector} from '../chart';
+import {Direction, Placement, ScaleType} from '../chart/chart-configuration';
+import {ContainerSize, Scale} from '../chart/chart.interface';
+import {FunctionsBase} from '../chart/functions-base';
 
 export interface BasicSvgMouseZoomHandlerConfiguration {
     xDirection?: string; // bottom or top
@@ -19,11 +19,11 @@ export interface BasicSvgMouseZoomHandlerConfiguration {
 }
 
 export class BasicSvgMouseZoomHandler extends FunctionsBase {
-    protected pointerGroup: Selection<BaseType, any, HTMLElement, any>;
+    protected pointerGroup: Selection<any, any, HTMLElement, any>;
 
-    protected zoomBackDrop: Selection<BaseType, any, BaseType, any>;
+    protected zoomBackDrop: Selection<any, any, BaseType, any>;
 
-    protected zoomBox: Selection<BaseType, any, BaseType, any>;
+    protected zoomBox: Selection<any, any, BaseType, any>;
 
     private xDirection: string = Placement.BOTTOM;
 
@@ -45,7 +45,7 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
 
     private isMoveEvent = true;
 
-    private tempZoomBox: Selection<BaseType, any, BaseType, any>;
+    private tempZoomBox: Selection<any, any, BaseType, any>;
 
     private moveSubscription: Subscription;
 
@@ -74,12 +74,7 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
 
         // zoom mask setup
         if (!this.svg.select('defs').select('#zoommask').node()) {
-            const mask: Selection<BaseType, any, BaseType, any> = this.svg
-                .select('defs')
-                .append('mask')
-                .attr('id', 'zoommask')
-                .attr('x', 0)
-                .attr('y', 0);
+            const mask: Selection<any, any, BaseType, any> = this.svg.select('defs').append('mask').attr('id', 'zoommask').attr('x', 0).attr('y', 0);
             this.zoomBackDrop = mask.append('rect').attr('class', 'zoom-back-drop').attr('x', 0).attr('y', 0).style('fill', '#fff');
             this.zoomBox = mask.append('rect').attr('class', 'zoom-box').attr('x', 0).attr('y', 0);
         } else {
@@ -151,7 +146,7 @@ export class BasicSvgMouseZoomHandler extends FunctionsBase {
         if (this.isMoveEvent) {
             this.moveSubscription = fromEvent(this.pointerGroup.node() as any, 'mousemove')
                 .pipe(debounceTime(this.delayTime))
-                .subscribe((e: MouseEvent) => {
+                .subscribe((e: any) => {
                     if (this.isDrag) {
                         return;
                     }
