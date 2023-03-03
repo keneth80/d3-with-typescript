@@ -122,7 +122,7 @@ export class BasicLineSeries extends SeriesBase {
 
         if (this.config.line) {
             this.line = line()
-                .defined((data) => data[this.config.xField])
+                .defined((data: any) => data[this.config.xField])
                 .x((data: any, i) => {
                     const xposition = x(data[this.config.xField]) + padding;
                     return xposition;

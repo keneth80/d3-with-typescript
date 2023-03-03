@@ -140,7 +140,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         }
     }
 
-    drawSeries(chartBaseData: T[], scales: Scale[], geometry: ContainerSize, option: DisplayOption) {
+    drawSeries(chartBaseData: any, scales: Scale[], geometry: ContainerSize, option: DisplayOption) {
         this.seriesIndex = option.index;
 
         this.geometry = geometry;
@@ -172,7 +172,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         }
 
         const lineData: any[] = (!this.dataFilter ? chartData : chartData.filter((item: T) => this.dataFilter(item))).filter(
-            (d: T) =>
+            (d: any) =>
                 d[this.config.xField] >= xmin - xmin * 0.01 &&
                 d[this.config.xField] <= xmax + xmax * 0.01 &&
                 d[this.config.yField] >= ymin &&
@@ -247,7 +247,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
                     [geometry.width, geometry.height]
                 ])
                 .addAll(
-                    lineData.map<any>((d: BasicCanvasWebglLineSeriesModel) => {
+                    lineData.map<any>((d: any) => {
                         const xposition = x(d[this.config.xField]);
                         const yposition = y(d[this.config.yField]);
 
@@ -322,7 +322,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
 
     // TODO: tooltip에 시리즈 아이디를 부여하여 시리즈 마다 tooltip을 컨트롤 할 수 있도록 한다.
     // multi tooltip도 구현해야 하기 때문에 이방법이 가장 좋음. 현재 중복으로 발생해서 왔다갔다 함.
-    private setChartTooltip(seriesData: T, geometry: ContainerSize, mouseEvent: number[]) {
+    private setChartTooltip(seriesData: any, geometry: ContainerSize, mouseEvent: number[]) {
         if (this.chartBase.isTooltipDisplay) {
             return;
         }
@@ -426,7 +426,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         }
     }
 
-    private initShaders(color: string, geometry: ContainerSize, vertices: [number, number][], alpha: number = 1) {
+    private initShaders(color: string, geometry: ContainerSize, vertices: any, alpha: number = 1) {
         const radius = this.config?.dot?.radius ?? 6;
 
         // Vertex shader source code
@@ -531,7 +531,7 @@ export class BasicCanvasWebgLineSeries<T = any> extends SeriesBase {
         this.gl.cullFace(this.gl.FRONT);
     }
 
-    private makeVertices(chartData: T[], xAxis: any, yAxis: any) {
+    private makeVertices(chartData: any, xAxis: any, yAxis: any) {
         // data 만들기
         const xScale = scaleLinear().domain([xAxis.min, xAxis.max]).range([-1, 1]); // [-0.99, 0.99]
 

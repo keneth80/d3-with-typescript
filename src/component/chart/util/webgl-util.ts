@@ -1,38 +1,32 @@
-import { BaseType, Selection } from 'd3';
+import {BaseType, Selection} from 'd3';
 
-const defaultShaderType = [
-    'VERTEX_SHADER',
-    'FRAGMENT_SHADER',
-];
+const defaultShaderType = ['VERTEX_SHADER', 'FRAGMENT_SHADER'];
 
 export const hexToRgb = (hex: any) =>
-hex.replace(/^#?([a-f\d])([a-f\d])([a-f\d])$/i, (m: number, r: number, g: number, b: number) => '#' + r + r + g + g + b + b)
-    .substring(1).match(/.{2}/g)
-    .map((x: string) => parseInt(x, 16));
+    hex
+        .replace(/^#?([a-f\d])([a-f\d])([a-f\d])$/i, (m: number, r: number, g: number, b: number) => '#' + r + r + g + g + b + b)
+        .substring(1)
+        .match(/.{2}/g)
+        .map((x: string) => parseInt(x, 16));
 
-export const rgbToHex = (r: number, g: number, b: number) => '#' + [r, g, b]
-    .map(x => x.toString(16).padStart(2, '0')).join('');
+export const rgbToHex = (r: number, g: number, b: number) => '#' + [r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('');
 
-export const createProgramFromScripts = (gl, shaderScriptIds, optAttribs, optLocations, optErrorCallback) => {
+export const createProgramFromScripts = (gl: any, shaderScriptIds: any, optAttribs: any, optLocations: any, optErrorCallback: any) => {
     const shaders = [];
     for (let ii = 0; ii < shaderScriptIds.length; ++ii) {
-        shaders.push(
-            createShaderFromScript(gl, shaderScriptIds[ii], gl[defaultShaderType[ii]], optErrorCallback)
-        );
+        shaders.push(createShaderFromScript(gl, shaderScriptIds[ii], gl[defaultShaderType[ii]], optErrorCallback));
     }
     return createProgram(gl, shaders, optAttribs, optLocations, optErrorCallback);
-}
+};
 
 export const createProgramFromSources = (gl: any, shaderSources: string[], optAttribs: any, optLocations: any, optErrorCallback: any) => {
     const shaders = [];
     for (let ii = 0; ii < shaderSources.length; ++ii) {
         const shaderType = defaultShaderType[ii];
-        shaders.push(
-            loadShader(gl, shaderSources[ii], gl[shaderType], optErrorCallback)
-        );
+        shaders.push(loadShader(gl, shaderSources[ii], gl[shaderType], optErrorCallback));
     }
     return createProgram(gl, shaders, optAttribs, optLocations, optErrorCallback);
-}
+};
 
 export const setupWebglContext = (canvas: Selection<BaseType, any, HTMLElement, any>) => {
     const webglOption = {
@@ -53,7 +47,7 @@ export const setupWebglContext = (canvas: Selection<BaseType, any, HTMLElement, 
         failIfMajorPerformanceCaveat: true // 시스템 성능이 낮거나 하드웨어 GPU를 사용할 수 없는 경우 컨텍스트가 생성될지 를 나타내는 부울수입니다.
     };
     return (canvas.node() as any).getContext('webgl', webglOption) ?? (canvas.node() as any).getContext('experimental-webgl', webglOption);
-}
+};
 
 const createShaderFromScript = (gl: any, scriptId: string, optShaderType: string, optErrorCallback: any) => {
     let shaderSource = '';
@@ -75,11 +69,8 @@ const createShaderFromScript = (gl: any, scriptId: string, optShaderType: string
         }
     }
 
-    return loadShader(
-        gl, shaderSource, optShaderType ? optShaderType : shaderType,
-        optErrorCallback
-    );
-}
+    return loadShader(gl, shaderSource, optShaderType ? optShaderType : shaderType, optErrorCallback);
+};
 
 const loadShader = (gl: any, shaderSource: any, shaderType: any, optErrorCallback: any) => {
     const errFn = optErrorCallback ?? error;
@@ -95,15 +86,15 @@ const loadShader = (gl: any, shaderSource: any, shaderType: any, optErrorCallbac
     // Check the compile status
     const compiled = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
     if (!compiled) {
-      // Something went wrong during compilation; get the error
-      const lastError = gl.getShaderInfoLog(shader);
-      errFn('*** Error compiling shader ' + shader + ':' + lastError);
-      gl.deleteShader(shader);
-      return null;
+        // Something went wrong during compilation; get the error
+        const lastError = gl.getShaderInfoLog(shader);
+        errFn('*** Error compiling shader ' + shader + ':' + lastError);
+        gl.deleteShader(shader);
+        return null;
     }
 
     return shader;
-}
+};
 
 const createProgram = (gl: any, shaders: string[], optAttribs: any, optLocations: any, optErrorCallback: any) => {
     const errFn = optErrorCallback ?? error;
@@ -114,10 +105,7 @@ const createProgram = (gl: any, shaders: string[], optAttribs: any, optLocations
 
     if (optAttribs) {
         optAttribs.forEach((attrib: any, ndx: number) => {
-        gl.bindAttribLocation(
-            program,
-            optLocations ? optLocations[ndx] : ndx,
-            attrib);
+            gl.bindAttribLocation(program, optLocations ? optLocations[ndx] : ndx, attrib);
         });
     }
     gl.linkProgram(program);
@@ -133,10 +121,10 @@ const createProgram = (gl: any, shaders: string[], optAttribs: any, optLocations
         return null;
     }
     return program;
-}
+};
 
 const error = (msg: any) => {
     if (console && console.log) {
         console.log('error : ', msg);
     }
-}
+};

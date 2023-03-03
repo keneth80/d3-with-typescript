@@ -10,7 +10,7 @@
         "dev": "webpack-dev-server --open --mode development",
         "bundle-analyze": "webpack --profile --json > stats.json",
         "bundle-analyze-open": "webpack-bundle-analyzer stats.json --port=9900",
-        "build:ms": "rmdir /s /q dist | cross-env NODE_ENV=production webpack | npm run mjs",
+        "build:ms": "rmdir /s /q dist | cross-env NODE_ENV=production webpack | (npm run mjs)",
         "build:linux": "rm -fr dist/* && cross-env NODE_ENV=production webpack && npm run mjs",
         "mjs": "ttsc -p tsconfig.json"
     },

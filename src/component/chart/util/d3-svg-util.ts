@@ -97,7 +97,7 @@ export const textBreak = (target: any, pattern: any = /\s+/) => {
     // /(\n|\r\n)/g
     target.each((d: any, index: number, node: any) => {
         const text = select(node[index]);
-        let lines = [];
+        let lines: any = [];
         const words = text.text().split(pattern).reverse();
         // const words = text.text().split('').reverse();
         let word = null;
@@ -164,7 +164,7 @@ export const wrapTextByRowLimit = (text: any, width: number, limitRowCount: numb
     const dy = parseFloat(text.attr('dy')) ?? 0;
 
     let word: string;
-    let lines = [];
+    let lines: any = [];
     let lineNumber = 0;
     let lineCount = 1;
     let tspan = text
@@ -267,9 +267,9 @@ export const drawSvgCheckBox = <T = any>(
             }
         ])
         .join(
-            (enter) => enter.append('g').attr('class', 'checkbox-group'),
-            (update) => update,
-            (exit) => exit.remove()
+            (enter: any) => enter.append('g').attr('class', 'checkbox-group'),
+            (update: any) => update,
+            (exit: any) => exit.remove()
         );
 
     const box = g

@@ -169,7 +169,7 @@ export class BasicDonutSeries extends SeriesBase {
                 // this.tooltipGroup.attr('transform', `translate(${xPosition}, ${yPosition})`).selectAll('rect').attr('width', textWidth);
             });
 
-        let currentSeries = null;
+        let currentSeries: any = null;
         series
             .transition()
             .duration(1000)
@@ -198,7 +198,7 @@ export class BasicDonutSeries extends SeriesBase {
                 return d.data[this.categoryField];
             });
 
-        let currentLabel = null;
+        let currentLabel: any = null;
         labels
             .transition()
             .duration(1000)
@@ -239,7 +239,7 @@ export class BasicDonutSeries extends SeriesBase {
             .style('stroke-width', 2)
             .style('fill', 'none');
 
-        let currentLine = null;
+        let currentLine: any = null;
         lines
             .transition()
             .duration(1000)

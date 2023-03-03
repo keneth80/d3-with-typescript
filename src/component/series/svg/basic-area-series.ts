@@ -25,12 +25,12 @@ export class BasicAreaSeries extends SeriesBase {
 
     private line: Line<[number, number]>;
 
-    private lineStyle = {
+    private lineStyle: any = {
         strokeWidth: 1,
         strokeColor: null
     };
 
-    private areaStyle = {
+    private areaStyle: any = {
         color: null,
         opacity: 0.7,
         isCurve: false

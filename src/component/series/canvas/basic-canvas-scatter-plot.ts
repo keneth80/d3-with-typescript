@@ -157,7 +157,7 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
             initialize = true;
         }
 
-        let generateData = [];
+        let generateData: any = [];
         if (this.isRestore) {
             generateData = this.originData;
         } else {
@@ -166,7 +166,7 @@ export class BasicCanvasScatterPlot<T = any> extends SeriesBase {
                     ? chartData
                     : chartData
                           // .filter((d: T) => d[this.config.xField] >= xmin && d[this.config.xField] <= xmax && d[this.config.yField] >= ymin && d[this.config.yField] <= ymax)
-                          .map((d: T, i: number) => {
+                          .map((d: any, i: number) => {
                               const xposition = x(d[this.config.xField]);
                               const yposition = y(d[this.config.yField]);
                               if (initialize) {

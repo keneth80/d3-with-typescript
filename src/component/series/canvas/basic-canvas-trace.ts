@@ -195,7 +195,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
         // ctx.fillStyle = "rgba(0, 0, 0, 0)";
         // ctx.fillRect(left, top, width, height);
         if (option.displayType === DisplayType.ZOOMOUT && this.restoreCanvas) {
-            generateData = lineData.map((d: BasicCanvasTraceModel, i: number) => {
+            generateData = lineData.map((d: any, i: number) => {
                 const xposition = x(d[this.config.xField]) + padding;
                 const yposition = y(d[this.config.yField]);
                 const obj: BasicCanvasTraceData = {
@@ -210,7 +210,7 @@ export class BasicCanvasTrace<T = any> extends SeriesBase {
             });
             context.drawImage(this.restoreCanvas.node(), 0, 0);
         } else {
-            generateData = lineData.map((d: BasicCanvasTraceModel, i: number) => {
+            generateData = lineData.map((d: any, i: number) => {
                 const xposition = x(d[this.config.xField]) + padding;
                 const yposition = y(d[this.config.yField]);
                 const obj: BasicCanvasTraceData = {

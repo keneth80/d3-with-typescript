@@ -40,11 +40,11 @@ export class StackedVerticalBarSeries extends SeriesBase {
         this.displayNames = configuration.displayNames ? [...configuration.displayNames] : [...configuration.columns];
     }
 
-    xField() {
+    xField(): any {
         return this.config.xField;
     }
 
-    yField() {
+    yField(): any {
         return null;
     }
 

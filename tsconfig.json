@@ -1,37 +1,40 @@
 {
     "compilerOptions": {
+        // leave JSX as it is
+        // resolve modules as you would expect
         "moduleResolution": "node",
-        "module": "es6",
+        // leave imports as they are
+        "module": "esnext",
+        // do not transpile stuff like classes, async/await, ...
         "target": "es5",
         "lib": ["es2015", "es6", "esnext", "dom"],
+        "allowJs": true,
+        // produce a source map
         "sourceMap": true,
-        "declaration": true,
-        "esModuleInterop": true,
-        "declarationDir": "dist/types",
-        "declarationMap": true,
-        "baseUrl": ".",
-        "outDir": "dist",
-        "paths": {
-            "components/*": ["./src/components/*"],
-            "assets/*": ["./src/assets/*"]
-        },
-        "noImplicitAny": false,
-        "resolveJsonModule": true,
-        "allowSyntheticDefaultImports": true,
-        "importHelpers": true,
-        "keyofStringsOnly": true,
-        "skipLibCheck": true,
         "strict": true,
         "strictNullChecks": false,
         "strictPropertyInitialization": false,
+        "declaration": true,
+        "declarationDir": "dist/types",
+        "declarationMap": true,
+        // "emitDeclarationOnly": true,
+        "jsx": "preserve",
+        "esModuleInterop": true,
+        "importHelpers": true,
+        "experimentalDecorators": true,
+        "skipLibCheck": true,
+        "allowSyntheticDefaultImports": true,
+        "resolveJsonModule": true,
+        "baseUrl": ".",
+        "outDir": "dist/mjs",
+        "types": ["node"],
         "plugins": [
             {"transform": "typescript-transform-paths"},
             {
                 "transform": "typescript-transform-paths",
                 "afterDeclarations": true
             }
-        ],
-        "types": ["node"]
+        ]
     },
     "include": ["./src/**/*"],
     "exclude": ["tmp", "dist", "./node_modules/**/*"]

@@ -1,4 +1,4 @@
-const {CleanWebpackPlugin} = require('clean-webpack-plugin');
+// const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const helpers = require('./helpers');
 const HtmlWebPackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
@@ -53,10 +53,6 @@ module.exports = {
         ]
     },
     plugins: [
-        new CleanWebpackPlugin({
-            root: helpers.root(),
-            verbose: true
-        }),
         new HtmlWebPackPlugin({
             template: './src/index.html',
             filename: './index.html'

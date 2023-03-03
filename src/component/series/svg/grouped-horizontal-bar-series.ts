@@ -33,11 +33,11 @@ export class GroupedHorizontalBarSeries extends SeriesBase {
         this.numberFmt = format(',d');
     }
 
-    xField() {
+    xField(): any {
         return this.config.xField;
     }
 
-    yField() {
+    yField(): any {
         return null;
     }
 

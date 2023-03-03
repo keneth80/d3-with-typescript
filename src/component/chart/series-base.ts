@@ -78,11 +78,11 @@ export class SeriesBase implements ISeries {
     //     return this.itemClickSubject.asObservable();
     // }
 
-    xField() {
+    xField(): any {
         return null;
     }
 
-    yField() {
+    yField(): any {
         return null;
     }
 
@@ -138,7 +138,7 @@ export class SeriesBase implements ISeries {
         }
     }
 
-    getSeriesDataByPosition(value: number[]) {
+    getSeriesDataByPosition(value: number[]): any {
         return [];
     }
 
@@ -235,7 +235,7 @@ export class SeriesBase implements ISeries {
     }
 
     protected search(quadtreeObj: Quadtree<any[]>, x0: number, y0: number, x3: number, y3: number) {
-        const temp = [];
+        const temp: any = [];
         if (quadtreeObj) {
             quadtreeObj.visit((node: any, x1: number, y1: number, x2: number, y2: number) => {
                 if (!node.length) {

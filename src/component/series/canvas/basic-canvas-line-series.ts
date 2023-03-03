@@ -171,7 +171,7 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
         context.beginPath();
 
         this.line = line()
-            .defined((data) => data[this.config.yField])
+            .defined((data: any) => data[this.config.yField])
             .x((data: any) => {
                 const xposition = x(data[this.config.xField]) + padding + space / 4;
                 return xposition;
@@ -202,8 +202,8 @@ export class BasicCanvasLineSeries<T = any> extends SeriesBase {
 
             const prevIndex = this.pointerCanvas.data()[0] ?? 0;
             let colorIndex = 0;
-            const colorData = {};
-            lineData.forEach((point: T, i: number) => {
+            const colorData: any = {};
+            lineData.forEach((point: any, i: number) => {
                 const drawX = x(point[this.config.xField]) + padding + space / 4;
                 const drawY = y(point[this.config.yField]) + space / 4;
                 this.drawPoint(drawX, drawY, radius, context);

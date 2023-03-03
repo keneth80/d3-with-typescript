@@ -185,7 +185,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
                     [geometry.width, geometry.height]
                 ])
                 .addAll(
-                    lineData.map<any>((d: BasicCanvasWebglLineSeriesOneModel) => {
+                    lineData.map<any>((d: any) => {
                         const xposition = x(d[this.config.xField]);
                         const yposition = y(d[this.config.yField]);
 
@@ -321,7 +321,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         // // // data generate
         // const vertices = this.isSizeUpdate ? this.makeVertices(chartData, xAxis, yAxis) : (this.isRestore ? this.cashingVertices : this.makeVertices(chartData, xAxis, yAxis));
 
-        const vertices = this.displayType === DisplayType.ZOOMOUT ? this.cashingVertices : this.makeVertices(chartData, xAxis, yAxis);
+        const vertices: any = this.displayType === DisplayType.ZOOMOUT ? this.cashingVertices : this.makeVertices(chartData, xAxis, yAxis);
 
         // 캔버스 얻어오기
         const canvas: HTMLCanvasElement = this.canvas.node() as HTMLCanvasElement;
@@ -504,7 +504,7 @@ export class BasicCanvasWebgLineSeriesOne<T = any> extends SeriesBase {
         this.gl.cullFace(this.gl.FRONT);
     }
 
-    private makeVertices(chartData: T[], xAxis: any, yAxis: any) {
+    private makeVertices(chartData: any, xAxis: any, yAxis: any) {
         // data 만들기
         const xScale = scaleLinear().domain([xAxis.min, xAxis.max]).range([-1, 1]); // [-0.99, 0.99]
 

@@ -34,11 +34,11 @@ export class BasicBoxplotSeries extends SeriesBase {
         }
     }
 
-    xField() {
+    xField(): any {
         return this.config.xField;
     }
 
-    yField() {
+    yField(): any {
         return null;
     }
 

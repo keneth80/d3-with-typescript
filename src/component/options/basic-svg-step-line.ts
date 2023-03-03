@@ -7,13 +7,13 @@ import {OptionsBase} from '../chart/options-base';
 export interface BasicStepLineConfiguration<T = any> {
     selector: string;
     xField: string;
-    data?: T[];
+    data?: any[];
 }
 
 export class BasicStepLine<T = any> extends OptionsBase {
     private xField: string;
 
-    private stepData: T[];
+    private stepData: any[];
 
     constructor(configuration: BasicStepLineConfiguration) {
         super();
@@ -34,7 +34,7 @@ export class BasicStepLine<T = any> extends OptionsBase {
         }
     }
 
-    drawOptions(chartData: T[], scales: Scale[], geometry: ContainerSize) {
+    drawOptions(chartData: any[], scales: Scale[], geometry: ContainerSize) {
         if (!this.stepData || !this.stepData.length) {
             return;
         }
@@ -52,11 +52,11 @@ export class BasicStepLine<T = any> extends OptionsBase {
             )
             .style('stroke', '#ccc')
             .style('stroke-width', 1)
-            .attr('x1', (data: T) => {
+            .attr('x1', (data: any) => {
                 return x(data[this.xField]);
             })
             .attr('y1', 0)
-            .attr('x2', (data: T) => {
+            .attr('x2', (data: any) => {
                 return x(data[this.xField]);
             })
             .attr('y2', geometry.height);

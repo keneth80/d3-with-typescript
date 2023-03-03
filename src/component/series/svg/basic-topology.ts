@@ -358,8 +358,8 @@ export class BasicTopology extends SeriesBase {
 
         // link draw
         const vlink = linkVertical()
-            .source((d) => d[0])
-            .target((d) => d[1])
+            .source((d: any) => d[0])
+            .target((d: any) => d[1])
             .x((d: any) => {
                 return d.x;
             })
@@ -437,7 +437,7 @@ export class BasicTopology extends SeriesBase {
 
     private onSectorMouseOver = (event: PointerEvent, data: TopologyGroupElement) => {
         this.currentSector = select(event.target as HTMLElement).style('stroke', this.boldColor);
-        const selectIps = [];
+        const selectIps: any = [];
         let currentIp = '';
         data.members.forEach((member: any) => {
             if (currentIp !== member.machineIP) {
@@ -602,7 +602,7 @@ export class BasicTopology extends SeriesBase {
         machineSize: {width: number; height: number},
         placement: string
     ): any[] {
-        const positions = [];
+        const positions: any = [];
         sectors.forEach((item: TopologyGroupElement) => {
             const currentSector = targetGroup.select(`#${item.data.frameworkID.toLowerCase()}`);
             const parentPosition = getTransformByArray(currentSector.attr('transform'));

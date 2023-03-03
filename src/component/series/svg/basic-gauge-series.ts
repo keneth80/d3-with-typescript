@@ -37,7 +37,7 @@ export class BasicGaugeSeries extends SeriesBase {
 
     private pointerGroup: any;
 
-    private config = {
+    private config: any = {
         clipWidth: 200,
         clipHeight: 110,
         ringInset: 20,
@@ -56,17 +56,17 @@ export class BasicGaugeSeries extends SeriesBase {
         colors: ['#e8e2ca', '#3e6c0a']
     };
 
-    private range = undefined;
-    private r = undefined;
-    private pointerHeadLength = undefined;
-    private arc = undefined;
-    private scale = undefined;
-    private ticks = undefined;
-    private tickData = undefined;
-    private pointer = undefined;
+    private range: any = undefined;
+    private r: any = undefined;
+    private pointerHeadLength: any = undefined;
+    private arc: any = undefined;
+    private scale: any = undefined;
+    private ticks: any = undefined;
+    private tickData: any = undefined;
+    private pointer: any = undefined;
     private arcColorFn = interpolateHsl(rgb('#e8e2ca'), rgb('#3e6c0a'));
 
-    constructor(configuration: BasicGaugeSeriesConfiguration) {
+    constructor(configuration: any) {
         super(configuration);
         if (configuration) {
             let prop: string;
@@ -123,11 +123,11 @@ export class BasicGaugeSeries extends SeriesBase {
             .selectAll(`.${this.selector}-path`)
             .data(this.tickData)
             .join(
-                (enter) => enter.append('path').attr('class', `${this.selector}-path`),
-                (update) => update,
-                (exit) => exit.remove()
+                (enter: any) => enter.append('path').attr('class', `${this.selector}-path`),
+                (update: any) => update,
+                (exit: any) => exit.remove()
             )
-            .style('fill', (d, i) => {
+            .style('fill', (d: any, i: any) => {
                 return this.arcColorFn(d * i);
             })
             .attr('d', this.arc);
@@ -136,15 +136,15 @@ export class BasicGaugeSeries extends SeriesBase {
             .selectAll(`.${this.selector}-label`)
             .data(this.ticks)
             .join(
-                (enter) => enter.append('text').attr('class', `${this.selector}-label`),
-                (update) => update,
-                (exit) => exit.remove()
+                (enter: any) => enter.append('text').attr('class', `${this.selector}-label`),
+                (update: any) => update,
+                (exit: any) => exit.remove()
             )
             .style('text-anchor', 'middle')
             .style('font-size', '14px')
             .style('font-weight', 'bold')
             .style('fill', '#aaa')
-            .attr('transform', (d) => {
+            .attr('transform', (d: any) => {
                 const ratio = this.scale(d);
                 const angleValue = this.config.minAngle + ratio * this.range;
                 return `rotate(${angleValue}) translate(0, ${this.config.labelInset - this.r})`;
@@ -177,9 +177,9 @@ export class BasicGaugeSeries extends SeriesBase {
             .selectAll(`.${this.selector}-pointer`)
             .data([lineData])
             .join(
-                (enter) => enter.append('g').attr('class', `${this.selector}-pointer`),
-                (update) => update,
-                (exit) => exit.remove()
+                (enter: any) => enter.append('g').attr('class', `${this.selector}-pointer`),
+                (update: any) => update,
+                (exit: any) => exit.remove()
             )
             .style('fill', '#e85116')
             .style('stroke', '#b64011')

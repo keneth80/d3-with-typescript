@@ -8,7 +8,7 @@ export interface BasicSpecAreaConfiguration<T = any> {
     startField: string;
     endField: string;
     placement?: string;
-    data?: T[];
+    data?: any;
     style?: {
         color: string;
     };
@@ -21,7 +21,7 @@ export class BasicSpecArea<T = any> extends OptionsBase {
 
     private labelField: string;
 
-    private stepData: T[];
+    private stepData: any;
 
     private placement: string = 'bottom';
 
@@ -62,7 +62,7 @@ export class BasicSpecArea<T = any> extends OptionsBase {
                 (update) => update,
                 (exit) => exit.remove
             )
-            .attr('transform', (data: T) => {
+            .attr('transform', (data: any) => {
                 const x = this.placement === 'bottom' ? axis(data[this.startField]) : 0;
                 const y = this.placement === 'bottom' ? 0 : axis(data[this.startField]);
                 const translate = `translate(${(x < 0 ? 0 : x) + 1}, ${y > geometry.height ? geometry.height : y})`;
@@ -71,18 +71,18 @@ export class BasicSpecArea<T = any> extends OptionsBase {
 
         elementGroup
             .selectAll('.' + this.selector + '-box')
-            .data((data: T) => [data])
+            .data((data: any) => [data])
             .join(
                 (enter) => enter.append('rect').attr('class', this.selector + '-box'),
                 (update) => update,
                 (exit) => exit.remove
             )
             .style('fill', '#f9e1fa')
-            .attr('width', (data: T) => {
+            .attr('width', (data: any) => {
                 const targetWidth = this.placement === 'bottom' ? axis(data[this.endField]) - axis(data[this.startField]) : geometry.width;
                 return (targetWidth > geometry.width ? geometry.width : targetWidth) - 1;
             })
-            .attr('height', (data: T) => {
+            .attr('height', (data: any) => {
                 const targetHeight = this.placement === 'bottom' ? geometry.height : axis(data[this.endField]) - axis(data[this.startField]);
                 return targetHeight > geometry.height ? geometry.height : targetHeight;
             });

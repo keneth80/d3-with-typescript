@@ -59,7 +59,7 @@ export class ChartBase<T = any> implements IChartBase {
 
     protected height = Infinity;
 
-    protected originalData: T[] = [];
+    protected originalData: any = [];
 
     protected svg: Selection<any, any, HTMLElement, any>;
 
@@ -93,7 +93,7 @@ export class ChartBase<T = any> implements IChartBase {
 
     protected tooltipTemplete: any = baseTooltipTemplate;
 
-    protected margin: Margin = {
+    protected margin: any = {
         top: 25,
         left: 20,
         bottom: 30,
@@ -151,7 +151,7 @@ export class ChartBase<T = any> implements IChartBase {
     private isCustomMargin = false;
 
     // ===================== axis configuration start ===================== //
-    private axisGroups: PlacementByElement = {
+    private axisGroups: any = {
         top: null,
         left: null,
         bottom: null,
@@ -165,7 +165,7 @@ export class ChartBase<T = any> implements IChartBase {
         right: null
     };
 
-    private axisTitleMargin: Margin = {
+    private axisTitleMargin: any = {
         top: 0,
         left: 0,
         bottom: 0,
@@ -198,7 +198,7 @@ export class ChartBase<T = any> implements IChartBase {
 
     private legendPadding = 5;
 
-    private currentLegend = null;
+    private currentLegend: any = null;
 
     private currentLegendNode: any = null;
 
@@ -722,7 +722,7 @@ export class ChartBase<T = any> implements IChartBase {
                             // this.originalData
                             displayType === DisplayType.ZOOMIN
                                 ? this.originalData.filter(
-                                      (d: T) =>
+                                      (d: any) =>
                                           xField &&
                                           d[xField] >= xScale.min - xScale.min * 0.1 &&
                                           d[xField] <= xScale.max + xScale.max * 0.1 &&
@@ -1223,8 +1223,8 @@ export class ChartBase<T = any> implements IChartBase {
 
         let isDragStart = false;
         let isMouseLeave = false;
-        const tooltipTargetDataList = [];
-        const tooltipPointerDataList = [];
+        const tooltipTargetDataList: any = [];
+        const tooltipPointerDataList: any = [];
 
         this.subscription.add(
             this.mouseEvent$.subscribe((chartEvent: ChartMouseEvent) => {
@@ -1588,7 +1588,7 @@ export class ChartBase<T = any> implements IChartBase {
     }
 
     protected updateAxis(): Promise<void> {
-        const maxTextWidth = {};
+        const maxTextWidth: any = {};
         const padding = 10; // 10 는 axis 여백.
 
         let isAxisUpdate = false;

@@ -12,7 +12,7 @@ import {delayExcute, textWrapping} from '../util';
 
 export const generateScaleByAxis = <T = any>(
     axes: Axes[] = [],
-    data: T[] = [],
+    data: any[] = [],
     size: ContainerSize = {
         width: 0,
         height: 0
@@ -40,7 +40,7 @@ export const generateScaleByAxis = <T = any>(
             if (axis.domain) {
                 scale.domain(axis.domain);
             } else {
-                scale.domain(data.map((item: T) => (item as any)[axis.field]));
+                scale.domain(data.map((item: any) => (item as any)[axis.field]));
             }
         } else if (axis.type === ScaleType.POINT) {
             scale = scalePoint()
@@ -49,7 +49,7 @@ export const generateScaleByAxis = <T = any>(
             if (axis.domain) {
                 scale.domain(axis.domain);
             } else {
-                scale.domain(data.map((item: T) => (item as any)[axis.field]));
+                scale.domain(data.map((item: any) => (item as any)[axis.field]));
             }
         } else {
             if (axis.type === ScaleType.TIME) {
@@ -71,18 +71,18 @@ export const generateScaleByAxis = <T = any>(
             } else {
                 if (!axis.hasOwnProperty('max')) {
                     if (axis.type === ScaleType.TIME) {
-                        axis.max = max(data.map((item: T) => new Date(item[axis.field]).getTime()));
+                        axis.max = max(data.map((item: any) => new Date(item[axis.field]).getTime()));
                     } else {
-                        axis.max = max(data.map((item: T) => parseFloat(item[axis.field])));
+                        axis.max = max(data.map((item: any) => parseFloat(item[axis.field])));
                         axis.max += Math.round(axis.max * 0.05);
                     }
                 }
 
                 if (!axis.hasOwnProperty('min')) {
                     if (axis.type === ScaleType.TIME) {
-                        axis.min = min(data.map((item: T) => new Date(item[axis.field]).getTime()));
+                        axis.min = min(data.map((item: any) => new Date(item[axis.field]).getTime()));
                     } else {
-                        axis.min = min(data.map((item: T) => parseFloat(item[axis.field])));
+                        axis.min = min(data.map((item: any) => parseFloat(item[axis.field])));
                         axis.min -= Math.round(axis.min * 0.05);
                     }
                 }
@@ -340,7 +340,7 @@ export const setupBrush = (
     targetGroup: Selection<BaseType, any, HTMLElement, any>,
     updateBrushHandler: any
 ) => {
-    let brush = null;
+    let brush: any = null;
     if (scale.type === ScaleType.NUMBER || scale.type === ScaleType.TIME) {
         if (scale.orient === Placement.RIGHT || scale.orient === Placement.LEFT) {
             let left = 0;

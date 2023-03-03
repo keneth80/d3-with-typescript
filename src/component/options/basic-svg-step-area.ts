@@ -21,7 +21,7 @@ export class BasicStepArea<T = any> extends OptionsBase {
 
     private labelField: string;
 
-    private stepData: T[];
+    private stepData: any[];
 
     constructor(configuration: BasicStepAreaConfiguration) {
         super();
@@ -39,7 +39,7 @@ export class BasicStepArea<T = any> extends OptionsBase {
         }
     }
 
-    drawOptions(chartData: T[], scales: Scale[], geometry: ContainerSize) {
+    drawOptions(chartData: any[], scales: Scale[], geometry: ContainerSize) {
         if (!this.stepData || !this.stepData.length) {
             return;
         }
@@ -61,13 +61,13 @@ export class BasicStepArea<T = any> extends OptionsBase {
                 (update) => update,
                 (exit) => exit.remove
             )
-            .attr('transform', (data: T) => {
+            .attr('transform', (data: any) => {
                 return `translate(${x(data[this.startField])}, 1)`;
             });
 
         elementGroup
             .selectAll('.' + this.selector + '-label')
-            .data((data: T) => [data])
+            .data((data: any) => [data])
             .join(
                 (enter) => enter.append('text').attr('class', this.selector + '-label'),
                 (update) => update,
@@ -78,11 +78,11 @@ export class BasicStepArea<T = any> extends OptionsBase {
             .attr('dy', '0.71em')
             .attr('x', 2)
             // .attr('y', this.chartBase.chartMargin.top / 2)
-            .text((data: T) => data[this.labelField]);
+            .text((data: any) => data[this.labelField]);
 
         elementGroup
             .selectAll('.' + this.selector + '-box')
-            .data((data: T) => [data])
+            .data((data: any) => [data])
             .join(
                 (enter) => enter.append('rect').attr('class', this.selector + '-box'),
                 (update) => update,
@@ -91,7 +91,7 @@ export class BasicStepArea<T = any> extends OptionsBase {
             // .style('stroke', '#000')
             // .style('fill', '#fff')
             .style('fill-opacity', 0)
-            .attr('width', (data: T) => {
+            .attr('width', (data: any) => {
                 return x(data[this.endField]) - x(data[this.startField]);
             })
             .attr('height', textHeight);

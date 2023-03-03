@@ -28,11 +28,11 @@ export class BasicBollingerBandSeries extends SeriesBase {
         this.config = configuration;
     }
 
-    xField() {
+    xField(): any {
         return this.config.xField;
     }
 
-    yField() {
+    yField(): any {
         return null;
     }
 

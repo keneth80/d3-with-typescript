@@ -47,7 +47,7 @@ export class BasicViolinSeries extends SeriesBase {
             .thresholds(y.ticks(20)) // Important: how many bins approx are going to be made? It is the 'resolution' of the violin plot
             .value((d) => d);
 
-        const sumstat = rollup(
+        const sumstat: any = rollup(
             chartData,
             (d: any) => {
                 // For each key..
