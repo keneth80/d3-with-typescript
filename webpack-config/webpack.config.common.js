@@ -25,9 +25,7 @@ module.exports = {
         extensions: ['.js', '.ts', '...']
     },
     devtool: 'inline-source-map',
-    devServer: {
-        writeToDisk: true
-    },
+
     module: {
         rules: [
             {
