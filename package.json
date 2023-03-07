@@ -2,7 +2,7 @@
     "name": "d3-with-typescript",
     "version": "1.0.0",
     "description": "d3-with-typescript",
-    "main": "src/index.ts",
+    "main": "src/main.ts",
     "scripts": {
         "result": "lite-server -c lite-server-config.json",
         "build": "cross-env NODE_ENV=development webpack --mode development",

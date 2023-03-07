@@ -37,7 +37,7 @@ export class BasicDonutSeries extends SeriesBase {
 
     private numberFmt: any;
 
-    constructor(configuration: BasicDonutSeriesConfiguration) {
+    constructor(configuration: any) {
         super(configuration);
         if (configuration) {
             if (configuration.categoryField) {
@@ -132,9 +132,9 @@ export class BasicDonutSeries extends SeriesBase {
                     // .style('stroke', '#f5330c')
                     // .style('stroke-width', 2);
 
-                    // this.tooltipGroup = this.chartBase.showTooltip();
+                    this.tooltipGroup = this.chartBase.showTooltip();
 
-                    // select(node).classed('tooltip', true);
+                    select(node).classed('tooltip', true);
                 }
             })
             .on('mouseout', (event: PointerEvent, d: any) => {
@@ -166,7 +166,7 @@ export class BasicDonutSeries extends SeriesBase {
                     xPosition = xPosition - textWidth;
                 }
 
-                // this.tooltipGroup.attr('transform', `translate(${xPosition}, ${yPosition})`).selectAll('rect').attr('width', textWidth);
+                this.tooltipGroup.attr('transform', `translate(${xPosition}, ${yPosition})`).selectAll('rect').attr('width', textWidth);
             });
 
         let currentSeries: any = null;

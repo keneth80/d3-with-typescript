@@ -7,6 +7,12 @@ const commonConfig = require('./webpack.config.common');
 
 module.exports = merge(commonConfig, {
     mode: 'production',
+    output: {
+        path: helpers.root('dist'),
+        publicPath: '/',
+        filename: '[hash].js',
+        chunkFilename: '[id].[hash].chunk.js'
+    },
     optimization: {
         noEmitOnErrors: true,
         usedExports: true,

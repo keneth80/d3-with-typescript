@@ -7,25 +7,15 @@ const path = require('path');
 
 module.exports = {
     entry: {
-        app: './src/index.ts'
-    },
-    output: {
-        asyncChunks: true,
-        path: helpers.root('dist'),
-        publicPath: '/',
-        filename: '[name].js',
-        sourceMapFilename: '[name].map',
-        chunkFilename: '[id].js',
-        libraryTarget: 'commonjs2',
-        environment: {
-            module: true
-        }
+        app: './src/main.ts'
     },
     resolve: {
-        extensions: ['.js', '.ts', '...']
+        extensions: ['.js', '.ts']
     },
     devtool: 'inline-source-map',
-
+    devServer: {
+        hot: true
+    },
     module: {
         rules: [
             {
@@ -39,14 +29,20 @@ module.exports = {
                 }
             },
             {
-                test: /\.(js)x?$/,
-                exclude: /node_modules/,
+                test: /\.js$/,
+                // exclude: /node_modules/,
+                exclude: [/\bcore-js\b/, /\bwebpack\/buildin\b/],
                 use: {
                     loader: 'babel-loader',
                     options: {
-                        presets: ['@babel/preset-env', '@babel/preset-typescript', '@babel/plugin-transform-typescript']
+                        sourceType: 'unambiguous',
+                        presets: ['@babel/preset-env']
                     }
                 }
+            },
+            {
+                test: /\.css$/,
+                use: ['style-loader', 'css-loader']
             }
         ]
     },

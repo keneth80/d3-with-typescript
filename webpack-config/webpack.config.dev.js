@@ -16,7 +16,12 @@ module.exports = merge(commonConfig, {
         filename: '[name].bundle.js',
         chunkFilename: '[id].chunk.js'
     },
+
     optimization: {
         noEmitOnErrors: true
+    },
+
+    devServer: {
+        historyApiFallback: true
     }
 });
